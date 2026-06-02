@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "voice2task-post-training"
+version = "0.1.0"
+description = "SFT/DPO preparation and evaluation for Chinese voice-to-browser task contracts."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Voice2Task maintainers" }]
+dependencies = []
+
+[project.optional-dependencies]
+dataset = ["jsonschema>=4.22"]
+evaluation = []
+train = [
+  "accelerate>=0.33",
+  "datasets>=2.20",
+  "peft>=0.12",
+  "transformers>=4.43",
+  "trl>=0.9",
+]
+dev = [
+  "mypy>=1.10",
+  "pytest>=8.0",
+  "ruff>=0.5",
+]
+engineering = ["ms-swift>=2.4"]
+
+[project.scripts]
+voice2task-data = "voice2task.cli.data:main"
+voice2task-train = "voice2task.cli.train:main"
+voice2task-eval = "voice2task.cli.eval:main"
+voice2task-report = "voice2task.cli.report:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.10"
+mypy_path = "src"
+packages = ["voice2task"]
+strict = true
+warn_unused_ignores = true

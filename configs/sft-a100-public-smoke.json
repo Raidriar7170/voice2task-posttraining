@@ -1,0 +1,31 @@
+{
+  "a100_project_root_policy": "must_resolve_to_approved_private_a100_project_root",
+  "adapter_output_dir": "<a100_project_root>/runs/a100-sft-public-smoke/adapter",
+  "allow_heavy_training": true,
+  "base_model": "Qwen/Qwen2.5-0.5B-Instruct",
+  "dataset_split": "train",
+  "dev_split": "dev",
+  "evidence_output_dir": "<a100_project_root>/evidence/a100-sft-public-smoke",
+  "gpu_identifier_policy": "policy_only_no_host_ip_or_gpu_uuid",
+  "gpu_selection_policy": "select_idle_gpu_only_no_process_interruption",
+  "lora": {
+    "alpha": 16,
+    "dropout": 0.05,
+    "r": 8,
+    "target_modules": [
+      "q_proj",
+      "v_proj"
+    ]
+  },
+  "logging_steps": 1,
+  "max_seq_length": 1024,
+  "num_train_epochs": 1,
+  "output_dir": "<a100_project_root>/runs/a100-sft-public-smoke",
+  "output_policy": "public_sample_smoke_only_run_training_requires_cli_and_config_opt_in_outputs_remain_private_by_default",
+  "output_root": "<a100_project_root>",
+  "per_device_train_batch_size": 1,
+  "public_sample_manifest": "data/public-samples/manifest_public_sample.json",
+  "reference_runtime": "a100-public-sample-smoke",
+  "save_strategy": "no",
+  "trainer": "trl.SFTTrainer"
+}

@@ -1,0 +1,18 @@
+schema: spec-driven
+
+context: |
+  Voice2Task Post-Training is an independent companion repository for Voice-to-Browser Agent.
+  First-phase scope: Chinese spoken command or ASR transcript -> schema-valid browser task contract.
+  Public data posture: commit sanitized samples, dataset builders, manifests, and aggregate reports; keep the full local/private corpus out of git.
+  First-phase training scope: SFT plus DPO with Qwen-family small instruction models using Transformers, PEFT, and TRL as the primary transparent stack.
+  Evaluation must use a contract evaluation ladder: schema validity, task type accuracy, route accuracy, safety precision/recall, confirmation accuracy, slot F1, and execution smoke.
+
+rules:
+  proposal:
+    - Include explicit non-goals for generic chat fine-tuning, skill routing, GUI action policy learning, first-phase GRPO, and public release of the full local corpus.
+    - Avoid claims that imply a released checkpoint, public full dataset, or live-browser benchmark improvement before evidence exists.
+  design:
+    - Treat CONTEXT.md as the domain glossary and docs/adr as the durable decision record.
+    - Separate public sample artifacts from local/private generated corpora.
+  tasks:
+    - Include fresh validation commands for dataset building, schema metrics, DPO pair checks, and public-leak scans.

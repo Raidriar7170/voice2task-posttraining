@@ -1,0 +1,29 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+venv/
+
+# Local/private corpora and generated training artifacts
+data/local-private/
+data/generated/
+outputs/
+checkpoints/
+adapters/
+runs/
+wandb/
+logs/
+reports/generated-local/
+reports/private/
+
+# Large or machine-local files
+*.safetensors
+*.ckpt
+*.pt
+*.bin
+*.log
+.env
+.env.*

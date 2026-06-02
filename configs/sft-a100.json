@@ -1,0 +1,18 @@
+{
+  "base_model": "Qwen/Qwen2.5-7B-Instruct",
+  "allow_heavy_training": false,
+  "dataset_split": "train",
+  "dev_split": "dev",
+  "lora": {
+    "alpha": 32,
+    "dropout": 0.05,
+    "r": 16,
+    "target_modules": ["q_proj", "k_proj", "v_proj", "o_proj"]
+  },
+  "max_seq_length": 2048,
+  "num_train_epochs": 2,
+  "output_policy": "run_training_requires_explicit_opt_in_and_write_under_mnt_data_minghongsun_when_remote",
+  "per_device_train_batch_size": 2,
+  "reference_runtime": "a100",
+  "trainer": "trl.SFTTrainer"
+}

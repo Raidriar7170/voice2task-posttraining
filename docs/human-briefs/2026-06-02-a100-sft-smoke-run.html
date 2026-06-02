@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>A100 SFT Smoke 简报</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f8fa;
+      --ink: #172033;
+      --muted: #5b6678;
+      --line: #d9dee8;
+      --panel: #ffffff;
+      --accent: #1f6f5f;
+      --ok: #1f6f5f;
+      --warn: #8a5a12;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 38px 22px 54px;
+    }
+    header {
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+    }
+    h1 { margin: 0 0 8px; font-size: 30px; letter-spacing: 0; }
+    h2 { margin: 26px 0 10px; font-size: 18px; }
+    p { margin: 8px 0; }
+    a { color: var(--accent); }
+    code {
+      background: #eef2f6;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 0.92em;
+    }
+    ul { margin: 8px 0; padding-left: 20px; }
+    .summary { font-size: 18px; max-width: 850px; }
+    .meta { color: var(--muted); font-size: 14px; }
+    .status {
+      display: inline-block;
+      border: 1px solid #9cc8bc;
+      color: var(--ok);
+      background: #eef9f5;
+      border-radius: 999px;
+      padding: 2px 10px;
+      font-weight: 700;
+      font-size: 13px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin: 14px 0 4px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+    }
+    .label { color: var(--muted); font-size: 13px; margin-bottom: 4px; }
+    .value { font-weight: 700; overflow-wrap: anywhere; }
+    .risk {
+      border-left: 4px solid var(--warn);
+      color: #47351c;
+      padding-left: 12px;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <p class="meta">2026-06-02 · OpenSpec apply phase · Human review companion</p>
+      <h1>A100 SFT Smoke 简报</h1>
+      <p class="summary">结论：A100 public-sample SFT smoke 已在 ModelScope retry 后完成训练；公开仓库只保留 sanitized evidence，不发布 checkpoint/adapter，也不声称 live-browser benchmark 提升。</p>
+      <p><span class="status">needs review</span></p>
+    </header>
+
+    <section>
+      <h2>当前状态</h2>
+      <div class="grid">
+        <div class="card">
+          <div class="label">OpenSpec change</div>
+          <div class="value">a100-sft-smoke-run</div>
+        </div>
+        <div class="card">
+          <div class="label">Training status</div>
+          <div class="value">training_completed</div>
+        </div>
+        <div class="card">
+          <div class="label">Release status</div>
+          <div class="value">not_released</div>
+        </div>
+        <div class="card">
+          <div class="label">Controlled smoke</div>
+          <div class="value">not_run_no_public_predictions_copied</div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>关键值</h2>
+      <ul>
+        <li>模型：<code>Qwen/Qwen2.5-0.5B-Instruct</code>，来源标记为 <code>modelscope</code>。</li>
+        <li>模型缓存策略：<code>private_remote_model_cache_not_copied_to_git</code>；公开 evidence 不写缓存路径。</li>
+        <li>数据：<code>public-sample-20260601T162313Z</code>，12 条 SFT public sample rows。</li>
+        <li>运行目录：<code>&lt;a100_run_dir&gt;</code>，位于 <code>&lt;a100_project_root&gt;</code> 下；公开 evidence 不写精确远程 run/cache 路径。</li>
+        <li>公开配置：<code>configs/sft-a100-public-smoke.json</code> 保留占位符；真实 A100 运行需使用私有 override 解析路径。</li>
+        <li>门禁：<code>cli_run_training=true</code>、<code>config_allow_heavy_training=true</code>、<code>will_run_heavy_training=true</code>。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>本阶段改动</h2>
+      <ul>
+        <li>将 A100 evidence 从 Hugging Face 下载失败更新为 ModelScope retry 后训练完成。</li>
+        <li>保留公开边界：raw logs、remote model caches、adapters、checkpoints 均不入 git。</li>
+        <li>将 controlled smoke 标为未运行训练模型预测，因为没有复制公开预测样本。</li>
+        <li>将 OpenSpec task 3.2 标记完成，并记录 HF 失败后用 ModelScope 获取同一 Qwen 模型 ID 完成 smoke。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>关键文件</h2>
+      <ul>
+        <li><a href="../../reports/public-sample/a100-sft-smoke/adapter_metadata.json">adapter_metadata.json</a>：sanitized training metadata。</li>
+        <li><a href="../../reports/public-sample/a100-sft-smoke/manifest.json">manifest.json</a> 与 <a href="../../reports/public-sample/a100-sft-smoke/report.md">report.md</a>：公开 evidence 摘要。</li>
+        <li><a href="../../reports/public-sample/a100-sft-smoke/controlled_smoke_result.json">controlled_smoke_result.json</a>：说明没有公开预测被复制。</li>
+        <li><a href="../../reports/public-sample/a100-sft-smoke/leak_scan_result.json">leak_scan_result.json</a>：本 evidence pack 的 leak scan 结果。</li>
+        <li><a href="../../openspec/changes/a100-sft-smoke-run/tasks.md">tasks.md</a>：task 3.2 完成说明。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>验证结果</h2>
+      <ul>
+        <li><code>uv run ruff check .</code>：All checks passed。</li>
+        <li><code>uv run mypy src</code>：Success，16 source files。</li>
+        <li><code>PYTHONDONTWRITEBYTECODE=1 uv run pytest -q -p no:cacheprovider</code>：36 passed。</li>
+        <li><code>PYTHONPATH=src python -m voice2task.cli.report leak-scan --paths reports/public-sample/a100-sft-smoke --output reports/public-sample/a100-sft-smoke/leak_scan_result.json</code>：ok true，0 findings。</li>
+        <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：5 passed，0 failed。</li>
+        <li><code>git diff --check</code>：无 whitespace/error 输出。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>剩余风险</h2>
+      <p class="risk">这次 evidence 只能说明 public-sample SFT 训练路径在 A100 上跑通一次；没有发布 adapter/checkpoint，没有公开训练模型预测，也不能包装成质量提升、生产可用或 live-browser benchmark 提升。</p>
+    </section>
+
+    <section>
+      <h2>推荐下一步</h2>
+      <p>主线程审核 sanitized evidence 和本轮验证输出；如果认可边界和用词，再进入 review/archive，而不是直接发布模型。</p>
+    </section>
+  </main>
+</body>
+</html>

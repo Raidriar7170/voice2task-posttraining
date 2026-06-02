@@ -1,0 +1,10 @@
+{
+  "enabled": false,
+  "failed": 0,
+  "notes": "A100 public-sample SFT training completed through a private ModelScope local snapshot, but no public model predictions were copied back. This controlled smoke result does not represent the trained model path; baseline controlled smoke remains in reports/public-sample/metrics and prior validation output.",
+  "passed": 0,
+  "public_predictions_copied": false,
+  "release_status": "not_released",
+  "status": "not_run_no_public_predictions_copied",
+  "training_status": "training_completed"
+}

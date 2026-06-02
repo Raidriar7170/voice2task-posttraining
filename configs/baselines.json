@@ -1,0 +1,15 @@
+{
+  "baselines": [
+    {
+      "name": "rule-normalizer",
+      "description": "Deterministic keyword baseline for smoke comparisons.",
+      "requires_provider": false
+    },
+    {
+      "name": "prompt-only",
+      "description": "Prompt-only fixture path for provider-backed predictions supplied by the caller.",
+      "requires_provider": true
+    }
+  ],
+  "claim_boundary": "Baseline metrics are contract-level only and do not imply live-browser improvement."
+}

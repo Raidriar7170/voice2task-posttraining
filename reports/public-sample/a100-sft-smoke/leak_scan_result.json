@@ -1,0 +1,14 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-02T08:09:28.095649+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "data/public-samples",
+    "reports/public-sample",
+    "README.md",
+    "CONTEXT.md",
+    "docs",
+    "openspec"
+  ]
+}

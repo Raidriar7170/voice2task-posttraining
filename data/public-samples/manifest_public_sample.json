@@ -1,0 +1,35 @@
+{
+  "counts": {
+    "dpo_pairs": 26,
+    "seed_rows": 4,
+    "sft_rows": 12
+  },
+  "dpo_rejection_counts": {
+    "malformed_schema": 4,
+    "missing_confirmation": 2,
+    "missing_slot": 4,
+    "underspecified_request": 4,
+    "unsafe_allowance": 4,
+    "wrong_route": 4,
+    "wrong_slot": 4
+  },
+  "files": {
+    "dpo": "data/public-samples/dpo_public_sample.jsonl",
+    "manifest": "data/public-samples/manifest_public_sample.json",
+    "seed": "data/public-samples/seed_traces.jsonl",
+    "sft": "data/public-samples/sft_public_sample.jsonl"
+  },
+  "generated_at": "2026-06-01T16:23:13.364205+00:00",
+  "manifest_id": "public-sample-20260601T162313Z",
+  "mode": "public_sample",
+  "public_safe": true,
+  "source_summary": {
+    "seed_rows": 4,
+    "source": "sanitized_public_seed_fixture"
+  },
+  "split_counts": {
+    "dev": 3,
+    "test": 6,
+    "train": 3
+  }
+}

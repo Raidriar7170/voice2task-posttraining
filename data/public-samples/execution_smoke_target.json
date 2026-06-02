@@ -1,0 +1,4 @@
+{
+  "command": ["python", "scripts/controlled_contract_validator.py"],
+  "description": "Public controlled fixture proving evaluator smoke can call a configured contract consumer without live browser claims."
+}

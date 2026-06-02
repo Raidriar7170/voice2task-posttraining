@@ -1,0 +1,18 @@
+{
+  "base_model": "Qwen/Qwen2.5-0.5B-Instruct",
+  "allow_heavy_training": false,
+  "dataset_split": "train",
+  "dev_split": "dev",
+  "lora": {
+    "alpha": 16,
+    "dropout": 0.05,
+    "r": 8,
+    "target_modules": ["q_proj", "v_proj"]
+  },
+  "max_seq_length": 1024,
+  "num_train_epochs": 1,
+  "output_policy": "dry_run_by_default_run_training_requires_explicit_opt_in",
+  "per_device_train_batch_size": 1,
+  "reference_runtime": "local-dev",
+  "trainer": "trl.SFTTrainer"
+}

@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Voice2Task SFT/DPO Apply 简报</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f8fa;
+      --ink: #172033;
+      --muted: #5b6678;
+      --line: #d9dee8;
+      --panel: #ffffff;
+      --accent: #1f6f5f;
+      --warn: #8a5a12;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 38px 22px 54px;
+    }
+    header {
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+    }
+    h1 { margin: 0 0 8px; font-size: 30px; letter-spacing: 0; }
+    h2 { margin: 26px 0 10px; font-size: 18px; }
+    p { margin: 8px 0; }
+    a { color: var(--accent); }
+    code {
+      background: #eef2f6;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 0.92em;
+    }
+    ul { margin: 8px 0; padding-left: 20px; }
+    .summary { font-size: 18px; max-width: 850px; }
+    .meta { color: var(--muted); font-size: 14px; }
+    .status {
+      display: inline-block;
+      border: 1px solid #9ac7bb;
+      color: var(--accent);
+      background: #eaf7f3;
+      border-radius: 999px;
+      padding: 2px 10px;
+      font-weight: 700;
+      font-size: 13px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin: 14px 0 4px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+    }
+    .label { color: var(--muted); font-size: 13px; margin-bottom: 4px; }
+    .value { font-weight: 700; }
+    .risk {
+      border-left: 4px solid var(--warn);
+      color: #47351c;
+      padding-left: 12px;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <p class="meta">2026-06-01 · OpenSpec apply phase · Human review companion</p>
+      <h1>Voice2Task SFT/DPO Apply 简报</h1>
+      <p class="summary">结论：bootstrap-voice2task-sft-dpo 已实现一个可运行的第一阶段闭环：public sample 数据构造、严格 schema 校验、SFT/DPO 格式化、受控训练入口、contract metrics、controlled smoke、leak scan 和 public-safe 报告。</p>
+      <p><span class="status">needs review before archive</span></p>
+    </header>
+
+    <section>
+      <h2>当前状态</h2>
+      <div class="grid">
+        <div class="card">
+          <div class="label">OpenSpec tasks</div>
+          <div class="value">35/35 marked complete</div>
+        </div>
+        <div class="card">
+          <div class="label">Public sample</div>
+          <div class="value">12 SFT rows · 26 DPO pairs</div>
+        </div>
+        <div class="card">
+          <div class="label">Training</div>
+          <div class="value">dry-run default · opt-in heavy run</div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>本阶段改动</h2>
+      <ul>
+        <li>新增 Python package、CLI entrypoints、依赖分组、gitignore 和 README quickstart。</li>
+        <li>实现 browser task contract、SFT row、DPO pair、manifest 和 rejection category schema。</li>
+        <li>实现 public-sample / local-private builders、schema-preserving augmentation、hard negatives 和 validation CLI。</li>
+        <li>实现 SFT/DPO formatting、TRL/PEFT dry-run metadata export、显式 opt-in 训练入口、rule/prompt fixture baselines、metrics evaluator 和 controlled execution smoke。</li>
+        <li>新增 report template、readiness checklist、public leak scan 和验证测试。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>关键文件</h2>
+      <ul>
+        <li><a href="../../src/voice2task/">src/voice2task/</a>：schema、dataset、training、evaluation、report 和 CLI 实现。</li>
+        <li><a href="../../tests/">tests/</a>：23 个聚焦测试，覆盖 schema、dataset、SFT/DPO、metrics、controlled smoke 和 leak scan。</li>
+        <li><a href="../../data/public-samples/manifest_public_sample.json">public manifest</a>：public sample 计数和 split/rejection 分布。</li>
+        <li><a href="../../reports/public-sample/metrics.md">metrics.md</a>：public sample 的 contract-level baseline metrics。</li>
+        <li><a href="../../reports/public-sample/sft-dry-run/adapter_metadata.json">SFT metadata</a>、<a href="../../reports/public-sample/dpo-dry-run/adapter_metadata.json">DPO metadata</a>：未发布 checkpoint 的 dry-run 记录。</li>
+        <li><a href="../../reports/readiness-checklist.md">readiness-checklist.md</a>：发布前 public-safe 检查表。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>验证命令</h2>
+      <ul>
+        <li><code>pytest -q</code>：23 passed。</li>
+        <li><code>ruff check .</code>：All checks passed。</li>
+        <li><code>mypy src</code>：Success, 16 source files。</li>
+        <li><code>PYTHONPATH=src python -m voice2task.cli.data validate ... --public</code>：ok true，12 SFT rows，26 DPO pairs。</li>
+        <li><code>PYTHONPATH=src python -m voice2task.cli.data dpo-check ...</code>：26 pairs，route/safety/confirmation/slot/schema/underspecified slices present。</li>
+        <li><code>PYTHONPATH=src python -m voice2task.cli.eval smoke ...</code>：controlled validation command passed 12 contracts。</li>
+        <li><code>PYTHONPATH=src python -m voice2task.cli.report leak-scan README.md CONTEXT.md docs data/public-samples reports/public-sample reports/readiness-checklist.md reports/templates configs scripts src tests pyproject.toml openspec</code>：ok true。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>剩余风险</h2>
+      <p class="risk">不要把默认 dry-run metadata 说成已发布 adapter；真实训练需要显式 <code>--run-training</code> 和 <code>allow_heavy_training</code>。当前 metrics 是 public sample 的 contract-level smoke，不代表 live-browser benchmark 提升。完整 local/private corpus 仍应留在 gitignored 路径，只公开样本、manifest 和 aggregate reports。</p>
+    </section>
+
+    <section>
+      <h2>推荐下一步</h2>
+      <p>主线程 review diff 和验证输出；确认后可进入 OpenSpec archive。若要真实训练，需要后续变更明确模型 checkpoint、依赖版本、A100 输出目录和可公开的评估证据。</p>
+    </section>
+  </main>
+</body>
+</html>
