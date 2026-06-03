@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import json
 import re
@@ -24,6 +25,7 @@ from voice2task.schemas import (
     DPOPair,
     SFTDatasetRow,
     as_contract,
+    canonical_contract_json,
 )
 
 
@@ -104,6 +106,13 @@ def _public_display_model(value: Any) -> str:
     if isinstance(value, str) and value:
         return _public_display_path(value, "<private_base_model>")
     return "unknown"
+
+
+def _public_display_artifact_path(value: Path, placeholder: str) -> str:
+    raw = value.as_posix()
+    if any(raw.startswith(prefix) for prefix in PRIVATE_PATH_PREFIXES):
+        return placeholder
+    return raw
 
 
 def _heavy_training_gate(config: dict[str, Any], dry_run: bool) -> dict[str, bool]:
@@ -376,6 +385,41 @@ def _decoding_policy(config: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _prediction_sidecar_paths(output_path: Path) -> dict[str, Path]:
+    return {
+        "prompt_snapshot": output_path.parent / "prompt_snapshot.json",
+        "raw_decoded_summary": output_path.parent / "raw_decoded_summary.jsonl",
+        "generation_trace": output_path.parent / "generation_trace.jsonl",
+    }
+
+
+def _public_sidecar_paths(sidecar_paths: dict[str, Path]) -> dict[str, str]:
+    placeholders = {
+        "prompt_snapshot": "<a100_prompt_snapshot>",
+        "raw_decoded_summary": "<a100_raw_decoded_summary>",
+        "generation_trace": "<a100_generation_trace>",
+    }
+    return {
+        name: _public_display_artifact_path(path, placeholders.get(name, "<a100_prediction_sidecar>"))
+        for name, path in sidecar_paths.items()
+    }
+
+
+def _diagnostic_artifact_paths(output_path: Path, *, overfit_diagnostic: bool) -> dict[str, str]:
+    if not overfit_diagnostic:
+        return {}
+    return {
+        "objective_inspection": _public_display_artifact_path(
+            output_path.parent / "objective_inspection.json",
+            "<a100_objective_inspection>",
+        ),
+        "leak_scan": _public_display_artifact_path(
+            output_path.parent / "leak_scan_result.json",
+            "<a100_leak_scan_result>",
+        ),
+    }
+
+
 def _prediction_metadata_common(
     *,
     config_path: Path,
@@ -386,6 +430,7 @@ def _prediction_metadata_common(
 ) -> dict[str, Any]:
     config = _load_config(config_path)
     load_summary = _manifest_load_summary(manifest_path, "sft")
+    sidecar_paths = _prediction_sidecar_paths(output_path)
     return {
         "stage": "sft_prediction",
         "stack": "transformers+peft+trl",
@@ -395,6 +440,8 @@ def _prediction_metadata_common(
         "dataset_manifest_path": _public_display_path(manifest_path, "data/public-samples/manifest_public_sample.json"),
         "prediction_output_path": _public_display_path(output_path, "<a100_prediction_output>"),
         "prediction_split": str(config.get("prediction_split", "all")),
+        "overfit_diagnostic": bool(config.get("overfit_diagnostic", False)),
+        "generalization_claim": bool(config.get("generalization_claim", False)),
         "prediction_source_kind": "none",
         "prediction_status": "pending",
         "prediction_count": 0,
@@ -403,6 +450,15 @@ def _prediction_metadata_common(
         "formatting_policy": dict(FORMATTING_POLICY),
         "prompt_constraints": prompt_constraint_summary(),
         "decoding_policy": _decoding_policy(config),
+        "sidecars": _public_sidecar_paths(sidecar_paths),
+        "diagnostic_artifacts": _diagnostic_artifact_paths(
+            output_path,
+            overfit_diagnostic=bool(config.get("overfit_diagnostic", False)),
+        ),
+        "metadata_path": _public_display_artifact_path(
+            output_path.parent / "prediction_metadata.json",
+            "<a100_prediction_metadata>",
+        ),
         "created_at": datetime.now(timezone.utc).isoformat(),
         "prediction_gate": _prediction_gate(config, dry_run, fixture_mode),
         "command_summary": {
@@ -433,6 +489,163 @@ def _write_fixture_predictions(rows: list[SFTDatasetRow], output_path: Path) -> 
         for record in records:
             handle.write(json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n")
     return len(records)
+
+
+def _sha256_text(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _sanitize_preview(text: str, limit: int = 240) -> str:
+    return _sanitize_decoded_prediction_text(text)[:limit]
+
+
+def _prompt_snapshot_row(row: SFTDatasetRow, prompt: str) -> dict[str, Any]:
+    sanitized_prompt = _sanitize_decoded_prediction_text(prompt)
+    return {
+        "id": row.id,
+        "prompt_sha256": _sha256_text(sanitized_prompt),
+        "prompt_char_count": len(sanitized_prompt),
+        "prompt_preview": sanitized_prompt[:240],
+        "input_text_preview": _sanitize_preview(row.input_text, limit=120),
+        "provenance": {"public_safe": True, "source_id": row.provenance.get("source_id", row.id)},
+    }
+
+
+def _write_prompt_snapshot(rows: list[dict[str, Any]], path: Path, *, prediction_split: str) -> None:
+    write_json(
+        path,
+        {
+            "artifact_kind": "sft_prediction_prompt_snapshot",
+            "prediction_split": prediction_split,
+            "formatting_policy": dict(FORMATTING_POLICY),
+            "prompt_constraints": prompt_constraint_summary(),
+            "rows": rows,
+            "claims": {
+                "prompt_snapshot_only": True,
+                "contains_gold_contract": False,
+                "public_safe": True,
+            },
+        },
+    )
+
+
+def _decoded_parse_status(decoded: str) -> str:
+    stripped = decoded.strip()
+    if not stripped:
+        return "empty"
+    try:
+        parsed = json.loads(stripped)
+    except json.JSONDecodeError:
+        parsed = None
+    else:
+        return "json_object" if isinstance(parsed, dict) else "json_non_object"
+    object_start = stripped.find("{")
+    object_end = stripped.rfind("}")
+    if object_start >= 0 and object_end > object_start:
+        try:
+            parsed = json.loads(stripped[object_start : object_end + 1])
+        except json.JSONDecodeError:
+            return "non_json"
+        return "json_fragment_object" if isinstance(parsed, dict) else "json_fragment_non_object"
+    return "non_json"
+
+
+def _raw_decoded_summary_row(row_id: str, decoded: str) -> dict[str, Any]:
+    sanitized = _sanitize_decoded_prediction_text(decoded)
+    return {
+        "id": row_id,
+        "parse_status": _decoded_parse_status(sanitized),
+        "decoded_sha256": _sha256_text(sanitized),
+        "decoded_char_count": len(sanitized),
+        "decoded_prefix": sanitized[:240],
+        "decoded_suffix": sanitized[-240:],
+        "private_values_sanitized": sanitized != decoded,
+        "schema_repair_applied": False,
+    }
+
+
+def _write_jsonl_records(path: Path, rows: list[dict[str, Any]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as handle:
+        for row in rows:
+            handle.write(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n")
+
+
+def _token_list(value: Any) -> list[Any]:
+    if hasattr(value, "tolist"):
+        value = value.tolist()
+    if isinstance(value, tuple):
+        value = list(value)
+    if isinstance(value, list):
+        if len(value) == 1 and isinstance(value[0], (list, tuple)):
+            return list(value[0])
+        return value
+    return []
+
+
+def _generation_trace_row(
+    *,
+    row_id: str,
+    prediction_source_kind: str,
+    generated_tokens: Any,
+    max_new_tokens: int,
+    eos_token_id: Any,
+    finish_state: str | None = None,
+) -> dict[str, Any]:
+    tokens = _token_list(generated_tokens)
+    eos_seen = eos_token_id is not None and eos_token_id in tokens
+    resolved_finish_state = finish_state or ("eos_observed" if eos_seen else "no_eos_observed")
+    return {
+        "id": row_id,
+        "prediction_source_kind": prediction_source_kind,
+        "strategy": "greedy",
+        "do_sample": False,
+        "max_new_tokens": max_new_tokens,
+        "generated_token_count": len(tokens),
+        "eos_token_id_available": eos_token_id is not None,
+        "eos_token_seen": eos_seen,
+        "finish_state": resolved_finish_state,
+    }
+
+
+def _write_fixture_sidecars(
+    *,
+    rows: list[SFTDatasetRow],
+    output_path: Path,
+    sidecar_paths: dict[str, Path],
+    prediction_split: str,
+    max_new_tokens: int,
+) -> None:
+    prompt_rows: list[dict[str, Any]] = []
+    raw_rows: list[dict[str, Any]] = []
+    trace_rows: list[dict[str, Any]] = []
+    for row in rows:
+        prompt = format_sft_prediction_prompt(row, tokenizer=None)
+        prompt_rows.append(_prompt_snapshot_row(row, prompt))
+        decoded = json.dumps(as_contract(row.target_contract).to_dict(), ensure_ascii=False, sort_keys=True)
+        raw_rows.append(_raw_decoded_summary_row(row.id, decoded))
+        trace_rows.append(
+            _generation_trace_row(
+                row_id=row.id,
+                prediction_source_kind="public_sample_contract_fixture",
+                generated_tokens=[],
+                max_new_tokens=max_new_tokens,
+                eos_token_id=None,
+                finish_state="fixture_no_generation",
+            )
+        )
+    _write_prompt_snapshot(prompt_rows, sidecar_paths["prompt_snapshot"], prediction_split=prediction_split)
+    _write_jsonl_records(sidecar_paths["raw_decoded_summary"], raw_rows)
+    _write_jsonl_records(sidecar_paths["generation_trace"], trace_rows)
+
+
+def _mark_sidecars_written(metadata: dict[str, Any]) -> None:
+    metadata["decoding_policy"]["raw_decoded_sidecar_written"] = True
+    metadata["decoding_policy"]["generation_trace_sidecar_written"] = True
+
+
+def _write_prediction_metadata(output_path: Path, metadata: dict[str, Any]) -> None:
+    write_json(output_path.parent / "prediction_metadata.json", metadata)
 
 
 def _write_private_prediction_unavailable(metadata: dict[str, Any]) -> dict[str, Any]:
@@ -494,7 +707,13 @@ def _sanitize_decoded_prediction_text(text: str) -> str:
     return sanitized
 
 
-def _run_real_sft_prediction(config: dict[str, Any], rows: list[SFTDatasetRow], output_path: Path) -> int:
+def _run_real_sft_prediction(
+    config: dict[str, Any],
+    rows: list[SFTDatasetRow],
+    output_path: Path,
+    *,
+    sidecar_paths: dict[str, Path] | None = None,
+) -> int:
     import torch
     from peft import PeftModel  # type: ignore[import-not-found, unused-ignore]
     from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -511,10 +730,14 @@ def _run_real_sft_prediction(config: dict[str, Any], rows: list[SFTDatasetRow], 
     model = PeftModel.from_pretrained(model, adapter_path)
     model.eval()
     max_new_tokens = int(config.get("max_new_tokens", 256))
+    prompt_rows: list[dict[str, Any]] = []
+    raw_rows: list[dict[str, Any]] = []
+    trace_rows: list[dict[str, Any]] = []
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", encoding="utf-8") as handle:
         for row in rows:
             prompt = format_sft_prediction_prompt(row, tokenizer=tokenizer)
+            prompt_rows.append(_prompt_snapshot_row(row, prompt))
             inputs: Any = tokenizer(prompt, return_tensors="pt").to(model.device)
             with torch.no_grad():
                 generated: Any = model.generate(
@@ -526,6 +749,16 @@ def _run_real_sft_prediction(config: dict[str, Any], rows: list[SFTDatasetRow], 
             new_tokens = generated[0][inputs["input_ids"].shape[-1] :]
             decoded_value = tokenizer.decode(new_tokens, skip_special_tokens=True)
             decoded = decoded_value if isinstance(decoded_value, str) else str(decoded_value)
+            raw_rows.append(_raw_decoded_summary_row(row.id, decoded))
+            trace_rows.append(
+                _generation_trace_row(
+                    row_id=row.id,
+                    prediction_source_kind="private_a100_adapter",
+                    generated_tokens=new_tokens,
+                    max_new_tokens=max_new_tokens,
+                    eos_token_id=getattr(tokenizer, "eos_token_id", None),
+                )
+            )
             record = {
                 "id": row.id,
                 "prediction": _extract_json_object(decoded),
@@ -533,7 +766,24 @@ def _run_real_sft_prediction(config: dict[str, Any], rows: list[SFTDatasetRow], 
                 "provenance": {"public_safe": True, "source_id": row.provenance.get("source_id", row.id)},
             }
             handle.write(json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n")
+    if sidecar_paths is not None:
+        _write_prompt_snapshot(
+            prompt_rows,
+            sidecar_paths["prompt_snapshot"],
+            prediction_split=str(config.get("prediction_split", "all")),
+        )
+        _write_jsonl_records(sidecar_paths["raw_decoded_summary"], raw_rows)
+        _write_jsonl_records(sidecar_paths["generation_trace"], trace_rows)
     return len(rows)
+
+
+def _run_real_prediction_with_optional_sidecars(
+    config: dict[str, Any],
+    rows: list[SFTDatasetRow],
+    output_path: Path,
+    sidecar_paths: dict[str, Path],
+) -> int:
+    return _run_real_sft_prediction(config, rows, output_path, sidecar_paths=sidecar_paths)
 
 
 def run_sft_prediction_export(
@@ -545,6 +795,7 @@ def run_sft_prediction_export(
     fixture_mode: bool = False,
 ) -> dict[str, Any]:
     config = _load_config(config_path)
+    sidecar_paths = _prediction_sidecar_paths(output_path)
     metadata = _prediction_metadata_common(
         config_path=config_path,
         manifest_path=manifest_path,
@@ -558,12 +809,21 @@ def run_sft_prediction_export(
     if fixture_mode:
         rows = _load_sft_prediction_rows(manifest_path, split=str(config.get("prediction_split", "all")))
         metadata["prediction_count"] = _write_fixture_predictions(rows, output_path)
+        _write_fixture_sidecars(
+            rows=rows,
+            output_path=output_path,
+            sidecar_paths=sidecar_paths,
+            prediction_split=str(config.get("prediction_split", "all")),
+            max_new_tokens=int(config.get("max_new_tokens", 256)),
+        )
+        _mark_sidecars_written(metadata)
         metadata["prediction_status"] = "fixture_predictions_written"
         metadata["prediction_source_kind"] = "public_sample_contract_fixture"
         metadata["notes"] = (
             "Fixture-mode predictions mirror public-sample target contracts to validate the evidence pipeline. "
             "No private adapter artifacts were loaded."
         )
+        _write_prediction_metadata(output_path, metadata)
         return metadata
     adapter_path = config.get("adapter_path")
     if not isinstance(adapter_path, str) or not adapter_path.strip():
@@ -587,14 +847,110 @@ def run_sft_prediction_export(
     if not _prediction_dependencies_available():
         return _write_private_prediction_unavailable(metadata)
     rows = _load_sft_prediction_rows(manifest_path, split=str(config.get("prediction_split", "all")))
-    metadata["prediction_count"] = _run_real_sft_prediction(config, rows, output_path)
+    metadata["prediction_count"] = _run_real_prediction_with_optional_sidecars(config, rows, output_path, sidecar_paths)
+    _mark_sidecars_written(metadata)
     metadata["prediction_status"] = "private_adapter_predictions_written"
     metadata["prediction_source_kind"] = "private_a100_adapter"
     metadata["notes"] = (
         "Private A100 adapter predictions were written as sanitized public-sample contract prediction rows. "
         "No checkpoints, adapters, raw logs, or private paths were copied into the prediction artifact."
     )
+    _write_prediction_metadata(output_path, metadata)
     return metadata
+
+
+def _objective_unavailable(reason: str) -> dict[str, Any]:
+    return {
+        "inspection_status": "dependency_unavailable",
+        "dependency_unavailable": True,
+        "unavailable_reason": reason,
+        "prompt_tokens_masked": None,
+        "assistant_tokens_carry_loss": None,
+        "loss_interpretation": {
+            "loss_improvement_alone_proves_contract_learning": False,
+            "requires_assistant_loss_evidence": True,
+        },
+    }
+
+
+def _flatten_offsets(value: Any) -> list[tuple[int, int]]:
+    offsets = _token_list(value)
+    normalized: list[tuple[int, int]] = []
+    for item in offsets:
+        if isinstance(item, (list, tuple)) and len(item) >= 2:
+            normalized.append((int(item[0]), int(item[1])))
+    return normalized
+
+
+def inspect_sft_objective(row: SFTDatasetRow, *, tokenizer: Any | None = None) -> dict[str, Any]:
+    if tokenizer is None:
+        if not _train_dependencies_available():
+            return _objective_unavailable("train dependencies or tokenizer are not available in this runtime")
+        return {
+            **_objective_unavailable("tokenizer was not supplied for local non-heavy inspection"),
+            "inspection_status": "tokenizer_unavailable",
+        }
+
+    training_text = format_sft_training_text(row, tokenizer=tokenizer)
+    assistant_text = canonical_contract_json(row.target_contract)
+    assistant_start = training_text.find(assistant_text)
+    if assistant_start < 0:
+        assistant_start = training_text.find("{")
+    if assistant_start < 0:
+        return {
+            "inspection_status": "assistant_span_unavailable",
+            "dependency_unavailable": False,
+            "prompt_tokens_masked": None,
+            "assistant_tokens_carry_loss": None,
+            "loss_interpretation": {
+                "loss_improvement_alone_proves_contract_learning": False,
+                "requires_assistant_loss_evidence": True,
+            },
+        }
+
+    encoded = tokenizer(training_text, return_offsets_mapping=True, add_special_tokens=False)
+    labels = _token_list(encoded.get("labels") if isinstance(encoded, dict) else getattr(encoded, "labels", None))
+    offsets = _flatten_offsets(
+        encoded.get("offset_mapping") if isinstance(encoded, dict) else getattr(encoded, "offset_mapping", None)
+    )
+    if not labels or not offsets or len(labels) != len(offsets):
+        return {
+            "inspection_status": "labels_unavailable",
+            "dependency_unavailable": False,
+            "prompt_tokens_masked": None,
+            "assistant_tokens_carry_loss": None,
+            "loss_interpretation": {
+                "loss_improvement_alone_proves_contract_learning": False,
+                "requires_assistant_loss_evidence": True,
+            },
+        }
+
+    prompt_indices = [index for index, (_, end) in enumerate(offsets) if end <= assistant_start]
+    assistant_indices = [index for index, (start, _) in enumerate(offsets) if start >= assistant_start]
+    prompt_tokens_masked = bool(prompt_indices) and all(labels[index] == -100 for index in prompt_indices)
+    assistant_tokens_carry_loss = bool(assistant_indices) and any(labels[index] != -100 for index in assistant_indices)
+    return {
+        "inspection_status": "inspectable",
+        "dependency_unavailable": False,
+        "row_id": row.id,
+        "prompt_token_count": len(prompt_indices),
+        "assistant_token_count": len(assistant_indices),
+        "prompt_tokens_masked": prompt_tokens_masked,
+        "assistant_tokens_carry_loss": assistant_tokens_carry_loss,
+        "loss_interpretation": {
+            "loss_improvement_alone_proves_contract_learning": False,
+            "requires_assistant_loss_evidence": True,
+        },
+    }
+
+
+def inspect_sft_objective_from_manifest(manifest_path: Path, *, split: str = "train") -> dict[str, Any]:
+    rows = _load_sft_training_rows(manifest_path, split=split)
+    if not rows:
+        result = _objective_unavailable(f"no SFT rows found for split={split}")
+        result["inspection_status"] = "row_unavailable"
+        return result
+    return inspect_sft_objective(rows[0], tokenizer=None)
 
 
 def _load_dpo_training_pairs(manifest_path: Path, split: str) -> list[DPOPair]:

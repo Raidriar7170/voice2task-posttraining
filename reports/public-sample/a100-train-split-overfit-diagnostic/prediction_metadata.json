@@ -1,0 +1,67 @@
+{
+  "adapter_release_status": "not_released",
+  "base_model": "Qwen/Qwen2.5-0.5B-Instruct",
+  "command_summary": {
+    "config": "configs/sft-a100-train-split-overfit-diagnostic.json",
+    "entrypoint": "voice2task-train sft-predict",
+    "manifest": "data/public-samples/manifest_public_sample.json",
+    "mode": "fixture_mode",
+    "output": "reports/public-sample/a100-train-split-overfit-diagnostic/predictions.jsonl",
+    "requires_cli_run_prediction": true,
+    "requires_config_allow_private_prediction": true
+  },
+  "created_at": "2026-06-03T05:11:08.971560+00:00",
+  "dataset_manifest_id": "public-sample-20260601T162313Z",
+  "dataset_manifest_path": "data/public-samples/manifest_public_sample.json",
+  "decoding_policy": {
+    "do_sample": false,
+    "generation_trace_sidecar_written": true,
+    "max_new_tokens": 256,
+    "raw_decoded_sidecar_written": true,
+    "schema_repair_applied": false,
+    "strategy": "greedy"
+  },
+  "diagnostic_artifacts": {
+    "leak_scan": "reports/public-sample/a100-train-split-overfit-diagnostic/leak_scan_result.json",
+    "objective_inspection": "reports/public-sample/a100-train-split-overfit-diagnostic/objective_inspection.json"
+  },
+  "formatting_policy": {
+    "fallback": "deterministic_role_plain_text",
+    "policy": "shared_contract_chat_template",
+    "prediction_prompt": "shared_contract_chat_template",
+    "prediction_target_policy": "generation_prompt_without_gold_contract",
+    "sft_training_text": "shared_contract_chat_template",
+    "tokenizer_chat_template": "used_when_available_with_tokenize_false"
+  },
+  "generalization_claim": false,
+  "metadata_path": "reports/public-sample/a100-train-split-overfit-diagnostic/prediction_metadata.json",
+  "model_source": "modelscope",
+  "notes": "Fixture-mode predictions mirror public-sample target contracts to validate the evidence pipeline. No private adapter artifacts were loaded.",
+  "overfit_diagnostic": true,
+  "prediction_count": 3,
+  "prediction_gate": {
+    "adapter_configured": true,
+    "cli_run_prediction": true,
+    "config_allow_private_prediction": true,
+    "fixture_mode": true,
+    "will_run_private_prediction": false
+  },
+  "prediction_output_path": "reports/public-sample/a100-train-split-overfit-diagnostic/predictions.jsonl",
+  "prediction_source_kind": "public_sample_contract_fixture",
+  "prediction_split": "train",
+  "prediction_status": "fixture_predictions_written",
+  "prompt_constraints": {
+    "route_enum_visible": true,
+    "route_not_url_or_path_visible": true,
+    "slots_object_not_array_visible": true,
+    "task_type_enum_visible": true
+  },
+  "release_status": "not_released",
+  "sidecars": {
+    "generation_trace": "reports/public-sample/a100-train-split-overfit-diagnostic/generation_trace.jsonl",
+    "prompt_snapshot": "reports/public-sample/a100-train-split-overfit-diagnostic/prompt_snapshot.json",
+    "raw_decoded_summary": "reports/public-sample/a100-train-split-overfit-diagnostic/raw_decoded_summary.jsonl"
+  },
+  "stack": "transformers+peft+trl",
+  "stage": "sft_prediction"
+}

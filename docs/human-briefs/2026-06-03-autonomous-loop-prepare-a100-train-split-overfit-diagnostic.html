@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Autonomous Loop Closeout: Train-Split Diagnostic</title>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #16202a; background: #f5f7fa; }
+    main { max-width: 960px; margin: 0 auto; padding: 32px 20px 48px; }
+    h1 { font-size: 28px; margin: 0 0 8px; }
+    h2 { font-size: 18px; margin: 28px 0 10px; }
+    p, li { line-height: 1.65; }
+    .status { display: inline-block; padding: 4px 10px; border-radius: 6px; background: #fff1cc; color: #684400; font-weight: 600; }
+    .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); margin: 16px 0; }
+    .card { background: #fff; border: 1px solid #d9dee7; border-radius: 8px; padding: 14px 16px; }
+    .num { font-size: 26px; font-weight: 700; }
+    code { background: #eceff3; padding: 1px 5px; border-radius: 4px; }
+    a { color: #1358a8; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Autonomous loop closeout: train-split diagnostic</h1>
+  <p><span class="status">stopped: needs user confirmation</span></p>
+  <p>结论：本轮已提交上一阶段、完成并归档 train-split overfit diagnostic 准备阶段；循环停止在真实 A100 私有执行前，因为下一步需要 private override、远程访问和 idle GPU 确认。</p>
+
+  <h2>本轮完成</h2>
+  <ul>
+    <li>提交上一阶段：<code>4145857 feat: diagnose training prompt decoding alignment</code>。</li>
+    <li>OpenSpec propose/apply/archive：<code>prepare-a100-train-split-overfit-diagnostic</code>。</li>
+    <li>Reviewer 发现 3 个 Must Fix；已修复 private sidecar fallback、objective inspection 过度表述、manifest artifact 链接缺口。</li>
+    <li>生成阶段 Human Brief，并同步长期 specs 后归档 change。</li>
+  </ul>
+
+  <h2>停止原因</h2>
+  <p>Hard stop：下一步是运行真实 A100 train-split overfit diagnostic，涉及私有基础设施、private override、远程 runtime、idle GPU 选择和 sanitized artifact 回传，需要用户确认后才能继续。</p>
+
+  <h2>关键文件</h2>
+  <ul>
+    <li><a href="./2026-06-03-prepare-a100-train-split-overfit-diagnostic.html">阶段 Human Brief</a></li>
+    <li><a href="../../openspec/changes/archive/2026-06-03-prepare-a100-train-split-overfit-diagnostic/tasks.md">archived OpenSpec tasks</a></li>
+    <li><a href="../../openspec/specs/supervised-contract-tuning/spec.md">supervised-contract-tuning spec</a></li>
+    <li><a href="../../openspec/specs/contract-evaluation/spec.md">contract-evaluation spec</a></li>
+    <li><a href="../../reports/public-sample/a100-train-split-overfit-diagnostic/report.md">diagnostic evidence report</a></li>
+  </ul>
+
+  <h2>验证</h2>
+  <ul>
+    <li><code>uv run pytest -q</code> -> 76 passed</li>
+    <li><code>uv run ruff check .</code> -> passed</li>
+    <li><code>uv run mypy src</code> -> passed</li>
+    <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code> -> 4 passed after archive</li>
+    <li><code>voice2task.cli.report leak-scan</code> -> ok true, 0 findings</li>
+    <li><code>git diff --check</code> -> clean before archive closeout</li>
+  </ul>
+
+  <h2>不要夸大的结论</h2>
+  <ul>
+    <li>本轮没有运行真实 A100 adapter prediction，也没有证明模型质量。</li>
+    <li>fixture-mode 满分不代表训练成功，只代表 public-safe artifact shape 可以闭环。</li>
+    <li>Objective inspection 当前是 unavailable 边界，尚未证明 prompt tokens 被 mask 或 assistant contract tokens carry loss。</li>
+    <li>没有 checkpoint release、adapter release、production readiness、dev/test generalization 或 live-browser benchmark claim。</li>
+  </ul>
+
+  <h2>推荐下一步</h2>
+  <p>用户确认后，进入真实 A100 private diagnostic：创建 repo 外 private override，确认 idle GPU，在 approved private root 下运行 train-split overfit prediction，并只回传 sanitized evidence pack。</p>
+</main>
+</body>
+</html>

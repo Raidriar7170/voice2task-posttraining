@@ -1,0 +1,11 @@
+{
+  "assistant_tokens_carry_loss": null,
+  "dependency_unavailable": true,
+  "inspection_status": "dependency_unavailable",
+  "loss_interpretation": {
+    "loss_improvement_alone_proves_contract_learning": false,
+    "requires_assistant_loss_evidence": true
+  },
+  "prompt_tokens_masked": null,
+  "unavailable_reason": "train dependencies or tokenizer are not available in this runtime"
+}

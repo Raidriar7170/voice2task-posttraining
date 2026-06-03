@@ -116,6 +116,42 @@ PYTHONPATH=src python -m voice2task.cli.train sft-predict \
   --fixture-mode
 ```
 
+## A100 Train-Split Overfit Diagnostic Runbook
+
+This diagnostic is a gated train-internal sanity check for prompt/objective/decoding evidence before
+another private A100 rerun. It is not a benchmark, not a release, not held-out generalization, and not
+a live-browser improvement claim. The committed template keeps private paths unresolved and requires a
+private override outside git before any remote execution.
+
+First record the SFT objective-inspection boundary locally. If train dependencies, an inspectable tokenizer,
+or labels from the actual training path are missing, the command reports an unavailable status with null
+mask/loss fields; that is an honest evidence boundary, not proof that assistant-only loss is active.
+
+```bash
+PYTHONPATH=src python -m voice2task.cli.train sft-inspect-objective \
+  --manifest data/public-samples/manifest_public_sample.json \
+  --output reports/public-sample/a100-train-split-overfit-diagnostic/objective_inspection.json
+```
+
+Then validate the public-safe artifact shape with fixture mode. Fixture-mode output is deterministic
+public-sample contract data used only to check predictions, prompt snapshots, decoded summaries,
+generation traces, metadata links, report manifest shape, and leak-scan behavior.
+
+```bash
+PYTHONPATH=src python -m voice2task.cli.train sft-predict \
+  --config configs/sft-a100-train-split-overfit-diagnostic.json \
+  --manifest data/public-samples/manifest_public_sample.json \
+  --output reports/public-sample/a100-train-split-overfit-diagnostic/predictions.jsonl \
+  --run-prediction \
+  --fixture-mode
+```
+
+For a real private diagnostic, create a private override that resolves `<a100_project_root>` and
+`adapter_path`, run only on an idle A100 GPU, and keep all raw logs, checkpoints, adapters, caches,
+host/SSH details, tokens, private paths, and private corpus rows outside committed artifacts. A
+train-split overfit pass may support only train-internal recovery; it must keep
+`generalization_claim=false` and `overfit_diagnostic=true` in the public manifest.
+
 ## Artifact Boundaries
 
 - `data/public-samples/`: committed sanitized seed traces, generated public SFT rows, DPO pairs, and public manifest.

@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from voice2task import training
+from voice2task.cli import train as train_cli
 from voice2task.evaluation import evaluate_predictions, load_predictions
 from voice2task.leak_scan import scan_paths
 from voice2task.reports import write_prediction_evidence_pack
@@ -139,6 +140,20 @@ def test_sft_prediction_metadata_uses_configured_max_new_tokens(tmp_path: Path) 
     assert metadata["decoding_policy"]["schema_repair_applied"] is False
 
 
+def test_prediction_metadata_sanitizes_private_sidecar_paths(tmp_path: Path) -> None:
+    manifest = _write_manifest(tmp_path)
+    private_output = Path("/private/var/folders/voice2task/predictions.jsonl")
+    config = _write_prediction_config(tmp_path, output_root="/private/var/folders/voice2task")
+
+    metadata = run_sft_prediction_export(config, manifest, private_output, dry_run=True, fixture_mode=False)
+
+    serialized = json.dumps(metadata, ensure_ascii=False, sort_keys=True)
+    assert "/private/" not in serialized
+    assert metadata["prediction_output_path"] == "<a100_prediction_output>"
+    assert metadata["sidecars"]["prompt_snapshot"] == "<a100_prompt_snapshot>"
+    assert metadata["metadata_path"] == "<a100_prediction_metadata>"
+
+
 def test_sft_prediction_fixture_mode_writes_public_safe_predictions(tmp_path: Path) -> None:
     manifest = _write_manifest(tmp_path)
     config = _write_prediction_config(tmp_path)
@@ -157,6 +172,71 @@ def test_sft_prediction_fixture_mode_writes_public_safe_predictions(tmp_path: Pa
     output_text = output.read_text(encoding="utf-8")
     assert A100_PROJECT_ROOT not in output_text
     assert "/Users/" not in output_text
+
+
+def test_train_split_overfit_diagnostic_config_is_public_safe_and_bounded() -> None:
+    config_path = Path("configs/sft-a100-train-split-overfit-diagnostic.json")
+
+    config = json.loads(config_path.read_text(encoding="utf-8"))
+    serialized = json.dumps(config, ensure_ascii=False, sort_keys=True)
+
+    assert config["prediction_split"] == "train"
+    assert config["overfit_diagnostic"] is True
+    assert config["generalization_claim"] is False
+    assert config["private_override_required"] is True
+    assert "<a100_project_root>" in serialized
+    assert "private override" in " ".join(config["private_override_requirements"]).lower()
+    assert "/mnt/data/" not in serialized
+    assert "/Users/" not in serialized
+
+
+def test_sft_prediction_fixture_mode_writes_sidecars_and_metadata_links(tmp_path: Path) -> None:
+    manifest = _write_manifest(tmp_path)
+    config = _write_prediction_config(tmp_path)
+    config_payload = json.loads(config.read_text(encoding="utf-8"))
+    config_payload["prediction_split"] = "train"
+    config_payload["overfit_diagnostic"] = True
+    config_payload["generalization_claim"] = False
+    config.write_text(json.dumps(config_payload), encoding="utf-8")
+    output = tmp_path / "trained_predictions.jsonl"
+
+    metadata = run_sft_prediction_export(config, manifest, output, dry_run=False, fixture_mode=True)
+
+    predictions_before = load_predictions(output)
+    sidecars = metadata["sidecars"]
+    prompt_snapshot = tmp_path / "prompt_snapshot.json"
+    raw_summary = tmp_path / "raw_decoded_summary.jsonl"
+    generation_trace = tmp_path / "generation_trace.jsonl"
+    metadata_path = tmp_path / "prediction_metadata.json"
+    assert sidecars == {
+        "prompt_snapshot": "<a100_prompt_snapshot>",
+        "raw_decoded_summary": "<a100_raw_decoded_summary>",
+        "generation_trace": "<a100_generation_trace>",
+    }
+    assert metadata["metadata_path"] == "<a100_prediction_metadata>"
+    assert json.loads(metadata_path.read_text(encoding="utf-8"))["sidecars"] == sidecars
+    assert metadata["diagnostic_artifacts"] == {
+        "objective_inspection": "<a100_objective_inspection>",
+        "leak_scan": "<a100_leak_scan_result>",
+    }
+    assert metadata["prediction_split"] == "train"
+    assert metadata["overfit_diagnostic"] is True
+    assert metadata["generalization_claim"] is False
+    assert metadata["decoding_policy"]["raw_decoded_sidecar_written"] is True
+    assert metadata["decoding_policy"]["generation_trace_sidecar_written"] is True
+
+    prompt_payload = json.loads(prompt_snapshot.read_text(encoding="utf-8"))
+    raw_rows = [json.loads(line) for line in raw_summary.read_text(encoding="utf-8").splitlines()]
+    trace_rows = [json.loads(line) for line in generation_trace.read_text(encoding="utf-8").splitlines()]
+    assert [row["id"] for row in prompt_payload["rows"]] == ["sft-train-1"]
+    assert [row["id"] for row in raw_rows] == ["sft-train-1"]
+    assert [row["id"] for row in trace_rows] == ["sft-train-1"]
+    assert raw_rows[0]["parse_status"] == "json_object"
+    assert raw_rows[0]["schema_repair_applied"] is False
+    assert trace_rows[0]["prediction_source_kind"] == "public_sample_contract_fixture"
+    assert trace_rows[0]["generated_token_count"] == 0
+    assert load_predictions(output) == predictions_before
+    assert scan_paths([prompt_snapshot, raw_summary, generation_trace, metadata_path]).ok is True
 
 
 def test_sft_prediction_metadata_sanitizes_private_a100_paths(tmp_path: Path) -> None:
@@ -316,6 +396,68 @@ def test_real_sft_prediction_preserves_non_json_decoded_output(
     assert result.failure_slices["schema"]["count"] == 1
 
 
+def test_real_sft_prediction_sidecars_summarize_sanitized_decoded_and_generation_trace(
+    monkeypatch: Any,
+    tmp_path: Path,
+) -> None:
+    output = tmp_path / "trained_predictions.jsonl"
+    row = SFTDatasetRow(
+        id="sft-test-1",
+        split="test",
+        input_text="帮我搜索机票",
+        target_contract=_contract("机票"),
+        provenance={"source_id": "sft-test-1", "public_safe": True},
+    )
+    torch_module = types.ModuleType("torch")
+    torch_module.float16 = "float16"
+    torch_module.float32 = "float32"
+    torch_module.cuda = types.SimpleNamespace(is_available=lambda: False)
+    torch_module.no_grad = lambda: _FakeNoGrad()
+    peft_module = types.ModuleType("peft")
+    peft_module.PeftModel = types.SimpleNamespace(from_pretrained=lambda model, adapter_path: model)
+    transformers_module = types.ModuleType("transformers")
+    transformers_module.AutoTokenizer = types.SimpleNamespace(from_pretrained=lambda *args, **kwargs: _FakeTokenizer())
+    transformers_module.AutoModelForCausalLM = types.SimpleNamespace(
+        from_pretrained=lambda *args, **kwargs: _FakeModel()
+    )
+    monkeypatch.setitem(sys.modules, "torch", torch_module)
+    monkeypatch.setitem(sys.modules, "peft", peft_module)
+    monkeypatch.setitem(sys.modules, "transformers", transformers_module)
+
+    count = training._run_real_sft_prediction(
+        {"base_model": "Qwen/Qwen2.5-0.5B-Instruct", "adapter_path": (tmp_path / "adapter").as_posix()},
+        [row],
+        output,
+        sidecar_paths={
+            "prompt_snapshot": tmp_path / "prompt_snapshot.json",
+            "raw_decoded_summary": tmp_path / "raw_decoded_summary.jsonl",
+            "generation_trace": tmp_path / "generation_trace.jsonl",
+        },
+    )
+
+    raw_rows = [
+        json.loads(line)
+        for line in (tmp_path / "raw_decoded_summary.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+    trace_rows = [
+        json.loads(line)
+        for line in (tmp_path / "generation_trace.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+    prompt_payload = json.loads((tmp_path / "prompt_snapshot.json").read_text(encoding="utf-8"))
+
+    assert count == 1
+    assert raw_rows[0]["parse_status"] == "non_json"
+    assert raw_rows[0]["decoded_prefix"].endswith("<private_path>")
+    assert raw_rows[0]["decoded_suffix"].endswith("<private_path>")
+    assert raw_rows[0]["private_values_sanitized"] is True
+    assert trace_rows[0]["generated_token_count"] == 2
+    assert trace_rows[0]["max_new_tokens"] == 256
+    assert trace_rows[0]["eos_token_seen"] is False
+    assert trace_rows[0]["finish_state"] == "no_eos_observed"
+    assert prompt_payload["rows"][0]["id"] == "sft-test-1"
+    assert "/mnt/data/" not in json.dumps(raw_rows + trace_rows + prompt_payload["rows"], ensure_ascii=False)
+
+
 def test_real_sft_prediction_sanitizes_private_paths_inside_json_output(
     monkeypatch: Any,
     tmp_path: Path,
@@ -389,7 +531,13 @@ def test_sft_prediction_run_prediction_calls_private_adapter_export(
 
     monkeypatch.setattr(training, "_prediction_dependencies_available", lambda: True)
 
-    def write_private_predictions(config: dict[str, Any], rows: list[Any], output_path: Path) -> int:
+    def write_private_predictions(
+        config: dict[str, Any],
+        rows: list[Any],
+        output_path: Path,
+        *,
+        sidecar_paths: dict[str, Path],
+    ) -> int:
         calls.append(output_path)
         output_path.write_text(
             "\n".join(
@@ -431,7 +579,13 @@ def test_invalid_private_adapter_predictions_remain_schema_failures(
 
     monkeypatch.setattr(training, "_prediction_dependencies_available", lambda: True)
 
-    def write_invalid_private_predictions(config: dict[str, Any], rows: list[Any], output_path: Path) -> int:
+    def write_invalid_private_predictions(
+        config: dict[str, Any],
+        rows: list[Any],
+        output_path: Path,
+        *,
+        sidecar_paths: dict[str, Path],
+    ) -> int:
         output_path.write_text(
             "\n".join(
                 json.dumps(
@@ -464,6 +618,126 @@ def test_invalid_private_adapter_predictions_remain_schema_failures(
     assert prediction_rows["sft-test-1"] == {"task": {"description": "generic normalization output"}}
     assert result.metrics["json_valid_rate"] == 0.0
     assert result.failure_slices["schema"]["count"] == 2
+
+
+def test_private_prediction_export_does_not_backfill_fixture_sidecars_for_legacy_writer(
+    monkeypatch: Any,
+    tmp_path: Path,
+) -> None:
+    manifest = _write_manifest(tmp_path)
+    config = _write_prediction_config(tmp_path, adapter_path=(tmp_path / "adapter").as_posix())
+    output = tmp_path / "trained_predictions.jsonl"
+
+    monkeypatch.setattr(training, "_prediction_dependencies_available", lambda: True)
+
+    def legacy_private_prediction_writer(
+        config_payload: dict[str, Any],
+        rows: list[SFTDatasetRow],
+        output_path: Path,
+    ) -> int:
+        output_path.write_text(
+            "\n".join(
+                json.dumps(
+                    {
+                        "id": row.id,
+                        "prediction": {"task": {"description": "legacy private writer output"}},
+                        "prediction_source_kind": "private_a100_adapter",
+                        "provenance": {"public_safe": True},
+                    },
+                    ensure_ascii=False,
+                )
+                for row in rows
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        return len(rows)
+
+    monkeypatch.setattr(training, "_run_real_sft_prediction", legacy_private_prediction_writer)
+
+    try:
+        run_sft_prediction_export(config, manifest, output, dry_run=False, fixture_mode=False)
+    except TypeError:
+        pass
+
+    assert not (tmp_path / "raw_decoded_summary.jsonl").exists()
+    assert not (tmp_path / "generation_trace.jsonl").exists()
+    assert not (tmp_path / "prompt_snapshot.json").exists()
+
+
+class _OffsetOnlyTokenizer:
+    def __call__(self, text: str, **kwargs: Any) -> dict[str, Any]:
+        tokens: list[int] = []
+        offsets: list[tuple[int, int]] = []
+        for index, char in enumerate(text):
+            token_id = ord(char)
+            tokens.append(token_id)
+            offsets.append((index, index + 1))
+        return {
+            "input_ids": tokens,
+            "offset_mapping": offsets,
+        }
+
+
+def test_sft_objective_inspection_does_not_claim_loss_mask_without_labels() -> None:
+    row = SFTDatasetRow(
+        id="sft-train-1",
+        split="train",
+        input_text="帮我搜索天气",
+        target_contract=_contract("天气"),
+        provenance={"source_id": "sft-train-1", "public_safe": True},
+    )
+
+    result = training.inspect_sft_objective(row, tokenizer=_OffsetOnlyTokenizer())
+
+    assert result["inspection_status"] == "labels_unavailable"
+    assert result["prompt_tokens_masked"] is None
+    assert result["assistant_tokens_carry_loss"] is None
+    assert result["loss_interpretation"]["loss_improvement_alone_proves_contract_learning"] is False
+    assert result["dependency_unavailable"] is False
+
+
+def test_sft_objective_inspection_reports_dependency_unavailable_without_train_deps(
+    monkeypatch: Any,
+    tmp_path: Path,
+) -> None:
+    manifest = _write_manifest(tmp_path)
+    monkeypatch.setattr(training, "_train_dependencies_available", lambda: False)
+
+    result = training.inspect_sft_objective_from_manifest(manifest, split="train")
+
+    assert result["inspection_status"] == "dependency_unavailable"
+    assert result["dependency_unavailable"] is True
+    assert result["prompt_tokens_masked"] is None
+    assert result["assistant_tokens_carry_loss"] is None
+
+
+def test_sft_objective_inspection_cli_writes_dependency_unavailable_result(
+    monkeypatch: Any,
+    tmp_path: Path,
+    capsys: Any,
+) -> None:
+    manifest = _write_manifest(tmp_path)
+    output = tmp_path / "objective_inspection.json"
+    monkeypatch.setattr(training, "_train_dependencies_available", lambda: False)
+
+    assert (
+        train_cli.main(
+            [
+                "sft-inspect-objective",
+                "--manifest",
+                manifest.as_posix(),
+                "--output",
+                output.as_posix(),
+            ]
+        )
+        == 0
+    )
+
+    assert capsys.readouterr().out == ""
+    payload = json.loads(output.read_text(encoding="utf-8"))
+    assert payload["inspection_status"] == "dependency_unavailable"
+    assert payload["dependency_unavailable"] is True
 
 
 def test_prediction_evidence_pack_is_honest_and_public_safe(tmp_path: Path) -> None:
@@ -511,6 +785,75 @@ def test_prediction_evidence_pack_is_honest_and_public_safe(tmp_path: Path) -> N
     assert "private a100 adapter path" in report
     assert "reported as failures" in report
     assert scan_paths([paths["manifest"], paths["report"]]).ok is True
+
+
+def test_train_split_overfit_evidence_pack_records_bounded_claims_and_sidecars(tmp_path: Path) -> None:
+    metadata = {
+        "base_model": "Qwen/Qwen2.5-0.5B-Instruct",
+        "model_source": "modelscope",
+        "dataset_manifest_id": "public-sample-test",
+        "prediction_source_kind": "public_sample_contract_fixture",
+        "prediction_status": "fixture_predictions_written",
+        "prediction_split": "train",
+        "overfit_diagnostic": True,
+        "generalization_claim": False,
+        "release_status": "not_released",
+        "sidecars": {
+            "prompt_snapshot": "reports/public-sample/a100-train-split-overfit-diagnostic/prompt_snapshot.json",
+            "raw_decoded_summary": (
+                "reports/public-sample/a100-train-split-overfit-diagnostic/raw_decoded_summary.jsonl"
+            ),
+            "generation_trace": "reports/public-sample/a100-train-split-overfit-diagnostic/generation_trace.jsonl",
+        },
+        "diagnostic_artifacts": {
+            "objective_inspection": (
+                "reports/public-sample/a100-train-split-overfit-diagnostic/objective_inspection.json"
+            ),
+            "leak_scan": "reports/public-sample/a100-train-split-overfit-diagnostic/leak_scan_result.json",
+        },
+    }
+
+    paths = write_prediction_evidence_pack(
+        output_dir=tmp_path / "evidence",
+        prediction_path=Path("reports/public-sample/a100-train-split-overfit-diagnostic/predictions.jsonl"),
+        prediction_metadata=metadata,
+        metrics_path=Path("reports/public-sample/a100-train-split-overfit-diagnostic/metrics.json"),
+        smoke_result={"enabled": False, "passed": 0, "failed": 0, "notes": "not_run_for_train_split_diagnostic"},
+        leak_scan_result={"ok": True, "findings": []},
+    )
+
+    manifest = json.loads(paths["manifest"].read_text(encoding="utf-8"))
+    report = paths["report"].read_text(encoding="utf-8").lower()
+    assert manifest["evidence_kind"] == "a100_train_split_overfit_diagnostic"
+    assert manifest["prediction_split"] == "train"
+    assert manifest["overfit_diagnostic"] is True
+    assert manifest["generalization_claim"] is False
+    assert manifest["claims"]["generalization_claim"] is False
+    assert manifest["claims"]["release_claim"] is False
+    assert manifest["sidecars"]["prompt_snapshot"].endswith("prompt_snapshot.json")
+    assert manifest["diagnostic_artifacts"]["objective_inspection"].endswith("objective_inspection.json")
+    assert manifest["diagnostic_artifacts"]["leak_scan"].endswith("leak_scan_result.json")
+    assert "train-internal" in report
+    assert "does not prove dev/test generalization" in report
+    assert "objective inspection" in report
+    assert "no release claim" in report
+    assert scan_paths([paths["manifest"], paths["report"]]).ok is True
+
+
+def test_train_split_overfit_metrics_are_standalone_bounded() -> None:
+    metrics_json = json.loads(
+        Path("reports/public-sample/a100-train-split-overfit-diagnostic/metrics.json").read_text(encoding="utf-8")
+    )
+    metrics_md = Path("reports/public-sample/a100-train-split-overfit-diagnostic/metrics.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert metrics_json["evidence_context"]["prediction_source_kind"] == "public_sample_contract_fixture"
+    assert metrics_json["evidence_context"]["prediction_split"] == "train"
+    assert metrics_json["evidence_context"]["overfit_diagnostic"] is True
+    assert metrics_json["evidence_context"]["model_quality_evidence"] is False
+    assert "prediction_source_kind: `public_sample_contract_fixture`" in metrics_md
+    assert "model_quality_evidence: `False`" in metrics_md
 
 
 def test_contract_output_recovery_template_is_public_safe_and_bounded() -> None:

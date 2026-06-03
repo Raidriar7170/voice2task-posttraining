@@ -1,0 +1,11 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-03T05:15:11.408460+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "reports/public-sample/a100-train-split-overfit-diagnostic",
+    "docs/human-briefs/2026-06-03-prepare-a100-train-split-overfit-diagnostic.html",
+    "docs/human-briefs/2026-06-03-autonomous-loop-prepare-a100-train-split-overfit-diagnostic.html"
+  ]
+}

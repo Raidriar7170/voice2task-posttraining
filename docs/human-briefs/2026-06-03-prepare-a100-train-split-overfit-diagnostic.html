@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>A100 Train-Split Overfit Diagnostic Brief</title>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #16202a; background: #f5f7fa; }
+    main { max-width: 960px; margin: 0 auto; padding: 32px 20px 48px; }
+    h1 { font-size: 28px; margin: 0 0 8px; }
+    h2 { font-size: 18px; margin: 28px 0 10px; }
+    p, li { line-height: 1.65; }
+    .status { display: inline-block; padding: 4px 10px; border-radius: 6px; background: #e3f2df; color: #195a28; font-weight: 600; }
+    .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); margin: 16px 0; }
+    .card { background: #fff; border: 1px solid #d9dee7; border-radius: 8px; padding: 14px 16px; }
+    .num { font-size: 26px; font-weight: 700; }
+    code { background: #eceff3; padding: 1px 5px; border-radius: 4px; }
+    a { color: #1358a8; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>A100 train-split overfit diagnostic 准备阶段</h1>
+  <p><span class="status">needs review before private A100 execution</span></p>
+  <p>结论：本阶段已准备好 public-safe train-split overfit diagnostic 的本地证据形状，但没有运行真实 A100 私有 adapter；当前结果只能证明 artifact pipeline 与边界控制有效。</p>
+
+  <h2>本阶段改了什么</h2>
+  <ul>
+    <li>新增 train-split diagnostic config template，固定 <code>prediction_split=train</code>、<code>overfit_diagnostic=true</code>、<code>generalization_claim=false</code>。</li>
+    <li>prediction export 增加 prompt snapshot、sanitized raw decoded summary、generation trace 和 prediction metadata links。</li>
+    <li>Objective inspection 采用 fail-closed 表达：本地缺少训练依赖或真实 label evidence 时，mask/loss 字段为 <code>null</code>。</li>
+    <li>Reviewer Must Fix 后移除了 private prediction 的 fixture sidecar fallback，避免把 gold fixture 包装成 private adapter evidence。</li>
+    <li>metrics/report/manifest 补充 standalone 边界语境，避免 1.0000 fixture metrics 被误读为模型质量。</li>
+  </ul>
+
+  <h2>关键证据</h2>
+  <div class="grid">
+    <div class="card"><div class="num">3</div><div>fixture train rows exported</div></div>
+    <div class="card"><div class="num">0</div><div>private A100 adapter runs in this phase</div></div>
+    <div class="card"><div class="num">true</div><div><code>overfit_diagnostic</code></div></div>
+    <div class="card"><div class="num">false</div><div><code>generalization_claim</code></div></div>
+    <div class="card"><div class="num">ok</div><div>leak scan, 0 findings</div></div>
+    <div class="card"><div class="num">null</div><div>objective mask/loss fields locally unavailable</div></div>
+  </div>
+
+  <h2>关键文件</h2>
+  <ul>
+    <li><a href="../../configs/sft-a100-train-split-overfit-diagnostic.json">diagnostic config template</a></li>
+    <li><a href="../../reports/public-sample/a100-train-split-overfit-diagnostic/report.md">diagnostic report</a></li>
+    <li><a href="../../reports/public-sample/a100-train-split-overfit-diagnostic/manifest.json">diagnostic manifest</a></li>
+    <li><a href="../../reports/public-sample/a100-train-split-overfit-diagnostic/objective_inspection.json">objective inspection</a></li>
+    <li><a href="../../reports/public-sample/a100-train-split-overfit-diagnostic/raw_decoded_summary.jsonl">raw decoded summary</a></li>
+    <li><a href="../../openspec/changes/prepare-a100-train-split-overfit-diagnostic/tasks.md">OpenSpec tasks before archive</a></li>
+  </ul>
+
+  <h2>验证</h2>
+  <ul>
+    <li><code>uv run pytest -q</code> -> 76 passed</li>
+    <li><code>uv run ruff check .</code> -> passed</li>
+    <li><code>uv run mypy src</code> -> passed</li>
+    <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code> -> 5 passed before archive</li>
+    <li><code>voice2task.cli.train sft-predict --fixture-mode</code> -> 3 train fixture predictions, no private adapter loaded</li>
+    <li><code>voice2task.cli.report leak-scan</code> on diagnostic evidence -> ok true, 0 findings</li>
+    <li><code>git diff --check</code> -> clean</li>
+  </ul>
+
+  <h2>不要夸大的结论</h2>
+  <ul>
+    <li>这不是真实 A100 训练或 private adapter 质量结果。</li>
+    <li>fixture metrics 的满分只证明 evidence pipeline shape，不证明模型学会了 Browser Task Contract。</li>
+    <li>Objective inspection 当前是 unavailable 边界，不证明 assistant-only 或 completion-only loss 已经生效。</li>
+    <li>train-split overfit 未来即使通过，也只支持训练内恢复，不支持 dev/test 泛化、release 或 live-browser benchmark claim。</li>
+  </ul>
+
+  <h2>建议下一步</h2>
+  <p>用户确认后，在 A100 approved private root 下创建 private override、选择 idle GPU，并运行真实 train-split overfit diagnostic；提交前只复制 sanitized predictions、sidecars、metrics、manifest、report 和 leak-scan 结果。</p>
+</main>
+</body>
+</html>

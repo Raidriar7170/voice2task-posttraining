@@ -286,8 +286,26 @@ def write_prediction_evidence_pack(
     report_path = output_dir / "report.md"
     release_status = str(prediction_metadata.get("release_status", "not_released"))
     prediction_source_kind = str(prediction_metadata.get("prediction_source_kind", "unknown"))
+    prediction_split = str(prediction_metadata.get("prediction_split", "all"))
+    overfit_diagnostic = bool(prediction_metadata.get("overfit_diagnostic", False))
+    generalization_claim = bool(prediction_metadata.get("generalization_claim", False))
+    diagnostic_evidence = overfit_diagnostic and prediction_split == "train"
+    sidecars = prediction_metadata.get("sidecars")
+    if not isinstance(sidecars, dict):
+        sidecars = {}
+    diagnostic_artifacts = prediction_metadata.get("diagnostic_artifacts")
+    if not isinstance(diagnostic_artifacts, dict):
+        diagnostic_artifacts = {}
+    if diagnostic_evidence:
+        diagnostic_artifacts = {
+            "objective_inspection": (output_dir / "objective_inspection.json").as_posix(),
+            "leak_scan": (output_dir / "leak_scan_result.json").as_posix(),
+            **diagnostic_artifacts,
+        }
     manifest = {
-        "evidence_kind": "a100_sft_prediction_eval_smoke",
+        "evidence_kind": "a100_train_split_overfit_diagnostic"
+        if diagnostic_evidence
+        else "a100_sft_prediction_eval_smoke",
         "evidence_status": prediction_metadata.get("prediction_status", "unknown"),
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "base_model": prediction_metadata.get("base_model"),
@@ -295,8 +313,13 @@ def write_prediction_evidence_pack(
         "dataset_manifest_id": prediction_metadata.get("dataset_manifest_id"),
         "prediction_artifact_path": prediction_path.as_posix(),
         "prediction_source_kind": prediction_source_kind,
+        "prediction_split": prediction_split,
+        "overfit_diagnostic": overfit_diagnostic,
+        "generalization_claim": generalization_claim,
         "prediction_count": prediction_metadata.get("prediction_count"),
         "metrics_path": metrics_path.as_posix(),
+        "sidecars": sidecars,
+        "diagnostic_artifacts": diagnostic_artifacts,
         "controlled_smoke_status": smoke_result,
         "leak_scan_result": leak_scan_result,
         "release_status": release_status,
@@ -305,6 +328,8 @@ def write_prediction_evidence_pack(
             "adapter_release": False,
             "live_browser_benchmark_claim": False,
             "production_readiness_claim": False,
+            "generalization_claim": generalization_claim,
+            "release_claim": False,
         },
         "artifact_policy": {
             "raw_logs_copied_to_git": False,
@@ -314,13 +339,24 @@ def write_prediction_evidence_pack(
         },
     }
     write_json(manifest_path, manifest)
-    lines = [
-        "# A100 SFT Prediction/Eval Smoke Evidence",
-        "",
-        (
+    title = (
+        "# A100 Train-Split Overfit Diagnostic Evidence"
+        if diagnostic_evidence
+        else "# A100 SFT Prediction/Eval Smoke Evidence"
+    )
+    status_line = (
+        "Status: train-internal overfit diagnostic evidence. This is not a benchmark, not a release, "
+        "and not a live-browser improvement claim."
+        if diagnostic_evidence
+        else (
             "Status: public-sample prediction/evaluation smoke evidence. "
             "This is not a checkpoint release and not a live-browser benchmark."
-        ),
+        )
+    )
+    lines = [
+        title,
+        "",
+        status_line,
         "",
         "## Scope",
         "",
@@ -328,6 +364,9 @@ def write_prediction_evidence_pack(
         f"- Model source: `{manifest['model_source']}`",
         f"- Dataset manifest: `{manifest['dataset_manifest_id']}`",
         f"- Prediction source kind: `{prediction_source_kind}`",
+        f"- Prediction split: `{prediction_split}`",
+        f"- Overfit diagnostic: `{overfit_diagnostic}`",
+        f"- Generalization claim: `{generalization_claim}`",
         f"- Release status: `{release_status}`",
         "",
         "## Interpretation",
@@ -343,11 +382,24 @@ def write_prediction_evidence_pack(
             "sample. Failed schema or smoke results must be reported as failures, not hidden behind the existence "
             "of a completed training run."
         ),
+        (
+            "For a train-internal overfit diagnostic, recovery on `prediction_split=train` can only support "
+            "a narrow train-internal sanity check. It does not prove dev/test generalization, production "
+            "readiness, checkpoint release, adapter release, or live-browser benchmark improvement. "
+            "There is no release claim."
+        )
+        if diagnostic_evidence
+        else "",
         "",
         "## Public Artifacts",
         "",
         f"- Predictions: `{prediction_path.as_posix()}`",
         f"- Metrics: `{metrics_path.as_posix()}`",
+        f"- Prompt snapshot: `{sidecars.get('prompt_snapshot', 'not_recorded')}`",
+        f"- Raw decoded summary: `{sidecars.get('raw_decoded_summary', 'not_recorded')}`",
+        f"- Generation trace: `{sidecars.get('generation_trace', 'not_recorded')}`",
+        f"- Objective inspection: `{diagnostic_artifacts.get('objective_inspection', 'not_recorded')}`",
+        f"- Leak scan artifact: `{diagnostic_artifacts.get('leak_scan', 'not_recorded')}`",
         f"- Controlled smoke: `{smoke_result.get('notes', 'unknown')}`",
         f"- Leak scan ok: `{bool(leak_scan_result.get('ok'))}`",
         "",

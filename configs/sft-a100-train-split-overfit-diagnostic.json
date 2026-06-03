@@ -1,0 +1,24 @@
+{
+  "adapter_path": "<a100_project_root>/runs/a100-train-split-overfit-diagnostic/adapter",
+  "allow_private_prediction": true,
+  "base_model": "Qwen/Qwen2.5-0.5B-Instruct",
+  "dataset_manifest_id": "public-sample-20260601T162313Z",
+  "evidence_output_dir": "<a100_project_root>/evidence/a100-train-split-overfit-diagnostic",
+  "generalization_claim": false,
+  "max_new_tokens": 256,
+  "model_cache_policy": "private_remote_model_cache_not_copied_to_git",
+  "model_source": "modelscope",
+  "output_policy": "train_split_overfit_diagnostic_requires_private_override_no_direct_public_template_run",
+  "output_root": "<a100_project_root>",
+  "overfit_diagnostic": true,
+  "prediction_artifact_policy": "commit_only_sanitized_train_split_predictions_sidecars_metrics_manifest_and_report",
+  "prediction_split": "train",
+  "private_override_required": true,
+  "private_override_requirements": [
+    "Create a private override outside git before remote execution.",
+    "Resolve <a100_project_root> to the approved private A100 project directory.",
+    "Resolve adapter_path to a real private adapter produced by a gated training run.",
+    "Keep raw logs, checkpoints, adapters, caches, host details, SSH details, tokens, and private corpus rows out of committed artifacts."
+  ],
+  "reference_runtime": "a100-train-split-overfit-diagnostic"
+}

@@ -4,7 +4,8 @@ import argparse
 import json
 from pathlib import Path
 
-from voice2task.training import run_dpo, run_sft, run_sft_prediction_export
+from voice2task.io import write_json
+from voice2task.training import inspect_sft_objective_from_manifest, run_dpo, run_sft, run_sft_prediction_export
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -26,6 +27,10 @@ def build_parser() -> argparse.ArgumentParser:
     prediction_mode.add_argument("--dry-run", dest="dry_run", action="store_true", default=True)
     prediction_mode.add_argument("--run-prediction", dest="dry_run", action="store_false")
     prediction.add_argument("--fixture-mode", action="store_true")
+    objective = subcommands.add_parser("sft-inspect-objective")
+    objective.add_argument("--manifest", type=Path, required=True)
+    objective.add_argument("--split", default="train")
+    objective.add_argument("--output", type=Path)
     return parser
 
 
@@ -43,9 +48,14 @@ def main(argv: list[str] | None = None) -> int:
             dry_run=args.dry_run,
             fixture_mode=args.fixture_mode,
         )
+    elif args.command == "sft-inspect-objective":
+        metadata = inspect_sft_objective_from_manifest(args.manifest, split=args.split)
     else:
         raise AssertionError(f"unhandled command: {args.command}")
-    print(json.dumps(metadata, ensure_ascii=False, indent=2, sort_keys=True))
+    if args.command == "sft-inspect-objective" and args.output:
+        write_json(args.output, metadata)
+    else:
+        print(json.dumps(metadata, ensure_ascii=False, indent=2, sort_keys=True))
     return 0
 
 
