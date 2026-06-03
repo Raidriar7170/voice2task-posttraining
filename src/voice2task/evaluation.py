@@ -629,8 +629,57 @@ def _formatting_policy_alignment(prediction_metadata: dict[str, Any]) -> dict[st
 
 
 def _real_label_provenance_available(objective_inspection: dict[str, Any]) -> bool:
-    provenance = objective_inspection.get("label_source") or objective_inspection.get("label_provenance")
-    return provenance in {"real_training_labels", "actual_training_labels", "trl_collator_labels"}
+    label_source = objective_inspection.get("label_source")
+    provenance = objective_inspection.get("label_provenance")
+    if label_source not in {"real_training_labels", "actual_training_labels", "trl_collator_labels"}:
+        return False
+    if isinstance(provenance, dict):
+        source_kind = str(provenance.get("source_kind", ""))
+        non_real_source = source_kind in {
+            "fixture",
+            "simulated",
+            "fixture_collator",
+            "simulated_collator",
+            "unavailable",
+            "unspecified",
+        }
+        return provenance.get("real_training_path") is True and not non_real_source
+    return provenance in {
+        "real_training_labels",
+        "actual_training_labels",
+        "training_runtime",
+        "private_training_runtime",
+    }
+
+
+def _label_provenance_payload(objective_inspection: dict[str, Any]) -> dict[str, Any]:
+    provenance = objective_inspection.get("label_provenance")
+    if isinstance(provenance, dict):
+        return dict(provenance)
+    if isinstance(provenance, str) and provenance:
+        return {"source_kind": provenance}
+    return {"source_kind": "unavailable", "real_training_path": False}
+
+
+def _label_evidence_gaps(objective_inspection: dict[str, Any], *extra_gaps: str) -> list[str]:
+    gaps: list[str] = []
+    objective_gaps = objective_inspection.get("evidence_gaps")
+    if isinstance(objective_gaps, list):
+        gaps.extend(str(gap) for gap in objective_gaps if gap)
+    gaps.extend(extra_gaps)
+    for gap in ("real_training_labels_not_inspected", "real_training_label_provenance_missing"):
+        if gap not in gaps:
+            gaps.append(gap)
+    return sorted(dict.fromkeys(gaps))
+
+
+def _fixture_label_provenance(objective_inspection: dict[str, Any]) -> bool:
+    provenance = _label_provenance_payload(objective_inspection)
+    source_kind = str(provenance.get("source_kind", ""))
+    if source_kind in {"fixture", "simulated", "fixture_collator", "simulated_collator"}:
+        return True
+    label_source = objective_inspection.get("label_source")
+    return label_source in {"fixture_labels", "simulated_labels", "fixture_collator_labels"}
 
 
 def _label_mask_evidence(objective_inspection: dict[str, Any] | None) -> dict[str, Any]:
@@ -639,12 +688,30 @@ def _label_mask_evidence(objective_inspection: dict[str, Any] | None) -> dict[st
             "status": "labels_unavailable",
             "true_label_mask_status": "unavailable",
             "source": "objective_inspection_not_loaded",
+            "tokenizer_template_status": "unavailable",
+            "collator_status": "unavailable",
+            "label_source": "unavailable",
+            "label_provenance": {"source_kind": "unavailable", "real_training_path": False},
+            "label_tensor_available": False,
+            "prompt_token_count": None,
+            "assistant_token_count": None,
             "prompt_tokens_masked": None,
             "assistant_tokens_carry_loss": None,
             "evidence_gaps": ["real_training_labels_not_inspected", "real_training_label_provenance_missing"],
         }
     prompt_tokens_masked = objective_inspection.get("prompt_tokens_masked")
     assistant_tokens_carry_loss = objective_inspection.get("assistant_tokens_carry_loss")
+    common = {
+        "source": "objective_inspection",
+        "inspection_status": objective_inspection.get("inspection_status", "unknown"),
+        "tokenizer_template_status": objective_inspection.get("tokenizer_template_status", "unknown"),
+        "collator_status": objective_inspection.get("collator_status", "unknown"),
+        "label_source": objective_inspection.get("label_source", "unavailable"),
+        "label_provenance": _label_provenance_payload(objective_inspection),
+        "label_tensor_available": bool(objective_inspection.get("label_tensor_available", False)),
+        "prompt_token_count": objective_inspection.get("prompt_token_count"),
+        "assistant_token_count": objective_inspection.get("assistant_token_count"),
+    }
     if (
         objective_inspection.get("inspection_status") == "inspectable"
         and _real_label_provenance_available(objective_inspection)
@@ -654,21 +721,27 @@ def _label_mask_evidence(objective_inspection: dict[str, Any] | None) -> dict[st
         return {
             "status": "labels_inspected",
             "true_label_mask_status": "inspectable",
-            "source": "objective_inspection",
-            "inspection_status": objective_inspection.get("inspection_status", "inspectable"),
-            "label_source": objective_inspection.get("label_source") or objective_inspection.get("label_provenance"),
+            **common,
             "prompt_tokens_masked": prompt_tokens_masked,
             "assistant_tokens_carry_loss": assistant_tokens_carry_loss,
             "evidence_gaps": [],
         }
+    if _fixture_label_provenance(objective_inspection):
+        return {
+            "status": "labels_unavailable",
+            "true_label_mask_status": "fixture_only",
+            **common,
+            "prompt_tokens_masked": None,
+            "assistant_tokens_carry_loss": None,
+            "evidence_gaps": _label_evidence_gaps(objective_inspection, "fixture_labels_not_real_training_proof"),
+        }
     return {
         "status": "labels_unavailable",
         "true_label_mask_status": "unavailable",
-        "source": "objective_inspection",
-        "inspection_status": objective_inspection.get("inspection_status", "unknown"),
+        **common,
         "prompt_tokens_masked": None,
         "assistant_tokens_carry_loss": None,
-        "evidence_gaps": ["real_training_labels_not_inspected", "real_training_label_provenance_missing"],
+        "evidence_gaps": _label_evidence_gaps(objective_inspection),
     }
 
 

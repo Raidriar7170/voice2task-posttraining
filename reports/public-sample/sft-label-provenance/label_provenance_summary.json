@@ -1,0 +1,48 @@
+{
+  "artifact_policy": {
+    "checkpoints_or_adapters_copied_to_git": false,
+    "raw_prompt_or_target_written": false,
+    "raw_rendered_training_text_written": false,
+    "remote_or_private_paths_omitted": true
+  },
+  "assistant_token_count": null,
+  "assistant_tokens_carry_loss": null,
+  "claims": {
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "held_out_generalization_claim": false,
+    "live_browser_benchmark_claim": false,
+    "model_recovery_claim": false,
+    "production_readiness_claim": false
+  },
+  "collator_status": "unavailable",
+  "dependency_unavailable": true,
+  "evidence_gaps": [
+    "real_training_labels_not_inspected",
+    "real_training_label_provenance_missing"
+  ],
+  "evidence_kind": "sft_label_provenance",
+  "generated_at": "2026-06-03T11:20:34.504787+00:00",
+  "inspection_status": "dependency_unavailable",
+  "label_provenance": {
+    "real_training_path": false,
+    "source_kind": "unavailable"
+  },
+  "label_source": "unavailable",
+  "label_tensor_available": false,
+  "loss_interpretation": {
+    "loss_improvement_alone_proves_contract_learning": false,
+    "requires_assistant_loss_evidence": true
+  },
+  "prior_artifacts": {
+    "target_template_alignment": "reports/public-sample/sft-target-template-alignment/sft_target_template_alignment.json",
+    "target_template_alignment_markdown": "reports/public-sample/sft-target-template-alignment/sft_target_template_alignment.md",
+    "train_split_overfit_objective": "reports/public-sample/a100-train-split-overfit-diagnostic/objective_inspection.json",
+    "train_split_overfit_report": "reports/public-sample/a100-train-split-overfit-diagnostic/report.md"
+  },
+  "prompt_token_count": null,
+  "prompt_tokens_masked": null,
+  "tokenizer_status": "unavailable",
+  "tokenizer_template_status": "unavailable",
+  "true_label_mask_status": "unavailable"
+}

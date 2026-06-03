@@ -498,6 +498,39 @@ def test_source_diagnostics_include_sft_target_template_alignment_evidence(tmp_p
     assert "private_debug_path" not in alignment_markdown
 
 
+def test_label_provenance_fixture_trl_collator_labels_do_not_count_as_real_proof() -> None:
+    rows = [_row_with_split("train-search", "train", "search", "search_web", {"query": "天气"})]
+
+    diagnostics = evaluation.diagnose_source_alignment(
+        rows,
+        {"train-search": rows[0].target_contract.to_dict()},
+        training_config={"dataset_split": "train", "prediction_split": "train"},
+        prediction_metadata={"prediction_split": "train"},
+        objective_inspection={
+            "inspection_status": "inspectable",
+            "label_source": "trl_collator_labels",
+            "label_provenance": {"source_kind": "fixture", "real_training_path": False},
+            "label_tensor_available": True,
+            "prompt_token_count": 12,
+            "assistant_token_count": 5,
+            "prompt_tokens_masked": True,
+            "assistant_tokens_carry_loss": True,
+            "evidence_gaps": ["fixture_labels_not_real_training_proof"],
+        },
+    )
+
+    label_mask = diagnostics["sft_target_template_alignment"]["label_mask_evidence"]
+    assert label_mask["status"] == "labels_unavailable"
+    assert label_mask["true_label_mask_status"] == "fixture_only"
+    assert label_mask["label_source"] == "trl_collator_labels"
+    assert label_mask["label_provenance"]["source_kind"] == "fixture"
+    assert label_mask["label_tensor_available"] is True
+    assert label_mask["prompt_tokens_masked"] is None
+    assert label_mask["assistant_tokens_carry_loss"] is None
+    assert "fixture_labels_not_real_training_proof" in label_mask["evidence_gaps"]
+    assert "real_training_label_provenance_missing" in label_mask["evidence_gaps"]
+
+
 def test_sft_target_template_alignment_reports_no_matching_rows_without_vacuous_success() -> None:
     rows = [_row_with_split("train-search", "train", "search", "search_web", {"query": "天气"})]
 

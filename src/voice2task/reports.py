@@ -6,6 +6,7 @@ from typing import Any
 
 from voice2task.evaluation import EvaluationResult
 from voice2task.io import write_json
+from voice2task.schemas import PRIVATE_IP_RE, PRIVATE_PATH_RE, SECRET_RE
 
 
 def write_metrics_report(
@@ -269,6 +270,154 @@ def write_sft_target_template_alignment_report(
 
     markdown_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
     return {"sft_target_template_alignment_json": json_path, "sft_target_template_alignment_markdown": markdown_path}
+
+
+def _sanitize_report_value(value: Any) -> Any:
+    if isinstance(value, str):
+        sanitized = PRIVATE_PATH_RE.sub("<private_path>", value)
+        sanitized = PRIVATE_IP_RE.sub("<private_ip>", sanitized)
+        return SECRET_RE.sub("<secret>", sanitized)
+    if isinstance(value, dict):
+        return {str(_sanitize_report_value(str(key))): _sanitize_report_value(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_sanitize_report_value(item) for item in value]
+    return value
+
+
+def _label_provenance_claims() -> dict[str, bool]:
+    return {
+        "checkpoint_release": False,
+        "adapter_release": False,
+        "held_out_generalization_claim": False,
+        "production_readiness_claim": False,
+        "live_browser_benchmark_claim": False,
+        "model_recovery_claim": False,
+    }
+
+
+def _standalone_true_label_mask_status(objective_inspection: dict[str, Any], gaps: list[Any]) -> str:
+    status = objective_inspection.get("true_label_mask_status")
+    if status in {"inspectable", "fixture_only", "unavailable"}:
+        return str(status)
+    provenance = objective_inspection.get("label_provenance")
+    source_kind = str(provenance.get("source_kind", "")) if isinstance(provenance, dict) else ""
+    if source_kind in {"fixture", "fixture_collator", "simulated", "simulated_collator"}:
+        return "fixture_only"
+    if (
+        objective_inspection.get("inspection_status") == "inspectable"
+        and objective_inspection.get("label_tensor_available") is True
+        and not gaps
+        and isinstance(objective_inspection.get("prompt_tokens_masked"), bool)
+        and isinstance(objective_inspection.get("assistant_tokens_carry_loss"), bool)
+    ):
+        return "inspectable"
+    return "unavailable"
+
+
+def write_sft_label_provenance_evidence_pack(
+    *,
+    objective_inspection: dict[str, Any],
+    output_dir: Path,
+    prior_artifacts: dict[str, str] | None = None,
+    title: str = "Voice2Task SFT label provenance evidence",
+) -> dict[str, Path]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    json_path = output_dir / "label_provenance_summary.json"
+    markdown_path = output_dir / "label_provenance_summary.md"
+    provenance = objective_inspection.get("label_provenance")
+    if not isinstance(provenance, dict):
+        provenance = {"source_kind": provenance or "unavailable", "real_training_path": False}
+    gaps = objective_inspection.get("evidence_gaps")
+    if not isinstance(gaps, list):
+        gaps = ["real_training_labels_not_inspected", "real_training_label_provenance_missing"]
+    true_label_mask_status = _standalone_true_label_mask_status(objective_inspection, gaps)
+    summary = {
+        "evidence_kind": "sft_label_provenance",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "inspection_status": objective_inspection.get("inspection_status", "unknown"),
+        "dependency_unavailable": bool(objective_inspection.get("dependency_unavailable", False)),
+        "tokenizer_status": objective_inspection.get("tokenizer_status", "unknown"),
+        "tokenizer_template_status": objective_inspection.get("tokenizer_template_status", "unknown"),
+        "collator_status": objective_inspection.get("collator_status", "unknown"),
+        "label_source": objective_inspection.get("label_source", "unavailable"),
+        "label_provenance": _sanitize_report_value(dict(provenance)),
+        "label_tensor_available": bool(objective_inspection.get("label_tensor_available", False)),
+        "true_label_mask_status": true_label_mask_status,
+        "prompt_token_count": objective_inspection.get("prompt_token_count"),
+        "assistant_token_count": objective_inspection.get("assistant_token_count"),
+        "prompt_tokens_masked": objective_inspection.get("prompt_tokens_masked"),
+        "assistant_tokens_carry_loss": objective_inspection.get("assistant_tokens_carry_loss"),
+        "evidence_gaps": _sanitize_report_value(list(gaps)),
+        "loss_interpretation": _sanitize_report_value(objective_inspection.get("loss_interpretation", {})),
+        "prior_artifacts": _sanitize_report_value(prior_artifacts or {}),
+        "claims": _label_provenance_claims(),
+        "artifact_policy": {
+            "raw_rendered_training_text_written": False,
+            "raw_prompt_or_target_written": False,
+            "checkpoints_or_adapters_copied_to_git": False,
+            "remote_or_private_paths_omitted": True,
+        },
+    }
+    write_json(json_path, summary)
+
+    prior = summary["prior_artifacts"]
+    lines = [
+        f"# {title}",
+        "",
+        (
+            "This evidence pack summarizes SFT label provenance only. "
+            "It does not publish raw rendered prompts, checkpoints, adapters, private paths, or raw logs."
+        ),
+        "",
+        "## Boundary",
+        "",
+        "- This is not a checkpoint release.",
+        "- This is not an adapter release.",
+        "- This is not held-out generalization evidence.",
+        "- This makes no production-readiness claim.",
+        "- This is not a live-browser benchmark or benchmark-improvement claim.",
+        "",
+        "## Summary",
+        "",
+        f"- Inspection status: `{summary['inspection_status']}`",
+        f"- Tokenizer status: `{summary['tokenizer_status']}`",
+        f"- Tokenizer template status: `{summary['tokenizer_template_status']}`",
+        f"- Collator status: `{summary['collator_status']}`",
+        f"- Label source: `{summary['label_source']}`",
+        f"- Label tensor available: `{summary['label_tensor_available']}`",
+        f"- True label-mask status: `{summary['true_label_mask_status']}`",
+        f"- Prompt token count: `{summary['prompt_token_count']}`",
+        f"- Assistant token count: `{summary['assistant_token_count']}`",
+        f"- Prompt tokens masked: `{summary['prompt_tokens_masked']}`",
+        f"- Assistant tokens carry loss: `{summary['assistant_tokens_carry_loss']}`",
+        "",
+        "## Evidence Gaps",
+        "",
+    ]
+    if summary["evidence_gaps"]:
+        for gap in summary["evidence_gaps"]:
+            lines.append(f"- `{gap}`")
+    else:
+        lines.append("- none")
+    lines.extend(["", "## Prior Artifacts", ""])
+    if prior:
+        for name, path in sorted(prior.items()):
+            lines.append(f"- `{name}`: `{path}`")
+    else:
+        lines.append("- none")
+    lines.extend(
+        [
+            "",
+            "## Interpretation",
+            "",
+            "- Loss improvement alone does not prove Browser Task Contract learning.",
+            "- Fixture or simulated labels are not real TRL/private-training-path proof.",
+            "- True label provenance requires inspected labels from the real tokenizer/collator path.",
+            "",
+        ]
+    )
+    markdown_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    return {"json": json_path, "markdown": markdown_path}
 
 
 def write_source_diagnostics_report(

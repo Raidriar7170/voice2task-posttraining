@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>inspect-sft-label-provenance Human Brief</title>
+    <style>
+      body {
+        margin: 0;
+        background: #f6f7f9;
+        color: #17202a;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.58;
+      }
+      main {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 32px 20px 48px;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 28px;
+      }
+      h2 {
+        margin-top: 28px;
+        font-size: 18px;
+      }
+      .lead {
+        font-size: 18px;
+        font-weight: 650;
+      }
+      .status {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 10px;
+        margin: 20px 0;
+      }
+      .box {
+        border: 1px solid #d9dde3;
+        border-radius: 8px;
+        background: #ffffff;
+        padding: 12px 14px;
+      }
+      .box strong {
+        display: block;
+        color: #42526e;
+        font-size: 12px;
+        text-transform: uppercase;
+      }
+      code {
+        background: #eef1f5;
+        border-radius: 4px;
+        padding: 1px 5px;
+      }
+      ul {
+        padding-left: 20px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #ffffff;
+        border: 1px solid #d9dde3;
+      }
+      th,
+      td {
+        border-bottom: 1px solid #e6e9ee;
+        padding: 9px 10px;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        color: #42526e;
+        font-size: 13px;
+      }
+      .ok {
+        color: #166534;
+        font-weight: 700;
+      }
+      .warn {
+        color: #9a3412;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>SFT label provenance inspection</h1>
+      <p class="lead">
+        结论：本阶段补齐了可审计的 SFT label provenance 输出形状；当前本地运行仍是
+        <code>dependency_unavailable</code>，因此不能把 loss 或 fixture labels 解读为真实训练路径的学习证据。
+      </p>
+
+      <section class="status" aria-label="status">
+        <div class="box"><strong>OpenSpec change</strong><code>inspect-sft-label-provenance</code></div>
+        <div class="box"><strong>当前状态</strong><span class="ok">archived · validation complete</span></div>
+        <div class="box"><strong>证据等级</strong>public-safe local inspection</div>
+        <div class="box"><strong>结论边界</strong>no checkpoint / adapter / benchmark claim</div>
+      </section>
+
+      <h2>本阶段改动</h2>
+      <ul>
+        <li><code>inspect_sft_objective</code> 增加 tokenizer/template、collator、label source/provenance、label tensor、prompt/assistant token count 和 evidence gaps 字段。</li>
+        <li>保留旧字段：<code>inspection_status</code>、<code>dependency_unavailable</code>、<code>prompt_tokens_masked</code>、<code>assistant_tokens_carry_loss</code>、<code>loss_interpretation</code>。</li>
+        <li>fixture/simulated labels 即使标成 <code>trl_collator_labels</code>，也不会被下游诊断升级为真实训练路径证明。</li>
+        <li>新增 <code>voice2task-report sft-label-provenance</code>，生成 public-safe JSON/Markdown evidence pack。</li>
+      </ul>
+
+      <h2>关键文件</h2>
+      <ul>
+        <li><code>src/voice2task/training.py</code>：objective/label provenance inspection。</li>
+        <li><code>src/voice2task/evaluation.py</code>：label-mask evidence 的真实路径/fixture 边界。</li>
+        <li><code>src/voice2task/reports.py</code> 与 <code>src/voice2task/cli/report.py</code>：label provenance evidence pack。</li>
+        <li><code>reports/public-sample/sft-label-provenance/</code>：本阶段 public-safe 证据包。</li>
+      </ul>
+
+      <h2>证据链接</h2>
+      <ul>
+        <li><code>reports/public-sample/sft-label-provenance/objective_inspection.json</code></li>
+        <li><code>reports/public-sample/sft-label-provenance/label_provenance_summary.json</code></li>
+        <li><code>reports/public-sample/sft-label-provenance/label_provenance_summary.md</code></li>
+        <li>链接但不修改：<code>reports/public-sample/sft-target-template-alignment/</code> 与 <code>reports/public-sample/a100-train-split-overfit-diagnostic/</code></li>
+      </ul>
+
+      <h2>验证结果</h2>
+      <table>
+        <thead>
+          <tr><th>命令</th><th>结果</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>PYTHONPATH=src pytest -q tests/test_a100_sft_prediction_smoke.py -k "objective_inspection or label_provenance"</code></td><td class="ok">7 passed</td></tr>
+          <tr><td><code>PYTHONPATH=src pytest -q tests/test_evaluator_reports.py -k "sft_target_template_alignment or label_mask or diagnose_source or label_provenance"</code></td><td class="ok">4 passed</td></tr>
+          <tr><td><code>PYTHONPATH=src pytest -q</code></td><td class="ok">83 passed</td></tr>
+          <tr><td><code>ruff check .</code></td><td class="ok">All checks passed</td></tr>
+          <tr><td><code>mypy src</code></td><td class="ok">no issues found in 16 source files</td></tr>
+          <tr><td><code>PYTHONPATH=src python -m voice2task.cli.data validate --sft data/public-samples/sft_public_sample.jsonl --dpo data/public-samples/dpo_public_sample.jsonl --manifest data/public-samples/manifest_public_sample.json --public</code></td><td class="ok">ok; 12 SFT rows, 26 DPO pairs</td></tr>
+          <tr><td><code>PYTHONPATH=src python -m voice2task.cli.data dpo-check --dpo data/public-samples/dpo_public_sample.jsonl</code></td><td class="ok">ok; 26 pairs</td></tr>
+          <tr><td><code>PYTHONPATH=src python -m voice2task.cli.eval metrics --gold data/public-samples/sft_public_sample.jsonl --predictions reports/public-sample/rule_baseline_predictions.jsonl --output "$tmpdir/metrics-smoke" --title "SFT label provenance validation metrics smoke"</code></td><td class="ok">ok; metrics JSON/Markdown written to a temporary smoke directory</td></tr>
+          <tr><td><code>PYTHONPATH=src python -m voice2task.cli.report leak-scan --paths reports/public-sample/sft-label-provenance docs/human-briefs/2026-06-03-inspect-sft-label-provenance.html openspec/changes/inspect-sft-label-provenance --output reports/public-sample/sft-label-provenance/leak_scan_result.json</code></td><td class="ok">ok; no findings</td></tr>
+          <tr><td><code>OPENSPEC_TELEMETRY=0 openspec validate inspect-sft-label-provenance --strict</code></td><td class="ok">valid</td></tr>
+          <tr><td><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code></td><td class="ok">archive 后 4 passed, 0 failed</td></tr>
+          <tr><td><code>git diff --check</code></td><td class="ok">passed</td></tr>
+        </tbody>
+      </table>
+
+      <h2>剩余风险</h2>
+      <ul>
+        <li>当前本地证据没有真实 tokenizer/collator label tensor；这仍是明确 evidence gap。</li>
+        <li>真实 A100/private adapter runtime 未在本阶段执行，不能声称 checkpoint release、adapter release、held-out generalization、production readiness 或 live-browser improvement。</li>
+        <li>Reviewer Must Fix 已完成；auto integration 因 unrelated <code>reports/.DS_Store</code> 未跟踪文件按策略跳过。</li>
+      </ul>
+
+      <h2>推荐下一步</h2>
+      <p>本 change 已归档。下一阶段建议是另起 bounded OpenSpec change，在真实 runtime 中检查 tokenizer/collator label provenance，或在用户确认后准备最小 A100 rerun 前检查。</p>
+    </main>
+  </body>
+</html>

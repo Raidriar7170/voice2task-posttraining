@@ -859,17 +859,133 @@ def run_sft_prediction_export(
     return metadata
 
 
-def _objective_unavailable(reason: str) -> dict[str, Any]:
+def _loss_interpretation() -> dict[str, bool]:
     return {
-        "inspection_status": "dependency_unavailable",
-        "dependency_unavailable": True,
+        "loss_improvement_alone_proves_contract_learning": False,
+        "requires_assistant_loss_evidence": True,
+    }
+
+
+def _label_provenance(
+    value: dict[str, Any] | str | None,
+    *,
+    source_kind: str,
+    real_training_path: bool,
+) -> dict[str, Any]:
+    if isinstance(value, dict):
+        provenance = dict(value)
+    elif isinstance(value, str) and value:
+        provenance = {"source_kind": value}
+    else:
+        provenance = {"source_kind": source_kind}
+    provenance.setdefault("source_kind", source_kind)
+    provenance.setdefault("real_training_path", real_training_path)
+    return provenance
+
+
+_REAL_LABEL_SOURCES = {"real_training_labels", "actual_training_labels", "trl_collator_labels"}
+_NON_REAL_LABEL_SOURCE_KINDS = {
+    "fixture",
+    "fixture_collator",
+    "simulated",
+    "simulated_collator",
+    "unavailable",
+    "unspecified",
+}
+
+
+def _deduped_gaps(values: list[str]) -> list[str]:
+    return list(dict.fromkeys(values))
+
+
+def _real_training_label_provenance(
+    *,
+    label_source: str,
+    collator_status: str,
+    provenance: dict[str, Any],
+) -> bool:
+    source_kind = str(provenance.get("source_kind", "unspecified"))
+    return (
+        label_source in _REAL_LABEL_SOURCES
+        and collator_status == "labels_inspected"
+        and provenance.get("real_training_path") is True
+        and source_kind not in _NON_REAL_LABEL_SOURCE_KINDS
+    )
+
+
+def _fixture_or_simulated_label_provenance(label_source: str, provenance: dict[str, Any]) -> bool:
+    source_kind = str(provenance.get("source_kind", "unspecified"))
+    return source_kind in {"fixture", "fixture_collator", "simulated", "simulated_collator"} or label_source in {
+        "fixture_labels",
+        "fixture_collator_labels",
+        "simulated_labels",
+        "simulated_collator_labels",
+    }
+
+
+def _true_label_mask_status(
+    *,
+    label_source: str,
+    provenance: dict[str, Any],
+    real_training_path: bool,
+) -> str:
+    if real_training_path:
+        return "inspectable"
+    if _fixture_or_simulated_label_provenance(label_source, provenance):
+        return "fixture_only"
+    return "unavailable"
+
+
+def _inspectable_label_evidence_gaps(
+    *,
+    label_source: str,
+    provenance: dict[str, Any],
+    explicit_provenance_supplied: bool,
+    real_training_path: bool,
+) -> list[str]:
+    if real_training_path:
+        return []
+    gaps = ["real_training_labels_not_inspected", "real_training_label_provenance_missing"]
+    if _fixture_or_simulated_label_provenance(label_source, provenance):
+        gaps.append("fixture_labels_not_real_training_proof")
+    if not explicit_provenance_supplied:
+        gaps.append("label_provenance_unspecified")
+    if provenance.get("real_training_path") is not True:
+        gaps.append("label_provenance_not_real_training_path")
+    return _deduped_gaps(gaps)
+
+
+def _objective_unavailable(
+    reason: str,
+    *,
+    inspection_status: str = "dependency_unavailable",
+    dependency_unavailable: bool = True,
+    tokenizer_status: str = "unavailable",
+    tokenizer_template_status: str = "unavailable",
+    collator_status: str = "unavailable",
+    evidence_gaps: list[str] | None = None,
+) -> dict[str, Any]:
+    resolved_gaps = list(evidence_gaps or [])
+    for gap in ("real_training_labels_not_inspected", "real_training_label_provenance_missing"):
+        if gap not in resolved_gaps:
+            resolved_gaps.append(gap)
+    return {
+        "inspection_status": inspection_status,
+        "dependency_unavailable": dependency_unavailable,
         "unavailable_reason": reason,
+        "tokenizer_status": tokenizer_status,
+        "tokenizer_template_status": tokenizer_template_status,
+        "collator_status": collator_status,
+        "label_source": "unavailable",
+        "label_provenance": _label_provenance(None, source_kind="unavailable", real_training_path=False),
+        "label_tensor_available": False,
+        "true_label_mask_status": "unavailable",
+        "prompt_token_count": None,
+        "assistant_token_count": None,
         "prompt_tokens_masked": None,
         "assistant_tokens_carry_loss": None,
-        "loss_interpretation": {
-            "loss_improvement_alone_proves_contract_learning": False,
-            "requires_assistant_loss_evidence": True,
-        },
+        "evidence_gaps": resolved_gaps,
+        "loss_interpretation": _loss_interpretation(),
     }
 
 
@@ -882,65 +998,160 @@ def _flatten_offsets(value: Any) -> list[tuple[int, int]]:
     return normalized
 
 
-def inspect_sft_objective(row: SFTDatasetRow, *, tokenizer: Any | None = None) -> dict[str, Any]:
+def _mapping_value(value: Any, key: str) -> Any:
+    if isinstance(value, dict):
+        return value.get(key)
+    return getattr(value, key, None)
+
+
+def _tokenizer_template_status(tokenizer: Any | None) -> str:
+    if tokenizer is None:
+        return "unavailable"
+    chat_template = getattr(tokenizer, "chat_template", None)
+    if isinstance(chat_template, str) and chat_template.strip():
+        return "template_available"
+    if callable(getattr(tokenizer, "apply_chat_template", None)):
+        return "template_callable"
+    return "fallback"
+
+
+def _collator_labels(
+    *,
+    collator: Any | None,
+    encoded: Any,
+    assistant_start: int,
+    row_id: str,
+) -> tuple[list[Any], str, str]:
+    if collator is None:
+        labels = _token_list(_mapping_value(encoded, "labels"))
+        if labels:
+            return labels, "tokenizer_encoding_labels", "labels_from_tokenizer_encoding"
+        return [], "unavailable", "not_supplied"
+    if not callable(collator):
+        return [], "unavailable", "not_callable"
+    feature = dict(encoded) if isinstance(encoded, dict) else {"input_ids": _mapping_value(encoded, "input_ids")}
+    feature["label_provenance_row_id"] = row_id
+    feature["label_provenance_assistant_start"] = assistant_start
+    try:
+        batch = collator([feature])
+    except Exception:
+        return [], "unavailable", "error"
+    labels = _token_list(_mapping_value(batch, "labels"))
+    if labels:
+        return labels, "trl_collator_labels", "labels_inspected"
+    return [], "unavailable", "labels_missing"
+
+
+def inspect_sft_objective(
+    row: SFTDatasetRow,
+    *,
+    tokenizer: Any | None = None,
+    collator: Any | None = None,
+    label_source: str | None = None,
+    label_provenance: dict[str, Any] | str | None = None,
+) -> dict[str, Any]:
     if tokenizer is None:
         if not _train_dependencies_available():
             return _objective_unavailable("train dependencies or tokenizer are not available in this runtime")
         return {
-            **_objective_unavailable("tokenizer was not supplied for local non-heavy inspection"),
+            **_objective_unavailable(
+                "tokenizer was not supplied for local non-heavy inspection",
+                inspection_status="tokenizer_unavailable",
+                tokenizer_status="unavailable",
+                tokenizer_template_status="unavailable",
+                collator_status="unavailable",
+            ),
             "inspection_status": "tokenizer_unavailable",
         }
 
+    template_status = _tokenizer_template_status(tokenizer)
     training_text = format_sft_training_text(row, tokenizer=tokenizer)
     assistant_text = canonical_contract_json(row.target_contract)
     assistant_start = training_text.find(assistant_text)
     if assistant_start < 0:
         assistant_start = training_text.find("{")
     if assistant_start < 0:
-        return {
-            "inspection_status": "assistant_span_unavailable",
-            "dependency_unavailable": False,
-            "prompt_tokens_masked": None,
-            "assistant_tokens_carry_loss": None,
-            "loss_interpretation": {
-                "loss_improvement_alone_proves_contract_learning": False,
-                "requires_assistant_loss_evidence": True,
-            },
-        }
+        return _objective_unavailable(
+            "assistant target span was not found in rendered training text",
+            inspection_status="assistant_span_unavailable",
+            dependency_unavailable=False,
+            tokenizer_status="available",
+            tokenizer_template_status=template_status,
+            collator_status="unavailable" if collator is None else "not_inspected",
+            evidence_gaps=["assistant_span_unavailable"],
+        )
 
     encoded = tokenizer(training_text, return_offsets_mapping=True, add_special_tokens=False)
-    labels = _token_list(encoded.get("labels") if isinstance(encoded, dict) else getattr(encoded, "labels", None))
-    offsets = _flatten_offsets(
-        encoded.get("offset_mapping") if isinstance(encoded, dict) else getattr(encoded, "offset_mapping", None)
+    offsets = _flatten_offsets(_mapping_value(encoded, "offset_mapping"))
+    labels, inferred_label_source, collator_status = _collator_labels(
+        collator=collator,
+        encoded=encoded,
+        assistant_start=assistant_start,
+        row_id=row.id,
     )
     if not labels or not offsets or len(labels) != len(offsets):
-        return {
-            "inspection_status": "labels_unavailable",
-            "dependency_unavailable": False,
-            "prompt_tokens_masked": None,
-            "assistant_tokens_carry_loss": None,
-            "loss_interpretation": {
-                "loss_improvement_alone_proves_contract_learning": False,
-                "requires_assistant_loss_evidence": True,
-            },
-        }
+        gaps = ["label_tensor_unavailable"]
+        if not offsets:
+            gaps.append("token_offsets_unavailable")
+        if collator_status == "not_supplied":
+            gaps.append("collator_not_supplied")
+        elif collator_status == "error":
+            gaps.append("collator_label_extraction_failed")
+        elif collator_status == "not_callable":
+            gaps.append("collator_not_callable")
+        return _objective_unavailable(
+            "labels or token offsets were not available from the inspected local path",
+            inspection_status="labels_unavailable",
+            dependency_unavailable=False,
+            tokenizer_status="available",
+            tokenizer_template_status=template_status,
+            collator_status=collator_status,
+            evidence_gaps=gaps,
+        )
 
     prompt_indices = [index for index, (_, end) in enumerate(offsets) if end <= assistant_start]
     assistant_indices = [index for index, (start, _) in enumerate(offsets) if start >= assistant_start]
     prompt_tokens_masked = bool(prompt_indices) and all(labels[index] == -100 for index in prompt_indices)
     assistant_tokens_carry_loss = bool(assistant_indices) and any(labels[index] != -100 for index in assistant_indices)
+    resolved_label_source = label_source or inferred_label_source
+    resolved_label_provenance = _label_provenance(
+        label_provenance,
+        source_kind="unspecified" if label_provenance is None else "training_runtime",
+        real_training_path=False,
+    )
+    real_training_path = _real_training_label_provenance(
+        label_source=resolved_label_source,
+        collator_status=collator_status,
+        provenance=resolved_label_provenance,
+    )
+    true_label_mask_status = _true_label_mask_status(
+        label_source=resolved_label_source,
+        provenance=resolved_label_provenance,
+        real_training_path=real_training_path,
+    )
+    evidence_gaps = _inspectable_label_evidence_gaps(
+        label_source=resolved_label_source,
+        provenance=resolved_label_provenance,
+        explicit_provenance_supplied=label_provenance is not None,
+        real_training_path=real_training_path,
+    )
     return {
         "inspection_status": "inspectable",
         "dependency_unavailable": False,
         "row_id": row.id,
+        "tokenizer_status": "available",
+        "tokenizer_template_status": template_status,
+        "collator_status": collator_status,
+        "label_source": resolved_label_source,
+        "label_provenance": resolved_label_provenance,
+        "label_tensor_available": True,
+        "true_label_mask_status": true_label_mask_status,
         "prompt_token_count": len(prompt_indices),
         "assistant_token_count": len(assistant_indices),
         "prompt_tokens_masked": prompt_tokens_masked,
         "assistant_tokens_carry_loss": assistant_tokens_carry_loss,
-        "loss_interpretation": {
-            "loss_improvement_alone_proves_contract_learning": False,
-            "requires_assistant_loss_evidence": True,
-        },
+        "evidence_gaps": evidence_gaps,
+        "loss_interpretation": _loss_interpretation(),
     }
 
 

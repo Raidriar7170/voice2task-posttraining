@@ -20,6 +20,7 @@ reports/generated-local/
 reports/private/
 
 # Large or machine-local files
+.DS_Store
 *.safetensors
 *.ckpt
 *.pt

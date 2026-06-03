@@ -1,0 +1,27 @@
+{
+  "assistant_token_count": null,
+  "assistant_tokens_carry_loss": null,
+  "collator_status": "unavailable",
+  "dependency_unavailable": true,
+  "evidence_gaps": [
+    "real_training_labels_not_inspected",
+    "real_training_label_provenance_missing"
+  ],
+  "inspection_status": "dependency_unavailable",
+  "label_provenance": {
+    "real_training_path": false,
+    "source_kind": "unavailable"
+  },
+  "label_source": "unavailable",
+  "label_tensor_available": false,
+  "loss_interpretation": {
+    "loss_improvement_alone_proves_contract_learning": false,
+    "requires_assistant_loss_evidence": true
+  },
+  "prompt_token_count": null,
+  "prompt_tokens_masked": null,
+  "tokenizer_status": "unavailable",
+  "tokenizer_template_status": "unavailable",
+  "true_label_mask_status": "unavailable",
+  "unavailable_reason": "train dependencies or tokenizer are not available in this runtime"
+}

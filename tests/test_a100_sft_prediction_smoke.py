@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from voice2task import training
+from voice2task.cli import report as report_cli
 from voice2task.cli import train as train_cli
 from voice2task.evaluation import evaluate_predictions, load_predictions
 from voice2task.leak_scan import scan_paths
@@ -679,6 +680,122 @@ class _OffsetOnlyTokenizer:
         }
 
 
+class _InspectableTokenizer:
+    chat_template = "fixture-template"
+
+    def __call__(self, text: str, **kwargs: Any) -> dict[str, Any]:
+        tokens = [ord(char) for char in text]
+        offsets = [(index, index + 1) for index, _ in enumerate(text)]
+        return {
+            "input_ids": tokens,
+            "attention_mask": [1 for _ in tokens],
+            "offset_mapping": offsets,
+        }
+
+
+class _AssistantOnlyLossCollator:
+    def __call__(self, features: list[dict[str, Any]]) -> dict[str, list[list[int]]]:
+        feature = features[0]
+        assistant_start = feature["label_provenance_assistant_start"]
+        labels = [
+            -100 if end <= assistant_start else token_id
+            for token_id, (_, end) in zip(feature["input_ids"], feature["offset_mapping"], strict=True)
+        ]
+        return {"labels": [labels]}
+
+
+def test_sft_objective_inspection_keeps_fixture_collator_labels_non_real() -> None:
+    row = SFTDatasetRow(
+        id="sft-train-1",
+        split="train",
+        input_text="帮我搜索天气",
+        target_contract=_contract("天气"),
+        provenance={"source_id": "sft-train-1", "public_safe": True},
+    )
+
+    result = training.inspect_sft_objective(
+        row,
+        tokenizer=_InspectableTokenizer(),
+        collator=_AssistantOnlyLossCollator(),
+        label_source="trl_collator_labels",
+        label_provenance={"source_kind": "fixture", "real_training_path": False},
+    )
+
+    assert result["inspection_status"] == "inspectable"
+    assert result["dependency_unavailable"] is False
+    assert result["tokenizer_status"] == "available"
+    assert result["tokenizer_template_status"] == "template_available"
+    assert result["collator_status"] == "labels_inspected"
+    assert result["label_source"] == "trl_collator_labels"
+    assert result["label_provenance"]["source_kind"] == "fixture"
+    assert result["label_provenance"]["real_training_path"] is False
+    assert result["label_tensor_available"] is True
+    assert result["prompt_token_count"] > 0
+    assert result["assistant_token_count"] > 0
+    assert result["prompt_tokens_masked"] is True
+    assert result["assistant_tokens_carry_loss"] is True
+    assert result["true_label_mask_status"] == "fixture_only"
+    assert "fixture_labels_not_real_training_proof" in result["evidence_gaps"]
+    assert "real_training_label_provenance_missing" in result["evidence_gaps"]
+    assert result["loss_interpretation"]["loss_improvement_alone_proves_contract_learning"] is False
+    assert "training_text" not in result
+    assert "assistant_contract_target" not in result
+
+
+def test_sft_objective_inspection_keeps_unspecified_collator_labels_non_real() -> None:
+    row = SFTDatasetRow(
+        id="sft-train-1",
+        split="train",
+        input_text="帮我搜索天气",
+        target_contract=_contract("天气"),
+        provenance={"source_id": "sft-train-1", "public_safe": True},
+    )
+
+    result = training.inspect_sft_objective(
+        row,
+        tokenizer=_InspectableTokenizer(),
+        collator=_AssistantOnlyLossCollator(),
+        label_source="trl_collator_labels",
+    )
+
+    assert result["inspection_status"] == "inspectable"
+    assert result["label_tensor_available"] is True
+    assert result["prompt_tokens_masked"] is True
+    assert result["assistant_tokens_carry_loss"] is True
+    assert result["label_provenance"]["source_kind"] == "unspecified"
+    assert result["label_provenance"]["real_training_path"] is False
+    assert result["true_label_mask_status"] == "unavailable"
+    assert "label_provenance_unspecified" in result["evidence_gaps"]
+    assert "real_training_label_provenance_missing" in result["evidence_gaps"]
+
+
+def test_sft_objective_inspection_allows_gap_free_labels_only_with_explicit_real_provenance() -> None:
+    row = SFTDatasetRow(
+        id="sft-train-1",
+        split="train",
+        input_text="帮我搜索天气",
+        target_contract=_contract("天气"),
+        provenance={"source_id": "sft-train-1", "public_safe": True},
+    )
+
+    result = training.inspect_sft_objective(
+        row,
+        tokenizer=_InspectableTokenizer(),
+        collator=_AssistantOnlyLossCollator(),
+        label_source="trl_collator_labels",
+        label_provenance={"source_kind": "private_training_runtime", "real_training_path": True},
+    )
+
+    assert result["inspection_status"] == "inspectable"
+    assert result["label_source"] == "trl_collator_labels"
+    assert result["label_provenance"]["source_kind"] == "private_training_runtime"
+    assert result["label_provenance"]["real_training_path"] is True
+    assert result["true_label_mask_status"] == "inspectable"
+    assert result["prompt_tokens_masked"] is True
+    assert result["assistant_tokens_carry_loss"] is True
+    assert result["evidence_gaps"] == []
+
+
 def test_sft_objective_inspection_does_not_claim_loss_mask_without_labels() -> None:
     row = SFTDatasetRow(
         id="sft-train-1",
@@ -695,6 +812,12 @@ def test_sft_objective_inspection_does_not_claim_loss_mask_without_labels() -> N
     assert result["assistant_tokens_carry_loss"] is None
     assert result["loss_interpretation"]["loss_improvement_alone_proves_contract_learning"] is False
     assert result["dependency_unavailable"] is False
+    assert result["tokenizer_status"] == "available"
+    assert result["tokenizer_template_status"] == "fallback"
+    assert result["collator_status"] == "not_supplied"
+    assert result["label_source"] == "unavailable"
+    assert result["label_tensor_available"] is False
+    assert "collator_not_supplied" in result["evidence_gaps"]
 
 
 def test_sft_objective_inspection_reports_dependency_unavailable_without_train_deps(
@@ -710,6 +833,10 @@ def test_sft_objective_inspection_reports_dependency_unavailable_without_train_d
     assert result["dependency_unavailable"] is True
     assert result["prompt_tokens_masked"] is None
     assert result["assistant_tokens_carry_loss"] is None
+    assert result["tokenizer_status"] == "unavailable"
+    assert result["collator_status"] == "unavailable"
+    assert result["label_source"] == "unavailable"
+    assert result["label_tensor_available"] is False
 
 
 def test_sft_objective_inspection_cli_writes_dependency_unavailable_result(
@@ -738,6 +865,97 @@ def test_sft_objective_inspection_cli_writes_dependency_unavailable_result(
     payload = json.loads(output.read_text(encoding="utf-8"))
     assert payload["inspection_status"] == "dependency_unavailable"
     assert payload["dependency_unavailable"] is True
+    assert payload["tokenizer_status"] == "unavailable"
+    assert payload["tokenizer_template_status"] == "unavailable"
+    assert payload["collator_status"] == "unavailable"
+    assert payload["label_source"] == "unavailable"
+    assert payload["label_tensor_available"] is False
+
+
+def test_sft_label_provenance_report_cli_writes_public_safe_output_shape(
+    tmp_path: Path,
+    capsys: Any,
+) -> None:
+    objective = tmp_path / "objective_inspection.json"
+    objective.write_text(
+        json.dumps(
+            {
+                "inspection_status": "labels_unavailable",
+                "dependency_unavailable": False,
+                "tokenizer_status": "available",
+                "tokenizer_template_status": "fallback",
+                "collator_status": "not_supplied",
+                "label_source": "unavailable",
+                "label_provenance": {
+                    "source_kind": "unavailable",
+                    "real_training_path": False,
+                    "token=secret1234": "sk-1234567890123456",
+                },
+                "label_tensor_available": False,
+                "true_label_mask_status": "unavailable",
+                "prompt_token_count": None,
+                "assistant_token_count": None,
+                "prompt_tokens_masked": None,
+                "assistant_tokens_carry_loss": None,
+                "evidence_gaps": ["collator_not_supplied", "real_training_label_provenance_missing"],
+                "loss_interpretation": {
+                    "loss_improvement_alone_proves_contract_learning": False,
+                    "requires_assistant_loss_evidence": True,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    output = tmp_path / "label-provenance"
+
+    assert (
+        report_cli.main(
+            [
+                "sft-label-provenance",
+                "--objective-inspection",
+                objective.as_posix(),
+                "--output-dir",
+                output.as_posix(),
+                "--prior-artifact",
+                "target_template=reports/public-sample/sft-target-template-alignment/sft_target_template_alignment.json",
+                "--prior-artifact",
+                "/Users/example/private/token=secret1234=reports/public-sample/prior.json",
+            ]
+        )
+        == 0
+    )
+
+    cli_output = json.loads(capsys.readouterr().out)
+    summary_path = output / "label_provenance_summary.json"
+    markdown_path = output / "label_provenance_summary.md"
+    assert cli_output["ok"] is True
+    assert cli_output["paths"]["json"] == summary_path.as_posix()
+    assert cli_output["paths"]["markdown"] == markdown_path.as_posix()
+
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    markdown = markdown_path.read_text(encoding="utf-8")
+    assert summary["evidence_kind"] == "sft_label_provenance"
+    assert summary["inspection_status"] == "labels_unavailable"
+    assert summary["tokenizer_template_status"] == "fallback"
+    assert summary["collator_status"] == "not_supplied"
+    assert summary["label_source"] == "unavailable"
+    assert summary["label_tensor_available"] is False
+    assert summary["true_label_mask_status"] == "unavailable"
+    assert summary["prior_artifacts"]["target_template"].endswith("sft_target_template_alignment.json")
+    assert summary["claims"]["checkpoint_release"] is False
+    assert summary["claims"]["live_browser_benchmark_claim"] is False
+    serialized_summary = json.dumps(summary, ensure_ascii=False, sort_keys=True)
+    assert "token=secret1234" not in serialized_summary
+    assert "sk-1234567890123456" not in serialized_summary
+    assert "/Users/example/private" not in serialized_summary
+    assert "<secret>" in serialized_summary
+    assert "<private_path>" in serialized_summary
+    assert "labels_unavailable" in markdown
+    assert "True label-mask status" in markdown
+    assert "not a checkpoint release" in markdown
+    assert "not a live-browser benchmark" in markdown
+    assert "training_text" not in markdown
+    assert scan_paths([summary_path, markdown_path]).ok is True
 
 
 def test_prediction_evidence_pack_is_honest_and_public_safe(tmp_path: Path) -> None:

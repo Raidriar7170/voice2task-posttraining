@@ -5,7 +5,9 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
+from voice2task.io import read_json
 from voice2task.leak_scan import scan_paths
+from voice2task.reports import write_sft_label_provenance_evidence_pack
 
 PRIVATE_SCAN_PREFIXES = (
     "/mnt/data/",
@@ -30,7 +32,23 @@ def build_parser() -> argparse.ArgumentParser:
     leak.add_argument("--paths", nargs="+", type=Path)
     leak.add_argument("--output", type=Path)
     leak.add_argument("--max-public-jsonl-rows", type=int, default=5000)
+    provenance = subcommands.add_parser("sft-label-provenance")
+    provenance.add_argument("--objective-inspection", type=Path, required=True)
+    provenance.add_argument("--output-dir", type=Path, required=True)
+    provenance.add_argument("--prior-artifact", action="append", default=[])
     return parser
+
+
+def _prior_artifacts(values: list[str]) -> dict[str, str]:
+    artifacts: dict[str, str] = {}
+    for value in values:
+        if "=" not in value:
+            raise SystemExit("--prior-artifact values must use name=path")
+        name, path = value.split("=", 1)
+        if not name.strip() or not path.strip():
+            raise SystemExit("--prior-artifact values must use non-empty name=path")
+        artifacts[name.strip()] = path.strip()
+    return artifacts
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -58,6 +76,19 @@ def main(argv: list[str] | None = None) -> int:
         else:
             print(output)
         return 0 if result.ok else 1
+    if args.command == "sft-label-provenance":
+        report_paths = write_sft_label_provenance_evidence_pack(
+            objective_inspection=read_json(args.objective_inspection),
+            output_dir=args.output_dir,
+            prior_artifacts=_prior_artifacts(args.prior_artifact),
+        )
+        print(
+            json.dumps(
+                {"ok": True, "paths": {key: value.as_posix() for key, value in report_paths.items()}},
+                indent=2,
+            )
+        )
+        return 0
     raise AssertionError(f"unhandled command: {args.command}")
 
 

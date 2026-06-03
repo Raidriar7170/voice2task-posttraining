@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Autonomous Loop Closeout · inspect-sft-label-provenance</title>
+    <style>
+      body {
+        margin: 0;
+        background: #f6f7f9;
+        color: #17202a;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.58;
+      }
+      main {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 34px 20px 52px;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 28px;
+      }
+      h2 {
+        margin-top: 28px;
+        font-size: 18px;
+      }
+      .lead {
+        font-size: 18px;
+        font-weight: 650;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 10px;
+        margin: 18px 0 8px;
+      }
+      .box {
+        border: 1px solid #d9dde3;
+        border-radius: 8px;
+        background: #ffffff;
+        padding: 12px 14px;
+      }
+      .box strong {
+        display: block;
+        color: #42526e;
+        font-size: 12px;
+        text-transform: uppercase;
+      }
+      code {
+        background: #eef1f5;
+        border-radius: 4px;
+        padding: 1px 5px;
+      }
+      ul {
+        padding-left: 20px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #ffffff;
+        border: 1px solid #d9dde3;
+      }
+      th,
+      td {
+        border-bottom: 1px solid #e6e9ee;
+        padding: 9px 10px;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        color: #42526e;
+        font-size: 13px;
+      }
+      .ok {
+        color: #166534;
+        font-weight: 700;
+      }
+      .warn {
+        color: #9a3412;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Autonomous Loop Closeout: inspect-sft-label-provenance</h1>
+      <p class="lead">
+        结论：本轮完成并归档 <code>inspect-sft-label-provenance</code>，把 SFT label provenance
+        证据边界补成可审计输出；当前本地证据仍明确停在 <code>dependency_unavailable</code>，不能声称真实训练路径已经被证明。
+      </p>
+
+      <section class="grid" aria-label="status">
+        <div class="box"><strong>Loop status</strong><span class="ok">completed · stopped for review</span></div>
+        <div class="box"><strong>Phase budget</strong>1 / 3 used</div>
+        <div class="box"><strong>Archived change</strong><code>2026-06-03-inspect-sft-label-provenance</code></div>
+        <div class="box"><strong>Auto integration</strong><span class="warn">blocked</span></div>
+      </section>
+
+      <h2>停止原因</h2>
+      <p>
+        本轮停止于 hard stop：下一个自然阶段需要真实 tokenizer/collator runtime 或 A100/private adapter
+        环境证据，会改变执行边界并涉及私有运行环境；同时当前 git state 存在 unrelated 未跟踪文件
+        <code>reports/.DS_Store</code>，不满足 auto integration policy。
+      </p>
+
+      <h2>项目阶段进度</h2>
+      <ul>
+        <li>当前阶段目标：first-phase SFT/DPO companion evidence；来源是 <code>README.md</code>、<code>CONTEXT.md</code> 和 OpenSpec specs。</li>
+        <li>本阶段推进：把 target-template 结构证据升级为 label provenance 证据契约，明确 tokenizer/template、collator、label source、true label-mask status 和 evidence gaps。</li>
+        <li>剩余能力缺口：真实 tokenizer/collator label tensor 仍未在本地或 A100 runtime 中检查；没有新的 private prediction、training、checkpoint 或 adapter release。</li>
+        <li>下一阶段计划：建议用户确认后新建 bounded change，在真实 runtime 中检查 label provenance，或准备最小 A100 rerun 前置检查。</li>
+      </ul>
+
+      <h2>本轮完成内容</h2>
+      <ul>
+        <li>新增 SFT label provenance inspection 字段，并保留旧 objective-inspection 消费字段。</li>
+        <li>修复 Reviewer Must Fix：fixture/simulated/unspecified labels 不会被升级为真实 <code>trl_collator_labels</code> proof。</li>
+        <li>新增 <code>voice2task-report sft-label-provenance</code> evidence writer，并对 report dict key/value 做 public-safe sanitizer。</li>
+        <li>生成 public-safe evidence pack：<code>reports/public-sample/sft-label-provenance/</code>。</li>
+        <li>同步主 specs 并归档 OpenSpec change。</li>
+      </ul>
+
+      <h2>关键文件和产物</h2>
+      <ul>
+        <li><code>src/voice2task/training.py</code>、<code>src/voice2task/evaluation.py</code>、<code>src/voice2task/reports.py</code>、<code>src/voice2task/cli/report.py</code></li>
+        <li><code>tests/test_a100_sft_prediction_smoke.py</code>、<code>tests/test_evaluator_reports.py</code></li>
+        <li><code>reports/public-sample/sft-label-provenance/label_provenance_summary.json</code> 和 <code>.md</code></li>
+        <li><code>docs/human-briefs/2026-06-03-inspect-sft-label-provenance.html</code></li>
+        <li><code>openspec/changes/archive/2026-06-03-inspect-sft-label-provenance/</code></li>
+      </ul>
+
+      <h2>验证结果</h2>
+      <table>
+        <thead>
+          <tr><th>命令</th><th>结果</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>PYTHONPATH=src pytest -q tests/test_a100_sft_prediction_smoke.py -k "objective_inspection or label_provenance"</code></td><td class="ok">7 passed</td></tr>
+          <tr><td><code>PYTHONPATH=src pytest -q tests/test_evaluator_reports.py -k "sft_target_template_alignment or label_mask or diagnose_source or label_provenance"</code></td><td class="ok">4 passed</td></tr>
+          <tr><td><code>PYTHONPATH=src pytest -q</code></td><td class="ok">83 passed</td></tr>
+          <tr><td><code>ruff check .</code></td><td class="ok">All checks passed</td></tr>
+          <tr><td><code>mypy src</code></td><td class="ok">no issues found in 16 source files</td></tr>
+          <tr><td><code>voice2task.cli.data validate --public</code></td><td class="ok">ok; 12 SFT rows, 26 DPO pairs</td></tr>
+          <tr><td><code>voice2task.cli.data dpo-check</code></td><td class="ok">ok; 26 pairs</td></tr>
+          <tr><td><code>voice2task.cli.eval metrics</code> temp-dir smoke</td><td class="ok">ok; public sample metrics smoke generated outside committed artifacts</td></tr>
+          <tr><td><code>voice2task.cli.report leak-scan</code></td><td class="ok">ok; no findings</td></tr>
+          <tr><td><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code></td><td class="ok">archive 后 4 passed, 0 failed</td></tr>
+          <tr><td><code>git diff --check</code></td><td class="ok">passed</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Review 和外部审查</h2>
+      <ul>
+        <li>内部 Reviewer verdict：Pass with fixes；2 个 Must Fix 已完成并复验。</li>
+        <li>External Pro review：未运行。本阶段未改 README、release、portfolio 或公开定位声明；主要风险是 label provenance/overclaim，已由内部 Reviewer 和 leak scan 覆盖。</li>
+      </ul>
+
+      <h2>Auto integration 状态</h2>
+      <ul>
+        <li>Stage/commit/merge/push：跳过。</li>
+        <li>原因：当前 worktree 有 unrelated 未跟踪文件 <code>reports/.DS_Store</code>，且仓库没有 configured remote；不满足 auto integration policy。</li>
+        <li>目标分支：<code>main</code>；commit hash：未创建；push：未执行。</li>
+      </ul>
+
+      <h2>不可夸大结论</h2>
+      <ul>
+        <li>本阶段没有真实 A100 training/prediction，没有加载 private adapter，没有发布 checkpoint 或 adapter。</li>
+        <li>当前 evidence pack 明确显示 <code>true_label_mask_status=unavailable</code>，不能证明真实训练路径已学习 Browser Task Contract。</li>
+        <li>不能声称 held-out generalization、production readiness、full private corpus release 或 live-browser benchmark improvement。</li>
+      </ul>
+    </main>
+  </body>
+</html>
