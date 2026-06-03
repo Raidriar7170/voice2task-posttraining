@@ -25,6 +25,42 @@ from voice2task.reports import (
 )
 
 
+def _existing_artifact_paths(predictions_path: Path, prediction_metadata: dict[str, object]) -> dict[str, str]:
+    artifact_dir = predictions_path.parent
+    candidates = {
+        "predictions": predictions_path,
+        "metrics": artifact_dir / "metrics.json",
+        "metrics_markdown": artifact_dir / "metrics.md",
+        "report": artifact_dir / "report.md",
+        "manifest": artifact_dir / "manifest.json",
+    }
+    for section_name in ("diagnostic_artifacts", "sidecars"):
+        section = prediction_metadata.get(section_name)
+        if isinstance(section, dict):
+            for key, value in section.items():
+                if isinstance(value, str) and value:
+                    candidates[str(key)] = Path(value)
+    return {key: path.as_posix() for key, path in candidates.items() if path.exists()}
+
+
+def _load_objective_inspection(
+    predictions_path: Path,
+    prediction_metadata: dict[str, object],
+) -> dict[str, object] | None:
+    diagnostic_artifacts = prediction_metadata.get("diagnostic_artifacts")
+    candidate: Path | None = None
+    if isinstance(diagnostic_artifacts, dict):
+        objective_path = diagnostic_artifacts.get("objective_inspection")
+        if isinstance(objective_path, str) and objective_path:
+            candidate = Path(objective_path)
+    if candidate is None:
+        candidate = predictions_path.parent / "objective_inspection.json"
+    if not candidate.exists():
+        return None
+    payload = read_json(candidate)
+    return payload if isinstance(payload, dict) else None
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="voice2task-eval")
     subcommands = parser.add_subparsers(dest="command", required=True)
@@ -110,11 +146,14 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "diagnose-source":
         rows = load_sft_rows(args.gold)
         predictions = load_predictions(args.predictions)
+        prediction_metadata = read_json(args.prediction_metadata)
         diagnostics = diagnose_source_alignment(
             rows,
             predictions,
             training_config=read_json(args.training_config),
-            prediction_metadata=read_json(args.prediction_metadata),
+            prediction_metadata=prediction_metadata,
+            prior_artifact_paths=_existing_artifact_paths(args.predictions, prediction_metadata),
+            objective_inspection=_load_objective_inspection(args.predictions, prediction_metadata),
         )
         paths = write_source_diagnostics_report(diagnostics, output_dir=args.output, title=args.title)
         print(json.dumps({"ok": True, "paths": {key: value.as_posix() for key, value in paths.items()}}, indent=2))

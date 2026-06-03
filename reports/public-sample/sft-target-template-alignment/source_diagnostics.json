@@ -1,0 +1,277 @@
+{
+  "claims": {
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "does_not_repair_normalize_coerce_or_replace_predictions": true,
+    "full_private_corpus_claim": false,
+    "invalid_predictions_remain_invalid": true,
+    "live_browser_benchmark_claim": false,
+    "production_readiness_claim": false
+  },
+  "current_prompt_constraints": {
+    "route_enum_visible": true,
+    "route_not_url_or_path_visible": true,
+    "slots_object_not_array_visible": true,
+    "task_type_enum_visible": true
+  },
+  "decoding_evidence": {
+    "decoding_policy_present": true,
+    "evidence_gaps": [
+      "generated_token_count",
+      "eos_or_finish_state"
+    ],
+    "fields_present": [
+      "do_sample",
+      "max_new_tokens",
+      "raw_decoded_sidecar_written",
+      "schema_repair_applied",
+      "strategy"
+    ],
+    "interprets_gaps_as_missing_evidence_not_cause": true,
+    "policy": {
+      "do_sample": false,
+      "max_new_tokens": 256,
+      "raw_decoded_sidecar_written": true,
+      "schema_repair_applied": false,
+      "strategy": "greedy"
+    }
+  },
+  "diagnostic_kind": "browser_task_contract_source_alignment",
+  "prediction_run_prompt_evidence": {
+    "constraints": {
+      "route_enum_visible": true,
+      "route_not_url_or_path_visible": true,
+      "slots_object_not_array_visible": true,
+      "task_type_enum_visible": true
+    },
+    "current_prompt_constraints_are_rerun_preparation_not_old_run_evidence": false,
+    "evidence_gaps": [],
+    "fields_present": [
+      "route_enum_visible",
+      "route_not_url_or_path_visible",
+      "slots_object_not_array_visible",
+      "task_type_enum_visible"
+    ],
+    "prompt_constraints_present": true
+  },
+  "prediction_symptoms": {
+    "invalid_predictions_remain_invalid": true,
+    "list_slots_count": 0,
+    "list_slots_examples": [],
+    "missing_prediction_count": 9,
+    "path_like_route_count": 0,
+    "path_like_route_examples": [],
+    "prediction_count": 3,
+    "schema_invalid_prediction_count": 3
+  },
+  "sft_target_template_alignment": {
+    "chat_template_evidence": {
+      "evidence_gaps": [
+        "tokenizer_chat_template_not_loaded"
+      ],
+      "fallback_policy": "deterministic_role_plain_text",
+      "formatting_policy": {
+        "fallback": "deterministic_role_plain_text",
+        "policy": "shared_contract_chat_template",
+        "prediction_prompt": "shared_contract_chat_template",
+        "prediction_target_policy": "generation_prompt_without_gold_contract",
+        "sft_training_text": "shared_contract_chat_template",
+        "tokenizer_chat_template": "used_when_available_with_tokenize_false"
+      },
+      "rendering_source": "fallback",
+      "tokenizer_template_inspected": false,
+      "tokenizer_template_status": "not_loaded"
+    },
+    "claims": {
+      "adapter_release": false,
+      "checkpoint_release": false,
+      "does_not_prove_dev_test_generalization": true,
+      "does_not_repair_outputs": true,
+      "does_not_retrain": true,
+      "does_not_run_private_prediction": true,
+      "live_browser_benchmark_improvement_claim": false,
+      "production_readiness_claim": false,
+      "public_sample_only": true
+    },
+    "diagnostic_kind": "sft_target_template_alignment",
+    "label_mask_evidence": {
+      "assistant_tokens_carry_loss": null,
+      "evidence_gaps": [
+        "real_training_labels_not_inspected",
+        "real_training_label_provenance_missing"
+      ],
+      "inspection_status": "tokenizer_unavailable",
+      "prompt_tokens_masked": null,
+      "source": "objective_inspection",
+      "status": "labels_unavailable",
+      "true_label_mask_status": "unavailable"
+    },
+    "metadata_alignment": {
+      "adapter_gate": {
+        "adapter_configured": true,
+        "adapter_path_public_safe": "<configured_not_disclosed>",
+        "cli_run_prediction": true,
+        "config_allow_private_prediction": true,
+        "fixture_mode": false,
+        "will_run_private_prediction": true
+      },
+      "adapter_release_status": "not_released",
+      "base_model": {
+        "prediction_metadata": "<private_base_model>",
+        "status": "prediction_metadata_private_placeholder",
+        "training_config": "Qwen/Qwen2.5-0.5B-Instruct"
+      },
+      "formatting_policy": {
+        "expected": {
+          "fallback": "deterministic_role_plain_text",
+          "policy": "shared_contract_chat_template",
+          "prediction_prompt": "shared_contract_chat_template",
+          "prediction_target_policy": "generation_prompt_without_gold_contract",
+          "sft_training_text": "shared_contract_chat_template",
+          "tokenizer_chat_template": "used_when_available_with_tokenize_false"
+        },
+        "matches": true,
+        "prediction_metadata": {
+          "fallback": "deterministic_role_plain_text",
+          "policy": "shared_contract_chat_template",
+          "prediction_prompt": "shared_contract_chat_template",
+          "prediction_target_policy": "generation_prompt_without_gold_contract",
+          "sft_training_text": "shared_contract_chat_template",
+          "tokenizer_chat_template": "used_when_available_with_tokenize_false"
+        }
+      },
+      "model_source": {
+        "matches": true,
+        "prediction_metadata": "modelscope",
+        "training_config": "modelscope"
+      },
+      "prediction_source_kind": "private_a100_adapter",
+      "prediction_split": {
+        "matches": true,
+        "prediction_metadata": "train",
+        "training_config": "train"
+      },
+      "stack": {
+        "matches": true,
+        "prediction_metadata": "transformers+peft+trl",
+        "training_config": "transformers+peft+trl"
+      }
+    },
+    "prior_artifacts": {
+      "generation_trace": "reports/public-sample/a100-train-split-overfit-diagnostic/generation_trace.jsonl",
+      "leak_scan": "reports/public-sample/a100-train-split-overfit-diagnostic/leak_scan_result.json",
+      "manifest": "reports/public-sample/a100-train-split-overfit-diagnostic/manifest.json",
+      "metrics": "reports/public-sample/a100-train-split-overfit-diagnostic/metrics.json",
+      "metrics_markdown": "reports/public-sample/a100-train-split-overfit-diagnostic/metrics.md",
+      "objective_inspection": "reports/public-sample/a100-train-split-overfit-diagnostic/objective_inspection.json",
+      "predictions": "reports/public-sample/a100-train-split-overfit-diagnostic/predictions.jsonl",
+      "prompt_snapshot": "reports/public-sample/a100-train-split-overfit-diagnostic/prompt_snapshot.json",
+      "raw_decoded_summary": "reports/public-sample/a100-train-split-overfit-diagnostic/raw_decoded_summary.jsonl",
+      "report": "reports/public-sample/a100-train-split-overfit-diagnostic/report.md"
+    },
+    "rows": [
+      {
+        "assistant_contract_target_char_count": 228,
+        "assistant_contract_target_in_prediction_prompt": false,
+        "assistant_contract_target_in_training_text": true,
+        "assistant_contract_target_sha256": "a5b21804fd7f2c927ffa2895b1abc876727b49e231020d1a3080276ffcf288ce",
+        "assistant_target_only_in_training_text": true,
+        "assistant_target_span": {
+          "end": 815,
+          "start": 587,
+          "status": "found"
+        },
+        "prediction_prompt_char_count": 586,
+        "prediction_prompt_ends_with_generation_boundary": true,
+        "prediction_prompt_sha256": "fa9a524462f0f4309bd376a41c57dbc8a8718cade5c025af07c900838de7db1a",
+        "row_id": "seed-search-weather",
+        "same_system_user_prefix": true,
+        "split": "train",
+        "structural_proxy_status": "assistant_target_span_found",
+        "training_text_char_count": 815,
+        "training_text_sha256": "9d7f10b146a5814760bdf2a2682c8409c3ef21ece6b22b59a923a74378c5eca1"
+      },
+      {
+        "assistant_contract_target_char_count": 228,
+        "assistant_contract_target_in_prediction_prompt": false,
+        "assistant_contract_target_in_training_text": true,
+        "assistant_contract_target_sha256": "a5b21804fd7f2c927ffa2895b1abc876727b49e231020d1a3080276ffcf288ce",
+        "assistant_target_only_in_training_text": true,
+        "assistant_target_span": {
+          "end": 813,
+          "start": 585,
+          "status": "found"
+        },
+        "prediction_prompt_char_count": 584,
+        "prediction_prompt_ends_with_generation_boundary": true,
+        "prediction_prompt_sha256": "98d0f5e5e0c37ad335100c972ad992d5e85f6dac82277f06cab190adc21db436",
+        "row_id": "seed-search-weather-aug-1",
+        "same_system_user_prefix": true,
+        "split": "train",
+        "structural_proxy_status": "assistant_target_span_found",
+        "training_text_char_count": 813,
+        "training_text_sha256": "eb9bafa73234629f7ab1778208635a625abcd39bdcd8fa63bca0cd031291bf43"
+      },
+      {
+        "assistant_contract_target_char_count": 228,
+        "assistant_contract_target_in_prediction_prompt": false,
+        "assistant_contract_target_in_training_text": true,
+        "assistant_contract_target_sha256": "a5b21804fd7f2c927ffa2895b1abc876727b49e231020d1a3080276ffcf288ce",
+        "assistant_target_only_in_training_text": true,
+        "assistant_target_span": {
+          "end": 812,
+          "start": 584,
+          "status": "found"
+        },
+        "prediction_prompt_char_count": 583,
+        "prediction_prompt_ends_with_generation_boundary": true,
+        "prediction_prompt_sha256": "022c2a88fa5608840362ae9bf200e4b380554957e2e10f5dcb70be645973e706",
+        "row_id": "seed-search-weather-aug-2",
+        "same_system_user_prefix": true,
+        "split": "train",
+        "structural_proxy_status": "assistant_target_span_found",
+        "training_text_char_count": 812,
+        "training_text_sha256": "64a160139192aa1c0efdac4839190984b27d08edc6875e9c6c9f6a770fec8384"
+      }
+    ],
+    "summary": {
+      "all_prediction_prompts_exclude_assistant_target": true,
+      "all_rows_share_system_user_prefix": true,
+      "all_training_text_contains_assistant_target": true,
+      "diagnostic_status": "public_safe_structural_evidence",
+      "evidence_gaps": [],
+      "prediction_split": "train",
+      "row_count": 3,
+      "structural_target_span_status": "found"
+    }
+  },
+  "split_coverage": {
+    "configured_prediction_split": "train",
+    "configured_training_split": "train",
+    "gold_split_counts": {
+      "dev": 3,
+      "test": 6,
+      "train": 3
+    },
+    "prediction_gold_row_count": 3,
+    "training_row_count": 3
+  },
+  "summary": {
+    "gold_row_count": 12,
+    "prediction_count": 3
+  },
+  "target_shape": {
+    "list_slots_count": 0,
+    "list_slots_examples": [],
+    "path_like_route_count": 0,
+    "path_like_route_examples": []
+  },
+  "training_coverage": {
+    "route_counts": {
+      "search_web": 3
+    },
+    "task_type_counts": {
+      "search": 3
+    }
+  }
+}

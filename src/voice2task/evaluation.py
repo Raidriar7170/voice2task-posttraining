@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import subprocess
@@ -7,7 +8,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from voice2task.formatting import prompt_constraint_summary
+from voice2task.formatting import (
+    FORMATTING_POLICY,
+    format_sft_prediction_prompt,
+    format_sft_training_text,
+    prompt_constraint_summary,
+)
 from voice2task.io import read_json, read_jsonl, write_jsonl
 from voice2task.schemas import (
     PRIVATE_IP_RE,
@@ -19,6 +25,7 @@ from voice2task.schemas import (
     SFTDatasetRow,
     ValidationError,
     as_contract,
+    canonical_contract_json,
 )
 
 
@@ -389,8 +396,12 @@ def _prediction_symptom_summary(rows: list[SFTDatasetRow], predictions: dict[str
     path_like_examples: list[dict[str, str]] = []
     list_slots_examples: list[dict[str, str]] = []
     schema_invalid_prediction_count = 0
+    missing_prediction_count = 0
     for row in rows:
-        raw_prediction = predictions.get(row.id)
+        if row.id not in predictions:
+            missing_prediction_count += 1
+            continue
+        raw_prediction = predictions[row.id]
         parsed_prediction = _parse_prediction_object(raw_prediction)
         if _prediction_to_contract(raw_prediction) is None:
             schema_invalid_prediction_count += 1
@@ -414,6 +425,7 @@ def _prediction_symptom_summary(rows: list[SFTDatasetRow], predictions: dict[str
             )
     return {
         "prediction_count": len(predictions),
+        "missing_prediction_count": missing_prediction_count,
         "path_like_route_count": len(path_like_examples),
         "list_slots_count": len(list_slots_examples),
         "schema_invalid_prediction_count": schema_invalid_prediction_count,
@@ -513,12 +525,304 @@ def _decoding_evidence(prediction_metadata: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _alignment_rows(rows: list[SFTDatasetRow], predictions: dict[str, Any], split: str) -> list[SFTDatasetRow]:
+    if predictions:
+        predicted_ids = set(predictions)
+        return [row for row in rows if row.id in predicted_ids]
+    if split == "all":
+        return rows
+    return [row for row in rows if row.split == split]
+
+
+def _system_user_prefix(text: str) -> str:
+    marker = "\nassistant:"
+    if marker in text:
+        return text.split(marker, 1)[0]
+    return text
+
+
+def _target_span(training_text: str, assistant_target: str) -> dict[str, Any]:
+    start = training_text.find(assistant_target)
+    if start < 0:
+        return {"status": "not_found", "start": None, "end": None}
+    return {"status": "found", "start": start, "end": start + len(assistant_target)}
+
+
+def _public_config_value(value: Any, *, private_placeholder: str = "<private_value>") -> Any:
+    if isinstance(value, dict):
+        return {
+            str(key): _public_config_value(item, private_placeholder=private_placeholder)
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [_public_config_value(item, private_placeholder=private_placeholder) for item in value]
+    if not isinstance(value, str):
+        return value
+    if any(value.startswith(prefix) for prefix in ("/mnt/data/", "/Users/", "/root/", "/tmp/", "/private/")):
+        return private_placeholder
+    return _sanitize_public_summary(value)
+
+
+def _metadata_field_alignment(config_value: Any, metadata_value: Any) -> dict[str, Any]:
+    config_public = _public_config_value(config_value)
+    metadata_public = _public_config_value(metadata_value)
+    return {
+        "training_config": config_public,
+        "prediction_metadata": metadata_public,
+        "matches": config_public == metadata_public,
+    }
+
+
+def _base_model_alignment(training_config: dict[str, Any], prediction_metadata: dict[str, Any]) -> dict[str, Any]:
+    config_base = _public_config_value(training_config.get("base_model"), private_placeholder="<private_base_model>")
+    metadata_base = _public_config_value(
+        prediction_metadata.get("base_model"),
+        private_placeholder="<private_base_model>",
+    )
+    if metadata_base == "<private_base_model>" and isinstance(config_base, str) and config_base:
+        status = "prediction_metadata_private_placeholder"
+    elif config_base == metadata_base:
+        status = "matches"
+    else:
+        status = "differs"
+    return {
+        "training_config": config_base,
+        "prediction_metadata": metadata_base,
+        "status": status,
+    }
+
+
+def _adapter_gate(training_config: dict[str, Any], prediction_metadata: dict[str, Any]) -> dict[str, Any]:
+    prediction_gate = prediction_metadata.get("prediction_gate")
+    gate = prediction_gate if isinstance(prediction_gate, dict) else {}
+    adapter_path = training_config.get("adapter_path")
+    return {
+        "adapter_configured": bool(
+            gate.get("adapter_configured")
+            if "adapter_configured" in gate
+            else isinstance(adapter_path, str) and bool(adapter_path.strip())
+        ),
+        "cli_run_prediction": bool(gate.get("cli_run_prediction", False)),
+        "config_allow_private_prediction": bool(
+            gate.get("config_allow_private_prediction", training_config.get("allow_private_prediction", False))
+        ),
+        "fixture_mode": bool(gate.get("fixture_mode", False)),
+        "will_run_private_prediction": bool(gate.get("will_run_private_prediction", False)),
+        "adapter_path_public_safe": "<configured_not_disclosed>"
+        if isinstance(adapter_path, str) and adapter_path.strip()
+        else "<not_configured>",
+    }
+
+
+def _formatting_policy_alignment(prediction_metadata: dict[str, Any]) -> dict[str, Any]:
+    metadata_policy = prediction_metadata.get("formatting_policy")
+    public_metadata_policy = {
+        key: _public_config_value(metadata_policy.get(key))
+        for key in FORMATTING_POLICY
+        if isinstance(metadata_policy, dict) and key in metadata_policy
+    }
+    return {
+        "expected": dict(FORMATTING_POLICY),
+        "prediction_metadata": public_metadata_policy,
+        "matches": public_metadata_policy == FORMATTING_POLICY,
+    }
+
+
+def _real_label_provenance_available(objective_inspection: dict[str, Any]) -> bool:
+    provenance = objective_inspection.get("label_source") or objective_inspection.get("label_provenance")
+    return provenance in {"real_training_labels", "actual_training_labels", "trl_collator_labels"}
+
+
+def _label_mask_evidence(objective_inspection: dict[str, Any] | None) -> dict[str, Any]:
+    if not isinstance(objective_inspection, dict):
+        return {
+            "status": "labels_unavailable",
+            "true_label_mask_status": "unavailable",
+            "source": "objective_inspection_not_loaded",
+            "prompt_tokens_masked": None,
+            "assistant_tokens_carry_loss": None,
+            "evidence_gaps": ["real_training_labels_not_inspected", "real_training_label_provenance_missing"],
+        }
+    prompt_tokens_masked = objective_inspection.get("prompt_tokens_masked")
+    assistant_tokens_carry_loss = objective_inspection.get("assistant_tokens_carry_loss")
+    if (
+        objective_inspection.get("inspection_status") == "inspectable"
+        and _real_label_provenance_available(objective_inspection)
+        and isinstance(prompt_tokens_masked, bool)
+        and isinstance(assistant_tokens_carry_loss, bool)
+    ):
+        return {
+            "status": "labels_inspected",
+            "true_label_mask_status": "inspectable",
+            "source": "objective_inspection",
+            "inspection_status": objective_inspection.get("inspection_status", "inspectable"),
+            "label_source": objective_inspection.get("label_source") or objective_inspection.get("label_provenance"),
+            "prompt_tokens_masked": prompt_tokens_masked,
+            "assistant_tokens_carry_loss": assistant_tokens_carry_loss,
+            "evidence_gaps": [],
+        }
+    return {
+        "status": "labels_unavailable",
+        "true_label_mask_status": "unavailable",
+        "source": "objective_inspection",
+        "inspection_status": objective_inspection.get("inspection_status", "unknown"),
+        "prompt_tokens_masked": None,
+        "assistant_tokens_carry_loss": None,
+        "evidence_gaps": ["real_training_labels_not_inspected", "real_training_label_provenance_missing"],
+    }
+
+
+def _prior_artifacts(
+    *,
+    prior_artifact_paths: dict[str, str] | None,
+    prediction_metadata: dict[str, Any],
+) -> dict[str, str]:
+    artifacts: dict[str, str] = {}
+    if isinstance(prior_artifact_paths, dict):
+        artifacts.update(
+            {
+                str(key): _sanitize_public_summary(str(value))
+                for key, value in prior_artifact_paths.items()
+                if isinstance(value, str) and value
+            }
+        )
+    for section_name in ("diagnostic_artifacts", "sidecars"):
+        section = prediction_metadata.get(section_name)
+        if isinstance(section, dict):
+            artifacts.update(
+                {
+                    str(key): _sanitize_public_summary(str(value))
+                    for key, value in section.items()
+                    if isinstance(value, str) and value
+                }
+            )
+    return dict(sorted(artifacts.items()))
+
+
+def _diagnose_sft_target_template_alignment(
+    rows: list[SFTDatasetRow],
+    predictions: dict[str, Any],
+    *,
+    training_config: dict[str, Any],
+    prediction_metadata: dict[str, Any],
+    prior_artifact_paths: dict[str, str] | None = None,
+    objective_inspection: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    prediction_split = str(prediction_metadata.get("prediction_split", training_config.get("prediction_split", "all")))
+    selected_rows = _alignment_rows(rows, predictions, prediction_split)
+    row_evidence: list[dict[str, Any]] = []
+    for row in selected_rows:
+        training_text = format_sft_training_text(row, tokenizer=None)
+        prediction_prompt = format_sft_prediction_prompt(row, tokenizer=None)
+        assistant_target = canonical_contract_json(as_contract(row.target_contract))
+        span = _target_span(training_text, assistant_target)
+        same_prefix = _system_user_prefix(training_text) == _system_user_prefix(prediction_prompt)
+        target_in_training = assistant_target in training_text
+        target_in_prompt = assistant_target in prediction_prompt
+        row_evidence.append(
+            {
+                "row_id": _sanitize_id(row.id),
+                "split": row.split,
+                "training_text_sha256": hashlib.sha256(training_text.encode("utf-8")).hexdigest(),
+                "prediction_prompt_sha256": hashlib.sha256(prediction_prompt.encode("utf-8")).hexdigest(),
+                "assistant_contract_target_sha256": hashlib.sha256(assistant_target.encode("utf-8")).hexdigest(),
+                "training_text_char_count": len(training_text),
+                "prediction_prompt_char_count": len(prediction_prompt),
+                "assistant_contract_target_char_count": len(assistant_target),
+                "same_system_user_prefix": same_prefix,
+                "assistant_contract_target_in_training_text": target_in_training,
+                "assistant_contract_target_in_prediction_prompt": target_in_prompt,
+                "assistant_target_only_in_training_text": target_in_training and not target_in_prompt,
+                "prediction_prompt_ends_with_generation_boundary": prediction_prompt.rstrip().endswith("assistant:"),
+                "assistant_target_span": span,
+                "structural_proxy_status": "assistant_target_span_found"
+                if span["status"] == "found"
+                else "assistant_target_span_unavailable",
+            }
+        )
+    no_matching_rows = not row_evidence
+    evidence_gaps = ["no_matching_prediction_rows"] if no_matching_rows else []
+    return {
+        "diagnostic_kind": "sft_target_template_alignment",
+        "summary": {
+            "diagnostic_status": "public_safe_structural_evidence",
+            "row_count": len(row_evidence),
+            "prediction_split": prediction_split,
+            "all_rows_share_system_user_prefix": bool(row_evidence)
+            and all(row["same_system_user_prefix"] for row in row_evidence),
+            "all_training_text_contains_assistant_target": all(
+                row["assistant_contract_target_in_training_text"] for row in row_evidence
+            )
+            if row_evidence
+            else False,
+            "all_prediction_prompts_exclude_assistant_target": bool(row_evidence)
+            and all(
+                not row["assistant_contract_target_in_prediction_prompt"] for row in row_evidence
+            ),
+            "structural_target_span_status": "found"
+            if row_evidence and all(row["assistant_target_span"]["status"] == "found" for row in row_evidence)
+            else "unavailable",
+            "evidence_gaps": evidence_gaps,
+        },
+        "rows": row_evidence,
+        "label_mask_evidence": _label_mask_evidence(objective_inspection),
+        "chat_template_evidence": {
+            "formatting_policy": dict(FORMATTING_POLICY),
+            "rendering_source": "fallback",
+            "fallback_policy": FORMATTING_POLICY["fallback"],
+            "tokenizer_template_status": "not_loaded",
+            "tokenizer_template_inspected": False,
+            "evidence_gaps": ["tokenizer_chat_template_not_loaded"],
+        },
+        "metadata_alignment": {
+            "base_model": _base_model_alignment(training_config, prediction_metadata),
+            "model_source": _metadata_field_alignment(
+                training_config.get("model_source"),
+                prediction_metadata.get("model_source"),
+            ),
+            "stack": _metadata_field_alignment(
+                training_config.get("stack", "transformers+peft+trl"),
+                prediction_metadata.get("stack"),
+            ),
+            "prediction_split": _metadata_field_alignment(
+                training_config.get("prediction_split", prediction_split),
+                prediction_metadata.get("prediction_split"),
+            ),
+            "adapter_gate": _adapter_gate(training_config, prediction_metadata),
+            "adapter_release_status": _sanitize_public_summary(
+                str(prediction_metadata.get("adapter_release_status", "unknown"))
+            ),
+            "prediction_source_kind": _sanitize_public_summary(
+                str(prediction_metadata.get("prediction_source_kind", "unknown"))
+            ),
+            "formatting_policy": _formatting_policy_alignment(prediction_metadata),
+        },
+        "prior_artifacts": _prior_artifacts(
+            prior_artifact_paths=prior_artifact_paths,
+            prediction_metadata=prediction_metadata,
+        ),
+        "claims": {
+            "public_sample_only": True,
+            "does_not_run_private_prediction": True,
+            "does_not_retrain": True,
+            "does_not_repair_outputs": True,
+            "checkpoint_release": False,
+            "adapter_release": False,
+            "does_not_prove_dev_test_generalization": True,
+            "production_readiness_claim": False,
+            "live_browser_benchmark_improvement_claim": False,
+        },
+    }
+
+
 def diagnose_source_alignment(
     rows: list[SFTDatasetRow],
     predictions: dict[str, Any],
     *,
     training_config: dict[str, Any],
     prediction_metadata: dict[str, Any],
+    prior_artifact_paths: dict[str, str] | None = None,
+    objective_inspection: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     split_coverage = _split_coverage(
         rows,
@@ -538,6 +842,14 @@ def diagnose_source_alignment(
         "current_prompt_constraints": prompt_constraint_summary(),
         "prediction_run_prompt_evidence": _prediction_run_prompt_evidence(prediction_metadata),
         "decoding_evidence": _decoding_evidence(prediction_metadata),
+        "sft_target_template_alignment": _diagnose_sft_target_template_alignment(
+            rows,
+            predictions,
+            training_config=training_config,
+            prediction_metadata=prediction_metadata,
+            prior_artifact_paths=prior_artifact_paths,
+            objective_inspection=objective_inspection,
+        ),
         "claims": {
             "invalid_predictions_remain_invalid": True,
             "does_not_repair_normalize_coerce_or_replace_predictions": True,

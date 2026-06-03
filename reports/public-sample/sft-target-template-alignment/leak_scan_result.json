@@ -1,0 +1,12 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-03T08:54:12.935791+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "reports/public-sample/sft-target-template-alignment",
+    "docs/human-briefs/2026-06-03-diagnose-sft-target-template-alignment.html",
+    "docs/human-briefs/2026-06-03-autonomous-loop-diagnose-sft-target-template-alignment.html",
+    "openspec/changes/archive/2026-06-03-diagnose-sft-target-template-alignment"
+  ]
+}

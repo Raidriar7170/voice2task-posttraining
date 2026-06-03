@@ -165,6 +165,112 @@ def write_alignment_diagnostics_report(
     return {"json": json_path, "markdown": markdown_path}
 
 
+def write_sft_target_template_alignment_report(
+    diagnostics: dict[str, Any],
+    output_dir: Path,
+    title: str = "Voice2Task source diagnostics",
+) -> dict[str, Path]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    alignment = diagnostics["sft_target_template_alignment"]
+    json_path = output_dir / "sft_target_template_alignment.json"
+    markdown_path = output_dir / "sft_target_template_alignment.md"
+    write_json(json_path, alignment)
+
+    summary = alignment["summary"]
+    label_mask = alignment["label_mask_evidence"]
+    chat_template = alignment["chat_template_evidence"]
+    metadata = alignment["metadata_alignment"]
+    lines = [
+        f"# SFT Target-Template Alignment - {title}",
+        "",
+        (
+            "This diagnostic compares public-sample SFT training rendering with prediction prompts. "
+            "It does not run private prediction, retrain, repair outputs, or replace prior diagnostic artifacts."
+        ),
+        "",
+        "## Boundary",
+        "",
+        "- This is not a checkpoint release.",
+        "- This is not an adapter release.",
+        "- This is not dev/test generalization evidence.",
+        "- This makes no production-readiness claim.",
+        "- This is not a live-browser benchmark improvement claim.",
+        "",
+        "## Summary",
+        "",
+        f"- Diagnostic status: `{summary['diagnostic_status']}`",
+        f"- Rows compared: `{summary['row_count']}`",
+        f"- Prediction split: `{summary['prediction_split']}`",
+        f"- Same system/user prefix for all rows: `{summary['all_rows_share_system_user_prefix']}`",
+        f"- Assistant target in all training text: `{summary['all_training_text_contains_assistant_target']}`",
+        f"- Assistant target excluded from all prediction prompts: "
+        f"`{summary['all_prediction_prompts_exclude_assistant_target']}`",
+        f"- Structural target span status: `{summary['structural_target_span_status']}`",
+        "",
+        "## Label-Mask Evidence",
+        "",
+        f"- Status: `{label_mask['status']}`",
+        f"- True label-mask status: `{label_mask['true_label_mask_status']}`",
+        f"- Prompt tokens masked: `{label_mask['prompt_tokens_masked']}`",
+        f"- Assistant tokens carry loss: `{label_mask['assistant_tokens_carry_loss']}`",
+        f"- Evidence gaps: `{label_mask['evidence_gaps']}`",
+        "",
+        "## Chat Template Evidence",
+        "",
+        f"- Rendering source: `{chat_template['rendering_source']}`",
+        f"- Fallback policy: `{chat_template['fallback_policy']}`",
+        f"- Tokenizer template status: `{chat_template['tokenizer_template_status']}`",
+        f"- Evidence gaps: `{chat_template['evidence_gaps']}`",
+        "",
+        "## Adapter/Base Metadata Alignment",
+        "",
+        f"- Base model status: `{metadata['base_model']['status']}`",
+        f"- Base model training config: `{metadata['base_model']['training_config']}`",
+        f"- Base model prediction metadata: `{metadata['base_model']['prediction_metadata']}`",
+        f"- Model source matches: `{metadata['model_source']['matches']}`",
+        f"- Stack matches: `{metadata['stack']['matches']}`",
+        f"- Prediction split matches: `{metadata['prediction_split']['matches']}`",
+        f"- Adapter gate: `{metadata['adapter_gate']}`",
+        f"- Adapter release status: `{metadata['adapter_release_status']}`",
+        f"- Prediction source kind: `{metadata['prediction_source_kind']}`",
+        f"- Formatting policy matches: `{metadata['formatting_policy']['matches']}`",
+        "",
+        "## Prior Artifacts Linked",
+        "",
+    ]
+    prior_artifacts = alignment.get("prior_artifacts", {})
+    if prior_artifacts:
+        for name, path in sorted(prior_artifacts.items()):
+            lines.append(f"- `{name}`: `{path}`")
+    else:
+        lines.append("- none")
+    lines.extend(["", "## Row Evidence", ""])
+    for row in alignment.get("rows", []):
+        lines.extend(
+            [
+                f"### `{row['row_id']}`",
+                "",
+                f"- Same system/user prefix: `{row['same_system_user_prefix']}`",
+                f"- Assistant target in training text: `{row['assistant_contract_target_in_training_text']}`",
+                f"- Assistant target in prediction prompt: `{row['assistant_contract_target_in_prediction_prompt']}`",
+                f"- Prediction prompt ends with generation boundary: "
+                f"`{row['prediction_prompt_ends_with_generation_boundary']}`",
+                f"- Structural proxy status: `{row['structural_proxy_status']}`",
+                f"- Assistant target span: `{row['assistant_target_span']}`",
+                f"- Training text SHA-256: `{row['training_text_sha256']}`",
+                f"- Prediction prompt SHA-256: `{row['prediction_prompt_sha256']}`",
+                f"- Assistant target SHA-256: `{row['assistant_contract_target_sha256']}`",
+                f"- Training text characters: `{row['training_text_char_count']}`",
+                f"- Prediction prompt characters: `{row['prediction_prompt_char_count']}`",
+                f"- Assistant target characters: `{row['assistant_contract_target_char_count']}`",
+                "",
+            ]
+        )
+
+    markdown_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    return {"sft_target_template_alignment_json": json_path, "sft_target_template_alignment_markdown": markdown_path}
+
+
 def write_source_diagnostics_report(
     diagnostics: dict[str, Any],
     output_dir: Path,
@@ -203,6 +309,7 @@ def write_source_diagnostics_report(
         "",
         f"- Gold rows: `{summary['gold_row_count']}`",
         f"- Predictions: `{summary['prediction_count']}`",
+        f"- Missing predictions: `{prediction_symptoms.get('missing_prediction_count', 0)}`",
         f"- Gold path-like route targets: `{target_shape['path_like_route_count']}`",
         f"- Gold list-shaped slots targets: `{target_shape['list_slots_count']}`",
         f"- Prediction path-like routes: `{prediction_symptoms['path_like_route_count']}`",
@@ -269,7 +376,10 @@ def write_source_diagnostics_report(
         lines.append("")
 
     markdown_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
-    return {"json": json_path, "markdown": markdown_path}
+    paths = {"json": json_path, "markdown": markdown_path}
+    if "sft_target_template_alignment" in diagnostics:
+        paths.update(write_sft_target_template_alignment_report(diagnostics, output_dir, title=title))
+    return paths
 
 
 def write_prediction_evidence_pack(

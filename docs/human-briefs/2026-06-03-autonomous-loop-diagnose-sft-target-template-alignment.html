@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Autonomous Loop Closeout: SFT Target-Template Alignment</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f8fb;
+      --ink: #172033;
+      --muted: #5d6877;
+      --line: #d8dee8;
+      --panel: #ffffff;
+      --accent: #1f6f5f;
+      --warn: #8a5a12;
+      --good: #17623a;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.58; }
+    main { max-width: 980px; margin: 0 auto; padding: 36px 22px 52px; }
+    h1 { margin: 0 0 8px; font-size: 30px; letter-spacing: 0; }
+    h2 { margin: 26px 0 10px; font-size: 18px; }
+    p { margin: 8px 0; }
+    a { color: var(--accent); }
+    code { background: #eef2f6; border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; font-size: 0.92em; }
+    ul { margin: 8px 0; padding-left: 20px; }
+    header { border-bottom: 1px solid var(--line); margin-bottom: 24px; padding-bottom: 18px; }
+    .status { display: inline-block; border: 1px solid #a8d5ba; color: var(--good); background: #eefaf2; border-radius: 999px; padding: 2px 10px; font-weight: 700; font-size: 13px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 14px 0 4px; }
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
+    .label { color: var(--muted); font-size: 13px; margin-bottom: 4px; }
+    .value { font-weight: 700; overflow-wrap: anywhere; }
+    .risk { border-left: 4px solid var(--warn); color: #47351c; padding-left: 12px; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Autonomous loop: SFT target-template alignment</h1>
+      <p><span class="status">completed · archived</span></p>
+      <p>结论：本轮已完成并归档 <code>diagnose-sft-target-template-alignment</code>，新增 public-safe 诊断证明本地 SFT target/prompt 结构一致但真实 label mask 与 tokenizer chat template 仍是证据缺口。</p>
+    </header>
+
+    <section>
+      <h2>停止原因</h2>
+      <p>停止于 phase complete：OpenSpec change 已归档，主 specs 已同步，Reviewer Must Fix 已修复，后续真实 tokenizer/collator label provenance 检查或最小重训前验证会改变下一阶段 scope，需要新的 bounded OpenSpec change 或人工确认。</p>
+    </section>
+
+    <section>
+      <h2>项目阶段进度</h2>
+      <ul>
+        <li>当前阶段目标：first-phase SFT/DPO companion evidence；来源是 <a href="../../README.md"><code>README.md</code></a>、<a href="../../CONTEXT.md"><code>CONTEXT.md</code></a> 和 OpenSpec specs。</li>
+        <li>本阶段推进：把 A100 train-split schema failure 后的原因空间收窄为 local formatting/metadata 证据与真实 label/tokenizer 缺口。</li>
+        <li>剩余能力缺口：未加载真实 tokenizer chat template；未检查真实 TRL/PEFT label tensors；未做新的 private A100 prediction/training。</li>
+        <li>下一阶段计划：建议新建 bounded change，验证真实 tokenizer/collator label provenance，或在证明 label mask 后再准备最小重训前检查。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>完成内容</h2>
+      <div class="grid">
+        <div class="card"><div class="label">OpenSpec change</div><div class="value">archived</div></div>
+        <div class="card"><div class="label">rows compared</div><div class="value">3 train rows</div></div>
+        <div class="card"><div class="label">label-mask status</div><div class="value">labels_unavailable</div></div>
+        <div class="card"><div class="label">leak scan</div><div class="value">0 findings</div></div>
+      </div>
+      <ul>
+        <li>扩展 <code>diagnose-source</code>，新增 <code>sft_target_template_alignment</code> 诊断切片。</li>
+        <li>只输出结构字段、hash、长度、span 和 evidence gaps，不输出完整 rendered prompt/target。</li>
+        <li>将 missing predictions 与实际 schema-invalid predictions 分开计数，避免 train split 诊断被 12-row public sample 误读。</li>
+        <li>归档到 <a href="../../openspec/changes/archive/2026-06-03-diagnose-sft-target-template-alignment/tasks.md"><code>openspec/changes/archive/2026-06-03-diagnose-sft-target-template-alignment</code></a>。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>关键文件</h2>
+      <ul>
+        <li><a href="../../src/voice2task/evaluation.py"><code>src/voice2task/evaluation.py</code></a></li>
+        <li><a href="../../src/voice2task/reports.py"><code>src/voice2task/reports.py</code></a></li>
+        <li><a href="../../src/voice2task/cli/eval.py"><code>src/voice2task/cli/eval.py</code></a></li>
+        <li><a href="../../tests/test_evaluator_reports.py"><code>tests/test_evaluator_reports.py</code></a></li>
+        <li><a href="../../reports/public-sample/sft-target-template-alignment/sft_target_template_alignment.md"><code>sft_target_template_alignment.md</code></a></li>
+        <li><a href="./2026-06-03-diagnose-sft-target-template-alignment.html"><code>phase Human Brief</code></a></li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>验证</h2>
+      <ul>
+        <li><code>PYTHONPATH=src pytest -q</code>：78 passed。</li>
+        <li><code>ruff check .</code>：All checks passed。</li>
+        <li><code>mypy src</code>：no issues in 16 source files。</li>
+        <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：archive 后 4 passed，0 failed。</li>
+        <li><code>voice2task.cli.data validate --public</code>：ok true，12 SFT rows，26 DPO pairs。</li>
+        <li><code>voice2task.cli.data dpo-check</code>：26 pairs；required rejection slices present。</li>
+        <li><code>voice2task.cli.eval metrics</code>：temp-dir smoke passed，未覆盖 public report。</li>
+        <li><code>voice2task.cli.report leak-scan</code>：ok true，0 findings。</li>
+        <li><code>git diff --check</code>：通过。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Review 和集成状态</h2>
+      <ul>
+        <li>内部 Reviewer 第一次返回 2 个 Must Fix；已修复 raw rendered text 泄漏风险和 label-mask provenance gap。</li>
+        <li>内部 Reviewer 复审：Must Fix none；已补 nested formatting policy sanitizer hardening。</li>
+        <li>External Pro review：未运行；本阶段未改 README、发布声明、作品集或 release claim，且内部 Reviewer 覆盖了 public-safety/overclaim 主要风险。</li>
+        <li>Auto integration：将按 policy stage + commit；push 会跳过，因为当前 repo 没有 remote/upstream。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>不可夸大结论</h2>
+      <p class="risk">本阶段没有加载 tokenizer、没有检查真实训练 label tensors、没有运行 private A100 prediction/training、没有修复 prior predictions，也不证明 checkpoint release、adapter release、held-out generalization、production readiness 或 live-browser improvement。</p>
+    </section>
+  </main>
+</body>
+</html>

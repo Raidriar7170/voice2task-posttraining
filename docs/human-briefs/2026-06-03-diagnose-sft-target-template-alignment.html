@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SFT Target-Template Alignment 诊断简报</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f8fb;
+      --ink: #172033;
+      --muted: #5f6b7a;
+      --line: #d9dee8;
+      --panel: #ffffff;
+      --accent: #1f6f5f;
+      --warn: #8a5a12;
+      --good: #17623a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main { max-width: 980px; margin: 0 auto; padding: 36px 22px 52px; }
+    header { border-bottom: 1px solid var(--line); margin-bottom: 24px; padding-bottom: 18px; }
+    h1 { margin: 0 0 8px; font-size: 30px; letter-spacing: 0; }
+    h2 { margin: 26px 0 10px; font-size: 18px; }
+    p { margin: 8px 0; }
+    a { color: var(--accent); }
+    code {
+      background: #eef2f6;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 0.92em;
+    }
+    ul { margin: 8px 0; padding-left: 20px; }
+    .summary { font-size: 18px; max-width: 900px; }
+    .meta { color: var(--muted); font-size: 14px; }
+    .status {
+      display: inline-block;
+      border: 1px solid #a8d5ba;
+      color: var(--good);
+      background: #eefaf2;
+      border-radius: 999px;
+      padding: 2px 10px;
+      font-weight: 700;
+      font-size: 13px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin: 14px 0 4px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+    }
+    .label { color: var(--muted); font-size: 13px; margin-bottom: 4px; }
+    .value { font-weight: 700; overflow-wrap: anywhere; }
+    .risk { border-left: 4px solid var(--warn); color: #47351c; padding-left: 12px; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>SFT Target-Template Alignment 诊断简报</h1>
+      <p class="meta">OpenSpec change: <code>diagnose-sft-target-template-alignment</code> · 2026-06-03</p>
+      <p><span class="status">archived · validation complete</span></p>
+    </header>
+
+    <section>
+      <p class="summary">结论：本阶段用 public-sample train rows 证明 SFT training text 与 prediction prompt 共享 system/user 前缀，assistant contract target 只出现在 training text；但 tokenizer chat template 和真实 label mask 仍未被本地证明。</p>
+      <div class="grid">
+        <div class="card">
+          <div class="label">rows compared</div>
+          <div class="value">3 train rows</div>
+        </div>
+        <div class="card">
+          <div class="label">structural target span</div>
+          <div class="value">found</div>
+        </div>
+        <div class="card">
+          <div class="label">true label-mask evidence</div>
+          <div class="value">labels_unavailable</div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>项目阶段进度</h2>
+      <ul>
+        <li>当前阶段目标：first-phase SFT/DPO companion evidence，来源于 <a href="../../README.md"><code>README.md</code></a> 和 <a href="../../CONTEXT.md"><code>CONTEXT.md</code></a>。</li>
+        <li>本阶段推进：把 train-split schema failure 后的下一步诊断收窄到 SFT target span、label-mask evidence gap、chat-template fallback 和 adapter/base metadata alignment。</li>
+        <li>剩余能力缺口：真实 tokenizer chat template 尚未加载验证；真实 TRL/PEFT label tensors 尚未检查；尚未做新的 private A100 rerun 或 retraining。</li>
+        <li>下一阶段建议：若继续，应提出新的 bounded OpenSpec change，专门检查真实 tokenizer/collator label provenance 或做最小重训前验证。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>本阶段改了什么</h2>
+      <ul>
+        <li>在现有 <code>diagnose_source_alignment</code> 中加入 <code>sft_target_template_alignment</code> 诊断切片。</li>
+        <li>报告每个 public sample row 的 SFT training text 与 prediction prompt 结构摘要、hash 和长度，不写入完整 rendered text。</li>
+        <li>分离 structural assistant target span 与 true label-mask evidence，避免把结构代理过度解释成真实 loss mask。</li>
+        <li>记录 fallback/chat-template policy、tokenizer 未加载 gap、adapter/base metadata alignment 和 prior train-split artifacts 链接。</li>
+        <li>保留 prior train-split diagnostic artifacts，只链接，不修改、不修复、不替换。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>关键文件</h2>
+      <ul>
+        <li><a href="../../src/voice2task/evaluation.py"><code>src/voice2task/evaluation.py</code></a>：SFT target-template alignment 诊断逻辑。</li>
+        <li><a href="../../src/voice2task/reports.py"><code>src/voice2task/reports.py</code></a>：JSON/Markdown evidence writer。</li>
+        <li><a href="../../src/voice2task/cli/eval.py"><code>src/voice2task/cli/eval.py</code></a>：<code>diagnose-source</code> 自动链接 prior artifacts/objective inspection。</li>
+        <li><a href="../../tests/test_evaluator_reports.py"><code>tests/test_evaluator_reports.py</code></a>：TDD 覆盖 rendering、label-mask 边界、metadata alignment 和 CLI 输出。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>证据链接</h2>
+      <ul>
+        <li><a href="../../reports/public-sample/sft-target-template-alignment/sft_target_template_alignment.json"><code>sft_target_template_alignment.json</code></a></li>
+        <li><a href="../../reports/public-sample/sft-target-template-alignment/sft_target_template_alignment.md"><code>sft_target_template_alignment.md</code></a></li>
+        <li><a href="../../reports/public-sample/sft-target-template-alignment/source_diagnostics.json"><code>source_diagnostics.json</code></a></li>
+        <li><a href="../../reports/public-sample/sft-target-template-alignment/source_diagnostics.md"><code>source_diagnostics.md</code></a></li>
+        <li><a href="../../reports/public-sample/a100-train-split-overfit-diagnostic/report.md"><code>prior train-split diagnostic report</code></a></li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>验证结果</h2>
+      <ul>
+        <li><code>PYTHONPATH=src pytest -q tests/test_evaluator_reports.py -k "sft_target_template_alignment or no_matching_rows or diagnose_source"</code>：RED 先失败；GREEN 后 3 passed。</li>
+        <li><code>PYTHONPATH=src pytest -q tests/test_evaluator_reports.py tests/test_formatting_training.py tests/test_a100_sft_prediction_smoke.py</code>：49 passed。</li>
+        <li><code>PYTHONPATH=src pytest -q</code>：78 passed。</li>
+        <li><code>ruff check .</code>：All checks passed。</li>
+        <li><code>mypy src</code>：no issues in 16 source files。</li>
+        <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：archive 前 5 passed；archive 后 4 passed，0 failed。</li>
+        <li><code>voice2task.cli.data validate --public</code>：ok true，12 SFT rows，26 DPO pairs。</li>
+        <li><code>voice2task.cli.data dpo-check</code>：26 pairs；required rejection slices present。</li>
+        <li><code>voice2task.cli.eval metrics</code> schema metrics smoke：写入临时目录，未覆盖 public report。</li>
+        <li><code>PYTHONPATH=src python -m voice2task.cli.eval diagnose-source ...</code>：已生成 alignment evidence pack。</li>
+        <li><code>voice2task.cli.report leak-scan</code>：ok true，0 findings；输出到 <code>leak_scan_result.json</code>。</li>
+        <li><code>git diff --check</code>：通过。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>剩余风险和不要夸大的结论</h2>
+      <p class="risk">本证据只收窄本地 formatting 和 metadata gap：它没有加载 tokenizer，没有检查真实 TRL/PEFT label tensors，没有运行私有 A100 prediction，没有 retrain，也没有修复 prior predictions。它不能证明 checkpoint release、adapter release、held-out generalization、production readiness 或 live-browser improvement。</p>
+    </section>
+
+    <section>
+      <h2>建议下一步</h2>
+      <p>已归档并同步 OpenSpec specs。下一步需要人工决定是否继续进入真实 tokenizer/collator label provenance 检查或最小重训前验证。</p>
+    </section>
+  </main>
+</body>
+</html>

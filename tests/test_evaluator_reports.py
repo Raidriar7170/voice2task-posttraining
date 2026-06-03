@@ -377,6 +377,146 @@ def test_source_diagnostics_report_targets_prompt_split_prediction_and_decoding_
     assert "not a checkpoint release" in markdown
 
 
+def test_source_diagnostics_include_sft_target_template_alignment_evidence(tmp_path: Path) -> None:
+    rows = [
+        _row_with_split("train-search", "train", "search", "search_web", {"query": "天气"}),
+        _row_with_split("dev-open", "dev", "navigate", "open_url", {"url": "https://example.com"}),
+    ]
+    prediction_metadata = {
+        "base_model": "<private_base_model>",
+        "model_source": "modelscope",
+        "stack": "transformers+peft+trl",
+        "prediction_split": "train",
+        "prediction_source_kind": "private_a100_adapter",
+        "adapter_release_status": "not_released",
+        "prediction_gate": {
+            "adapter_configured": True,
+            "cli_run_prediction": True,
+            "config_allow_private_prediction": True,
+            "fixture_mode": False,
+            "will_run_private_prediction": True,
+        },
+        "formatting_policy": {
+            "policy": "shared_contract_chat_template",
+            "sft_training_text": "shared_contract_chat_template",
+            "prediction_prompt": "shared_contract_chat_template",
+            "tokenizer_chat_template": "used_when_available_with_tokenize_false",
+            "fallback": {"mode": "deterministic_role_plain_text", "debug_path": "/Users/example/private/tokenizer"},
+            "prediction_target_policy": "generation_prompt_without_gold_contract",
+            "private_debug_path": "/Users/example/private/tokenizer",
+        },
+        "diagnostic_artifacts": {
+            "objective_inspection": "reports/public-sample/prior/objective_inspection.json",
+            "leak_scan": "reports/public-sample/prior/leak_scan_result.json",
+        },
+        "sidecars": {"prompt_snapshot": "reports/public-sample/prior/prompt_snapshot.json"},
+    }
+
+    diagnostics = evaluation.diagnose_source_alignment(
+        rows,
+        {"train-search": rows[0].target_contract.to_dict()},
+        training_config={
+            "base_model": "Qwen/Qwen2.5-0.5B-Instruct",
+            "model_source": "modelscope",
+            "dataset_split": "train",
+            "prediction_split": "train",
+            "adapter_path": "<a100_project_root>/runs/adapter",
+        },
+        prediction_metadata=prediction_metadata,
+        prior_artifact_paths={
+            "predictions": "reports/public-sample/prior/predictions.jsonl",
+            "metrics": "reports/public-sample/prior/metrics.json",
+            "report": "reports/public-sample/prior/report.md",
+        },
+        objective_inspection={
+            "inspection_status": "tokenizer_unavailable",
+            "prompt_tokens_masked": True,
+            "assistant_tokens_carry_loss": True,
+        },
+    )
+
+    alignment = diagnostics["sft_target_template_alignment"]
+    assert alignment["summary"]["diagnostic_status"] == "public_safe_structural_evidence"
+    assert alignment["summary"]["row_count"] == 1
+    assert alignment["summary"]["all_rows_share_system_user_prefix"] is True
+    assert alignment["summary"]["all_training_text_contains_assistant_target"] is True
+    assert alignment["summary"]["all_prediction_prompts_exclude_assistant_target"] is True
+    assert alignment["summary"]["evidence_gaps"] == []
+    assert diagnostics["prediction_symptoms"]["schema_invalid_prediction_count"] == 0
+    assert diagnostics["prediction_symptoms"]["missing_prediction_count"] == 1
+    assert alignment["label_mask_evidence"]["status"] == "labels_unavailable"
+    assert alignment["label_mask_evidence"]["true_label_mask_status"] == "unavailable"
+    assert "real_training_label_provenance_missing" in alignment["label_mask_evidence"]["evidence_gaps"]
+    assert alignment["chat_template_evidence"]["rendering_source"] == "fallback"
+    assert "tokenizer_chat_template_not_loaded" in alignment["chat_template_evidence"]["evidence_gaps"]
+    assert alignment["metadata_alignment"]["base_model"]["prediction_metadata"] == "<private_base_model>"
+    assert alignment["metadata_alignment"]["base_model"]["status"] == "prediction_metadata_private_placeholder"
+    assert alignment["metadata_alignment"]["model_source"]["matches"] is True
+    assert alignment["metadata_alignment"]["prediction_split"]["matches"] is True
+    assert alignment["metadata_alignment"]["formatting_policy"]["matches"] is False
+    fallback_policy = alignment["metadata_alignment"]["formatting_policy"]["prediction_metadata"]["fallback"]
+    assert fallback_policy["mode"] == "deterministic_role_plain_text"
+    assert fallback_policy["debug_path"] == "<private_value>"
+    assert alignment["metadata_alignment"]["adapter_gate"]["adapter_configured"] is True
+    assert alignment["metadata_alignment"]["adapter_release_status"] == "not_released"
+    assert alignment["metadata_alignment"]["prediction_source_kind"] == "private_a100_adapter"
+    assert "private_debug_path" not in alignment["metadata_alignment"]["formatting_policy"]["prediction_metadata"]
+    assert alignment["prior_artifacts"]["predictions"] == "reports/public-sample/prior/predictions.jsonl"
+    assert (
+        alignment["prior_artifacts"]["objective_inspection"]
+        == "reports/public-sample/prior/objective_inspection.json"
+    )
+    assert alignment["claims"]["does_not_run_private_prediction"] is True
+    assert alignment["claims"]["does_not_prove_dev_test_generalization"] is True
+
+    row = alignment["rows"][0]
+    assert row["row_id"] == "train-search"
+    assert row["same_system_user_prefix"] is True
+    assert row["assistant_contract_target_in_training_text"] is True
+    assert row["assistant_contract_target_in_prediction_prompt"] is False
+    assert row["assistant_target_span"]["status"] == "found"
+    assert row["structural_proxy_status"] == "assistant_target_span_found"
+    assert row["prediction_prompt_ends_with_generation_boundary"] is True
+    assert row["training_text_sha256"]
+    assert row["prediction_prompt_sha256"]
+    assert row["assistant_contract_target_sha256"]
+    assert row["training_text_char_count"] > row["prediction_prompt_char_count"]
+    assert "training_text" not in row
+    assert "prediction_prompt" not in row
+    assert "assistant_contract_target" not in row
+
+    paths = reports.write_source_diagnostics_report(diagnostics, output_dir=tmp_path, title="Source diagnostics")
+    alignment_json = json.loads(paths["sft_target_template_alignment_json"].read_text(encoding="utf-8"))
+    alignment_markdown = paths["sft_target_template_alignment_markdown"].read_text(encoding="utf-8")
+    assert alignment_json["summary"]["row_count"] == 1
+    assert "training_text" not in alignment_json["rows"][0]
+    assert "SFT Target-Template Alignment" in alignment_markdown
+    assert "labels_unavailable" in alignment_markdown
+    assert "tokenizer_chat_template_not_loaded" in alignment_markdown
+    assert "does not run private prediction" in alignment_markdown
+    assert "帮我处理train-search" not in alignment_markdown
+    assert "private_debug_path" not in alignment_markdown
+
+
+def test_sft_target_template_alignment_reports_no_matching_rows_without_vacuous_success() -> None:
+    rows = [_row_with_split("train-search", "train", "search", "search_web", {"query": "天气"})]
+
+    diagnostics = evaluation.diagnose_source_alignment(
+        rows,
+        {"different-row": rows[0].target_contract.to_dict()},
+        training_config={"dataset_split": "train", "prediction_split": "train"},
+        prediction_metadata={"prediction_split": "train"},
+    )
+
+    alignment = diagnostics["sft_target_template_alignment"]
+    assert alignment["summary"]["row_count"] == 0
+    assert alignment["summary"]["all_rows_share_system_user_prefix"] is False
+    assert alignment["summary"]["all_training_text_contains_assistant_target"] is False
+    assert alignment["summary"]["all_prediction_prompts_exclude_assistant_target"] is False
+    assert alignment["summary"]["structural_target_span_status"] == "unavailable"
+    assert "no_matching_prediction_rows" in alignment["summary"]["evidence_gaps"]
+
+
 def test_diagnose_source_cli_writes_public_safe_json_and_markdown(tmp_path: Path) -> None:
     rows = [
         _row_with_split("train-search", "train", "search", "search_web", {"query": "天气"}),
@@ -447,10 +587,20 @@ def test_diagnose_source_cli_writes_public_safe_json_and_markdown(tmp_path: Path
 
     diagnostics = json.loads((output / "source_diagnostics.json").read_text(encoding="utf-8"))
     markdown = (output / "source_diagnostics.md").read_text(encoding="utf-8")
+    alignment_diagnostics = json.loads((output / "sft_target_template_alignment.json").read_text(encoding="utf-8"))
+    alignment_markdown = (output / "sft_target_template_alignment.md").read_text(encoding="utf-8")
     assert diagnostics["decoding_evidence"]["policy"]["max_new_tokens"] == 128
     assert diagnostics["decoding_evidence"]["policy"]["schema_repair_applied"] is False
     assert diagnostics["prediction_run_prompt_evidence"]["prompt_constraints_present"] is False
     assert diagnostics["prediction_symptoms"]["path_like_route_count"] == 1
+    assert alignment_diagnostics["summary"]["diagnostic_status"] == "public_safe_structural_evidence"
+    assert alignment_diagnostics["label_mask_evidence"]["status"] == "labels_unavailable"
+    assert "training_text" not in alignment_diagnostics["rows"][0]
+    assert "prediction_prompt" not in alignment_diagnostics["rows"][0]
+    assert alignment_diagnostics["rows"][0]["prediction_prompt_ends_with_generation_boundary"] is True
+    assert "SFT Target-Template Alignment" in alignment_markdown
+    assert "not a checkpoint release" in alignment_markdown
+    assert "帮我处理train-search" not in alignment_markdown
     assert "Source diagnostics" in markdown
     assert "schema_repair_applied" in markdown
 
