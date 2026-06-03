@@ -1,0 +1,70 @@
+{
+  "artifact_policy": {
+    "checkpoints_or_adapters_copied_to_git": false,
+    "private_paths_omitted": true,
+    "raw_logs_copied_to_git": false,
+    "raw_rendered_prompts_written": false
+  },
+  "claims": {
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "held_out_generalization_claim": false,
+    "live_browser_benchmark_claim": false,
+    "production_readiness_claim": false,
+    "runtime_readiness_proves_contract_learning": false
+  },
+  "dependency_policy": {
+    "a100_connection_allowed": false,
+    "model_download_allowed": false,
+    "policy": "prep_only_no_train_dependency_import_no_model_download",
+    "private_adapter_load_allowed": false,
+    "train_dependencies_imported": false
+  },
+  "evidence_gaps": [
+    "runtime_check_not_executed",
+    "real_training_labels_not_inspected",
+    "real_training_label_provenance_missing",
+    "private_override_unresolved",
+    "runtime_opt_in_missing"
+  ],
+  "evidence_kind": "sft_runtime_label_provenance_prep",
+  "generated_at": "2026-06-03T16:17:39.341789+00:00",
+  "inspection_status": "runtime_check_not_executed",
+  "label_provenance_intent": {
+    "intent": "inspect_real_tokenizer_collator_labels_later",
+    "private_labels_inspected": false,
+    "runtime_path": "future_authorized_private_tokenizer_collator_check"
+  },
+  "label_tensor_available": false,
+  "output_root_policy": {
+    "approved_policy": "must_resolve_to_approved_private_a100_project_root",
+    "output_root": "<a100_project_root>",
+    "public_template_output_root": "<a100_project_root>",
+    "status": "blocked_unresolved_template"
+  },
+  "prior_artifacts": {
+    "a100_train_split_overfit_diagnostic": "reports/public-sample/a100-train-split-overfit-diagnostic/",
+    "sft_label_provenance": "reports/public-sample/sft-label-provenance/",
+    "sft_target_template_alignment": "reports/public-sample/sft-target-template-alignment/"
+  },
+  "private_override": {
+    "public_placeholder": "<a100_project_root>",
+    "required": true,
+    "requirements": [
+      "Create a private override outside git before runtime execution.",
+      "Resolve <a100_project_root> to the approved private A100 project root.",
+      "Resolve adapter_path to a real private adapter produced by a gated training run.",
+      "Run only after explicit private/A100 authorization.",
+      "Keep raw rendered prompts, raw logs, checkpoints, adapters, caches, host details, SSH details, tokens, and private corpus rows out of committed artifacts."
+    ],
+    "status": "unresolved",
+    "unresolved_fields": [
+      "adapter_path",
+      "evidence_output_dir",
+      "output_root",
+      "runtime_check_output_dir"
+    ]
+  },
+  "runtime_check_status": "blocked_unresolved_private_override",
+  "true_label_mask_status": "unavailable"
+}

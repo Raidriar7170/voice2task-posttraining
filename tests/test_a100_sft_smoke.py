@@ -5,6 +5,7 @@ from typing import Any
 import pytest
 
 from voice2task import training
+from voice2task.cli import train as train_cli
 from voice2task.leak_scan import scan_paths
 from voice2task.training import run_sft
 
@@ -71,6 +72,50 @@ def _write_config(tmp_path: Path, allow_heavy_training: bool, output_root: str =
     return config
 
 
+def _write_runtime_label_provenance_config(
+    tmp_path: Path,
+    *,
+    allow_runtime_check: bool = False,
+    output_root: str = "<a100_project_root>",
+    adapter_path: str = "<a100_project_root>/runs/a100-train-split-overfit-diagnostic/adapter",
+    evidence_output_dir: str | None = None,
+    runtime_check_output_dir: str | None = None,
+) -> Path:
+    resolved_evidence_output_dir = evidence_output_dir or f"{output_root}/evidence/runtime-label-provenance-prep"
+    resolved_runtime_check_output_dir = (
+        runtime_check_output_dir or f"{output_root}/evidence/runtime-label-provenance-prep"
+    )
+    config = tmp_path / "runtime-label-provenance-prep.json"
+    config.write_text(
+        json.dumps(
+            {
+                "base_model": "Qwen/Qwen2.5-0.5B-Instruct",
+                "allow_runtime_label_provenance_check": allow_runtime_check,
+                "private_override_required": True,
+                "private_override_requirements": [
+                    "Create a private override outside git before runtime execution.",
+                    "Resolve <a100_project_root> to the approved private A100 project root.",
+                ],
+                "output_root": output_root,
+                "evidence_output_dir": resolved_evidence_output_dir,
+                "runtime_check_output_dir": resolved_runtime_check_output_dir,
+                "adapter_path": adapter_path,
+                "dependency_policy": "prep_only_no_train_dependency_import_no_model_download",
+                "label_provenance_intent": "inspect_real_tokenizer_collator_labels_later",
+                "prior_artifacts": {
+                    "sft_label_provenance": "reports/public-sample/sft-label-provenance/",
+                    "sft_target_template_alignment": "reports/public-sample/sft-target-template-alignment/",
+                    "a100_train_split_overfit_diagnostic": (
+                        "reports/public-sample/a100-train-split-overfit-diagnostic/"
+                    ),
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    return config
+
+
 def test_public_sample_a100_sft_smoke_config_is_bounded_and_opt_in() -> None:
     config_path = REPO_ROOT / "configs" / "sft-a100-public-smoke.json"
 
@@ -85,6 +130,149 @@ def test_public_sample_a100_sft_smoke_config_is_bounded_and_opt_in() -> None:
     assert config["a100_project_root_policy"] == A100_PROJECT_ROOT_POLICY
     assert config["gpu_selection_policy"] == "select_idle_gpu_only_no_process_interruption"
     assert scan_paths([config_path]).ok is True
+
+
+def test_runtime_label_provenance_config_template_is_public_safe_and_requires_private_override() -> None:
+    config_path = REPO_ROOT / "configs" / "sft-runtime-label-provenance-prep.json"
+
+    assert config_path.exists()
+    config = json.loads(config_path.read_text(encoding="utf-8"))
+    serialized = json.dumps(config, ensure_ascii=False, sort_keys=True)
+
+    assert config["private_override_required"] is True
+    assert config["allow_runtime_label_provenance_check"] is False
+    assert config["true_label_mask_status"] == "unavailable"
+    assert config["label_tensor_available"] is False
+    assert config["output_root"] == "<a100_project_root>"
+    assert "<a100_project_root>" in serialized
+    assert "private override" in " ".join(config["private_override_requirements"]).lower()
+    assert "prep_only_no_train_dependency_import_no_model_download" == config["dependency_policy"]
+    assert set(config["prior_artifacts"]) == {
+        "sft_label_provenance",
+        "sft_target_template_alignment",
+        "a100_train_split_overfit_diagnostic",
+    }
+    assert "/mnt/data/" not in serialized
+    assert "/Users/" not in serialized
+    assert scan_paths([config_path]).ok is True
+
+
+def test_runtime_label_provenance_prep_blocks_unresolved_private_override_and_keeps_true_labels_unavailable(
+    monkeypatch: Any,
+    tmp_path: Path,
+) -> None:
+    manifest = _write_manifest(tmp_path)
+    config = _write_runtime_label_provenance_config(tmp_path, allow_runtime_check=True)
+
+    def fail_if_train_dependencies_checked() -> bool:
+        raise AssertionError("runtime prep must not inspect train dependencies")
+
+    monkeypatch.setattr(training, "_train_dependencies_available", fail_if_train_dependencies_checked)
+
+    metadata = training.prepare_sft_runtime_label_provenance(config, manifest)
+    serialized = json.dumps(metadata, ensure_ascii=False, sort_keys=True)
+
+    assert metadata["evidence_kind"] == "sft_runtime_label_provenance_prep"
+    assert metadata["runtime_check_status"] == "blocked_unresolved_private_override"
+    assert metadata["runtime_gate"] == {
+        "cli_requested_runtime_check": False,
+        "config_allow_runtime_label_provenance_check": True,
+        "private_override_resolved": False,
+        "will_run_runtime_label_provenance_check": False,
+    }
+    assert metadata["private_override"]["required"] is True
+    assert metadata["private_override"]["status"] == "unresolved"
+    assert set(metadata["private_override"]["unresolved_fields"]) == {
+        "adapter_path",
+        "evidence_output_dir",
+        "output_root",
+        "runtime_check_output_dir",
+    }
+    assert metadata["dependency_policy"]["train_dependencies_imported"] is False
+    assert metadata["dependency_policy"]["model_download_allowed"] is False
+    assert metadata["dependency_policy"]["private_adapter_load_allowed"] is False
+    assert metadata["label_provenance_intent"]["private_labels_inspected"] is False
+    assert metadata["label_tensor_available"] is False
+    assert metadata["true_label_mask_status"] == "unavailable"
+    assert "runtime_check_not_executed" in metadata["evidence_gaps"]
+    assert "/mnt/data/" not in serialized
+    assert "/Users/" not in serialized
+
+
+def test_runtime_label_provenance_prep_defaults_to_non_heavy_skipped_status(tmp_path: Path) -> None:
+    manifest = _write_manifest(tmp_path)
+    resolved_root = tmp_path / "private-a100-root"
+    config = _write_runtime_label_provenance_config(
+        tmp_path,
+        allow_runtime_check=False,
+        output_root=resolved_root.as_posix(),
+        adapter_path=(resolved_root / "runs" / "adapter").as_posix(),
+    )
+
+    metadata = training.prepare_sft_runtime_label_provenance(config, manifest)
+
+    assert metadata["runtime_check_status"] == "skipped_no_runtime_opt_in"
+    assert metadata["runtime_gate"] == {
+        "cli_requested_runtime_check": False,
+        "config_allow_runtime_label_provenance_check": False,
+        "private_override_resolved": True,
+        "will_run_runtime_label_provenance_check": False,
+    }
+    assert metadata["output_root_policy"]["status"] == "resolved_private_override_not_run"
+    assert metadata["label_tensor_available"] is False
+    assert metadata["true_label_mask_status"] == "unavailable"
+    assert metadata["claims"]["runtime_readiness_proves_contract_learning"] is False
+
+
+def test_runtime_label_provenance_prep_blocks_partial_override_with_unresolved_evidence_output_dir(
+    tmp_path: Path,
+) -> None:
+    manifest = _write_manifest(tmp_path)
+    resolved_root = tmp_path / "private-a100-root"
+    config = _write_runtime_label_provenance_config(
+        tmp_path,
+        allow_runtime_check=True,
+        output_root=resolved_root.as_posix(),
+        adapter_path=(resolved_root / "runs" / "adapter").as_posix(),
+        runtime_check_output_dir=(resolved_root / "evidence" / "runtime-label-provenance-prep").as_posix(),
+        evidence_output_dir="<a100_project_root>/evidence/runtime-label-provenance-prep",
+    )
+
+    metadata = training.prepare_sft_runtime_label_provenance(config, manifest)
+
+    assert metadata["runtime_check_status"] == "blocked_unresolved_private_override"
+    assert metadata["runtime_gate"]["private_override_resolved"] is False
+    assert metadata["private_override"]["status"] == "unresolved"
+    assert metadata["private_override"]["unresolved_fields"] == ["evidence_output_dir"]
+
+
+def test_runtime_label_provenance_train_cli_writes_prep_metadata_without_stdout(
+    tmp_path: Path,
+    capsys: Any,
+) -> None:
+    manifest = _write_manifest(tmp_path)
+    config = _write_runtime_label_provenance_config(tmp_path, allow_runtime_check=True)
+    output = tmp_path / "runtime_prep.json"
+
+    assert (
+        train_cli.main(
+            [
+                "sft-prepare-runtime-label-provenance",
+                "--config",
+                config.as_posix(),
+                "--manifest",
+                manifest.as_posix(),
+                "--output",
+                output.as_posix(),
+            ]
+        )
+        == 0
+    )
+
+    assert capsys.readouterr().out == ""
+    metadata = json.loads(output.read_text(encoding="utf-8"))
+    assert metadata["runtime_check_status"] == "blocked_unresolved_private_override"
+    assert metadata["metadata_path"] == output.as_posix()
 
 
 def test_sft_heavy_training_requires_cli_and_config_opt_ins(monkeypatch: Any, tmp_path: Path) -> None:

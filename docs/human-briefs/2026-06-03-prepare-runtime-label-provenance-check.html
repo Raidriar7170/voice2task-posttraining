@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>prepare-runtime-label-provenance-check Human Brief</title>
+    <style>
+      body {
+        margin: 0;
+        background: #f6f7f9;
+        color: #17202a;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.58;
+      }
+      main {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 32px 20px 48px;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 28px;
+      }
+      h2 {
+        margin-top: 28px;
+        font-size: 18px;
+      }
+      .lead {
+        font-size: 18px;
+        font-weight: 650;
+      }
+      .status {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 10px;
+        margin: 20px 0;
+      }
+      .box {
+        border: 1px solid #d9dde3;
+        border-radius: 8px;
+        background: #ffffff;
+        padding: 12px 14px;
+      }
+      .box strong {
+        display: block;
+        color: #42526e;
+        font-size: 12px;
+        text-transform: uppercase;
+      }
+      code {
+        background: #eef1f5;
+        border-radius: 4px;
+        padding: 1px 5px;
+      }
+      ul {
+        padding-left: 20px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #ffffff;
+        border: 1px solid #d9dde3;
+      }
+      th,
+      td {
+        border-bottom: 1px solid #e6e9ee;
+        padding: 9px 10px;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        color: #42526e;
+        font-size: 13px;
+      }
+      .ok {
+        color: #166534;
+        font-weight: 700;
+      }
+      .warn {
+        color: #9a3412;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Runtime label provenance preparation</h1>
+      <p class="lead">
+        结论：本阶段只准备后续 runtime label provenance 检查路径；公开模板保持 private override 未解析，
+        因此不会连接 A100、不会下载模型、不会加载私有 adapter，也不会把 readiness 误写成真实 label 证据。
+      </p>
+
+      <section class="status" aria-label="status">
+        <div class="box"><strong>OpenSpec change</strong><code>prepare-runtime-label-provenance-check</code></div>
+        <div class="box"><strong>当前状态</strong><span class="ok">archived · validation complete</span></div>
+        <div class="box"><strong>runtime_check_status</strong><code>blocked_unresolved_private_override</code></div>
+        <div class="box"><strong>true_label_mask_status</strong><code>unavailable</code></div>
+      </section>
+
+      <h2>本阶段改动</h2>
+      <ul>
+        <li>新增 <code>prepare_sft_runtime_label_provenance</code>：只读 config 与 manifest metadata，不读取私有 label，不导入 train deps。</li>
+        <li>新增 <code>voice2task-train sft-prepare-runtime-label-provenance</code>：生成 prep metadata JSON，不执行 runtime 检查。</li>
+        <li>新增 <code>voice2task-report runtime-label-provenance-prep</code>：把 prep metadata 写成 public-safe JSON/Markdown evidence pack。</li>
+        <li>新增公开模板 <code>configs/sft-runtime-label-provenance-prep.json</code>，保留 <code>&lt;a100_project_root&gt;</code> 占位符并要求 repo 外 private override。</li>
+      </ul>
+
+      <h2>关键文件</h2>
+      <ul>
+        <li><code>src/voice2task/training.py</code>：runtime prep metadata helper。</li>
+        <li><code>src/voice2task/cli/train.py</code>：prep CLI command。</li>
+        <li><code>src/voice2task/reports.py</code> 与 <code>src/voice2task/cli/report.py</code>：prep evidence pack writer。</li>
+        <li><code>tests/test_a100_sft_smoke.py</code> 与 <code>tests/test_report_cli.py</code>：TDD 覆盖 config、blocking、non-heavy 默认、metadata shape 和 evidence sanitization。</li>
+      </ul>
+
+      <h2>证据链接</h2>
+      <ul>
+        <li><code>reports/public-sample/runtime-label-provenance-prep/runtime_prep_metadata.json</code></li>
+        <li><code>reports/public-sample/runtime-label-provenance-prep/runtime_label_provenance_prep.json</code></li>
+        <li><code>reports/public-sample/runtime-label-provenance-prep/runtime_label_provenance_prep.md</code></li>
+        <li>链接但不修改：<code>reports/public-sample/sft-label-provenance/</code></li>
+        <li>链接但不修改：<code>reports/public-sample/sft-target-template-alignment/</code></li>
+        <li>链接但不修改：<code>reports/public-sample/a100-train-split-overfit-diagnostic/</code></li>
+      </ul>
+
+      <h2>验证结果</h2>
+      <table>
+        <thead>
+          <tr><th>命令</th><th>结果</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>PYTHONPATH=src pytest -q tests/test_a100_sft_smoke.py tests/test_a100_sft_prediction_smoke.py tests/test_report_cli.py -k "runtime_label_provenance or label_provenance"</code></td><td class="ok">9 passed, 40 deselected</td></tr>
+          <tr><td><code>PYTHONPATH=src pytest -q</code></td><td class="ok">91 passed</td></tr>
+          <tr><td><code>ruff check .</code></td><td class="ok">All checks passed</td></tr>
+          <tr><td><code>mypy src</code></td><td class="ok">Success: no issues found in 16 source files</td></tr>
+          <tr><td><code>PYTHONPATH=src python -m voice2task.cli.data validate --sft data/public-samples/sft_public_sample.jsonl --dpo data/public-samples/dpo_public_sample.jsonl --manifest data/public-samples/manifest_public_sample.json --public</code></td><td class="ok">ok; 12 SFT rows, 26 DPO pairs</td></tr>
+          <tr><td><code>PYTHONPATH=src python -m voice2task.cli.data dpo-check --dpo data/public-samples/dpo_public_sample.jsonl</code></td><td class="ok">ok; 26 pairs</td></tr>
+          <tr><td><code>PYTHONPATH=src python -m voice2task.cli.eval metrics --gold data/public-samples/sft_public_sample.jsonl --predictions reports/public-sample/a100-train-split-overfit-diagnostic/predictions.jsonl --output "$tmpdir/runtime-label-provenance-prep-metrics-smoke" --title "Runtime label provenance prep metrics smoke"</code></td><td class="ok">ok; metrics JSON/Markdown written to a temporary smoke directory</td></tr>
+          <tr><td><code>PYTHONPATH=src python -m voice2task.cli.report leak-scan --paths configs/sft-runtime-label-provenance-prep.json reports/public-sample/runtime-label-provenance-prep docs/human-briefs/2026-06-03-prepare-runtime-label-provenance-check.html openspec/changes/archive/2026-06-03-prepare-runtime-label-provenance-check --output reports/public-sample/runtime-label-provenance-prep/leak_scan_result.json</code></td><td class="ok">ok; no findings</td></tr>
+          <tr><td><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code></td><td class="ok">archive 后 4 passed, 0 failed</td></tr>
+          <tr><td><code>git diff --check</code></td><td class="ok">passed</td></tr>
+        </tbody>
+      </table>
+
+      <h2>非夸大边界</h2>
+      <ul>
+        <li>本阶段没有执行 A100/private runtime，也没有 SSH、私有路径解析、模型下载或 adapter 加载。</li>
+        <li><code>label_tensor_available=false</code> 且 <code>true_label_mask_status=unavailable</code>，所以 readiness 不是真实 label-mask 证据。</li>
+        <li>不能声称 checkpoint release、adapter release、held-out generalization、production readiness 或 live-browser improvement。</li>
+      </ul>
+
+      <h2>推荐下一步</h2>
+      <p>本 change 已归档。后续真实 runtime 检查应作为另一个授权的私有/A100 phase 执行，并只提交脱敏摘要。</p>
+    </main>
+  </body>
+</html>

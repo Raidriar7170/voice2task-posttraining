@@ -8,7 +8,7 @@ import sys
 from datetime import datetime, timezone
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from voice2task.formatting import (
     FORMATTING_POLICY,
@@ -113,6 +113,180 @@ def _public_display_artifact_path(value: Path, placeholder: str) -> str:
     if any(raw.startswith(prefix) for prefix in PRIVATE_PATH_PREFIXES):
         return placeholder
     return raw
+
+
+def _sanitize_training_metadata_value(value: Any) -> Any:
+    if isinstance(value, str):
+        sanitized = PRIVATE_DECODED_PATH_RE.sub("<private_path>", value)
+        sanitized = PRIVATE_PATH_RE.sub("<private_path>", sanitized)
+        sanitized = PRIVATE_IP_RE.sub("<private_ip>", sanitized)
+        return SECRET_RE.sub("<secret>", sanitized)
+    if isinstance(value, dict):
+        return {
+            str(_sanitize_training_metadata_value(str(key))): _sanitize_training_metadata_value(item)
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [_sanitize_training_metadata_value(item) for item in value]
+    return value
+
+
+def _manifest_metadata_without_dataset_load(manifest_path: Path) -> dict[str, Any]:
+    manifest = read_json(manifest_path)
+    return {
+        "manifest_id": str(manifest.get("manifest_id", manifest_path.stem)),
+        "manifest_counts": manifest.get("counts", {}),
+        "manifest_public_safe": bool(manifest.get("public_safe", False)),
+    }
+
+
+def _runtime_private_fields(config: dict[str, Any]) -> dict[str, str]:
+    fields: dict[str, str] = {}
+    for key in (
+        "adapter_path",
+        "evidence_output_dir",
+        "output_root",
+        "runtime_check_output_dir",
+        "private_override_path",
+    ):
+        value = config.get(key)
+        if isinstance(value, str) and value:
+            fields[key] = value
+    return fields
+
+
+def _unresolved_runtime_fields(config: dict[str, Any]) -> list[str]:
+    return sorted(
+        key
+        for key, value in _runtime_private_fields(config).items()
+        if "<" in value or ">" in value
+    )
+
+
+def _runtime_output_root_policy(config: dict[str, Any], unresolved_fields: list[str]) -> dict[str, Any]:
+    raw_output_root = config.get("output_root")
+    policy = str(config.get("output_root_policy", config.get("a100_project_root_policy", "")) or "")
+    if "output_root" in unresolved_fields:
+        status = "blocked_unresolved_template"
+    elif isinstance(raw_output_root, str) and raw_output_root:
+        status = "resolved_private_override_not_run"
+    else:
+        status = "missing_output_root"
+    return {
+        "status": status,
+        "approved_policy": policy or "must_resolve_to_approved_private_a100_project_root",
+        "output_root": _sanitize_training_metadata_value(raw_output_root or "<missing_output_root>"),
+        "public_template_output_root": "<a100_project_root>",
+    }
+
+
+def _runtime_check_status(
+    *,
+    unresolved_fields: list[str],
+    config_allows_runtime_check: bool,
+) -> str:
+    if unresolved_fields:
+        return "blocked_unresolved_private_override"
+    if not config_allows_runtime_check:
+        return "skipped_no_runtime_opt_in"
+    return "prepared_private_override_resolved_not_run"
+
+
+def prepare_sft_runtime_label_provenance(
+    config_path: Path,
+    manifest_path: Path,
+    *,
+    metadata_path: Path | None = None,
+) -> dict[str, Any]:
+    config = _load_config(config_path)
+    manifest_summary = _manifest_metadata_without_dataset_load(manifest_path)
+    unresolved_fields = _unresolved_runtime_fields(config)
+    config_allows_runtime_check = bool(config.get("allow_runtime_label_provenance_check", False))
+    private_override_required = bool(config.get("private_override_required", True))
+    private_override_resolved = private_override_required and not unresolved_fields
+    runtime_check_status = _runtime_check_status(
+        unresolved_fields=unresolved_fields,
+        config_allows_runtime_check=config_allows_runtime_check,
+    )
+    evidence_gaps = [
+        "runtime_check_not_executed",
+        "real_training_labels_not_inspected",
+        "real_training_label_provenance_missing",
+    ]
+    if unresolved_fields:
+        evidence_gaps.append("private_override_unresolved")
+    if not config_allows_runtime_check:
+        evidence_gaps.append("runtime_opt_in_missing")
+    metadata = {
+        "evidence_kind": "sft_runtime_label_provenance_prep",
+        "stage": "sft_runtime_label_provenance_prep",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "config_path": _sanitize_training_metadata_value(config_path.as_posix()),
+        "dataset_manifest_path": _sanitize_training_metadata_value(manifest_path.as_posix()),
+        "dataset_manifest_id": manifest_summary["manifest_id"],
+        "manifest_counts": manifest_summary["manifest_counts"],
+        "manifest_public_safe": manifest_summary["manifest_public_safe"],
+        "runtime_check_status": runtime_check_status,
+        "runtime_gate": {
+            "cli_requested_runtime_check": False,
+            "config_allow_runtime_label_provenance_check": config_allows_runtime_check,
+            "private_override_resolved": private_override_resolved,
+            "will_run_runtime_label_provenance_check": False,
+        },
+        "private_override": {
+            "required": private_override_required,
+            "status": "resolved" if private_override_resolved else "unresolved",
+            "unresolved_fields": unresolved_fields,
+            "requirements": _sanitize_training_metadata_value(config.get("private_override_requirements", [])),
+            "public_placeholder": "<a100_project_root>",
+        },
+        "output_root_policy": _runtime_output_root_policy(config, unresolved_fields),
+        "dependency_policy": {
+            "policy": str(config.get("dependency_policy", "prep_only_no_train_dependency_import_no_model_download")),
+            "train_dependencies_imported": False,
+            "model_download_allowed": False,
+            "private_adapter_load_allowed": False,
+            "a100_connection_allowed": False,
+        },
+        "label_provenance_intent": {
+            "intent": str(
+                config.get(
+                    "label_provenance_intent",
+                    "inspect_real_tokenizer_collator_labels_later",
+                )
+            ),
+            "private_labels_inspected": False,
+            "runtime_path": "future_authorized_private_tokenizer_collator_check",
+        },
+        "label_tensor_available": False,
+        "true_label_mask_status": "unavailable",
+        "inspection_status": "runtime_check_not_executed",
+        "evidence_gaps": _deduped_gaps(evidence_gaps),
+        "prior_artifacts": _sanitize_training_metadata_value(config.get("prior_artifacts", {})),
+        "claims": {
+            "runtime_readiness_proves_contract_learning": False,
+            "checkpoint_release": False,
+            "adapter_release": False,
+            "held_out_generalization_claim": False,
+            "production_readiness_claim": False,
+            "live_browser_benchmark_claim": False,
+        },
+        "artifact_policy": {
+            "raw_rendered_prompts_written": False,
+            "raw_logs_copied_to_git": False,
+            "checkpoints_or_adapters_copied_to_git": False,
+            "private_paths_omitted": True,
+        },
+        "metadata_path": metadata_path.as_posix() if metadata_path is not None else "not_written",
+        "notes": (
+            "Preparation metadata only; no A100/private adapter execution occurred, no model was downloaded, "
+            "and no true runtime labels were inspected."
+        ),
+    }
+    sanitized = _sanitize_training_metadata_value(metadata)
+    if not isinstance(sanitized, dict):
+        raise AssertionError("runtime label provenance prep metadata must be a mapping")
+    return cast(dict[str, Any], sanitized)
 
 
 def _heavy_training_gate(config: dict[str, Any], dry_run: bool) -> dict[str, bool]:

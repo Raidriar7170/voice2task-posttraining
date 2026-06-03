@@ -1,0 +1,29 @@
+{
+  "adapter_path": "<a100_project_root>/runs/a100-train-split-overfit-diagnostic/adapter",
+  "allow_runtime_label_provenance_check": false,
+  "base_model": "Qwen/Qwen2.5-0.5B-Instruct",
+  "dataset_manifest_id": "public-sample-20260601T162313Z",
+  "dependency_policy": "prep_only_no_train_dependency_import_no_model_download",
+  "evidence_output_dir": "<a100_project_root>/evidence/runtime-label-provenance-prep",
+  "label_provenance_intent": "inspect_real_tokenizer_collator_labels_later",
+  "label_tensor_available": false,
+  "model_cache_policy": "private_remote_model_cache_not_copied_to_git",
+  "output_root": "<a100_project_root>",
+  "output_root_policy": "must_resolve_to_approved_private_a100_project_root",
+  "prior_artifacts": {
+    "a100_train_split_overfit_diagnostic": "reports/public-sample/a100-train-split-overfit-diagnostic/",
+    "sft_label_provenance": "reports/public-sample/sft-label-provenance/",
+    "sft_target_template_alignment": "reports/public-sample/sft-target-template-alignment/"
+  },
+  "private_override_required": true,
+  "private_override_requirements": [
+    "Create a private override outside git before runtime execution.",
+    "Resolve <a100_project_root> to the approved private A100 project root.",
+    "Resolve adapter_path to a real private adapter produced by a gated training run.",
+    "Run only after explicit private/A100 authorization.",
+    "Keep raw rendered prompts, raw logs, checkpoints, adapters, caches, host details, SSH details, tokens, and private corpus rows out of committed artifacts."
+  ],
+  "reference_runtime": "runtime-label-provenance-prep",
+  "runtime_check_output_dir": "<a100_project_root>/evidence/runtime-label-provenance-prep",
+  "true_label_mask_status": "unavailable"
+}

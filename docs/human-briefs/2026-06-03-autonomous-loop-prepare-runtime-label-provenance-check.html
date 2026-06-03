@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Autonomous Loop Closeout · prepare-runtime-label-provenance-check</title>
+    <style>
+      body {
+        margin: 0;
+        background: #f6f7f9;
+        color: #17202a;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.58;
+      }
+      main {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 34px 20px 52px;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 28px;
+      }
+      h2 {
+        margin-top: 28px;
+        font-size: 18px;
+      }
+      .lead {
+        font-size: 18px;
+        font-weight: 650;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 10px;
+        margin: 18px 0 8px;
+      }
+      .box {
+        border: 1px solid #d9dde3;
+        border-radius: 8px;
+        background: #ffffff;
+        padding: 12px 14px;
+      }
+      .box strong {
+        display: block;
+        color: #42526e;
+        font-size: 12px;
+        text-transform: uppercase;
+      }
+      code {
+        background: #eef1f5;
+        border-radius: 4px;
+        padding: 1px 5px;
+      }
+      ul {
+        padding-left: 20px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #ffffff;
+        border: 1px solid #d9dde3;
+      }
+      th,
+      td {
+        border-bottom: 1px solid #e6e9ee;
+        padding: 9px 10px;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        color: #42526e;
+        font-size: 13px;
+      }
+      .ok {
+        color: #166534;
+        font-weight: 700;
+      }
+      .warn {
+        color: #9a3412;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Autonomous Loop Closeout: prepare-runtime-label-provenance-check</h1>
+      <p class="lead">
+        结论：本轮完成并归档 <code>prepare-runtime-label-provenance-check</code>，把后续真实 runtime
+        label provenance 检查的公开模板、阻断状态、证据包和非夸大边界准备好，但没有运行 A100/private runtime。
+      </p>
+
+      <section class="grid" aria-label="status">
+        <div class="box"><strong>Loop status</strong><span class="ok">completed · archived</span></div>
+        <div class="box"><strong>Phase budget</strong>1 / 3 used</div>
+        <div class="box"><strong>Archived change</strong><code>2026-06-03-prepare-runtime-label-provenance-check</code></div>
+        <div class="box"><strong>Auto integration</strong><span class="warn">pending final policy check</span></div>
+      </section>
+
+      <h2>停止原因</h2>
+      <p>
+        本轮停止于 phase complete：OpenSpec change 已归档，Reviewer Must Fix 已修复，公开准备路径已验证。下一步如果要真正运行
+        tokenizer/collator label provenance 检查，会涉及私有/A100 runtime，必须作为新的授权阶段处理。
+      </p>
+
+      <h2>项目阶段进度</h2>
+      <ul>
+        <li>当前阶段目标：first-phase SFT/DPO companion evidence；来源是 <code>README.md</code>、<code>CONTEXT.md</code> 和 OpenSpec specs。</li>
+        <li>本阶段推进：把 runtime label provenance 从“概念下一步”变成可审计的 public-safe template、prep metadata、evidence pack 和 blocking contract。</li>
+        <li>剩余能力缺口：真实 tokenizer/collator label tensor 尚未在 A100/private runtime 中检查；没有 checkpoint/adapter release 或 held-out generalization evidence。</li>
+        <li>下一阶段计划：用户确认私有/A100 runtime 后，新建 bounded change 执行真实 label provenance check，并只提交脱敏摘要。</li>
+      </ul>
+
+      <h2>完成内容</h2>
+      <ul>
+        <li>新增 <code>configs/sft-runtime-label-provenance-prep.json</code>，保留 <code>&lt;a100_project_root&gt;</code> 占位符和 private override 要求。</li>
+        <li>新增 <code>voice2task-train sft-prepare-runtime-label-provenance</code>，只读 config/manifest 并输出 blocked prep metadata。</li>
+        <li>新增 <code>voice2task-report runtime-label-provenance-prep</code>，输出 public-safe JSON/Markdown evidence pack。</li>
+        <li>修复 Reviewer Must Fix：hostile metadata 不能覆盖 false claims 和 artifact-policy 安全默认值。</li>
+        <li>修复 Reviewer Should Fix：<code>evidence_output_dir</code> 参与 unresolved private override 检查。</li>
+      </ul>
+
+      <h2>关键文件和产物</h2>
+      <ul>
+        <li><code>src/voice2task/training.py</code>、<code>src/voice2task/cli/train.py</code>、<code>src/voice2task/reports.py</code>、<code>src/voice2task/cli/report.py</code></li>
+        <li><code>tests/test_a100_sft_smoke.py</code>、<code>tests/test_report_cli.py</code></li>
+        <li><code>reports/public-sample/runtime-label-provenance-prep/runtime_label_provenance_prep.json</code> 和 <code>.md</code></li>
+        <li><code>docs/human-briefs/2026-06-03-prepare-runtime-label-provenance-check.html</code></li>
+        <li><code>openspec/changes/archive/2026-06-03-prepare-runtime-label-provenance-check/</code></li>
+      </ul>
+
+      <h2>验证结果</h2>
+      <table>
+        <thead>
+          <tr><th>命令</th><th>结果</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>PYTHONPATH=src pytest -q tests/test_a100_sft_smoke.py tests/test_a100_sft_prediction_smoke.py tests/test_report_cli.py -k "runtime_label_provenance or label_provenance"</code></td><td class="ok">9 passed</td></tr>
+          <tr><td><code>PYTHONPATH=src pytest -q</code></td><td class="ok">91 passed</td></tr>
+          <tr><td><code>ruff check .</code></td><td class="ok">All checks passed</td></tr>
+          <tr><td><code>mypy src</code></td><td class="ok">no issues found in 16 source files</td></tr>
+          <tr><td><code>voice2task.cli.data validate --public</code></td><td class="ok">ok; 12 SFT rows, 26 DPO pairs</td></tr>
+          <tr><td><code>voice2task.cli.data dpo-check</code></td><td class="ok">ok; 26 pairs</td></tr>
+          <tr><td><code>voice2task.cli.eval metrics</code> temp-dir smoke</td><td class="ok">ok</td></tr>
+          <tr><td><code>voice2task.cli.report leak-scan</code></td><td class="ok">ok; no findings</td></tr>
+          <tr><td><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code></td><td class="ok">archive 后 4 passed, 0 failed</td></tr>
+          <tr><td><code>git diff --check</code></td><td class="ok">passed</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Review 和外部审查</h2>
+      <ul>
+        <li>内部 Reviewer verdict：Pass with fixes required；1 个 Must Fix 和 1 个 Should Fix 已完成并复验。</li>
+        <li>External Pro review：未运行。本阶段未改 README、release、portfolio 或公开定位声明；主要风险已由内部 Reviewer 和 leak scan 覆盖。</li>
+      </ul>
+
+      <h2>Auto integration 状态</h2>
+      <ul>
+        <li>本报告生成时尚未执行最终 stage/commit；主线程会在最终 freshness checks 后按 auto integration policy 决定是否本地提交。</li>
+        <li>仓库没有 configured remote，因此即使本地 commit 成功，也不会 push。</li>
+      </ul>
+
+      <h2>不可夸大结论</h2>
+      <ul>
+        <li>本阶段没有运行 A100/private runtime，没有 SSH，没有模型下载，没有 adapter 加载，也没有真实 label tensor。</li>
+        <li><code>runtime_check_status=blocked_unresolved_private_override</code>，<code>true_label_mask_status=unavailable</code>。</li>
+        <li>不能声称 checkpoint release、adapter release、held-out generalization、production readiness 或 live-browser improvement。</li>
+      </ul>
+    </main>
+  </body>
+</html>

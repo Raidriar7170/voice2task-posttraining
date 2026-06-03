@@ -1,0 +1,13 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-03T16:20:59.878552+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "configs/sft-runtime-label-provenance-prep.json",
+    "reports/public-sample/runtime-label-provenance-prep",
+    "docs/human-briefs/2026-06-03-prepare-runtime-label-provenance-check.html",
+    "docs/human-briefs/2026-06-03-autonomous-loop-prepare-runtime-label-provenance-check.html",
+    "openspec/changes/archive/2026-06-03-prepare-runtime-label-provenance-check"
+  ]
+}

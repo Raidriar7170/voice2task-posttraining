@@ -7,7 +7,10 @@ from pathlib import Path
 
 from voice2task.io import read_json
 from voice2task.leak_scan import scan_paths
-from voice2task.reports import write_sft_label_provenance_evidence_pack
+from voice2task.reports import (
+    write_runtime_label_provenance_prep_evidence_pack,
+    write_sft_label_provenance_evidence_pack,
+)
 
 PRIVATE_SCAN_PREFIXES = (
     "/mnt/data/",
@@ -36,6 +39,10 @@ def build_parser() -> argparse.ArgumentParser:
     provenance.add_argument("--objective-inspection", type=Path, required=True)
     provenance.add_argument("--output-dir", type=Path, required=True)
     provenance.add_argument("--prior-artifact", action="append", default=[])
+    runtime_prep = subcommands.add_parser("runtime-label-provenance-prep")
+    runtime_prep.add_argument("--prep-metadata", type=Path, required=True)
+    runtime_prep.add_argument("--output-dir", type=Path, required=True)
+    runtime_prep.add_argument("--prior-artifact", action="append", default=[])
     return parser
 
 
@@ -79,6 +86,19 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "sft-label-provenance":
         report_paths = write_sft_label_provenance_evidence_pack(
             objective_inspection=read_json(args.objective_inspection),
+            output_dir=args.output_dir,
+            prior_artifacts=_prior_artifacts(args.prior_artifact),
+        )
+        print(
+            json.dumps(
+                {"ok": True, "paths": {key: value.as_posix() for key, value in report_paths.items()}},
+                indent=2,
+            )
+        )
+        return 0
+    if args.command == "runtime-label-provenance-prep":
+        report_paths = write_runtime_label_provenance_prep_evidence_pack(
+            prep_metadata=read_json(args.prep_metadata),
             output_dir=args.output_dir,
             prior_artifacts=_prior_artifacts(args.prior_artifact),
         )

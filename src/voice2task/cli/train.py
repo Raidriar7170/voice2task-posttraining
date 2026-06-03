@@ -5,7 +5,13 @@ import json
 from pathlib import Path
 
 from voice2task.io import write_json
-from voice2task.training import inspect_sft_objective_from_manifest, run_dpo, run_sft, run_sft_prediction_export
+from voice2task.training import (
+    inspect_sft_objective_from_manifest,
+    prepare_sft_runtime_label_provenance,
+    run_dpo,
+    run_sft,
+    run_sft_prediction_export,
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -31,6 +37,10 @@ def build_parser() -> argparse.ArgumentParser:
     objective.add_argument("--manifest", type=Path, required=True)
     objective.add_argument("--split", default="train")
     objective.add_argument("--output", type=Path)
+    runtime_prep = subcommands.add_parser("sft-prepare-runtime-label-provenance")
+    runtime_prep.add_argument("--config", type=Path, required=True)
+    runtime_prep.add_argument("--manifest", type=Path, required=True)
+    runtime_prep.add_argument("--output", type=Path, required=True)
     return parser
 
 
@@ -50,9 +60,13 @@ def main(argv: list[str] | None = None) -> int:
         )
     elif args.command == "sft-inspect-objective":
         metadata = inspect_sft_objective_from_manifest(args.manifest, split=args.split)
+    elif args.command == "sft-prepare-runtime-label-provenance":
+        metadata = prepare_sft_runtime_label_provenance(args.config, args.manifest, metadata_path=args.output)
     else:
         raise AssertionError(f"unhandled command: {args.command}")
     if args.command == "sft-inspect-objective" and args.output:
+        write_json(args.output, metadata)
+    elif args.command == "sft-prepare-runtime-label-provenance":
         write_json(args.output, metadata)
     else:
         print(json.dumps(metadata, ensure_ascii=False, indent=2, sort_keys=True))

@@ -420,6 +420,121 @@ def write_sft_label_provenance_evidence_pack(
     return {"json": json_path, "markdown": markdown_path}
 
 
+def write_runtime_label_provenance_prep_evidence_pack(
+    *,
+    prep_metadata: dict[str, Any],
+    output_dir: Path,
+    prior_artifacts: dict[str, str] | None = None,
+    title: str = "Voice2Task runtime label provenance preparation",
+) -> dict[str, Path]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    json_path = output_dir / "runtime_label_provenance_prep.json"
+    markdown_path = output_dir / "runtime_label_provenance_prep.md"
+    metadata = _sanitize_report_value(dict(prep_metadata))
+    metadata_prior = metadata.get("prior_artifacts", {})
+    combined_prior = dict(metadata_prior if isinstance(metadata_prior, dict) else {})
+    combined_prior.update(prior_artifacts or {})
+    combined_prior = _sanitize_report_value(combined_prior)
+    metadata_claims = metadata.get("claims", {})
+    safe_claims = {
+        "runtime_readiness_proves_contract_learning": False,
+        "checkpoint_release": False,
+        "adapter_release": False,
+        "held_out_generalization_claim": False,
+        "production_readiness_claim": False,
+        "live_browser_benchmark_claim": False,
+    }
+    metadata_artifact_policy = metadata.get("artifact_policy", {})
+    safe_artifact_policy = {
+        "raw_rendered_prompts_written": False,
+        "raw_logs_copied_to_git": False,
+        "checkpoints_or_adapters_copied_to_git": False,
+        "private_paths_omitted": True,
+    }
+    summary = {
+        "evidence_kind": "sft_runtime_label_provenance_prep",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "runtime_check_status": metadata.get("runtime_check_status", "unknown"),
+        "private_override": metadata.get("private_override", {}),
+        "output_root_policy": metadata.get("output_root_policy", {}),
+        "dependency_policy": metadata.get("dependency_policy", {}),
+        "label_provenance_intent": metadata.get("label_provenance_intent", {}),
+        "label_tensor_available": False,
+        "true_label_mask_status": "unavailable",
+        "inspection_status": metadata.get("inspection_status", "runtime_check_not_executed"),
+        "evidence_gaps": metadata.get(
+            "evidence_gaps",
+            ["runtime_check_not_executed", "real_training_labels_not_inspected"],
+        ),
+        "prior_artifacts": combined_prior,
+        "claims": {
+            **(metadata_claims if isinstance(metadata_claims, dict) else {}),
+            **safe_claims,
+        },
+        "artifact_policy": {
+            **(metadata_artifact_policy if isinstance(metadata_artifact_policy, dict) else {}),
+            **safe_artifact_policy,
+        },
+    }
+    summary = _sanitize_report_value(summary)
+    write_json(json_path, summary)
+
+    prior = summary["prior_artifacts"]
+    lines = [
+        f"# {title}",
+        "",
+        (
+            "This phase did not run private A100 execution, did not load a private adapter, "
+            "did not download a model, and did not inspect real tokenizer/collator labels."
+        ),
+        "",
+        "## Boundary",
+        "",
+        "- Runtime readiness is not true label-mask evidence.",
+        "- This is not a checkpoint release.",
+        "- This is not an adapter release.",
+        "- This is not held-out generalization evidence.",
+        "- This makes no production-readiness claim.",
+        "- This is not a live-browser benchmark or benchmark-improvement claim.",
+        "",
+        "## Summary",
+        "",
+        f"- Runtime check status: `{summary['runtime_check_status']}`",
+        f"- Private override status: `{summary['private_override'].get('status', 'unknown')}`",
+        f"- Output-root policy status: `{summary['output_root_policy'].get('status', 'unknown')}`",
+        f"- Label tensor available: `{summary['label_tensor_available']}`",
+        f"- True label-mask status: `{summary['true_label_mask_status']}`",
+        "",
+        "## Evidence Gaps",
+        "",
+    ]
+    gaps = summary["evidence_gaps"]
+    if isinstance(gaps, list) and gaps:
+        for gap in gaps:
+            lines.append(f"- `{gap}`")
+    else:
+        lines.append("- none")
+    lines.extend(["", "## Prior Artifacts", ""])
+    if isinstance(prior, dict) and prior:
+        for name, path in sorted(prior.items()):
+            lines.append(f"- `{name}`: `{path}`")
+    else:
+        lines.append("- none")
+    lines.extend(
+        [
+            "",
+            "## Interpretation",
+            "",
+            "- Preparation metadata can make a later private runtime check auditable.",
+            "- It cannot prove Browser Task Contract learning or real loss masking.",
+            "- Later runtime execution must commit only sanitized public summaries.",
+            "",
+        ]
+    )
+    markdown_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    return {"json": json_path, "markdown": markdown_path}
+
+
 def write_source_diagnostics_report(
     diagnostics: dict[str, Any],
     output_dir: Path,
