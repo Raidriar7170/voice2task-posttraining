@@ -101,6 +101,86 @@ def write_schema_diagnostics_report(
     return {"json": json_path, "markdown": markdown_path}
 
 
+def write_constrained_decoding_diagnosis_report(
+    diagnostics: dict[str, Any],
+    output_dir: Path,
+    title: str = "Voice2Task constrained decoding diagnosis",
+) -> dict[str, Path]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    json_path = output_dir / "constrained_decoding_diagnosis.json"
+    markdown_path = output_dir / "constrained_decoding_diagnosis.md"
+    write_json(json_path, diagnostics)
+
+    summary = diagnostics["summary"]
+    examples = diagnostics.get("examples", {})
+    lines = [
+        f"# {title}",
+        "",
+        (
+            "This diagnosis is local decoder/output-shape hardening evidence only: "
+            "invalid predictions remain invalid, and the report does not repair, normalize, "
+            "coerce, or replace model outputs."
+        ),
+        "",
+        "## Boundary",
+        "",
+        "- This is not a checkpoint release.",
+        "- This is not an adapter release.",
+        "- This is not a model recovery claim.",
+        "- This is not held-out generalization evidence.",
+        "- This makes no production-readiness claim.",
+        "- This makes no full-private-corpus claim.",
+        "- This is not a live-browser benchmark or benchmark-improvement claim.",
+        "",
+        "## Summary",
+        "",
+        f"- Predictions: `{summary['prediction_count']}`",
+        f"- Decoded summary rows: `{summary['decoded_summary_row_count']}`",
+        f"- Prediction schema-valid count: `{summary['prediction_schema_valid_count']}`",
+        f"- Invalid predictions: `{summary['invalid_prediction_count']}`",
+        f"- Raw attempt schema-valid count: `{summary['raw_attempt_schema_valid_count']}`",
+        f"- Retry attempt schema-valid count: `{summary['retry_attempt_schema_valid_count']}`",
+        f"- Validated output schema-valid count: `{summary['validated_output_schema_valid_count']}`",
+        f"- Legacy task_type alias count: `{summary['legacy_task_type_alias_count']}`",
+        f"- Path-like route count: `{summary['path_like_route_count']}`",
+        f"- Prose/Markdown wrapper count: `{summary['prose_markdown_wrapper_count']}`",
+        "",
+        "## Parse Status Counts",
+        "",
+    ]
+    for source_name, counts in sorted(summary.get("parse_status_counts", {}).items()):
+        lines.append(f"### `{source_name}`")
+        lines.append("")
+        if counts:
+            for parse_status, count in sorted(counts.items()):
+                lines.append(f"- `{parse_status}`: `{count}`")
+        else:
+            lines.append("- none")
+        lines.append("")
+
+    lines.append("## Symptom Examples")
+    lines.append("")
+    for symptom_name in ("legacy_task_type_alias", "path_like_route", "prose_markdown_wrapper"):
+        lines.append(f"### `{symptom_name}`")
+        lines.append("")
+        symptom_examples = examples.get(symptom_name, []) if isinstance(examples, dict) else []
+        if symptom_examples:
+            for example in symptom_examples:
+                observed = (
+                    example.get("task_type")
+                    or example.get("route")
+                    or example.get("parse_status")
+                    or "observed"
+                )
+                lines.append(f"- `{example['row_id']}` `{example['source']}`: {observed}")
+        else:
+            lines.append("- none")
+        lines.append("")
+
+    markdown_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    return {"json": json_path, "markdown": markdown_path}
+
+
 def write_alignment_diagnostics_report(
     diagnostics: dict[str, Any],
     output_dir: Path,

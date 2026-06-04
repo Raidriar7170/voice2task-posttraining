@@ -1,0 +1,176 @@
+{
+  "claims": {
+    "a100_model_recovery_claim": false,
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "does_not_coerce_or_replace_invalid_predictions": true,
+    "full_private_corpus_claim": false,
+    "held_out_generalization_claim": false,
+    "invalid_predictions_remain_invalid": true,
+    "live_browser_benchmark_claim": false,
+    "local_decoder_output_shape_hardening_only": true,
+    "production_readiness_claim": false
+  },
+  "diagnostic_kind": "constrained_contract_decoding_diagnosis",
+  "examples": {
+    "legacy_task_type_alias": [
+      {
+        "row_id": "seed-search-weather",
+        "source": "raw_attempt",
+        "task_type": "string(10): search_web"
+      },
+      {
+        "row_id": "seed-search-weather",
+        "source": "retry_attempt",
+        "task_type": "string(10): search_web"
+      },
+      {
+        "row_id": "seed-search-weather-aug-2",
+        "source": "raw_attempt",
+        "task_type": "string(10): search_web"
+      },
+      {
+        "row_id": "seed-search-weather-aug-2",
+        "source": "retry_attempt",
+        "task_type": "string(10): search_web"
+      }
+    ],
+    "path_like_route": [
+      {
+        "route": "string(30): /weather/query_weather_request",
+        "row_id": "seed-search-weather-aug-1",
+        "source": "retry_attempt"
+      },
+      {
+        "route": "string(33): /weather/forecast?city=北京&date=明天",
+        "row_id": "seed-search-weather-aug-2",
+        "source": "retry_attempt"
+      }
+    ],
+    "prose_markdown_wrapper": [
+      {
+        "parse_status": "json_fragment_object",
+        "row_id": "seed-search-weather",
+        "source": "retry_attempt"
+      },
+      {
+        "parse_status": "json_fragment_object",
+        "row_id": "seed-search-weather-aug-1",
+        "source": "retry_attempt"
+      },
+      {
+        "parse_status": "json_fragment_object",
+        "row_id": "seed-search-weather-aug-2",
+        "source": "retry_attempt"
+      }
+    ]
+  },
+  "rows": [
+    {
+      "raw_parse_status": "non_json",
+      "retry_parse_status": "json_fragment_object",
+      "row_id": "seed-search-weather",
+      "schema_guard": {
+        "raw_attempt_schema_valid": false,
+        "retry_attempt_schema_valid": false,
+        "validated_output_schema_valid": false,
+        "validated_output_source": "none"
+      },
+      "symptoms": [
+        {
+          "observed_value_summary": "string(10): search_web",
+          "source": "raw_attempt",
+          "symptom": "legacy_task_type_alias"
+        },
+        {
+          "observed_value_summary": "string(10): search_web",
+          "source": "retry_attempt",
+          "symptom": "legacy_task_type_alias"
+        },
+        {
+          "observed_value_summary": "json_fragment_object",
+          "source": "retry_attempt",
+          "symptom": "prose_markdown_wrapper"
+        }
+      ]
+    },
+    {
+      "raw_parse_status": "json_object",
+      "retry_parse_status": "json_fragment_object",
+      "row_id": "seed-search-weather-aug-1",
+      "schema_guard": {
+        "raw_attempt_schema_valid": false,
+        "retry_attempt_schema_valid": false,
+        "validated_output_schema_valid": false,
+        "validated_output_source": "none"
+      },
+      "symptoms": [
+        {
+          "observed_value_summary": "string(30): /weather/query_weather_request",
+          "source": "retry_attempt",
+          "symptom": "path_like_route"
+        },
+        {
+          "observed_value_summary": "json_fragment_object",
+          "source": "retry_attempt",
+          "symptom": "prose_markdown_wrapper"
+        }
+      ]
+    },
+    {
+      "raw_parse_status": "json_object",
+      "retry_parse_status": "json_fragment_object",
+      "row_id": "seed-search-weather-aug-2",
+      "schema_guard": {
+        "raw_attempt_schema_valid": false,
+        "retry_attempt_schema_valid": false,
+        "validated_output_schema_valid": false,
+        "validated_output_source": "none"
+      },
+      "symptoms": [
+        {
+          "observed_value_summary": "string(10): search_web",
+          "source": "raw_attempt",
+          "symptom": "legacy_task_type_alias"
+        },
+        {
+          "observed_value_summary": "string(10): search_web",
+          "source": "retry_attempt",
+          "symptom": "legacy_task_type_alias"
+        },
+        {
+          "observed_value_summary": "string(33): /weather/forecast?city=北京&date=明天",
+          "source": "retry_attempt",
+          "symptom": "path_like_route"
+        },
+        {
+          "observed_value_summary": "json_fragment_object",
+          "source": "retry_attempt",
+          "symptom": "prose_markdown_wrapper"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "decoded_summary_row_count": 3,
+    "invalid_prediction_count": 3,
+    "invalid_predictions_remain_invalid": true,
+    "legacy_task_type_alias_count": 4,
+    "parse_status_counts": {
+      "raw_attempt": {
+        "json_object": 2,
+        "non_json": 1
+      },
+      "retry_attempt": {
+        "json_fragment_object": 3
+      }
+    },
+    "path_like_route_count": 2,
+    "prediction_count": 3,
+    "prediction_schema_valid_count": 0,
+    "prose_markdown_wrapper_count": 3,
+    "raw_attempt_schema_valid_count": 0,
+    "retry_attempt_schema_valid_count": 0,
+    "validated_output_schema_valid_count": 0
+  }
+}

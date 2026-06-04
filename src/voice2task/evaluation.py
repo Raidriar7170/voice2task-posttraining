@@ -1169,6 +1169,182 @@ def diagnose_schema_mismatches(rows: list[SFTDatasetRow], predictions: dict[str,
     }
 
 
+_JSON_STRING_FIELD_RE = re.compile(r'"(?P<field>task_type|route)"\s*:\s*"(?P<value>[^"]+)"')
+
+
+def _attempt_text(attempt: dict[str, Any]) -> str:
+    decoded_text = attempt.get("decoded_text")
+    if isinstance(decoded_text, str):
+        return _sanitize_public_summary(decoded_text)
+    prefix = str(attempt.get("decoded_prefix", ""))
+    suffix = str(attempt.get("decoded_suffix", ""))
+    if not prefix:
+        return _sanitize_public_summary(suffix)
+    if not suffix or suffix == prefix:
+        return _sanitize_public_summary(prefix)
+    return _sanitize_public_summary(f"{prefix}\n{suffix}")
+
+
+def _attempt_field_values(text: str, field: str) -> list[str]:
+    return [match.group("value") for match in _JSON_STRING_FIELD_RE.finditer(text) if match.group("field") == field]
+
+
+def _is_legacy_task_type_alias(value: str) -> bool:
+    if value in TASK_TYPES:
+        return False
+    return (
+        value in ROUTES
+        or value in {"search_web", "open_url", "query_weather_request"}
+        or value.startswith(("query_", "search_", "open_"))
+        or value.endswith(("_request", "_action"))
+    )
+
+
+def _has_prose_or_markdown_wrapper(attempt: dict[str, Any], text: str) -> bool:
+    parse_status = str(attempt.get("parse_status", "missing"))
+    stripped = text.strip()
+    if parse_status.startswith("json_fragment"):
+        return True
+    return bool(stripped) and (not stripped.startswith("{") or not stripped.endswith("}") or "```" in stripped)
+
+
+def _increment_count(counts: dict[str, int], key: str) -> None:
+    counts[key] = counts.get(key, 0) + 1
+
+
+def diagnose_constrained_contract_decoding(
+    predictions: dict[str, Any],
+    raw_decoded_summary_rows: list[dict[str, Any]],
+) -> dict[str, Any]:
+    parse_status_counts: dict[str, dict[str, int]] = {"raw_attempt": {}, "retry_attempt": {}}
+    legacy_task_type_alias_examples: list[dict[str, str]] = []
+    path_like_route_examples: list[dict[str, str]] = []
+    prose_markdown_wrapper_examples: list[dict[str, str]] = []
+    rows: list[dict[str, Any]] = []
+    raw_schema_valid_count = 0
+    retry_schema_valid_count = 0
+    validated_schema_valid_count = 0
+
+    for summary_row in raw_decoded_summary_rows:
+        row_id = _sanitize_id(str(summary_row.get("id", "")))
+        schema_guard = summary_row.get("schema_guard")
+        guard = schema_guard if isinstance(schema_guard, dict) else {}
+        if guard.get("raw_attempt_schema_valid") is True:
+            raw_schema_valid_count += 1
+        if guard.get("retry_attempt_schema_valid") is True:
+            retry_schema_valid_count += 1
+        if guard.get("validated_output_schema_valid") is True:
+            validated_schema_valid_count += 1
+
+        row_symptoms: list[dict[str, str]] = []
+        for source_name in ("raw_attempt", "retry_attempt"):
+            attempt = summary_row.get(source_name)
+            if not isinstance(attempt, dict):
+                continue
+            parse_status = str(attempt.get("parse_status", "missing"))
+            _increment_count(parse_status_counts[source_name], parse_status)
+            text = _attempt_text(attempt)
+            for value in _attempt_field_values(text, "task_type"):
+                if _is_legacy_task_type_alias(value):
+                    example = {
+                        "row_id": row_id,
+                        "source": source_name,
+                        "task_type": _observed_value_summary(value),
+                    }
+                    legacy_task_type_alias_examples.append(example)
+                    row_symptoms.append(
+                        {
+                            "source": source_name,
+                            "symptom": "legacy_task_type_alias",
+                            "observed_value_summary": example["task_type"],
+                        }
+                    )
+                    break
+            for value in _attempt_field_values(text, "route"):
+                if _is_path_like_route(value):
+                    example = {
+                        "row_id": row_id,
+                        "source": source_name,
+                        "route": _observed_value_summary(value),
+                    }
+                    path_like_route_examples.append(example)
+                    row_symptoms.append(
+                        {
+                            "source": source_name,
+                            "symptom": "path_like_route",
+                            "observed_value_summary": example["route"],
+                        }
+                    )
+                    break
+            if _has_prose_or_markdown_wrapper(attempt, text):
+                example = {"row_id": row_id, "source": source_name, "parse_status": parse_status}
+                prose_markdown_wrapper_examples.append(example)
+                row_symptoms.append(
+                    {
+                        "source": source_name,
+                        "symptom": "prose_markdown_wrapper",
+                        "observed_value_summary": parse_status,
+                    }
+                )
+        rows.append(
+            {
+                "row_id": row_id,
+                "raw_parse_status": summary_row.get("raw_attempt", {}).get("parse_status")
+                if isinstance(summary_row.get("raw_attempt"), dict)
+                else None,
+                "retry_parse_status": summary_row.get("retry_attempt", {}).get("parse_status")
+                if isinstance(summary_row.get("retry_attempt"), dict)
+                else None,
+                "schema_guard": {
+                    "raw_attempt_schema_valid": bool(guard.get("raw_attempt_schema_valid")),
+                    "retry_attempt_schema_valid": guard.get("retry_attempt_schema_valid"),
+                    "validated_output_schema_valid": bool(guard.get("validated_output_schema_valid")),
+                    "validated_output_source": str(guard.get("validated_output_source", "unknown")),
+                },
+                "symptoms": row_symptoms,
+            }
+        )
+
+    prediction_schema_valid_count = sum(1 for prediction in predictions.values() if _prediction_to_contract(prediction))
+    return {
+        "diagnostic_kind": "constrained_contract_decoding_diagnosis",
+        "summary": {
+            "prediction_count": len(predictions),
+            "decoded_summary_row_count": len(raw_decoded_summary_rows),
+            "prediction_schema_valid_count": prediction_schema_valid_count,
+            "invalid_prediction_count": len(predictions) - prediction_schema_valid_count,
+            "raw_attempt_schema_valid_count": raw_schema_valid_count,
+            "retry_attempt_schema_valid_count": retry_schema_valid_count,
+            "validated_output_schema_valid_count": validated_schema_valid_count,
+            "parse_status_counts": {
+                source: dict(sorted(counts.items())) for source, counts in parse_status_counts.items()
+            },
+            "legacy_task_type_alias_count": len(legacy_task_type_alias_examples),
+            "path_like_route_count": len(path_like_route_examples),
+            "prose_markdown_wrapper_count": len(prose_markdown_wrapper_examples),
+            "invalid_predictions_remain_invalid": True,
+        },
+        "examples": {
+            "legacy_task_type_alias": _limited_examples(legacy_task_type_alias_examples),
+            "path_like_route": _limited_examples(path_like_route_examples),
+            "prose_markdown_wrapper": _limited_examples(prose_markdown_wrapper_examples),
+        },
+        "rows": rows,
+        "claims": {
+            "invalid_predictions_remain_invalid": True,
+            "does_not_coerce_or_replace_invalid_predictions": True,
+            "local_decoder_output_shape_hardening_only": True,
+            "checkpoint_release": False,
+            "adapter_release": False,
+            "held_out_generalization_claim": False,
+            "production_readiness_claim": False,
+            "full_private_corpus_claim": False,
+            "live_browser_benchmark_claim": False,
+            "a100_model_recovery_claim": False,
+        },
+    }
+
+
 def rule_baseline_predictions(rows: list[SFTDatasetRow]) -> dict[str, dict[str, Any]]:
     predictions: dict[str, dict[str, Any]] = {}
     for row in rows:

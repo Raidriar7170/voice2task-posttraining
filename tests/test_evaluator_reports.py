@@ -197,6 +197,170 @@ def test_diagnose_schema_cli_writes_public_safe_json_and_markdown(tmp_path: Path
     assert "invalid predictions remain invalid" in markdown
 
 
+def test_constrained_decoding_diagnosis_counts_retry_failure_families(tmp_path: Path) -> None:
+    valid_contract = _row("strict-valid", "search_web", "机票").target_contract.to_dict()
+    invalid_contract = {
+        "task_type": "search_web",
+        "route": "open_url",
+        "safety": {"allow": True, "reason": "public_readonly"},
+        "confirmation_required": False,
+        "slots": {"query": "天气"},
+        "normalized_command": "搜索天气",
+        "language": "zh-CN",
+        "contract_version": "v1",
+    }
+    wrapped_retry = (
+        "这是修复后的 Browser Task Contract:\n```json\n"
+        + json.dumps(
+            {
+                "task_type": "query_weather_request",
+                "route": "/weather/query_weather_request",
+                "safety": {"allow": True, "reason": "public_readonly"},
+                "confirmation_required": False,
+                "slots": {"city": "北京"},
+                "normalized_command": "查询北京天气",
+                "language": "zh-CN",
+                "contract_version": "v1",
+            },
+            ensure_ascii=False,
+            sort_keys=True,
+        )
+        + "\n```\n"
+    )
+    raw_summary_rows = [
+        {
+            "id": "wrapped-invalid",
+            "raw_attempt": {
+                "parse_status": "json_object",
+                "decoded_prefix": json.dumps(invalid_contract, ensure_ascii=False, sort_keys=True),
+                "decoded_suffix": json.dumps(invalid_contract, ensure_ascii=False, sort_keys=True),
+            },
+            "retry_attempt": {
+                "parse_status": "json_fragment_object",
+                "decoded_prefix": wrapped_retry,
+                "decoded_suffix": wrapped_retry,
+            },
+            "schema_guard": {
+                "raw_attempt_schema_valid": False,
+                "retry_attempt_schema_valid": False,
+                "validated_output_schema_valid": False,
+            },
+        },
+        {
+            "id": "strict-valid",
+            "raw_attempt": {
+                "parse_status": "json_object",
+                "decoded_prefix": json.dumps({"task_type": "search"}, ensure_ascii=False),
+                "decoded_suffix": json.dumps({"task_type": "search"}, ensure_ascii=False),
+            },
+            "retry_attempt": {
+                "parse_status": "json_object",
+                "decoded_prefix": json.dumps(valid_contract, ensure_ascii=False, sort_keys=True),
+                "decoded_suffix": json.dumps(valid_contract, ensure_ascii=False, sort_keys=True),
+            },
+            "schema_guard": {
+                "raw_attempt_schema_valid": False,
+                "retry_attempt_schema_valid": True,
+                "validated_output_schema_valid": True,
+            },
+        },
+    ]
+
+    diagnostics = evaluation.diagnose_constrained_contract_decoding(
+        {"wrapped-invalid": invalid_contract, "strict-valid": valid_contract},
+        raw_summary_rows,
+    )
+
+    summary = diagnostics["summary"]
+    assert diagnostics["diagnostic_kind"] == "constrained_contract_decoding_diagnosis"
+    assert summary["prediction_count"] == 2
+    assert summary["raw_attempt_schema_valid_count"] == 0
+    assert summary["retry_attempt_schema_valid_count"] == 1
+    assert summary["validated_output_schema_valid_count"] == 1
+    assert summary["parse_status_counts"]["raw_attempt"]["json_object"] == 2
+    assert summary["parse_status_counts"]["retry_attempt"]["json_fragment_object"] == 1
+    assert summary["legacy_task_type_alias_count"] == 2
+    assert summary["path_like_route_count"] == 1
+    assert summary["prose_markdown_wrapper_count"] == 1
+    assert diagnostics["claims"]["local_decoder_output_shape_hardening_only"] is True
+    assert diagnostics["claims"]["does_not_coerce_or_replace_invalid_predictions"] is True
+    assert diagnostics["claims"]["held_out_generalization_claim"] is False
+
+    paths = reports.write_constrained_decoding_diagnosis_report(
+        diagnostics,
+        output_dir=tmp_path,
+        title="Constrained decoding diagnosis",
+    )
+    markdown = paths["markdown"].read_text(encoding="utf-8")
+    assert "Constrained decoding diagnosis" in markdown
+    assert "local decoder/output-shape hardening" in markdown
+    assert "invalid predictions remain invalid" in markdown
+    assert "not a model recovery claim" in markdown
+
+
+def test_diagnose_constrained_decoding_cli_writes_public_safe_json_and_markdown(tmp_path: Path) -> None:
+    prediction = {
+        "task_type": "search_web",
+        "route": "open_url",
+        "safety": {"allow": True, "reason": "public_readonly"},
+        "confirmation_required": False,
+        "slots": {"query": "天气"},
+        "normalized_command": "搜索天气",
+        "language": "zh-CN",
+        "contract_version": "v1",
+    }
+    predictions = tmp_path / "predictions.jsonl"
+    raw_decoded_summary = tmp_path / "raw_decoded_summary.jsonl"
+    output = tmp_path / "constrained"
+    write_jsonl(predictions, [{"id": "row-1", "prediction": prediction}])
+    write_jsonl(
+        raw_decoded_summary,
+        [
+            {
+                "id": "row-1",
+                "raw_attempt": {
+                    "parse_status": "json_object",
+                    "decoded_prefix": json.dumps(prediction, ensure_ascii=False, sort_keys=True),
+                    "decoded_suffix": json.dumps(prediction, ensure_ascii=False, sort_keys=True),
+                },
+                "retry_attempt": {
+                    "parse_status": "json_fragment_object",
+                    "decoded_prefix": "```json\n{\"task_type\":\"search_web\",\"route\":\"/weather\"}\n```",
+                    "decoded_suffix": "```json\n{\"task_type\":\"search_web\",\"route\":\"/weather\"}\n```",
+                },
+                "schema_guard": {
+                    "raw_attempt_schema_valid": False,
+                    "retry_attempt_schema_valid": False,
+                    "validated_output_schema_valid": False,
+                },
+            }
+        ],
+    )
+
+    assert (
+        eval_cli.main(
+            [
+                "diagnose-constrained-decoding",
+                "--predictions",
+                predictions.as_posix(),
+                "--raw-decoded-summary",
+                raw_decoded_summary.as_posix(),
+                "--output",
+                output.as_posix(),
+            ]
+        )
+        == 0
+    )
+
+    diagnostics = json.loads((output / "constrained_decoding_diagnosis.json").read_text(encoding="utf-8"))
+    markdown = (output / "constrained_decoding_diagnosis.md").read_text(encoding="utf-8")
+    assert diagnostics["summary"]["prediction_count"] == 1
+    assert diagnostics["summary"]["validated_output_schema_valid_count"] == 0
+    assert diagnostics["summary"]["prose_markdown_wrapper_count"] == 1
+    assert "invalid predictions remain invalid" in markdown
+    assert "not a checkpoint release" in markdown
+
+
 def test_alignment_diagnostics_compare_raw_invalid_prediction_fields(tmp_path: Path) -> None:
     row = _row("gold-1", "search_web", "天气")
     prediction = {

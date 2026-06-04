@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Repair constrained contract decoding brief</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #1f2937;
+      background: #f7f8fb;
+      line-height: 1.6;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      line-height: 1.2;
+    }
+    h2 {
+      margin-top: 28px;
+      font-size: 18px;
+    }
+    .summary {
+      padding: 16px 18px;
+      border-left: 4px solid #2563eb;
+      background: #ffffff;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 12px;
+      margin: 16px 0;
+    }
+    .tile {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 14px;
+    }
+    .label {
+      display: block;
+      color: #6b7280;
+      font-size: 13px;
+    }
+    .value {
+      display: block;
+      margin-top: 4px;
+      font-size: 20px;
+      font-weight: 700;
+    }
+    code {
+      padding: 1px 4px;
+      border-radius: 4px;
+      background: #eef2ff;
+    }
+    a {
+      color: #1d4ed8;
+    }
+    ul {
+      padding-left: 20px;
+    }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Repair constrained contract decoding</h1>
+  <p class="summary">
+    结论：本阶段已完成本地 constrained/canonical decoding 修复；retry 现在只接受完整 JSON object，Markdown/prose 包裹的 JSON 片段会继续作为失败证据保留，不能被误报为模型恢复。
+  </p>
+
+  <h2>当前状态</h2>
+  <div class="grid">
+    <div class="tile"><span class="label">阶段</span><span class="value">needs archive</span></div>
+    <div class="tile"><span class="label">本地代码修复</span><span class="value">完成</span></div>
+    <div class="tile"><span class="label">诊断样本</span><span class="value">3 predictions</span></div>
+    <div class="tile"><span class="label">Validated outputs</span><span class="value">0 / 3</span></div>
+  </div>
+
+  <h2>本阶段做了什么</h2>
+  <ul>
+    <li>强化 <code>_schema_retry_prompt()</code>：明确合法 <code>task_type</code>/<code>route</code> enums、完整 Browser Task Contract skeleton、<code>safety.allow</code> boolean、JSON-only、禁止 Markdown/code fences/prose。</li>
+    <li>将 retry attempt 改为严格 whole-string JSON object 解析；raw attempt 仍保留原来的片段兼容解析，用于历史证据可读性。</li>
+    <li>新增 constrained decoding diagnosis：统计 raw/retry/validated schema-valid counts、parse status、legacy <code>task_type</code> alias、path-like route、prose/Markdown wrapper。</li>
+    <li>从上轮 required-field rerun 的公开安全证据生成本地诊断报告，不运行 A100，不改训练目标，不替换 invalid predictions。</li>
+  </ul>
+
+  <h2>当前模型能达到什么效果</h2>
+  <ul>
+    <li>从既有 required-field rerun 证据看，3 条 train prediction 仍是 0/3 schema-valid。</li>
+    <li>retry attempt 全部是 <code>json_fragment_object</code>，也就是包含 JSON 片段但外部仍有包装文本；新 strict retry 会把这种输出保留为失败。</li>
+    <li>诊断发现 4 个 legacy <code>task_type</code> alias 症状、2 个 path-like route 症状、3 个 prose/Markdown wrapper 症状。</li>
+    <li>本阶段提升的是本地 decoder/output-shape 防护与证据解释，不是 A100 模型恢复。</li>
+  </ul>
+
+  <h2>关键文件与证据</h2>
+  <ul>
+    <li><a href="../../src/voice2task/training.py">src/voice2task/training.py</a>：retry prompt 和 strict retry extraction。</li>
+    <li><a href="../../src/voice2task/evaluation.py">src/voice2task/evaluation.py</a>：constrained decoding diagnosis。</li>
+    <li><a href="../../src/voice2task/reports.py">src/voice2task/reports.py</a> 与 <a href="../../src/voice2task/cli/eval.py">src/voice2task/cli/eval.py</a>：报告 writer 和 CLI。</li>
+    <li><a href="../../reports/public-sample/constrained-contract-decoding-diagnosis/constrained_decoding_diagnosis.json">constrained_decoding_diagnosis.json</a></li>
+    <li><a href="../../reports/public-sample/constrained-contract-decoding-diagnosis/constrained_decoding_diagnosis.md">constrained_decoding_diagnosis.md</a></li>
+    <li><a href="../../reports/public-sample/constrained-contract-decoding-diagnosis/leak_scan_result.json">leak_scan_result.json</a></li>
+    <li><a href="../../openspec/changes/repair-constrained-contract-decoding/tasks.md">OpenSpec tasks</a></li>
+  </ul>
+
+  <h2>验证结果</h2>
+  <ul>
+    <li><code>PYTHONPATH=src pytest -q</code>: 129 passed。</li>
+    <li><code>PYTHONPATH=src pytest -q tests/test_a100_sft_prediction_smoke.py tests/test_evaluator_reports.py tests/test_formatting_training.py</code>: 64 passed。</li>
+    <li><code>uv run ruff check .</code>: passed。</li>
+    <li><code>uv run mypy src</code>: success, 16 source files。</li>
+    <li><code>voice2task.cli.data validate --public</code>: ok, 12 SFT rows, 26 DPO pairs。</li>
+    <li><code>voice2task.cli.data dpo-check</code>: ok, 26 pairs。</li>
+    <li><code>voice2task.cli.report leak-scan</code>: ok, 0 findings，覆盖诊断 artifacts、本 Human Brief 和 active OpenSpec artifacts。</li>
+    <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>: 5 passed, 0 failed。</li>
+    <li><code>git diff --check</code>: passed。</li>
+  </ul>
+
+  <h2>不要夸大的结论</h2>
+  <ul>
+    <li>这不是 checkpoint release、adapter release 或 A100 model recovery claim。</li>
+    <li>这不是 held-out generalization、production readiness、public full-corpus release 或 live-browser benchmark improvement。</li>
+    <li>诊断基于 public-safe sidecar 摘要；它解释当前失败形态，不替代完整私有日志或新模型 rerun。</li>
+  </ul>
+
+  <h2>推荐下一步</h2>
+  <p>
+    下一阶段建议在用户明确授权后做一次很小的 A100 train-split rerun，用本阶段 strict retry/canonical prompt 验证是否能让 train predictions 至少产生 schema-valid Browser Task Contract。因为这会再次使用私有 A100 环境，应先等用户确认。
+  </p>
+</main>
+</body>
+</html>

@@ -23,7 +23,9 @@ from voice2task.io import read_json, read_jsonl, write_json
 from voice2task.schemas import (
     PRIVATE_IP_RE,
     PRIVATE_PATH_RE,
+    ROUTES,
     SECRET_RE,
+    TASK_TYPES,
     BrowserTaskContract,
     DPOPair,
     SFTDatasetRow,
@@ -945,6 +947,17 @@ def _extract_json_object(text: str) -> Any:
     return _sanitize_decoded_prediction_text(stripped)
 
 
+def _extract_strict_json_object(text: str) -> Any:
+    stripped = text.strip()
+    if not stripped:
+        return ""
+    try:
+        parsed = json.loads(stripped)
+    except json.JSONDecodeError:
+        return _sanitize_decoded_prediction_text(stripped)
+    return _sanitize_prediction_value(parsed)
+
+
 def _required_field_missing(prediction: Any) -> list[str]:
     required = {
         "task_type",
@@ -987,14 +1000,33 @@ def _schema_retry_prompt(row: SFTDatasetRow, raw_prediction: Any, guard_status: 
     missing = guard_status.get("missing_required_fields", [])
     missing_text = ", ".join(str(field) for field in missing) if missing else "unknown"
     raw_summary = json.dumps(_sanitize_prediction_value(raw_prediction), ensure_ascii=False, sort_keys=True)
+    canonical_skeleton = json.dumps(
+        {
+            "task_type": "search",
+            "route": "search_web",
+            "safety": {"allow": True, "reason": "public_readonly"},
+            "confirmation_required": False,
+            "slots": {},
+            "normalized_command": row.input_text,
+            "language": "zh-CN",
+            "contract_version": "v1",
+        },
+        ensure_ascii=False,
+    )
     return "\n".join(
         [
             "你刚才输出的 JSON 不是合法 Browser Task Contract。",
             f"缺失字段: {missing_text}。",
+            f"合法 task_type enum: {', '.join(sorted(TASK_TYPES))}。",
+            f"合法 route enum: {', '.join(sorted(ROUTES))}。",
             "请重新输出一个完整 Browser Task Contract JSON object，必须包含全部 8 个顶层字段：",
             "task_type, route, safety, confirmation_required, slots, normalized_command, language, contract_version。",
+            f"Canonical required skeleton: {canonical_skeleton}",
             "safety 必须是 object，且包含 boolean safety.allow 和非空字符串 safety.reason。",
-            "不要解释、不要 Markdown、不要自然语言前后缀。",
+            "route 是 enum，不是 URL/path；不要输出 /weather、https://...、www... 或文件路径。",
+            "task_type 不能使用 search_web、open_url、query_weather_request，也不能使用 app/action name。",
+            "第一个非空字符必须是 `{`；最后一个非空字符必须是 `}`。",
+            "不要 Markdown/code fences/prose；不要解释、不要自然语言前后缀。",
             f"用户输入: {row.input_text}",
             f"上一轮输出摘要: {raw_summary[:500]}",
         ]
@@ -1133,7 +1165,7 @@ def _run_real_sft_prediction(
                     max_new_tokens=max_new_tokens,
                     torch_module=torch,
                 )
-                retry_prediction = _extract_json_object(retry_decoded)
+                retry_prediction = _extract_strict_json_object(retry_decoded)
                 retry_status = _schema_guard_status(retry_prediction)
             schema_guard = _build_schema_guard(
                 raw_status=raw_status,

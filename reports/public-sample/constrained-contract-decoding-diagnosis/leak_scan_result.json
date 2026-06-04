@@ -1,0 +1,14 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-04T10:42:14.484643+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "reports/public-sample/constrained-contract-decoding-diagnosis",
+    "docs/human-briefs/2026-06-04-repair-constrained-contract-decoding.html",
+    "docs/human-briefs/2026-06-04-autonomous-loop-repair-constrained-contract-decoding.html",
+    "openspec/changes/archive/2026-06-04-repair-constrained-contract-decoding",
+    "openspec/specs/contract-evaluation/spec.md",
+    "openspec/specs/supervised-contract-tuning/spec.md"
+  ]
+}

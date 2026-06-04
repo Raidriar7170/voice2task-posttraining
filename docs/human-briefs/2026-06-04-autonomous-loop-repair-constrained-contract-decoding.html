@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Autonomous loop closeout: repair constrained contract decoding</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #1f2937;
+      background: #f7f8fb;
+      line-height: 1.6;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      line-height: 1.2;
+    }
+    h2 {
+      margin-top: 28px;
+      font-size: 18px;
+    }
+    .summary {
+      padding: 16px 18px;
+      border-left: 4px solid #0f766e;
+      background: #ffffff;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 12px;
+      margin: 16px 0;
+    }
+    .tile {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 14px;
+    }
+    .label {
+      display: block;
+      color: #6b7280;
+      font-size: 13px;
+    }
+    .value {
+      display: block;
+      margin-top: 4px;
+      font-size: 20px;
+      font-weight: 700;
+    }
+    code {
+      padding: 1px 4px;
+      border-radius: 4px;
+      background: #eef2ff;
+    }
+    a {
+      color: #1d4ed8;
+    }
+    ul {
+      padding-left: 20px;
+    }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Autonomous loop closeout</h1>
+  <p class="summary">
+    结论：本轮 opsx-auto 已完成并归档 <code>repair-constrained-contract-decoding</code>；代码层面修复了 retry 误接收 Markdown/prose JSON 片段的问题，下一步若要验证模型是否恢复，需要再次明确授权 A100 rerun。
+  </p>
+
+  <h2>Loop 状态</h2>
+  <div class="grid">
+    <div class="tile"><span class="label">状态</span><span class="value">stopped</span></div>
+    <div class="tile"><span class="label">归档阶段</span><span class="value">1 OpenSpec change</span></div>
+    <div class="tile"><span class="label">本地验证</span><span class="value">passed</span></div>
+    <div class="tile"><span class="label">Stop reason</span><span class="value">A100 confirmation</span></div>
+  </div>
+
+  <h2>完成的阶段</h2>
+  <ul>
+    <li>OpenSpec change：<code>repair-constrained-contract-decoding</code>。</li>
+    <li>归档位置：<a href="../../openspec/changes/archive/2026-06-04-repair-constrained-contract-decoding/tasks.md">openspec archive tasks</a>。</li>
+    <li>同步 specs：<a href="../../openspec/specs/contract-evaluation/spec.md">contract-evaluation</a> 与 <a href="../../openspec/specs/supervised-contract-tuning/spec.md">supervised-contract-tuning</a>。</li>
+    <li>阶段 Human Brief：<a href="2026-06-04-repair-constrained-contract-decoding.html">2026-06-04-repair-constrained-contract-decoding.html</a>。</li>
+  </ul>
+
+  <h2>为什么停止</h2>
+  <p>
+    本地修复、诊断、review、验证和 OpenSpec archive 已完成。推荐下一步是用当前 strict retry/canonical prompt 再做一次很小的 A100 train-split rerun；这会触发私有 A100 环境和 heavy-training/prediction 边界，因此按 opsx-auto hard stop 规则等待用户确认。
+  </p>
+
+  <h2>项目阶段进度</h2>
+  <ul>
+    <li>当前目标：speech-to-contract normalization，即把中文 spoken command 或 ASR transcript 转成 schema-valid Browser Task Contract。</li>
+    <li>目标来源：<a href="../../CONTEXT.md">CONTEXT.md</a>、<a href="../../README.md">README.md</a> 和 OpenSpec specs。</li>
+    <li>本轮贡献：修复本地 retry 解码防线，避免将 Markdown/prose 包裹的 JSON 片段误当作 schema-valid retry output，并新增可审查诊断面。</li>
+    <li>剩余差距：当前既有 A100 required-field rerun 证据仍是 0/3 train predictions schema-valid；模型是否能在新 strict prompt 下恢复，仍未被重新运行验证。</li>
+    <li>下一阶段计划：用户确认后 propose/apply 一个 bounded A100 strict-retry train-split rerun；若用户不想用 A100，则先做本地 fixture-only regression hardening。</li>
+  </ul>
+
+  <h2>关键文件与证据</h2>
+  <ul>
+    <li><a href="../../src/voice2task/training.py">training.py</a>：retry prompt 和 strict JSON-only retry extraction。</li>
+    <li><a href="../../src/voice2task/evaluation.py">evaluation.py</a>：constrained decoding diagnosis。</li>
+    <li><a href="../../src/voice2task/reports.py">reports.py</a> 与 <a href="../../src/voice2task/cli/eval.py">cli/eval.py</a>：诊断报告与 CLI。</li>
+    <li><a href="../../reports/public-sample/constrained-contract-decoding-diagnosis/constrained_decoding_diagnosis.json">constrained_decoding_diagnosis.json</a></li>
+    <li><a href="../../reports/public-sample/constrained-contract-decoding-diagnosis/constrained_decoding_diagnosis.md">constrained_decoding_diagnosis.md</a></li>
+    <li><a href="../../reports/public-sample/constrained-contract-decoding-diagnosis/leak_scan_result.json">leak_scan_result.json</a></li>
+  </ul>
+
+  <h2>验证结果</h2>
+  <ul>
+    <li><code>PYTHONPATH=src pytest -q</code>: 129 passed。</li>
+    <li><code>PYTHONPATH=src pytest -q tests/test_a100_sft_prediction_smoke.py tests/test_evaluator_reports.py tests/test_formatting_training.py</code>: 64 passed。</li>
+    <li><code>uv run ruff check .</code>: passed。</li>
+    <li><code>uv run mypy src</code>: success, 16 source files。</li>
+    <li><code>voice2task.cli.data validate --public</code>: ok, 12 SFT rows, 26 DPO pairs。</li>
+    <li><code>voice2task.cli.data dpo-check</code>: ok, 26 pairs。</li>
+    <li><code>voice2task.cli.report leak-scan</code>: ok, 0 findings，覆盖诊断 artifacts、阶段/loop Human Briefs、archived OpenSpec artifacts 和同步 specs。</li>
+    <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>: post-archive 4 passed, 0 failed。</li>
+    <li><code>git diff --check</code>: passed after archive whitespace cleanup。</li>
+  </ul>
+
+  <h2>Review 与集成</h2>
+  <ul>
+    <li>Reviewer verdict：Pass with fixes。</li>
+    <li>Must Fix：补阶段 Human Brief，并扩大 leak-scan 覆盖到 Human Brief 和 OpenSpec artifacts；已修复。</li>
+    <li>External Pro review：未使用；本轮是本地代码/证据修复，未发送外部审查包。</li>
+    <li>Auto integration：报告生成时待执行；最终 stage、commit、merge、push 状态以本轮 Codex final response 为准。</li>
+  </ul>
+
+  <h2>不要夸大的结论</h2>
+  <ul>
+    <li>不是 checkpoint release、adapter release 或 A100 model recovery claim。</li>
+    <li>不是 held-out generalization、production readiness、public full-corpus release 或 live-browser benchmark improvement。</li>
+    <li>本轮诊断基于 public-safe decoded summary；它解释失败形态，不等同于新模型质量证据。</li>
+  </ul>
+
+  <h2>推荐下一步</h2>
+  <p>
+    推荐下一步：确认是否使用 A100 做 strict-retry train-split rerun。若同意，应保持 train-internal、public-safe、no-release、no-generalization 边界，只验证新的 decoder/output-shape 修复是否让 train predictions 产生 schema-valid Browser Task Contract。
+  </p>
+</main>
+</body>
+</html>

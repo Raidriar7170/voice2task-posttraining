@@ -10,7 +10,7 @@ from voice2task.cli import train as train_cli
 from voice2task.evaluation import evaluate_predictions, load_predictions
 from voice2task.leak_scan import scan_paths
 from voice2task.reports import write_prediction_evidence_pack
-from voice2task.schemas import SFTDatasetRow
+from voice2task.schemas import ROUTES, TASK_TYPES, SFTDatasetRow
 from voice2task.training import run_sft_prediction_export
 
 A100_PROJECT_ROOT = "/mnt/data/" + "minghongsun/voice2task-post-training"
@@ -363,6 +363,35 @@ class _FakeRetryTokenizer(_FakeTokenizer):
         return json.dumps(_contract("机票"), ensure_ascii=False)
 
 
+class _FakeMarkdownRetryTokenizer(_FakeTokenizer):
+    def __init__(self) -> None:
+        self.prompts: list[str] = []
+        self.decode_calls = 0
+
+    def __call__(self, prompt: str, *, return_tensors: str) -> _FakeInputs:
+        self.prompts.append(prompt)
+        return _FakeInputs({"input_ids": _FakeInputIds()})
+
+    def decode(self, new_tokens: list[int], *, skip_special_tokens: bool) -> str:
+        self.decode_calls += 1
+        if self.decode_calls == 1:
+            return json.dumps(
+                {
+                    "task_type": "search",
+                    "route": "search_web",
+                    "confirmation_required": False,
+                    "slots": {"query": "机票"},
+                    "language": "zh-CN",
+                },
+                ensure_ascii=False,
+            )
+        return (
+            "这是修复后的 JSON：\n\n```json\n"
+            + json.dumps(_contract("机票"), ensure_ascii=False, sort_keys=True)
+            + "\n```\n请检查。"
+        )
+
+
 class _FakeValidTokenizer(_FakeTokenizer):
     def __init__(self) -> None:
         self.prompts: list[str] = []
@@ -615,6 +644,101 @@ def test_real_sft_prediction_retries_schema_invalid_missing_required_fields(
     assert raw_rows[0]["retry_attempt"]["decoded_prefix"].startswith("{")
     assert result.metrics["json_valid_rate"] == 1.0
     assert scan_paths([output, tmp_path / "raw_decoded_summary.jsonl"]).ok is True
+
+
+def test_schema_retry_prompt_declares_canonical_json_only_contract_shape() -> None:
+    row = SFTDatasetRow(
+        id="sft-test-1",
+        split="test",
+        input_text="帮我搜索机票",
+        target_contract=_contract("机票"),
+        provenance={"source_id": "sft-test-1", "public_safe": True},
+    )
+    raw_prediction = {
+        "task_type": "search_web",
+        "route": "/weather/query_weather_request",
+        "safety": {"reason": "query_weather_request"},
+    }
+
+    prompt = training._schema_retry_prompt(row, raw_prediction, training._schema_guard_status(raw_prediction))
+
+    assert all(task_type in prompt for task_type in sorted(TASK_TYPES))
+    assert all(route in prompt for route in sorted(ROUTES))
+    assert '"task_type": "search"' in prompt
+    assert '"route": "search_web"' in prompt
+    assert '"safety": {"allow": true, "reason": "public_readonly"}' in prompt
+    assert '"confirmation_required": false' in prompt
+    assert '"slots": {}' in prompt
+    assert "第一个非空字符必须是 `{`" in prompt
+    assert "最后一个非空字符必须是 `}`" in prompt
+    assert "不要 Markdown/code fences/prose" in prompt
+    assert "route 是 enum，不是 URL/path" in prompt
+    assert "task_type 不能使用 search_web、open_url、query_weather_request" in prompt
+
+
+def test_real_sft_prediction_rejects_markdown_wrapped_retry_even_when_fragment_is_valid(
+    monkeypatch: Any,
+    tmp_path: Path,
+) -> None:
+    output = tmp_path / "trained_predictions.jsonl"
+    tokenizer = _FakeMarkdownRetryTokenizer()
+    row = SFTDatasetRow(
+        id="sft-test-1",
+        split="test",
+        input_text="帮我搜索机票",
+        target_contract=_contract("机票"),
+        provenance={"source_id": "sft-test-1", "public_safe": True},
+    )
+    torch_module = types.ModuleType("torch")
+    torch_module.float16 = "float16"
+    torch_module.float32 = "float32"
+    torch_module.cuda = types.SimpleNamespace(is_available=lambda: False)
+    torch_module.no_grad = lambda: _FakeNoGrad()
+    peft_module = types.ModuleType("peft")
+    peft_module.PeftModel = types.SimpleNamespace(from_pretrained=lambda model, adapter_path: model)
+    transformers_module = types.ModuleType("transformers")
+    transformers_module.AutoTokenizer = types.SimpleNamespace(from_pretrained=lambda *args, **kwargs: tokenizer)
+    transformers_module.AutoModelForCausalLM = types.SimpleNamespace(
+        from_pretrained=lambda *args, **kwargs: _FakeModel()
+    )
+    monkeypatch.setitem(sys.modules, "torch", torch_module)
+    monkeypatch.setitem(sys.modules, "peft", peft_module)
+    monkeypatch.setitem(sys.modules, "transformers", transformers_module)
+
+    count = training._run_real_sft_prediction(
+        {
+            "base_model": "Qwen/Qwen2.5-0.5B-Instruct",
+            "adapter_path": (tmp_path / "adapter").as_posix(),
+            "schema_retry_enabled": True,
+        },
+        [row],
+        output,
+        sidecar_paths={
+            "prompt_snapshot": tmp_path / "prompt_snapshot.json",
+            "raw_decoded_summary": tmp_path / "raw_decoded_summary.jsonl",
+            "generation_trace": tmp_path / "generation_trace.jsonl",
+        },
+    )
+
+    record = json.loads(output.read_text(encoding="utf-8"))
+    raw_rows = [
+        json.loads(line)
+        for line in (tmp_path / "raw_decoded_summary.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+    result = evaluate_predictions([row], load_predictions(output))
+
+    assert count == 1
+    assert tokenizer.decode_calls == 2
+    assert record["prediction"] != _contract("机票")
+    assert record["schema_guard"]["raw_attempt_schema_valid"] is False
+    assert record["schema_guard"]["retry_attempted"] is True
+    assert record["schema_guard"]["retry_attempt_schema_valid"] is False
+    assert record["schema_guard"]["validated_output_schema_valid"] is False
+    assert record["schema_guard"]["validated_output_source"] == "none"
+    assert raw_rows[0]["retry_attempt"]["parse_status"] == "json_fragment_object"
+    assert raw_rows[0]["schema_guard"]["retry_attempt_schema_valid"] is False
+    assert raw_rows[0]["schema_guard"]["validated_output_schema_valid"] is False
+    assert result.metrics["json_valid_rate"] == 0.0
 
 
 def test_real_sft_prediction_skips_retry_when_raw_attempt_is_valid(

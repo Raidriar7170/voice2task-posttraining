@@ -6,6 +6,7 @@ from pathlib import Path
 
 from voice2task.evaluation import (
     diagnose_alignment_mismatches,
+    diagnose_constrained_contract_decoding,
     diagnose_schema_mismatches,
     diagnose_source_alignment,
     evaluate_predictions,
@@ -16,9 +17,10 @@ from voice2task.evaluation import (
     run_execution_smoke,
     write_predictions,
 )
-from voice2task.io import read_json
+from voice2task.io import read_json, read_jsonl
 from voice2task.reports import (
     write_alignment_diagnostics_report,
+    write_constrained_decoding_diagnosis_report,
     write_metrics_report,
     write_schema_diagnostics_report,
     write_source_diagnostics_report,
@@ -86,6 +88,12 @@ def build_parser() -> argparse.ArgumentParser:
     diagnose_schema.add_argument("--output", type=Path, required=True)
     diagnose_schema.add_argument("--title", default="Voice2Task schema diagnostics")
 
+    diagnose_constrained = subcommands.add_parser("diagnose-constrained-decoding")
+    diagnose_constrained.add_argument("--predictions", type=Path, required=True)
+    diagnose_constrained.add_argument("--raw-decoded-summary", type=Path, required=True)
+    diagnose_constrained.add_argument("--output", type=Path, required=True)
+    diagnose_constrained.add_argument("--title", default="Voice2Task constrained decoding diagnosis")
+
     diagnose_alignment = subcommands.add_parser("diagnose-alignment")
     diagnose_alignment.add_argument("--gold", type=Path, required=True)
     diagnose_alignment.add_argument("--predictions", type=Path, required=True)
@@ -134,6 +142,12 @@ def main(argv: list[str] | None = None) -> int:
         predictions = load_predictions(args.predictions)
         diagnostics = diagnose_schema_mismatches(rows, predictions)
         paths = write_schema_diagnostics_report(diagnostics, output_dir=args.output, title=args.title)
+        print(json.dumps({"ok": True, "paths": {key: value.as_posix() for key, value in paths.items()}}, indent=2))
+        return 0
+    if args.command == "diagnose-constrained-decoding":
+        predictions = load_predictions(args.predictions)
+        diagnostics = diagnose_constrained_contract_decoding(predictions, read_jsonl(args.raw_decoded_summary))
+        paths = write_constrained_decoding_diagnosis_report(diagnostics, output_dir=args.output, title=args.title)
         print(json.dumps({"ok": True, "paths": {key: value.as_posix() for key, value in paths.items()}}, indent=2))
         return 0
     if args.command == "diagnose-alignment":
