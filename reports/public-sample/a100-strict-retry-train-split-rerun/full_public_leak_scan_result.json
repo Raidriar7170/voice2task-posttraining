@@ -1,0 +1,9 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-04T11:05:06.160565+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "reports/public-sample/a100-strict-retry-train-split-rerun"
+  ]
+}

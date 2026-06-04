@@ -1,0 +1,60 @@
+{
+  "artifact_kind": "sft_prediction_prompt_snapshot",
+  "claims": {
+    "contains_gold_contract": false,
+    "prompt_snapshot_only": true,
+    "public_safe": true
+  },
+  "formatting_policy": {
+    "fallback": "deterministic_role_plain_text",
+    "policy": "shared_contract_chat_template",
+    "prediction_prompt": "shared_contract_chat_template",
+    "prediction_target_policy": "generation_prompt_without_gold_contract",
+    "sft_training_text": "shared_contract_chat_template",
+    "tokenizer_chat_template": "used_when_available_with_tokenize_false"
+  },
+  "prediction_split": "train",
+  "prompt_constraints": {
+    "required_field_checklist_visible": true,
+    "required_field_skeleton_visible": true,
+    "route_enum_visible": true,
+    "route_not_url_or_path_visible": true,
+    "slots_object_not_array_visible": true,
+    "task_type_enum_visible": true
+  },
+  "rows": [
+    {
+      "id": "seed-search-weather",
+      "input_text_preview": "帮我搜索北京明天的天气",
+      "prompt_char_count": 1163,
+      "prompt_preview": "<|im_start|>system\n你是 Voice2Task contract normalizer。只输出一个 Browser Task Contract JSON object。必须包含且只使用这些顶层字段：task_type, route, safety, confirmation_required, slots, normalized_command, language, contract_version。task_type enum: blocked, clar",
+      "prompt_sha256": "d427df20da3235a0ec0eca899d49e357ee4ee52798e7a473465d22740bb1f65f",
+      "provenance": {
+        "public_safe": true,
+        "source_id": "seed-search-weather"
+      }
+    },
+    {
+      "id": "seed-search-weather-aug-1",
+      "input_text_preview": "查一下北京明天天气",
+      "prompt_char_count": 1161,
+      "prompt_preview": "<|im_start|>system\n你是 Voice2Task contract normalizer。只输出一个 Browser Task Contract JSON object。必须包含且只使用这些顶层字段：task_type, route, safety, confirmation_required, slots, normalized_command, language, contract_version。task_type enum: blocked, clar",
+      "prompt_sha256": "e566f5073d714cdfd94cd47b3e384b814b3a7de73e23bd6c83f9b206fdf716a0",
+      "provenance": {
+        "public_safe": true,
+        "source_id": "seed-search-weather"
+      }
+    },
+    {
+      "id": "seed-search-weather-aug-2",
+      "input_text_preview": "搜北京明天的天气",
+      "prompt_char_count": 1160,
+      "prompt_preview": "<|im_start|>system\n你是 Voice2Task contract normalizer。只输出一个 Browser Task Contract JSON object。必须包含且只使用这些顶层字段：task_type, route, safety, confirmation_required, slots, normalized_command, language, contract_version。task_type enum: blocked, clar",
+      "prompt_sha256": "af495ae7f688f7c9e582dedc79dfdc63372b365f300e24385c67548887f63aa6",
+      "provenance": {
+        "public_safe": true,
+        "source_id": "seed-search-weather"
+      }
+    }
+  ]
+}

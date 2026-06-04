@@ -1,0 +1,12 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-04T11:12:42.080714+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "reports/public-sample/a100-strict-retry-train-split-rerun",
+    "docs/human-briefs/2026-06-04-run-a100-strict-retry-train-split-rerun.html",
+    "docs/human-briefs/2026-06-04-autonomous-loop-run-a100-strict-retry-train-split-rerun.html",
+    "openspec/changes/archive/2026-06-04-run-a100-strict-retry-train-split-rerun"
+  ]
+}

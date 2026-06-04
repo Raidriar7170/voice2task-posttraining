@@ -1,0 +1,64 @@
+{
+  "evidence_context": {
+    "generalization_claim": false,
+    "model_quality_evidence": false,
+    "overfit_diagnostic": true,
+    "prediction_source_kind": "private_a100_adapter",
+    "prediction_split": "train",
+    "raw_attempt_schema_valid_count": 0,
+    "required_field_checklist_visible": true,
+    "required_field_skeleton_visible": true,
+    "retry_attempt_schema_valid_count": 0,
+    "retry_fragment_objects_rejected_count": 3,
+    "schema_retry_enabled": true,
+    "strict_retry_interpretation": "whole_string_json_only_retry_parser",
+    "train_internal_recovery_observed": false,
+    "validated_output_schema_valid_count": 0
+  },
+  "failure_slices": {
+    "confirmation": {
+      "count": 0,
+      "examples": []
+    },
+    "route": {
+      "count": 0,
+      "examples": []
+    },
+    "safety": {
+      "count": 0,
+      "examples": []
+    },
+    "schema": {
+      "count": 3,
+      "examples": [
+        "seed-search-weather",
+        "seed-search-weather-aug-1",
+        "seed-search-weather-aug-2"
+      ]
+    },
+    "slot": {
+      "count": 0,
+      "examples": []
+    },
+    "task_type": {
+      "count": 0,
+      "examples": []
+    },
+    "unknown": {
+      "count": 0,
+      "examples": []
+    }
+  },
+  "metrics": {
+    "confirmation_accuracy": 0.0,
+    "contract_exact_match": 0.0,
+    "json_valid_rate": 0.0,
+    "route_accuracy": 0.0,
+    "safety_gold_stop_support": 0.0,
+    "safety_precision": 1.0,
+    "safety_predicted_stop_support": 0.0,
+    "safety_recall": 1.0,
+    "slot_f1": 0.0,
+    "task_type_accuracy": 0.0
+  }
+}

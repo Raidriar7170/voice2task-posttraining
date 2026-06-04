@@ -1569,6 +1569,50 @@ def test_required_field_repair_train_split_rerun_evidence_preserves_retry_attemp
     assert scan_paths([evidence_dir]).ok is True
 
 
+def test_strict_retry_train_split_rerun_evidence_preserves_rejected_retry_fragments() -> None:
+    evidence_dir = Path("reports/public-sample/a100-strict-retry-train-split-rerun")
+    manifest = json.loads((evidence_dir / "manifest.json").read_text(encoding="utf-8"))
+    metrics = json.loads((evidence_dir / "metrics.json").read_text(encoding="utf-8"))
+    schema_summary = json.loads((evidence_dir / "schema_guard_summary.json").read_text(encoding="utf-8"))
+    constrained = json.loads((evidence_dir / "constrained_decoding_diagnosis.json").read_text(encoding="utf-8"))
+    full_leak_scan = json.loads((evidence_dir / "full_public_leak_scan_result.json").read_text(encoding="utf-8"))
+    raw_rows = [
+        json.loads(line)
+        for line in (evidence_dir / "raw_decoded_summary.jsonl").read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    report = (evidence_dir / "report.md").read_text(encoding="utf-8")
+
+    assert manifest["evidence_kind"] == "a100_strict_retry_train_split_rerun"
+    assert manifest["prediction_split"] == "train"
+    assert manifest["training_rows_used"] == 3
+    assert manifest["prediction_count"] == 3
+    assert manifest["claims"]["held_out_generalization_claim"] is False
+    assert manifest["claims"]["adapter_release"] is False
+    assert manifest["release_status"] == "not_released"
+    assert manifest["strict_retry_interpretation"] == "whole_string_json_only_retry_parser"
+    assert manifest["prior_context"]["required_field_repair_rerun"] == (
+        "a100-required-field-repair-train-split-rerun"
+    )
+    assert manifest["observed_result"]["validated_output_schema_valid_count"] == 0
+    assert manifest["observed_result"]["retry_fragment_objects_rejected_count"] == 3
+    assert metrics["evidence_context"]["strict_retry_interpretation"] == "whole_string_json_only_retry_parser"
+    assert metrics["evidence_context"]["retry_fragment_objects_rejected_count"] == 3
+    assert metrics["failure_slices"]["schema"]["count"] == 3
+    assert schema_summary["retry_attempted_count"] == 3
+    assert schema_summary["retry_attempt_schema_valid_count"] == 0
+    assert schema_summary["validated_output_schema_valid_count"] == 0
+    assert schema_summary["strict_retry_parser_rejected_fragment_count"] == 3
+    assert all(row["retry_attempt"]["parse_status"] == "json_fragment_object" for row in raw_rows)
+    assert constrained["summary"]["json_fragment_retry_attempt_count"] == 3
+    assert constrained["summary"]["validated_output_schema_valid_count"] == 0
+    assert full_leak_scan["ok"] is True
+    assert full_leak_scan["findings"] == []
+    assert "strict retry rejected JSON fragments wrapped in Markdown/prose" in report
+    assert "must not be described as schema recovery" in report
+    assert scan_paths([evidence_dir]).ok is True
+
+
 def test_leak_scan_rejects_model_adapter_and_cache_artifacts(tmp_path: Path) -> None:
     evidence_dir = tmp_path / "evidence"
     (evidence_dir / "adapter").mkdir(parents=True)

@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Autonomous loop - A100 strict-retry train-split rerun</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #1f2937;
+      background: #f7f8fb;
+      line-height: 1.6;
+    }
+    main {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 32px 20px 52px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      line-height: 1.2;
+    }
+    h2 {
+      margin-top: 28px;
+      font-size: 18px;
+    }
+    .summary {
+      padding: 16px 18px;
+      border-left: 4px solid #dc2626;
+      background: #ffffff;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin: 16px 0;
+    }
+    .tile {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 14px;
+    }
+    .label {
+      display: block;
+      color: #6b7280;
+      font-size: 13px;
+    }
+    .value {
+      display: block;
+      margin-top: 4px;
+      font-size: 20px;
+      font-weight: 700;
+    }
+    code {
+      padding: 1px 4px;
+      border-radius: 4px;
+      background: #eef2ff;
+    }
+    a {
+      color: #1d4ed8;
+    }
+    ul {
+      padding-left: 20px;
+    }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Autonomous loop: A100 strict-retry train-split rerun</h1>
+  <p class="summary">
+    结论：本轮 opsx auto 完成并归档了 A100 strict-retry prediction-only 复验；strict retry 成功拒绝 3 个 wrapped JSON fragment，但当前 adapter 仍是 0/3 schema-valid，下一步应先做受控输出修复而不是继续扩大训练或宣传结论。
+  </p>
+
+  <h2>Loop 状态</h2>
+  <div class="grid">
+    <div class="tile"><span class="label">状态</span><span class="value">needs confirmation</span></div>
+    <div class="tile"><span class="label">已完成阶段</span><span class="value">1 archived</span></div>
+    <div class="tile"><span class="label">Validated outputs</span><span class="value">0 / 3</span></div>
+    <div class="tile"><span class="label">Strict retry rejects</span><span class="value">3 / 3</span></div>
+  </div>
+
+  <h2>为什么停止</h2>
+  <p>
+    停止条件：推荐的下一阶段是 constrained-output repair，会修改解码/输出行为并影响下一阶段成功标准；按 opsx-auto hard stop，需要用户确认后再继续。
+  </p>
+
+  <h2>项目阶段进度</h2>
+  <ul>
+    <li>当前项目目标：first-phase speech-to-contract normalization，来源为 <a href="../../CONTEXT.md">CONTEXT.md</a>。</li>
+    <li>本阶段推进：真实 A100 train-split prediction evidence 证明 strict retry 不再把 Markdown/prose-wrapped JSON fragment 误判成成功。</li>
+    <li>能力差距：模型本体仍未稳定输出 schema-valid Browser Task Contract；raw attempt 0/3 valid，retry attempt 0/3 valid，validated output 0/3 valid。</li>
+    <li>证据差距：目前只有 train-split prediction-only 诊断，没有 dev/test 泛化、production readiness、adapter release 或 live-browser benchmark 证据。</li>
+    <li>下一阶段计划：开一个很小的 constrained-output repair OpenSpec 变更，在本地先验证 canonical JSON one-shot 或 deterministic constrained JSON emission，再决定是否值得 A100 rerun。</li>
+  </ul>
+
+  <h2>本轮完成项</h2>
+  <ul>
+    <li>创建并应用 OpenSpec change：<code>run-a100-strict-retry-train-split-rerun</code>。</li>
+    <li>使用用户授权的 A100 路径运行 prediction-only rerun，复用 prior private adapter，不重新训练。</li>
+    <li>导入 public-safe evidence pack：<a href="../../reports/public-sample/a100-strict-retry-train-split-rerun/manifest.json">manifest</a>、metrics、schema guard summary、constrained diagnosis、sidecars 和 leak scans。</li>
+    <li>生成阶段 Human Brief：<a href="2026-06-04-run-a100-strict-retry-train-split-rerun.html">2026-06-04-run-a100-strict-retry-train-split-rerun.html</a>。</li>
+    <li>Reviewer verdict: Pass；Must Fix / Should Fix / Nice to Have 均为 None。</li>
+    <li>OpenSpec archived to <code>openspec/changes/archive/2026-06-04-run-a100-strict-retry-train-split-rerun/</code>，并同步 main specs。</li>
+  </ul>
+
+  <h2>验证结果</h2>
+  <ul>
+    <li><code>PYTHONPATH=src pytest -q</code>: 130 passed。</li>
+    <li><code>uv run ruff check .</code>: passed。</li>
+    <li><code>uv run mypy src</code>: success, 16 source files。</li>
+    <li><code>voice2task.cli.data validate --public</code>: ok, 12 SFT rows, 26 DPO pairs。</li>
+    <li><code>voice2task.cli.data dpo-check</code>: ok, 26 pairs。</li>
+    <li><code>voice2task.cli.report leak-scan</code>: ok, 0 findings for evidence, Human Brief, and archived OpenSpec.</li>
+    <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>: 4 passed, 0 failed after archive。</li>
+    <li><code>git diff --check</code>: passed after removing OpenSpec archive EOF whitespace.</li>
+  </ul>
+
+  <h2>Auto integration</h2>
+  <ul>
+    <li>Status before final integration: validation passed and branch is ready for guarded stage/commit/merge.</li>
+    <li>Target branch: <code>main</code>, subject to clean target worktree and no merge conflicts.</li>
+    <li>Push: not planned unless the repository has an unambiguous normal push path and credentials do not block.</li>
+  </ul>
+
+  <h2>不要夸大的结论</h2>
+  <ul>
+    <li>这不是 checkpoint release 或 adapter release。</li>
+    <li>这不是 dev/test held-out generalization 证据。</li>
+    <li>这不是 production readiness、A100 model recovery 或 live-browser benchmark improvement。</li>
+    <li>strict retry 只提高失败判定可信度，不等于模型已经学会 Browser Task Contract。</li>
+  </ul>
+
+  <h2>推荐下一步</h2>
+  <p>
+    推荐用户确认一个新 bounded phase：constrained-output repair。建议从本地可测的 canonical JSON one-shot 或 deterministic constrained JSON emission 开始，目标是让模型输出先变成完整 Browser Task Contract，再考虑新的 A100 复验。
+  </p>
+</main>
+</body>
+</html>

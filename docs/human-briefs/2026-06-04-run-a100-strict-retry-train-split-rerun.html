@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>A100 strict-retry train-split rerun brief</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #1f2937;
+      background: #f7f8fb;
+      line-height: 1.6;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      line-height: 1.2;
+    }
+    h2 {
+      margin-top: 28px;
+      font-size: 18px;
+    }
+    .summary {
+      padding: 16px 18px;
+      border-left: 4px solid #dc2626;
+      background: #ffffff;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 12px;
+      margin: 16px 0;
+    }
+    .tile {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 14px;
+    }
+    .label {
+      display: block;
+      color: #6b7280;
+      font-size: 13px;
+    }
+    .value {
+      display: block;
+      margin-top: 4px;
+      font-size: 20px;
+      font-weight: 700;
+    }
+    code {
+      padding: 1px 4px;
+      border-radius: 4px;
+      background: #eef2ff;
+    }
+    a {
+      color: #1d4ed8;
+    }
+    ul {
+      padding-left: 20px;
+    }
+  </style>
+</head>
+<body>
+<main>
+  <h1>A100 strict-retry train-split rerun</h1>
+  <p class="summary">
+    结论：A100 prediction-only rerun 已完成；strict retry 成功拒绝了 3 个 Markdown/prose-wrapped JSON fragment，但当前 private adapter 在 3 条 train prediction 上仍是 0/3 schema-valid，不能说模型已恢复 Browser Task Contract 输出。
+  </p>
+
+  <h2>当前状态</h2>
+  <div class="grid">
+    <div class="tile"><span class="label">阶段</span><span class="value">needs review</span></div>
+    <div class="tile"><span class="label">预测数量</span><span class="value">3 train rows</span></div>
+    <div class="tile"><span class="label">Contract schema-valid rate</span><span class="value">0.0000</span></div>
+    <div class="tile"><span class="label">Strict retry rejected fragments</span><span class="value">3 / 3</span></div>
+  </div>
+
+  <h2>本阶段做了什么</h2>
+  <ul>
+    <li>在用户授权后使用 A100 运行 prediction-only rerun，复用 prior required-field repair private adapter，不重新训练。</li>
+    <li>保持 <code>prediction_split=train</code>、<code>overfit_diagnostic=true</code>、<code>generalization_claim=false</code>、<code>schema_retry_enabled=true</code>。</li>
+    <li>只导入 public-safe evidence：predictions、metadata、prompt snapshot、raw decoded summary、generation trace、metrics、schema guard summary、constrained decoding diagnosis、manifest、report 和 leak scans。</li>
+    <li>新增测试锁定 strict-retry evidence 形状，确保 retry fragment 不被当成有效合约。</li>
+  </ul>
+
+  <h2>模型目前能达到什么效果</h2>
+  <ul>
+    <li>模型仍未输出 schema-valid Browser Task Contract：raw attempt 0/3 valid，retry attempt 0/3 valid，validated output 0/3 valid。</li>
+    <li>raw 输出里 1 条 non-JSON、2 条 JSON object，但 JSON object 仍违反合约字段或 enum 约束。</li>
+    <li>strict retry 的效果是防止误报：3 个 retry attempt 都是 JSON fragment wrapped in Markdown/prose，均被正确保留为失败证据。</li>
+    <li>本轮只说明 decoder guard 更可信；不说明模型质量恢复、dev/test 泛化、发布可用或 live-browser benchmark 改进。</li>
+  </ul>
+
+  <h2>关键证据</h2>
+  <ul>
+    <li><a href="../../reports/public-sample/a100-strict-retry-train-split-rerun/manifest.json">manifest.json</a></li>
+    <li><a href="../../reports/public-sample/a100-strict-retry-train-split-rerun/report.md">report.md</a></li>
+    <li><a href="../../reports/public-sample/a100-strict-retry-train-split-rerun/metrics.json">metrics.json</a> / <a href="../../reports/public-sample/a100-strict-retry-train-split-rerun/metrics.md">metrics.md</a></li>
+    <li><a href="../../reports/public-sample/a100-strict-retry-train-split-rerun/schema_guard_summary.json">schema_guard_summary.json</a> / <a href="../../reports/public-sample/a100-strict-retry-train-split-rerun/schema_guard_summary.md">schema_guard_summary.md</a></li>
+    <li><a href="../../reports/public-sample/a100-strict-retry-train-split-rerun/constrained_decoding_diagnosis.json">constrained_decoding_diagnosis.json</a> / <a href="../../reports/public-sample/a100-strict-retry-train-split-rerun/constrained_decoding_diagnosis.md">constrained_decoding_diagnosis.md</a></li>
+    <li><a href="../../reports/public-sample/a100-strict-retry-train-split-rerun/raw_decoded_summary.jsonl">raw_decoded_summary.jsonl</a></li>
+    <li><a href="../../reports/public-sample/a100-strict-retry-train-split-rerun/full_public_leak_scan_result.json">full_public_leak_scan_result.json</a></li>
+  </ul>
+
+  <h2>验证结果</h2>
+  <ul>
+    <li><code>PYTHONPATH=src pytest -q</code>: 130 passed。</li>
+    <li><code>uv run ruff check .</code>: passed。</li>
+    <li><code>uv run mypy src</code>: success, 16 source files。</li>
+    <li><code>voice2task.cli.data validate --public</code>: ok, 12 SFT rows, 26 DPO pairs。</li>
+    <li><code>voice2task.cli.data dpo-check</code>: ok, 26 pairs。</li>
+    <li><code>voice2task.cli.report leak-scan</code>: ok, 0 findings。</li>
+    <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>: 5 passed, 0 failed。</li>
+    <li><code>git diff --check</code>: passed。</li>
+  </ul>
+
+  <h2>项目阶段进度</h2>
+  <ul>
+    <li>当前目标：first-phase speech-to-contract normalization，来源为 <a href="../../CONTEXT.md">CONTEXT.md</a>。</li>
+    <li>本阶段推进：把 retry parser 的误收风险用真实 A100 train-split prediction evidence 复验了一次，证明 current strict parser 不再把 Markdown/prose fragment 当成功。</li>
+    <li>剩余差距：模型本体仍不会稳定产生 schema-valid contract；下一步应修输出约束或训练目标，而不是扩大宣传口径。</li>
+  </ul>
+
+  <h2>不要夸大的结论</h2>
+  <ul>
+    <li>这不是 checkpoint release 或 adapter release。</li>
+    <li>这不是 dev/test held-out generalization 证据。</li>
+    <li>这不是 production readiness、A100 model recovery 或 live-browser benchmark improvement。</li>
+    <li>strict retry 只提高失败判定可信度，不等于模型已经学会 Browser Task Contract。</li>
+  </ul>
+
+  <h2>推荐下一步</h2>
+  <p>
+    下一阶段建议开一个很小的 constrained-output repair proposal：先做 deterministic constrained JSON emission 或 canonical JSON one-shot 的本地可测修复，再决定是否值得用 A100 rerun。不要继续无诊断地重训。
+  </p>
+</main>
+</body>
+</html>
