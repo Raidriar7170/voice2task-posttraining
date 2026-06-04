@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Autonomous Loop Report - fine_tuning</title>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #17202a; background: #ffffff; }
+    main { max-width: 1040px; margin: 0 auto; padding: 38px 24px 56px; }
+    h1 { font-size: 30px; margin: 0 0 10px; letter-spacing: 0; }
+    h2 { font-size: 19px; margin: 30px 0 10px; letter-spacing: 0; }
+    p, li { line-height: 1.65; }
+    code { background: #eef2f3; border-radius: 4px; padding: 2px 5px; }
+    a { color: #117864; }
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    th, td { border: 1px solid #d6dbdf; padding: 10px 12px; text-align: left; vertical-align: top; }
+    th { background: #f4f6f7; }
+    .summary { font-size: 18px; font-weight: 650; padding: 16px 18px; background: #e8f5ef; border-left: 5px solid #117864; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin: 16px 0 22px; }
+    .box { border: 1px solid #d6dbdf; border-radius: 8px; padding: 13px 15px; background: #fbfcfc; }
+    .label { color: #5d6d7e; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+    .value { font-weight: 650; margin-top: 4px; }
+    .ok { color: #117864; font-weight: 650; }
+    .warn { color: #9a5a00; font-weight: 650; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Autonomous Phase Loop - fine_tuning</h1>
+  <p class="summary">结论：本轮自动循环完成并归档两个阶段，修复公开材料 leak-scan 问题，并把本地 SFT 目标函数改为 assistant-only/completion-only labels；循环按硬停止规则停在私有 A100 rerun gate。</p>
+
+  <section class="grid" aria-label="loop status">
+    <div class="box"><div class="label">Loop status</div><div class="value">stopped at hard gate</div></div>
+    <div class="box"><div class="label">Target branch</div><div class="value">main</div></div>
+    <div class="box"><div class="label">OpenSpec</div><div class="value">0 active changes</div></div>
+    <div class="box"><div class="label">Next gate</div><div class="value">private A100 rerun</div></div>
+  </section>
+
+  <h2>停止原因</h2>
+  <p>下一步若继续验证模型质量，需要在私有 A100 环境运行新的 train-split overfit rerun 或 runtime/prediction 证据采集。按照项目规则和 opsx-auto hard stop，这属于私有基础设施执行，不能在本轮继续自动运行。</p>
+
+  <h2>项目阶段进度</h2>
+  <p>当前阶段目标：first-phase speech-to-contract normalization，即把中文语音命令或 ASR transcript 转成 schema-valid Browser Task Contract。来源：<a href="../../README.md">README</a>、<a href="../../CONTEXT.md">CONTEXT</a>、<a href="../../openspec/config.yaml">OpenSpec config</a>。</p>
+  <ul>
+    <li>已推进：公开材料隐私扫描闭环；SFT objective path 从 full-text causal labels 修正为 assistant-only labels；OpenSpec specs 已同步。</li>
+    <li>仍缺口：没有新 A100 rerun、没有新的 train-split recovery、没有 dev/test generalization、没有 checkpoint/adapter release、没有 live-browser improvement evidence。</li>
+    <li>推荐下一阶段：明确授权私有 A100 执行后，开 <code>run-a100-assistant-only-train-split-rerun</code>，只做 train split 3-row overfit sanity check，并保持 <code>generalization_claim=false</code>。</li>
+  </ul>
+
+  <h2>完成阶段</h2>
+  <table>
+    <thead><tr><th>阶段</th><th>结果</th><th>关键文件</th><th>提交</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>sanitize-historical-human-briefs-full-leak-scan</code></td>
+        <td>已归档；清理一个历史 Human Brief 中的远端私有路径样例，full public-surface leak-scan 通过。</td>
+        <td><a href="2026-06-04-sanitize-historical-human-briefs-full-leak-scan.html">阶段 Human Brief</a>；<a href="../../openspec/changes/archive/2026-06-04-sanitize-historical-human-briefs-full-leak-scan/proposal.md">archive proposal</a></td>
+        <td><code>5902adc</code></td>
+      </tr>
+      <tr>
+        <td><code>implement-sft-assistant-only-loss-masking</code></td>
+        <td>已归档；SFT real path 保持 TRL/PEFT，并使用 pretokenized assistant-only labels；旧 runtime evidence 未被重写。</td>
+        <td><a href="2026-06-04-implement-sft-assistant-only-loss-masking.html">阶段 Human Brief</a>；<a href="../../src/voice2task/training.py">training.py</a>；<a href="../../openspec/changes/archive/2026-06-04-implement-sft-assistant-only-loss-masking/proposal.md">archive proposal</a></td>
+        <td><code>fc42f3c</code></td>
+      </tr>
+      <tr>
+        <td><code>worktree setup</code></td>
+        <td>添加 <code>.worktrees/</code> ignore，允许隔离实现。</td>
+        <td><a href="../../.gitignore">.gitignore</a></td>
+        <td><code>93694fd</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>验证命令</h2>
+  <table>
+    <thead><tr><th>命令</th><th>最终结果</th></tr></thead>
+    <tbody>
+      <tr><td><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code></td><td class="ok">4 specs passed, 0 failed</td></tr>
+      <tr><td><code>PYTHONPATH=src pytest -q</code></td><td class="ok">119 passed</td></tr>
+      <tr><td><code>uv run ruff check .</code></td><td class="ok">passed</td></tr>
+      <tr><td><code>uv run mypy src</code></td><td class="ok">16 source files clean</td></tr>
+      <tr><td><code>PYTHONPATH=src python -m voice2task.cli.data validate --sft data/public-samples/sft_public_sample.jsonl --dpo data/public-samples/dpo_public_sample.jsonl --manifest data/public-samples/manifest_public_sample.json --public</code></td><td class="ok">ok; 12 SFT rows, 26 DPO pairs</td></tr>
+      <tr><td><code>PYTHONPATH=src python -m voice2task.cli.data dpo-check --dpo data/public-samples/dpo_public_sample.jsonl</code></td><td class="ok">26 pairs checked</td></tr>
+      <tr><td><code>PYTHONPATH=src python -m voice2task.cli.report leak-scan --paths README.md CONTEXT.md data/public-samples reports/public-sample reports/templates docs/human-briefs openspec</code></td><td class="ok">ok; 0 findings</td></tr>
+      <tr><td><code>git diff --check</code></td><td class="ok">passed</td></tr>
+    </tbody>
+  </table>
+
+  <h2>自动集成状态</h2>
+  <ul>
+    <li>阶段 A：staged、committed to <code>main</code> as <code>5902adc</code>。</li>
+    <li>隔离准备：committed to <code>main</code> as <code>93694fd</code>。</li>
+    <li>阶段 B：committed on <code>codex/implement-sft-assistant-only-loss-masking</code> as <code>fc42f3c</code>，随后 fast-forward merged into <code>main</code>。</li>
+    <li>Push：skipped；本轮没有用户要求更新远端，且下一步停在私有 A100 gate。</li>
+  </ul>
+
+  <h2>证据边界</h2>
+  <ul>
+    <li>本轮没有运行新的私有 A100 训练、预测或 adapter 加载。</li>
+    <li>旧 <a href="../../reports/public-sample/runtime-label-provenance-check/runtime_label_provenance_check.md">runtime label provenance evidence</a> 仍然表示当时观察到的 <code>prompt_tokens_masked=false</code>；它没有被改写。</li>
+    <li>本轮只证明本地训练入口和 objective inspection 现在构造并验证 assistant-only labels。</li>
+    <li class="warn">不要宣称：模型恢复、train-split recovery、dev/test 泛化、checkpoint release、adapter release、production readiness 或 live-browser benchmark improvement。</li>
+  </ul>
+
+  <h2>下一步</h2>
+  <p>建议下一步在用户明确授权私有 A100 执行后，运行新的 bounded train-split overfit diagnostic：只检查修复后的 objective path 是否让 3 条 train rows 出现 schema-valid recovery；即使成功，也只能作为 train-internal sanity evidence。</p>
+</main>
+</body>
+</html>
