@@ -1,0 +1,15 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-04T07:40:19.449432+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "README.md",
+    "CONTEXT.md",
+    "data/public-samples",
+    "reports/public-sample",
+    "reports/templates",
+    "docs/human-briefs",
+    "openspec"
+  ]
+}

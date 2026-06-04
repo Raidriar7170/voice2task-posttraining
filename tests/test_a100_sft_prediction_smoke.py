@@ -1162,6 +1162,52 @@ def test_assistant_only_train_split_rerun_evidence_is_bounded_and_public_safe() 
     assert scan_paths([evidence_dir]).ok is True
 
 
+def test_assistant_only_schema_output_diagnosis_separates_parseability_from_contract_validity() -> None:
+    evidence_dir = Path("reports/public-sample/a100-assistant-only-train-split-rerun")
+    diagnosis = json.loads((evidence_dir / "schema_output_diagnosis.json").read_text(encoding="utf-8"))
+    leak_scan = json.loads((evidence_dir / "schema_output_diagnosis_leak_scan_result.json").read_text(encoding="utf-8"))
+    report = (evidence_dir / "schema_output_diagnosis.md").read_text(encoding="utf-8")
+
+    assert diagnosis["diagnostic_kind"] == "assistant_only_schema_output_failure_diagnosis"
+    assert diagnosis["prediction_split"] == "train"
+    assert diagnosis["overfit_diagnostic"] is True
+    assert diagnosis["generalization_claim"] is False
+    assert diagnosis["summary"]["prediction_count"] == 3
+    assert diagnosis["summary"]["raw_json_parseable_count"] == 3
+    assert diagnosis["summary"]["contract_schema_valid_count"] == 0
+    assert diagnosis["summary"]["contract_schema_valid_rate"] == 0.0
+    assert diagnosis["summary"]["truncation_or_decode_limit_count"] == 0
+    assert diagnosis["summary"]["dominant_failure_family"] == (
+        "parseable_json_contract_shape_missing_required_fields"
+    )
+    assert diagnosis["field_issue_counts"]["missing_required_fields"] == {
+        "contract_version": 1,
+        "normalized_command": 2,
+        "safety": 3,
+    }
+    assert diagnosis["field_issue_counts"]["field_mismatches"]["slots"] == 3
+    assert all(row["raw_json_parseable"] is True for row in diagnosis["rows"])
+    assert all(row["contract_schema_valid"] is False for row in diagnosis["rows"])
+    assert all(row["generation_finish_state"] == "eos_observed" for row in diagnosis["rows"])
+    assert diagnosis["claims"]["raw_json_parseability_is_not_contract_schema_validity"] is True
+    assert diagnosis["claims"]["does_not_repair_normalize_coerce_or_replace_predictions"] is True
+    assert diagnosis["recommended_next_bounded_phase"]["needs_user_confirmation_before_behavior_change"] is True
+    assert "parseable JSON is not the same as schema-valid Browser Task Contract output" in report
+    expected_boundary = (
+        "This phase does not modify decoding, prompt templates, schemas, data generation, "
+        "or training objectives"
+    )
+    assert expected_boundary in report
+    assert leak_scan["ok"] is True
+    assert leak_scan["findings"] == []
+    assert scan_paths(
+        [
+            evidence_dir / "schema_output_diagnosis.json",
+            evidence_dir / "schema_output_diagnosis.md",
+        ]
+    ).ok is True
+
+
 def test_contract_output_recovery_template_is_public_safe_and_bounded() -> None:
     template = Path("reports/templates/a100-sft-contract-output-recovery.md")
 

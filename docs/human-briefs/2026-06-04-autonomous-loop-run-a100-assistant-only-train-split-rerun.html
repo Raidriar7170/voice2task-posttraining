@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Autonomous loop A100 assistant-only rerun</title>
+  <title>Autonomous loop A100 assistant-only rerun and diagnosis</title>
   <style>
     body {
       margin: 0;
@@ -69,18 +69,23 @@
 </head>
 <body>
 <main>
-  <h1>Autonomous Phase Loop: A100 assistant-only rerun</h1>
+  <h1>Autonomous Phase Loop: A100 assistant-only rerun and diagnosis</h1>
   <p class="summary">
-    结论：本轮 opsx-auto 已完成 A100 assistant-only train-split rerun、公开安全证据包、Reviewer 审查和 OpenSpec archive；结果证明训练目标 mask 路径成立，但没有证明 schema 恢复或泛化提升。
+    结论：本轮 opsx-auto 已完成并归档 A100 assistant-only train-split rerun 和后续 schema-output diagnosis；训练目标 mask 路径成立，但输出失败已缩小为“raw JSON 可解析但缺 Browser Task Contract 必填字段”，尚未进入行为修复。
   </p>
 
   <h2>Loop 状态</h2>
   <div class="grid">
-    <div class="tile"><span class="label">OpenSpec change</span><span class="value">archived</span></div>
+    <div class="tile"><span class="label">OpenSpec changes</span><span class="value">2 archived</span></div>
     <div class="tile"><span class="label">A100 execution</span><span class="value">completed</span></div>
-    <div class="tile"><span class="label">Contract schema-valid rate</span><span class="value">0.0000</span></div>
+    <div class="tile"><span class="label">Contract schema-valid</span><span class="value">0 / 3</span></div>
     <div class="tile"><span class="label">Leak scan</span><span class="value">0 findings</span></div>
   </div>
+
+  <h2>停止原因</h2>
+  <p>
+    Loop 停在 needs review：下一步 <code>repair-contract-required-field-emission</code> 会改变 decoding/postprocessor、prompt target emphasis 或 training sample/template 行为之一，属于行为修复路径选择，需要用户确认后再开启新的 OpenSpec phase。
+  </p>
 
   <h2>完成内容</h2>
   <ul>
@@ -89,21 +94,27 @@
     <li>只对 train split 生成 3 条 private-adapter prediction，公开证据中显式标注 <code>overfit_diagnostic=true</code> 和 <code>generalization_claim=false</code>。</li>
     <li>新增 evidence regression test，锁定 12 条 public SFT source rows 与 3 条 train rows 的边界，避免指标被误读。</li>
     <li>Reviewer 结论为 Must Fix none；Should Fix 已处理，包括 <code>json_valid_rate</code> 语义和 private A100 runtime 表述。</li>
-    <li>OpenSpec change 已归档，并把 accepted delta spec 同步进主 spec。</li>
+    <li>OpenSpec change <code>run-a100-assistant-only-train-split-rerun</code> 已归档，并把 accepted delta spec 同步进主 spec。</li>
+    <li>继续完成 OpenSpec change <code>diagnose-assistant-only-schema-output-failure</code>：生成 schema-output diagnosis，确认三条输出 raw JSON 可解析但 Contract schema-valid count 为 0。</li>
+    <li>诊断阶段已归档，并把 assistant-only schema-output diagnosis 要求同步进 <code>contract-evaluation</code> 主 spec。</li>
   </ul>
 
   <h2>关键链接</h2>
   <ul>
     <li><a href="../../openspec/changes/archive/2026-06-04-run-a100-assistant-only-train-split-rerun/proposal.md">OpenSpec archive proposal</a></li>
+    <li><a href="../../openspec/changes/archive/2026-06-04-diagnose-assistant-only-schema-output-failure/proposal.md">Schema diagnosis OpenSpec archive proposal</a></li>
     <li><a href="./2026-06-04-run-a100-assistant-only-train-split-rerun.html">阶段 Human Brief</a></li>
+    <li><a href="./2026-06-04-diagnose-assistant-only-schema-output-failure.html">诊断阶段 Human Brief</a></li>
     <li><a href="../../reports/public-sample/a100-assistant-only-train-split-rerun/manifest.json">manifest.json</a></li>
     <li><a href="../../reports/public-sample/a100-assistant-only-train-split-rerun/report.md">report.md</a></li>
+    <li><a href="../../reports/public-sample/a100-assistant-only-train-split-rerun/schema_output_diagnosis.json">schema_output_diagnosis.json</a></li>
+    <li><a href="../../reports/public-sample/a100-assistant-only-train-split-rerun/schema_output_diagnosis.md">schema_output_diagnosis.md</a></li>
     <li><a href="../../reports/public-sample/a100-assistant-only-train-split-rerun/full_public_leak_scan_result.json">full_public_leak_scan_result.json</a></li>
   </ul>
 
   <h2>验证结果</h2>
   <ul>
-    <li><code>PYTHONPATH=src pytest -q</code>: 120 passed。</li>
+    <li><code>PYTHONPATH=src pytest -q</code>: 121 passed。</li>
     <li><code>uv run ruff check .</code>: passed。</li>
     <li><code>uv run mypy src</code>: success, 16 source files。</li>
     <li><code>voice2task.cli.data validate --public</code>: ok, 12 SFT rows, 26 DPO pairs。</li>
@@ -118,12 +129,12 @@
     <li>不是 checkpoint release、adapter release、production readiness 或 live-browser benchmark improvement。</li>
     <li>不是 dev/test held-out generalization evidence。</li>
     <li>不是 schema recovery evidence：3 条 train prediction 仍全部未通过 Browser Task Contract schema。</li>
-    <li>当前结论只说明 assistant-only objective 在真实训练路径上可检查且成立，下一步仍要诊断输出格式失败。</li>
+    <li>当前结论只说明 assistant-only objective 在真实训练路径上可检查且成立，并且输出失败更像缺必填 contract 字段，不是 raw JSON 解析失败或截断。</li>
   </ul>
 
   <h2>推荐下一阶段</h2>
   <p>
-    建议开启一个很小的 bounded decoding/schema-output diagnosis：比较 prompt snapshot、generation trace、raw decoded summary、gold contract 和 schema validator failure，先定位模型为何仍输出缺字段或错字段，再决定是否需要改 decoding、prompt contract、训练目标或样本配方。
+    建议开启 <code>repair-contract-required-field-emission</code>，但开始前需要用户确认只选一个小修复路径：decoding/postprocessor guard、prompt target emphasis、或 training sample/template adjustment。不要在同一阶段同时混合三类改动。
   </p>
 </main>
 </body>

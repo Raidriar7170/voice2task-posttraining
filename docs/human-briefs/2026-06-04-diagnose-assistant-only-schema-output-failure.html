@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Assistant-only schema-output diagnosis brief</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #1f2937;
+      background: #f7f8fb;
+      line-height: 1.6;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      line-height: 1.2;
+    }
+    h2 {
+      margin-top: 28px;
+      font-size: 18px;
+    }
+    .summary {
+      padding: 16px 18px;
+      border-left: 4px solid #7c3aed;
+      background: #ffffff;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 12px;
+      margin: 16px 0;
+    }
+    .tile {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 14px;
+    }
+    .label {
+      display: block;
+      color: #6b7280;
+      font-size: 13px;
+    }
+    .value {
+      display: block;
+      margin-top: 4px;
+      font-size: 20px;
+      font-weight: 700;
+    }
+    code {
+      padding: 1px 4px;
+      border-radius: 4px;
+      background: #eef2ff;
+    }
+    a {
+      color: #1d4ed8;
+    }
+    ul {
+      padding-left: 20px;
+    }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Assistant-only schema-output diagnosis</h1>
+  <p class="summary">
+    结论：A100 assistant-only 输出不是 raw JSON 解析失败，也不像截断；三条 train 输出都能解析成 JSON object，但都缺 <code>safety</code>，因此仍不是 schema-valid Browser Task Contract。
+  </p>
+
+  <h2>当前状态</h2>
+  <div class="grid">
+    <div class="tile"><span class="label">阶段</span><span class="value">archived</span></div>
+    <div class="tile"><span class="label">Raw JSON parseable</span><span class="value">3 / 3</span></div>
+    <div class="tile"><span class="label">Contract schema-valid</span><span class="value">0 / 3</span></div>
+    <div class="tile"><span class="label">Decode truncation</span><span class="value">0</span></div>
+  </div>
+
+  <h2>项目阶段进度</h2>
+  <ul>
+    <li>当前项目阶段目标：first-phase speech-to-contract normalization。</li>
+    <li>目标来源：<a href="../../CONTEXT.md">CONTEXT.md</a> 和 <a href="../../openspec/specs/contract-evaluation/spec.md">contract-evaluation spec</a>。</li>
+    <li>本阶段推进：把 A100 rerun 的失败从“训练目标是否正确”缩小到“可解析 JSON 仍缺 Browser Task Contract 必填字段”。</li>
+    <li>剩余差距：还没有选择修复路径；下一步需要在 decoding/postprocessor guard、prompt target emphasis、training sample/template adjustment 中选一个小路径。</li>
+  </ul>
+
+  <h2>本阶段发现</h2>
+  <ul>
+    <li><code>raw_json_parseable_count=3</code>，但 <code>contract_schema_valid_count=0</code>。</li>
+    <li>三条输出都缺 <code>safety</code>；两条缺 <code>normalized_command</code>；一条缺 <code>contract_version</code>。</li>
+    <li>三条都有 <code>finish_state=eos_observed</code> 且低于 <code>max_new_tokens=256</code>，当前证据不支持把失败归因于生成截断。</li>
+    <li>所有输出保持 invalid，没有被修复、补字段、coerce、rule baseline 或 gold contract 替换。</li>
+  </ul>
+
+  <h2>关键证据</h2>
+  <ul>
+    <li><a href="../../reports/public-sample/a100-assistant-only-train-split-rerun/schema_output_diagnosis.json">schema_output_diagnosis.json</a></li>
+    <li><a href="../../reports/public-sample/a100-assistant-only-train-split-rerun/schema_output_diagnosis.md">schema_output_diagnosis.md</a></li>
+    <li><a href="../../reports/public-sample/a100-assistant-only-train-split-rerun/schema_output_diagnosis_leak_scan_result.json">schema_output_diagnosis_leak_scan_result.json</a></li>
+    <li><a href="../../reports/public-sample/a100-assistant-only-train-split-rerun/raw_decoded_summary.jsonl">raw_decoded_summary.jsonl</a></li>
+    <li><a href="../../reports/public-sample/a100-assistant-only-train-split-rerun/generation_trace.jsonl">generation_trace.jsonl</a></li>
+  </ul>
+
+  <h2>验证结果</h2>
+  <ul>
+    <li><code>PYTHONPATH=src pytest -q tests/test_a100_sft_prediction_smoke.py -k "schema_output_diagnosis"</code>: 1 passed, 28 deselected。</li>
+    <li><code>PYTHONPATH=src pytest -q</code>: 121 passed。</li>
+    <li><code>uv run ruff check .</code>: passed。</li>
+    <li><code>uv run mypy src</code>: success, 16 source files。</li>
+    <li><code>voice2task.cli.data validate --public</code>: ok, 12 SFT rows, 26 DPO pairs。</li>
+    <li><code>voice2task.cli.data dpo-check</code>: ok, 26 pairs。</li>
+    <li><code>voice2task.cli.report leak-scan</code>: diagnosis artifacts ok, 0 findings。</li>
+    <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>: post-archive 4 passed。</li>
+    <li><code>git diff --check</code>: passed。</li>
+  </ul>
+
+  <h2>不要夸大的结论</h2>
+  <ul>
+    <li>这不是 schema recovery。</li>
+    <li>这不是 dev/test held-out generalization evidence。</li>
+    <li>这不是 checkpoint release、adapter release、production readiness、public full-corpus release 或 live-browser benchmark improvement。</li>
+  </ul>
+
+  <h2>推荐下一步</h2>
+  <p>
+    下一阶段建议命名为 <code>repair-contract-required-field-emission</code>，但开始行为修改前需要用户确认具体修复路径；不要一次性混合 decoding、prompt 和训练样本三类改动。
+  </p>
+</main>
+</body>
+</html>

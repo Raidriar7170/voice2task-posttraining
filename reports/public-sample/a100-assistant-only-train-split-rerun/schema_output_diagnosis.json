@@ -1,0 +1,146 @@
+{
+  "diagnostic_kind": "assistant_only_schema_output_failure_diagnosis",
+  "generated_at": "2026-06-04T07:22:10.116955+00:00",
+  "source_evidence_dir": "reports/public-sample/a100-assistant-only-train-split-rerun",
+  "prediction_split": "train",
+  "prediction_source_kind": "private_a100_adapter",
+  "overfit_diagnostic": true,
+  "generalization_claim": false,
+  "summary": {
+    "prediction_count": 3,
+    "raw_json_parseable_count": 3,
+    "raw_json_parseable_rate": 1.0,
+    "contract_schema_valid_count": 0,
+    "contract_schema_valid_rate": 0.0,
+    "schema_failure_count": 3,
+    "truncation_or_decode_limit_count": 0,
+    "dominant_failure_family": "parseable_json_contract_shape_missing_required_fields",
+    "primary_missing_required_field": "safety"
+  },
+  "field_issue_counts": {
+    "missing_required_fields": {
+      "contract_version": 1,
+      "normalized_command": 2,
+      "safety": 3
+    },
+    "field_mismatches": {
+      "normalized_command": 1,
+      "slots": 3,
+      "task_type": 1
+    }
+  },
+  "prompt_and_decoding_context": {
+    "prompt_constraints": {
+      "route_enum_visible": true,
+      "route_not_url_or_path_visible": true,
+      "slots_object_not_array_visible": true,
+      "task_type_enum_visible": true
+    },
+    "all_generations_finished_with_eos": true,
+    "max_new_tokens": [
+      256
+    ],
+    "strategy": [
+      "greedy"
+    ],
+    "schema_repair_applied": [
+      false
+    ]
+  },
+  "rows": [
+    {
+      "id": "seed-search-weather",
+      "raw_json_parseable": true,
+      "contract_schema_valid": false,
+      "validation_error": "missing required fields: normalized_command, safety",
+      "missing_required_fields": [
+        "safety",
+        "normalized_command"
+      ],
+      "field_mismatches": [
+        {
+          "field_path": "slots",
+          "mismatch_category": "value_mismatch",
+          "gold_value_summary": "{\"query\": \"北京 明天 天气\"}",
+          "prediction_value_summary": "{\"city\": \"北京\", \"date\": \"明天\"}"
+        }
+      ],
+      "generation_finish_state": "eos_observed",
+      "generated_token_count": 38,
+      "max_new_tokens": 256,
+      "decode_limit_hit": false
+    },
+    {
+      "id": "seed-search-weather-aug-1",
+      "raw_json_parseable": true,
+      "contract_schema_valid": false,
+      "validation_error": "missing required fields: contract_version, safety",
+      "missing_required_fields": [
+        "safety",
+        "contract_version"
+      ],
+      "field_mismatches": [
+        {
+          "field_path": "task_type",
+          "mismatch_category": "value_mismatch",
+          "gold_value_summary": "\"search\"",
+          "prediction_value_summary": "\"form_fill\""
+        },
+        {
+          "field_path": "slots",
+          "mismatch_category": "value_mismatch",
+          "gold_value_summary": "{\"query\": \"北京 明天 天气\"}",
+          "prediction_value_summary": "{\"city\": \"北京\", \"date\": \"明天\", \"humidity\": \"湿度\", \"pressure\": \"气压\", \"sunrise\": \"日出时间\", \"sunset\": \"日落时间\", \"temperature\": \"最高温度\", \"weather\": \"晴天\", \"wind_speed\": \"风速\"}"
+        },
+        {
+          "field_path": "normalized_command",
+          "mismatch_category": "value_mismatch",
+          "gold_value_summary": "\"搜索北京明天天气\"",
+          "prediction_value_summary": "\"查询北京明天天气\""
+        }
+      ],
+      "generation_finish_state": "eos_observed",
+      "generated_token_count": 80,
+      "max_new_tokens": 256,
+      "decode_limit_hit": false
+    },
+    {
+      "id": "seed-search-weather-aug-2",
+      "raw_json_parseable": true,
+      "contract_schema_valid": false,
+      "validation_error": "missing required fields: normalized_command, safety",
+      "missing_required_fields": [
+        "safety",
+        "normalized_command"
+      ],
+      "field_mismatches": [
+        {
+          "field_path": "slots",
+          "mismatch_category": "value_mismatch",
+          "gold_value_summary": "{\"query\": \"北京 明天 天气\"}",
+          "prediction_value_summary": "{\"query\": \"北京明天天气\"}"
+        }
+      ],
+      "generation_finish_state": "eos_observed",
+      "generated_token_count": 36,
+      "max_new_tokens": 256,
+      "decode_limit_hit": false
+    }
+  ],
+  "recommended_next_bounded_phase": {
+    "name": "repair-contract-required-field-emission",
+    "scope": "Choose one small fix path after review: decoding/postprocessor guard, prompt target emphasis, or training sample/template adjustment. Do not combine all three without a new OpenSpec decision.",
+    "needs_user_confirmation_before_behavior_change": true
+  },
+  "claims": {
+    "raw_json_parseability_is_not_contract_schema_validity": true,
+    "invalid_predictions_remain_invalid": true,
+    "does_not_repair_normalize_coerce_or_replace_predictions": true,
+    "checkpoint_release": false,
+    "adapter_release": false,
+    "held_out_generalization_claim": false,
+    "production_readiness_claim": false,
+    "public_full_corpus_release_claim": false,
+    "live_browser_benchmark_claim": false
+  }
+}
