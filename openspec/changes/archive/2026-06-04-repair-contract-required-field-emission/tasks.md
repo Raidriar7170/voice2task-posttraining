@@ -19,4 +19,4 @@
 ## 4. Review, Archive, and Integration
 
 - [x] 4.1 Run Reviewer diff review, fix in-scope Must Fix items, and rerun required validation.
-- [ ] 4.2 Archive the OpenSpec change, rerun post-archive validation, update the loop report, and apply auto integration when safe.
+- [x] 4.2 Archive the OpenSpec change, rerun post-archive validation, update the loop report, and apply auto integration when safe.
