@@ -1,0 +1,135 @@
+{
+  "claims": {
+    "a100_execution_performed": false,
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "does_not_normalize_or_semantically_score_normalized_command": true,
+    "does_not_repair_normalize_coerce_replace_or_rescore": true,
+    "held_out_generalization_claim": false,
+    "live_browser_benchmark_improvement_claim": false,
+    "local_evidence_only_analysis": true,
+    "model_quality_improvement_claim": false,
+    "normalized_command_normalization_performed": false,
+    "normalized_command_semantic_equivalence_marked": false,
+    "predictions_repaired_or_replaced": false,
+    "predictions_rescored": false,
+    "production_readiness_claim": false,
+    "prompt_training_decoding_or_metric_logic_changed": false,
+    "public_full_corpus_release_claim": false,
+    "search_query_terms_marked_equivalent": false,
+    "semantic_equivalence_scoring_performed": false,
+    "training_or_prediction_rerun_performed": false
+  },
+  "diagnostic_kind": "normalized_command_string_mismatch_diagnosis",
+  "rows": [
+    {
+      "co_occurring_field_paths": [
+        "confirmation_required"
+      ],
+      "context_kind": "co_occurs_with_schema_failure",
+      "mismatch": {
+        "field_path": "normalized_command",
+        "gold_value_summary": "string(8): 搜索北京明天天气",
+        "mismatch_category": "value_mismatch",
+        "prediction_value_summary": "string(9): 搜索北京明天的天气",
+        "row_id": "seed-search-weather"
+      },
+      "row_id": "seed-search-weather",
+      "source_prediction_status": {
+        "raw_attempt_missing_required_fields": [
+          "confirmation_required"
+        ],
+        "schema_valid_prediction": false,
+        "validated_output_schema_valid": false,
+        "validated_output_source": "none"
+      },
+      "source_primary_failure_family": "missing_required_field_schema_failure"
+    },
+    {
+      "co_occurring_field_paths": [
+        "route",
+        "safety.reason",
+        "task_type"
+      ],
+      "context_kind": "co_occurs_with_semantic_task_route_safety",
+      "mismatch": {
+        "field_path": "normalized_command",
+        "gold_value_summary": "string(8): 搜索北京明天天气",
+        "mismatch_category": "value_mismatch",
+        "prediction_value_summary": "string(8): 查询北京明天天气",
+        "row_id": "seed-search-weather-aug-1"
+      },
+      "row_id": "seed-search-weather-aug-1",
+      "source_prediction_status": {
+        "raw_attempt_missing_required_fields": [],
+        "schema_valid_prediction": true,
+        "validated_output_schema_valid": true,
+        "validated_output_source": "raw_attempt"
+      },
+      "source_primary_failure_family": "semantic_task_route_safety_mismatch"
+    },
+    {
+      "co_occurring_field_paths": [],
+      "context_kind": "strict_string_only",
+      "mismatch": {
+        "field_path": "normalized_command",
+        "gold_value_summary": "string(8): 搜索北京明天天气",
+        "mismatch_category": "value_mismatch",
+        "prediction_value_summary": "string(9): 搜索北京明天的天气",
+        "row_id": "seed-search-weather-aug-2"
+      },
+      "row_id": "seed-search-weather-aug-2",
+      "source_prediction_status": {
+        "raw_attempt_missing_required_fields": [],
+        "schema_valid_prediction": true,
+        "validated_output_schema_valid": true,
+        "validated_output_source": "raw_attempt"
+      },
+      "source_primary_failure_family": "strict_string_field_exact_match_mismatch"
+    }
+  ],
+  "source_artifact_policy": {
+    "a100_execution_performed": false,
+    "derives_from_row_mismatch_diagnostics": true,
+    "evaluator_metrics_changed": false,
+    "normalization_or_semantic_equivalence_added": false,
+    "prediction_rerun_performed": false,
+    "primary_inputs_are_row_mismatch_artifacts": true,
+    "prompt_changed": false,
+    "training_or_decoding_changed": false,
+    "transitive_rerun_artifacts_are_linked_for_traceability_only": true,
+    "uses_prior_public_sample_artifacts_only": true
+  },
+  "source_artifacts": {
+    "row_mismatch_diagnosis": "reports/public-sample/confirmation-rerun-row-mismatch-diagnosis/row_mismatch_diagnosis.json",
+    "row_mismatch_manifest": "reports/public-sample/confirmation-rerun-row-mismatch-diagnosis/manifest.json"
+  },
+  "summary": {
+    "co_occurs_with_schema_failure_count": 1,
+    "co_occurs_with_semantic_task_route_safety_count": 1,
+    "context_counts": {
+      "co_occurs_with_schema_failure": 1,
+      "co_occurs_with_semantic_task_route_safety": 1,
+      "strict_string_only": 1
+    },
+    "metrics_preserved_from_source": true,
+    "normalized_command_mismatch_count": 3,
+    "source_diagnostic_kind": "confirmation_required_rerun_row_mismatch_diagnosis",
+    "source_row_mismatch_count": 3,
+    "strict_final_confirmation_accuracy": 0.6666666666666666,
+    "strict_final_contract_exact_match": 0.0,
+    "strict_final_json_valid_rate": 0.6666666666666666,
+    "strict_final_route_accuracy": 0.3333333333333333,
+    "strict_final_slot_f1": 0.6666666666666666,
+    "strict_final_task_type_accuracy": 0.3333333333333333,
+    "strict_metrics_preserved": true,
+    "string_only_count": 1
+  },
+  "transitive_source_artifacts": {
+    "manifest": "reports/public-sample/a100-confirmation-required-train-split-rerun/manifest.json",
+    "metrics": "reports/public-sample/a100-confirmation-required-train-split-rerun/metrics.json",
+    "predictions": "reports/public-sample/a100-confirmation-required-train-split-rerun/predictions.jsonl",
+    "schema_guard_summary": "reports/public-sample/a100-confirmation-required-train-split-rerun/schema_guard_summary.json",
+    "train_split_gold": "reports/public-sample/a100-confirmation-required-train-split-rerun/train_split_gold.jsonl"
+  }
+}

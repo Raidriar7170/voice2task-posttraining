@@ -473,6 +473,141 @@ def diagnose_confirmation_rerun_row_mismatches(
     }
 
 
+def _normalized_command_context_kind(row: dict[str, Any], mismatch_paths: set[str]) -> str:
+    family = row.get("primary_failure_family")
+    status = row.get("source_prediction_status")
+    schema_valid_prediction = status.get("schema_valid_prediction") if isinstance(status, dict) else None
+    if family == "missing_required_field_schema_failure" or schema_valid_prediction is False:
+        return "co_occurs_with_schema_failure"
+    if family == "semantic_task_route_safety_mismatch" or mismatch_paths & {
+        "task_type",
+        "route",
+        "safety.allow",
+        "safety.reason",
+    }:
+        return "co_occurs_with_semantic_task_route_safety"
+    if mismatch_paths == {"normalized_command"}:
+        return "strict_string_only"
+    return "co_occurs_with_other_field_mismatch"
+
+
+def diagnose_normalized_command_string_mismatches(
+    row_mismatch_diagnostics: dict[str, Any],
+    *,
+    source_artifacts: dict[str, str] | None = None,
+) -> dict[str, Any]:
+    source_summary = row_mismatch_diagnostics.get("summary", {})
+    source_rows = row_mismatch_diagnostics.get("rows", [])
+    if not isinstance(source_summary, dict):
+        source_summary = {}
+    if not isinstance(source_rows, list):
+        source_rows = []
+
+    context_counts: dict[str, int] = {}
+    diagnostic_rows: list[dict[str, Any]] = []
+    for row in source_rows:
+        if not isinstance(row, dict):
+            continue
+        mismatches = row.get("mismatches", [])
+        if not isinstance(mismatches, list):
+            continue
+        normalized_mismatches = [
+            mismatch
+            for mismatch in mismatches
+            if isinstance(mismatch, dict) and mismatch.get("field_path") == "normalized_command"
+        ]
+        if not normalized_mismatches:
+            continue
+        mismatch_paths = {
+            str(mismatch.get("field_path"))
+            for mismatch in mismatches
+            if isinstance(mismatch, dict) and isinstance(mismatch.get("field_path"), str)
+        }
+        context_kind = _normalized_command_context_kind(row, mismatch_paths)
+        _increment_count(context_counts, context_kind)
+        co_occurring_fields = sorted(path for path in mismatch_paths if path != "normalized_command")
+        sanitized_mismatch = {
+            str(key): _sanitize_public_summary(str(value)) for key, value in normalized_mismatches[0].items()
+        }
+        diagnostic_rows.append(
+            {
+                "row_id": _sanitize_id(str(row.get("row_id", "unknown-row"))),
+                "context_kind": context_kind,
+                "source_primary_failure_family": _sanitize_public_summary(
+                    str(row.get("primary_failure_family", "unknown"))
+                ),
+                "co_occurring_field_paths": co_occurring_fields,
+                "source_prediction_status": row.get("source_prediction_status", {}),
+                "mismatch": sanitized_mismatch,
+            }
+        )
+
+    strict_metric_keys = (
+        "strict_final_json_valid_rate",
+        "strict_final_task_type_accuracy",
+        "strict_final_route_accuracy",
+        "strict_final_confirmation_accuracy",
+        "strict_final_slot_f1",
+        "strict_final_contract_exact_match",
+    )
+    strict_metrics = {key: source_summary.get(key) for key in strict_metric_keys}
+    inherited_source_artifacts = (
+        row_mismatch_diagnostics.get("source_artifacts", {})
+        if isinstance(row_mismatch_diagnostics.get("source_artifacts"), dict)
+        else {}
+    )
+    safe_source_artifacts = {
+        str(key): _sanitize_public_summary(str(value))
+        for key, value in (source_artifacts or {}).items()
+    }
+    safe_transitive_source_artifacts = {
+        str(key): _sanitize_public_summary(str(value)) for key, value in inherited_source_artifacts.items()
+    }
+    summary = {
+        "source_diagnostic_kind": row_mismatch_diagnostics.get("diagnostic_kind"),
+        "source_row_mismatch_count": source_summary.get("row_mismatch_count"),
+        "normalized_command_mismatch_count": len(diagnostic_rows),
+        "string_only_count": context_counts.get("strict_string_only", 0),
+        "co_occurs_with_schema_failure_count": context_counts.get("co_occurs_with_schema_failure", 0),
+        "co_occurs_with_semantic_task_route_safety_count": context_counts.get(
+            "co_occurs_with_semantic_task_route_safety", 0
+        ),
+        "context_counts": dict(sorted(context_counts.items())),
+        "strict_metrics_preserved": bool(source_summary.get("metrics_preserved_from_source")),
+        "metrics_preserved_from_source": bool(source_summary.get("metrics_preserved_from_source")),
+        **strict_metrics,
+    }
+    return {
+        "diagnostic_kind": "normalized_command_string_mismatch_diagnosis",
+        "summary": summary,
+        "rows": diagnostic_rows,
+        "source_artifacts": safe_source_artifacts,
+        "transitive_source_artifacts": safe_transitive_source_artifacts,
+        "source_artifact_policy": {
+            "uses_prior_public_sample_artifacts_only": True,
+            "derives_from_row_mismatch_diagnostics": True,
+            "primary_inputs_are_row_mismatch_artifacts": True,
+            "transitive_rerun_artifacts_are_linked_for_traceability_only": True,
+            "a100_execution_performed": False,
+            "prediction_rerun_performed": False,
+            "training_or_decoding_changed": False,
+            "prompt_changed": False,
+            "evaluator_metrics_changed": False,
+            "normalization_or_semantic_equivalence_added": False,
+        },
+        "claims": {
+            **_confirmation_rerun_claims(),
+            "semantic_equivalence_scoring_performed": False,
+            "normalized_command_normalization_performed": False,
+            "normalized_command_semantic_equivalence_marked": False,
+            "does_not_normalize_or_semantically_score_normalized_command": True,
+            "predictions_repaired_or_replaced": False,
+            "predictions_rescored": False,
+            "search_query_terms_marked_equivalent": False,
+        },
+    }
+
+
 def _count_values(values: list[str]) -> dict[str, int]:
     counts: dict[str, int] = {}
     for value in values:

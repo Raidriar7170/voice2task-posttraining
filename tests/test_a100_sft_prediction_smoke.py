@@ -2232,6 +2232,135 @@ def test_constrained_output_train_split_rerun_evidence_preserves_failure_boundar
     assert scan_paths([evidence_dir]).ok is True
 
 
+def test_normalized_command_string_mismatch_evidence_pack_is_public_safe_and_bounded() -> None:
+    evidence_dir = Path("reports/public-sample/confirmation-rerun-normalized-command-string-mismatch-diagnosis")
+    human_brief_path = Path("docs/human-briefs/2026-06-05-diagnose-normalized-command-string-mismatches.html")
+    change_dirs = [
+        Path("openspec/changes/diagnose-normalized-command-string-mismatches"),
+        Path("openspec/changes/archive/2026-06-05-diagnose-normalized-command-string-mismatches"),
+    ]
+    expected_artifacts = {
+        "normalized_command_mismatch_diagnosis.json",
+        "normalized_command_mismatch_diagnosis.md",
+        "manifest.json",
+        "leak_scan_result.json",
+        "phase_validation_leak_scan_result.json",
+        "post_archive_leak_scan_result.json",
+        "final_leak_scan_result.json",
+    }
+
+    assert {path.name for path in evidence_dir.iterdir()} >= expected_artifacts
+    assert human_brief_path.exists()
+    existing_change_dirs = [path for path in change_dirs if path.exists()]
+    assert existing_change_dirs
+
+    diagnosis = json.loads((evidence_dir / "normalized_command_mismatch_diagnosis.json").read_text(encoding="utf-8"))
+    report = (evidence_dir / "normalized_command_mismatch_diagnosis.md").read_text(encoding="utf-8")
+    manifest = json.loads((evidence_dir / "manifest.json").read_text(encoding="utf-8"))
+    leak_scan = json.loads((evidence_dir / "leak_scan_result.json").read_text(encoding="utf-8"))
+    phase_validation_leak_scan = json.loads(
+        (evidence_dir / "phase_validation_leak_scan_result.json").read_text(encoding="utf-8")
+    )
+    post_archive_leak_scan = json.loads(
+        (evidence_dir / "post_archive_leak_scan_result.json").read_text(encoding="utf-8")
+    )
+    final_leak_scan = json.loads((evidence_dir / "final_leak_scan_result.json").read_text(encoding="utf-8"))
+    human_brief = human_brief_path.read_text(encoding="utf-8")
+
+    assert diagnosis["diagnostic_kind"] == "normalized_command_string_mismatch_diagnosis"
+    assert diagnosis["summary"]["normalized_command_mismatch_count"] == 3
+    assert diagnosis["summary"]["context_counts"] == {
+        "co_occurs_with_schema_failure": 1,
+        "co_occurs_with_semantic_task_route_safety": 1,
+        "strict_string_only": 1,
+    }
+    assert diagnosis["summary"]["strict_final_contract_exact_match"] == 0.0
+    assert diagnosis["summary"]["strict_final_json_valid_rate"] == 2 / 3
+    assert diagnosis["summary"]["strict_final_task_type_accuracy"] == 1 / 3
+    assert diagnosis["summary"]["strict_final_route_accuracy"] == 1 / 3
+    assert diagnosis["summary"]["strict_final_confirmation_accuracy"] == 2 / 3
+    assert diagnosis["summary"]["strict_final_slot_f1"] == 2 / 3
+    assert diagnosis["summary"]["strict_metrics_preserved"] is True
+    assert diagnosis["source_artifacts"]["row_mismatch_diagnosis"].endswith("row_mismatch_diagnosis.json")
+    assert diagnosis["source_artifacts"]["row_mismatch_manifest"].endswith("manifest.json")
+    assert set(diagnosis["source_artifacts"]) == {"row_mismatch_diagnosis", "row_mismatch_manifest"}
+    assert diagnosis["transitive_source_artifacts"]["predictions"].endswith("predictions.jsonl")
+    assert diagnosis["source_artifact_policy"]["primary_inputs_are_row_mismatch_artifacts"] is True
+    assert diagnosis["source_artifact_policy"]["transitive_rerun_artifacts_are_linked_for_traceability_only"] is True
+    assert diagnosis["claims"]["local_evidence_only_analysis"] is True
+    assert diagnosis["claims"]["semantic_equivalence_scoring_performed"] is False
+    assert diagnosis["claims"]["normalized_command_normalization_performed"] is False
+    assert diagnosis["claims"]["normalized_command_semantic_equivalence_marked"] is False
+    assert diagnosis["claims"]["search_query_terms_marked_equivalent"] is False
+    assert diagnosis["claims"]["predictions_repaired_or_replaced"] is False
+    assert diagnosis["claims"]["predictions_rescored"] is False
+    assert diagnosis["claims"]["training_or_prediction_rerun_performed"] is False
+
+    assert manifest["evidence_kind"] == "confirmation_rerun_normalized_command_string_mismatch_diagnosis"
+    assert manifest["counts"] == {
+        "co_occurs_with_schema_failure": 1,
+        "co_occurs_with_semantic_task_route_safety": 1,
+        "normalized_command_mismatch_rows": 3,
+        "strict_string_only": 1,
+    }
+    assert manifest["diagnostic_artifacts"]["normalized_command_mismatch_diagnosis"].endswith(
+        "normalized_command_mismatch_diagnosis.json"
+    )
+    assert manifest["diagnostic_artifacts"]["normalized_command_mismatch_report"].endswith(
+        "normalized_command_mismatch_diagnosis.md"
+    )
+    assert manifest["diagnostic_artifacts"]["leak_scan"].endswith("leak_scan_result.json")
+    assert manifest["diagnostic_artifacts"]["phase_validation_leak_scan"].endswith(
+        "phase_validation_leak_scan_result.json"
+    )
+    assert manifest["diagnostic_artifacts"]["post_archive_leak_scan"].endswith(
+        "post_archive_leak_scan_result.json"
+    )
+    assert manifest["diagnostic_artifacts"]["final_leak_scan"].endswith("final_leak_scan_result.json")
+    assert manifest["source_artifacts"]["row_mismatch_diagnosis"].endswith("row_mismatch_diagnosis.json")
+    assert manifest["source_artifacts"]["row_mismatch_manifest"].endswith("manifest.json")
+    assert set(manifest["source_artifacts"]) == {"row_mismatch_diagnosis", "row_mismatch_manifest"}
+    assert manifest["transitive_source_artifacts"]["predictions"].endswith("predictions.jsonl")
+    assert manifest["transitive_source_artifacts"]["train_split_gold"].endswith("train_split_gold.jsonl")
+    assert manifest["source_artifact_policy"]["primary_inputs_are_row_mismatch_artifacts"] is True
+    assert manifest["source_artifact_policy"]["transitive_rerun_artifacts_are_linked_for_traceability_only"] is True
+    assert manifest["metrics_preserved"]["contract_exact_match"] == 0.0
+    assert manifest["claims"]["local_evidence_only_analysis"] is True
+    assert manifest["claims"]["semantic_equivalence_scoring_performed"] is False
+    assert manifest["claims"]["normalized_command_normalization_performed"] is False
+    assert manifest["claims"]["predictions_rescored"] is False
+
+    assert leak_scan["ok"] is True
+    assert leak_scan["findings"] == []
+    assert phase_validation_leak_scan["ok"] is True
+    assert phase_validation_leak_scan["findings"] == []
+    assert post_archive_leak_scan["ok"] is True
+    assert post_archive_leak_scan["findings"] == []
+    assert final_leak_scan["ok"] is True
+    assert final_leak_scan["findings"] == []
+    assert "local evidence-only analysis" in report
+    assert "does not normalize or semantically score" in report
+    assert "本地 evidence-only" in human_brief
+    assert "不改 strict evaluator metrics" in human_brief
+
+    combined_public_text = "\n".join(
+        [
+            json.dumps(diagnosis, ensure_ascii=False, sort_keys=True),
+            json.dumps(manifest, ensure_ascii=False, sort_keys=True),
+            json.dumps(leak_scan, ensure_ascii=False, sort_keys=True),
+            json.dumps(phase_validation_leak_scan, ensure_ascii=False, sort_keys=True),
+            json.dumps(post_archive_leak_scan, ensure_ascii=False, sort_keys=True),
+            json.dumps(final_leak_scan, ensure_ascii=False, sort_keys=True),
+            report,
+            human_brief,
+        ]
+    )
+    assert "/mnt/data/" not in combined_public_text
+    assert "/Users/" not in combined_public_text
+    assert "volcano" not in combined_public_text
+    assert scan_paths([evidence_dir, human_brief_path, *existing_change_dirs]).ok is True
+
+
 def test_leak_scan_rejects_model_adapter_and_cache_artifacts(tmp_path: Path) -> None:
     evidence_dir = tmp_path / "evidence"
     (evidence_dir / "adapter").mkdir(parents=True)

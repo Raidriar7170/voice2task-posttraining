@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Diagnose Normalized Command String Mismatches Human Brief</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; color: #20242a; background: #f6f7f9; }
+    main { max-width: 940px; margin: 0 auto; padding: 32px 20px 48px; }
+    h1 { font-size: 28px; margin: 0 0 8px; }
+    h2 { font-size: 18px; margin: 28px 0 10px; }
+    p, li { line-height: 1.65; }
+    .panel, .metric { background: #fff; border: 1px solid #d8dde6; border-radius: 8px; padding: 16px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin: 14px 0 20px; }
+    .metric strong { display: block; font-size: 22px; }
+    code { background: #eceff3; padding: 1px 5px; border-radius: 4px; }
+    a { color: #1957a6; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Diagnose normalized_command string mismatches</h1>
+  <section class="panel">
+    <p><strong>一句话结论：</strong>本阶段是本地 evidence-only 诊断：只从已提交 row-mismatch public evidence 派生 <code>normalized_command</code> 严格字符串错配说明，3 行均有 mismatch，其中 1 行是 string-only，1 行伴随 schema failure，1 行伴随 task/route/safety mismatch；不改 strict evaluator metrics。</p>
+  </section>
+
+  <div class="grid">
+    <div class="metric"><span>当前状态</span><strong>archived</strong></div>
+    <div class="metric"><span>A100 / rerun</span><strong>false</strong></div>
+    <div class="metric"><span>mismatch rows</span><strong>3</strong></div>
+    <div class="metric"><span>strict string-only</span><strong>1</strong></div>
+  </div>
+
+  <h2>本阶段变化</h2>
+  <ul>
+    <li>新增纯 helper <code>diagnose_normalized_command_string_mismatches</code>，输入只用上一阶段 <code>row_mismatch_diagnosis.json</code>。</li>
+    <li>新增 <code>write_normalized_command_mismatch_report</code>，写出 JSON 和 Markdown 诊断报告。</li>
+    <li>生成 <a href="../../reports/public-sample/confirmation-rerun-normalized-command-string-mismatch-diagnosis/normalized_command_mismatch_diagnosis.md">normalized-command mismatch diagnosis</a> evidence pack、manifest 和 leak-scan artifacts。</li>
+    <li>补充 focused tests，锁住 counts、source links、claims、privacy boundary 和 strict metrics preserved。</li>
+  </ul>
+
+  <h2>关键结果</h2>
+  <ul>
+    <li><code>normalized_command_mismatch_count=3</code>。</li>
+    <li><code>strict_string_only=1</code>：<code>seed-search-weather-aug-2</code> 只有 <code>normalized_command</code> 严格字符串不一致。</li>
+    <li><code>co_occurs_with_schema_failure=1</code>：<code>seed-search-weather</code> 同时缺 <code>confirmation_required</code>，prediction 仍 schema-invalid。</li>
+    <li><code>co_occurs_with_semantic_task_route_safety=1</code>：<code>seed-search-weather-aug-1</code> 同时存在 <code>task_type</code>、<code>route</code>、<code>safety.reason</code> mismatch。</li>
+    <li>严格指标保持来自上一阶段：<code>json_valid_rate=2/3</code>、<code>contract_exact_match=0.0</code>，没有 re-score。</li>
+  </ul>
+
+  <h2>权威源与证据</h2>
+  <ul>
+    <li><a href="../../openspec/changes/archive/2026-06-05-diagnose-normalized-command-string-mismatches/proposal.md">OpenSpec proposal</a>、<a href="../../openspec/changes/archive/2026-06-05-diagnose-normalized-command-string-mismatches/design.md">design</a>、<a href="../../openspec/changes/archive/2026-06-05-diagnose-normalized-command-string-mismatches/specs/contract-evaluation/spec.md">spec delta</a></li>
+    <li><a href="../../reports/public-sample/confirmation-rerun-row-mismatch-diagnosis/row_mismatch_diagnosis.json">source row_mismatch_diagnosis.json</a>、<a href="../../reports/public-sample/confirmation-rerun-row-mismatch-diagnosis/manifest.json">source manifest.json</a></li>
+    <li><a href="../../reports/public-sample/confirmation-rerun-normalized-command-string-mismatch-diagnosis/manifest.json">new manifest.json</a>、<a href="../../reports/public-sample/confirmation-rerun-normalized-command-string-mismatch-diagnosis/leak_scan_result.json">new leak_scan_result.json</a></li>
+  </ul>
+
+  <h2>验证记录</h2>
+  <ul>
+    <li>TDD 红灯：新增 focused tests 先分别因 helper 缺失和 evidence 目录缺失失败。</li>
+    <li><code>PYTHONPATH=src pytest -q tests/test_evaluator_reports.py::test_normalized_command_string_mismatch_diagnosis_preserves_strict_boundaries tests/test_a100_sft_prediction_smoke.py::test_normalized_command_string_mismatch_evidence_pack_is_public_safe_and_bounded</code>：2 passed。</li>
+    <li><code>PYTHONPATH=src pytest -q</code>：143 passed。</li>
+    <li><code>uv run ruff check .</code>：All checks passed。</li>
+    <li><code>uv run mypy src</code>：Success，16 source files。</li>
+    <li>Public data validation：ok true，12 SFT rows，26 DPO pairs；DPO check：26 pairs checked。</li>
+    <li>Leak scan over evidence、Human Brief、archived OpenSpec、synced spec：phase/post-archive/final 均 ok true，0 findings。</li>
+    <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：archive 前 5 passed；archive 后 4 passed，0 failed。</li>
+    <li><code>git diff --check</code>：passed。</li>
+  </ul>
+
+  <h2>不要夸大的结论</h2>
+  <ul>
+    <li>这不是 A100 新运行、训练、prediction rerun、prompt/training/decoding/schema/parser/retry/evaluator metric change。</li>
+    <li>这不是 semantic-equivalence scoring；不把 <code>搜索/查询</code> 或 <code>明天的天气/明天天气</code> 判成等价。</li>
+    <li>这不是 held-out generalization、checkpoint release、adapter release、production readiness、public full-corpus release、model-quality improvement 或 live-browser benchmark improvement evidence。</li>
+    <li>Human Brief 只是阅读伴侣；权威来源仍是 OpenSpec、source code、tests 和 evidence pack。</li>
+  </ul>
+
+  <h2>推荐下一步</h2>
+  <p>本阶段已经 archive。推荐下一步仍然保持小步：若继续，应单独决定是解释 strict string-only row 的展示口径，还是提出一个需要用户确认的训练目标/prompt/metric 变更。</p>
+</main>
+</body>
+</html>

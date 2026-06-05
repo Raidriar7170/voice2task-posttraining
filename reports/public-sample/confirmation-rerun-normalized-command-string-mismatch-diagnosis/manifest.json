@@ -1,0 +1,78 @@
+{
+  "claims": {
+    "a100_execution_performed": false,
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "does_not_normalize_or_semantically_score_normalized_command": true,
+    "does_not_repair_normalize_coerce_replace_or_rescore": true,
+    "held_out_generalization_claim": false,
+    "live_browser_benchmark_improvement_claim": false,
+    "local_evidence_only_analysis": true,
+    "model_quality_improvement_claim": false,
+    "normalized_command_normalization_performed": false,
+    "normalized_command_semantic_equivalence_marked": false,
+    "predictions_repaired_or_replaced": false,
+    "predictions_rescored": false,
+    "production_readiness_claim": false,
+    "prompt_training_decoding_or_metric_logic_changed": false,
+    "public_full_corpus_release_claim": false,
+    "search_query_terms_marked_equivalent": false,
+    "semantic_equivalence_scoring_performed": false,
+    "training_or_prediction_rerun_performed": false
+  },
+  "counts": {
+    "co_occurs_with_schema_failure": 1,
+    "co_occurs_with_semantic_task_route_safety": 1,
+    "normalized_command_mismatch_rows": 3,
+    "strict_string_only": 1
+  },
+  "diagnostic_artifacts": {
+    "final_leak_scan": "reports/public-sample/confirmation-rerun-normalized-command-string-mismatch-diagnosis/final_leak_scan_result.json",
+    "leak_scan": "reports/public-sample/confirmation-rerun-normalized-command-string-mismatch-diagnosis/leak_scan_result.json",
+    "manifest": "reports/public-sample/confirmation-rerun-normalized-command-string-mismatch-diagnosis/manifest.json",
+    "normalized_command_mismatch_diagnosis": "reports/public-sample/confirmation-rerun-normalized-command-string-mismatch-diagnosis/normalized_command_mismatch_diagnosis.json",
+    "normalized_command_mismatch_report": "reports/public-sample/confirmation-rerun-normalized-command-string-mismatch-diagnosis/normalized_command_mismatch_diagnosis.md",
+    "phase_validation_leak_scan": "reports/public-sample/confirmation-rerun-normalized-command-string-mismatch-diagnosis/phase_validation_leak_scan_result.json",
+    "post_archive_leak_scan": "reports/public-sample/confirmation-rerun-normalized-command-string-mismatch-diagnosis/post_archive_leak_scan_result.json"
+  },
+  "evidence_kind": "confirmation_rerun_normalized_command_string_mismatch_diagnosis",
+  "generated_at": "2026-06-05T08:20:20.593401+00:00",
+  "metrics_preserved": {
+    "confirmation_accuracy": 0.6666666666666666,
+    "contract_exact_match": 0.0,
+    "json_valid_rate": 0.6666666666666666,
+    "route_accuracy": 0.3333333333333333,
+    "slot_f1": 0.6666666666666666,
+    "task_type_accuracy": 0.3333333333333333
+  },
+  "row_ids": [
+    "seed-search-weather",
+    "seed-search-weather-aug-1",
+    "seed-search-weather-aug-2"
+  ],
+  "source_artifact_policy": {
+    "a100_execution_performed": false,
+    "derives_from_row_mismatch_diagnostics": true,
+    "evaluator_metrics_changed": false,
+    "normalization_or_semantic_equivalence_added": false,
+    "prediction_rerun_performed": false,
+    "primary_inputs_are_row_mismatch_artifacts": true,
+    "private_paths_or_logs_copied": false,
+    "prompt_changed": false,
+    "training_or_decoding_changed": false,
+    "transitive_rerun_artifacts_are_linked_for_traceability_only": true,
+    "uses_prior_public_sample_artifacts_only": true
+  },
+  "source_artifacts": {
+    "row_mismatch_diagnosis": "reports/public-sample/confirmation-rerun-row-mismatch-diagnosis/row_mismatch_diagnosis.json",
+    "row_mismatch_manifest": "reports/public-sample/confirmation-rerun-row-mismatch-diagnosis/manifest.json"
+  },
+  "source_prior_phase": "reports/public-sample/a100-confirmation-required-train-split-rerun",
+  "transitive_source_artifacts": {
+    "manifest": "reports/public-sample/a100-confirmation-required-train-split-rerun/manifest.json",
+    "metrics": "reports/public-sample/a100-confirmation-required-train-split-rerun/metrics.json",
+    "predictions": "reports/public-sample/a100-confirmation-required-train-split-rerun/predictions.jsonl",
+    "schema_guard_summary": "reports/public-sample/a100-confirmation-required-train-split-rerun/schema_guard_summary.json",
+    "train_split_gold": "reports/public-sample/a100-confirmation-required-train-split-rerun/train_split_gold.jsonl"
+  }
+}

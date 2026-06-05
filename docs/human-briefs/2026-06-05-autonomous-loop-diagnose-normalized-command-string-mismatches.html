@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Autonomous Loop Closeout: Normalized Command String Mismatch Diagnosis</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; background: #f6f7f9; color: #20242a; }
+    main { max-width: 980px; margin: 0 auto; padding: 32px 20px 52px; }
+    h1 { font-size: 28px; margin: 0 0 8px; }
+    h2 { font-size: 18px; margin: 28px 0 10px; }
+    p, li { line-height: 1.65; }
+    .panel, .metric { background: #fff; border: 1px solid #d8dde6; border-radius: 8px; padding: 16px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin: 14px 0 20px; }
+    .metric strong { display: block; font-size: 22px; }
+    code { background: #eceff3; padding: 1px 5px; border-radius: 4px; }
+    a { color: #1957a6; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Autonomous loop: diagnose normalized_command string mismatches</h1>
+  <section class="panel">
+    <p><strong>一句话结论：</strong>本轮已完成并归档一个本地 evidence-only 阶段：只解释上一阶段 3 条 <code>normalized_command</code> 严格字符串错配的上下文，不使用 A100、不训练、不重跑预测、不改 evaluator metrics，也不做 semantic-equivalence scoring。</p>
+  </section>
+  <div class="grid">
+    <div class="metric"><span>loop status</span><strong>completed</strong></div>
+    <div class="metric"><span>archived phases</span><strong>1</strong></div>
+    <div class="metric"><span>mismatch rows</span><strong>3</strong></div>
+    <div class="metric"><span>strict string-only</span><strong>1</strong></div>
+  </div>
+
+  <h2>停止原因</h2>
+  <p>停止条件：当前 bounded OpenSpec phase 已完成实现、Reviewer 复审、archive、post-archive validation、Human Brief 和 loop closeout。继续下一阶段会涉及展示口径、prompt/training-target 或 metric 取舍；其中任何 metric 口径变化都需要用户确认。</p>
+
+  <h2>项目阶段进度</h2>
+  <ul>
+    <li>当前项目目标：first-phase speech-to-contract normalization，即把中文 spoken command 或 ASR transcript 转成 schema-valid Browser Task Contract。来源：<a href="../../CONTEXT.md">CONTEXT.md</a>、<a href="../../README.md">README.md</a> 和 OpenSpec specs。</li>
+    <li>本阶段推进：把 <code>normalized_command=3/3</code> 的 strict string mismatch 拆成 <code>strict_string_only=1</code>、<code>co_occurs_with_schema_failure=1</code>、<code>co_occurs_with_semantic_task_route_safety=1</code>。</li>
+    <li>剩余差距：仍没有 dev/test held-out generalization、checkpoint/adapter release、production readiness、public full-corpus release、model-quality improvement 或 live-browser benchmark evidence。</li>
+    <li>下一阶段计划：建议先人工选择是否只更新展示说明；如果要改变 prompt、training target 或 evaluator metric，应作为新的 OpenSpec scope 并需要确认。</li>
+  </ul>
+
+  <h2>完成的阶段</h2>
+  <ul>
+    <li>OpenSpec archive：<a href="../../openspec/changes/archive/2026-06-05-diagnose-normalized-command-string-mismatches/proposal.md">2026-06-05-diagnose-normalized-command-string-mismatches</a>。</li>
+    <li>阶段 Human Brief：<a href="2026-06-05-diagnose-normalized-command-string-mismatches.html">2026-06-05-diagnose-normalized-command-string-mismatches.html</a>。</li>
+    <li>Evidence pack：<a href="../../reports/public-sample/confirmation-rerun-normalized-command-string-mismatch-diagnosis/normalized_command_mismatch_diagnosis.md">normalized_command_mismatch_diagnosis.md</a>、<a href="../../reports/public-sample/confirmation-rerun-normalized-command-string-mismatch-diagnosis/manifest.json">manifest.json</a>。</li>
+    <li>Specs updated：<a href="../../openspec/specs/contract-evaluation/spec.md">contract-evaluation</a> 新增 normalized-command string-mismatch diagnosis requirement。</li>
+  </ul>
+
+  <h2>关键结果</h2>
+  <ul>
+    <li><code>seed-search-weather</code>：<code>normalized_command</code> mismatch 与 schema required-field failure 共现。</li>
+    <li><code>seed-search-weather-aug-1</code>：<code>normalized_command</code> mismatch 与 task/route/safety semantic mismatch 共现。</li>
+    <li><code>seed-search-weather-aug-2</code>：strict string-only mismatch；没有把字符串差异判成语义等价。</li>
+    <li>Strict metrics preserved：<code>json_valid_rate=2/3</code>、<code>contract_exact_match=0.0</code>，没有 re-score。</li>
+  </ul>
+
+  <h2>验证结果</h2>
+  <ul>
+    <li>Focused tests：<code>2 passed</code>，覆盖 helper/report 和 evidence pack。</li>
+    <li><code>PYTHONPATH=src pytest -q</code>：<code>143 passed</code>。</li>
+    <li><code>uv run ruff check .</code>：passed；<code>uv run mypy src</code>：16 source files passed。</li>
+    <li>Public data validation：ok true，12 SFT rows，26 DPO pairs；DPO check：26 pairs checked。</li>
+    <li>Leak scan：phase、post-archive、final scans 均 ok true，0 findings。</li>
+    <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：archive 后通过；<code>git diff --check</code>：通过。</li>
+  </ul>
+
+  <h2>Review 和集成</h2>
+  <ul>
+    <li>Reviewer verdict：Pass，Must Fix 无，Re-plan Needed：No；Should Fix 已处理。</li>
+    <li>External Pro review：未运行。本阶段是小型本地诊断，风险由 Reviewer、测试、OpenSpec strict 和 leak scan 覆盖。</li>
+    <li>Auto integration：按 <code>$opsx-auto</code> guarded policy，在最终验证后 stage/commit；提交 hash 无法自引用写入同一 commit，精确 hash 和 push 状态以 Codex final response 为准。</li>
+  </ul>
+
+  <h2>不要夸大的结论</h2>
+  <ul>
+    <li>这不是 A100 新运行、训练、prediction rerun、prompt/training/decoding/schema/parser/retry/evaluator metric change。</li>
+    <li>这不是 semantic-equivalence scoring；不把 <code>搜索/查询</code> 或 <code>明天的天气/明天天气</code> 判成等价。</li>
+    <li>这不是 held-out generalization、checkpoint release、adapter release、production readiness、public full-corpus release、model-quality improvement 或 live-browser benchmark improvement evidence。</li>
+  </ul>
+</main>
+</body>
+</html>

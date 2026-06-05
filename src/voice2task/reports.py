@@ -349,6 +349,107 @@ def write_confirmation_rerun_row_mismatch_report(
     return {"json": json_path, "markdown": markdown_path}
 
 
+def write_normalized_command_mismatch_report(
+    diagnostics: dict[str, Any],
+    output_dir: Path,
+    title: str = "Normalized-command string mismatch diagnosis",
+) -> dict[str, Path]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    json_path = output_dir / "normalized_command_mismatch_diagnosis.json"
+    markdown_path = output_dir / "normalized_command_mismatch_diagnosis.md"
+    write_json(json_path, diagnostics)
+
+    summary = diagnostics["summary"]
+    lines = [
+        f"# {title}",
+        "",
+        (
+            "This is a local evidence-only analysis derived from prior public-sample row-mismatch artifacts. "
+            "It does not normalize or semantically score `normalized_command` strings, "
+            "does not mark `搜索/查询` or `明天的天气/明天天气` as equivalent, and "
+            "does not repair, coerce, replace, or re-score predictions."
+        ),
+        "",
+        "## Boundary",
+        "",
+        "- No A100 execution was performed in this phase.",
+        (
+            "- No training, prediction rerun, prompt change, decoding change, schema change, parser change, "
+            "retry change, or evaluator metric change was performed."
+        ),
+        "- This is not semantic-equivalence scoring.",
+        "- This is not a checkpoint release.",
+        "- This is not an adapter release.",
+        "- This is not held-out generalization evidence.",
+        "- This makes no production-readiness claim.",
+        "- This makes no public full-corpus release claim.",
+        "- This is not a live-browser benchmark improvement claim.",
+        "- This is not model-quality improvement evidence.",
+        "",
+        "## Summary",
+        "",
+        f"- Normalized-command mismatch rows: `{summary['normalized_command_mismatch_count']}`",
+        f"- Strict string-only rows: `{summary['string_only_count']}`",
+        f"- Co-occurs with schema failure: `{summary['co_occurs_with_schema_failure_count']}`",
+        (
+            "- Co-occurs with task/route/safety mismatch: "
+            f"`{summary['co_occurs_with_semantic_task_route_safety_count']}`"
+        ),
+        f"- Strict metrics preserved: `{summary['strict_metrics_preserved']}`",
+        f"- Strict final JSON-valid rate remains `{summary.get('strict_final_json_valid_rate')}`",
+        f"- Strict final contract_exact_match remains `{summary.get('strict_final_contract_exact_match')}`",
+        "",
+        "## Context Counts",
+        "",
+    ]
+    context_counts = summary.get("context_counts", {})
+    if context_counts:
+        for context_kind, count in sorted(context_counts.items()):
+            lines.append(f"- `{context_kind}`: `{count}`")
+    else:
+        lines.append("- none")
+
+    lines.extend(["", "## Source Artifacts", ""])
+    source_artifacts = diagnostics.get("source_artifacts", {})
+    if source_artifacts:
+        for name, path in sorted(source_artifacts.items()):
+            lines.append(f"- `{name}`: `{path}`")
+    else:
+        lines.append("- none")
+
+    lines.extend(["", "## Transitive Source Artifacts", ""])
+    lines.append(
+        "These artifacts are inherited through the source row-mismatch diagnosis for traceability only; "
+        "this phase derives its counts from the row-mismatch diagnosis artifacts above."
+    )
+    transitive_source_artifacts = diagnostics.get("transitive_source_artifacts", {})
+    if transitive_source_artifacts:
+        for name, path in sorted(transitive_source_artifacts.items()):
+            lines.append(f"- `{name}`: `{path}`")
+    else:
+        lines.append("- none")
+
+    lines.extend(["", "## Row Diagnosis", ""])
+    for row in diagnostics.get("rows", []):
+        lines.append(f"### `{row['row_id']}`")
+        lines.append("")
+        lines.append(f"- Context: `{row['context_kind']}`")
+        lines.append(f"- Source primary failure family: `{row.get('source_primary_failure_family')}`")
+        co_occurring = row.get("co_occurring_field_paths", [])
+        lines.append(f"- Co-occurring field paths: `{', '.join(co_occurring) if co_occurring else 'none'}`")
+        mismatch = row.get("mismatch", {})
+        lines.append(
+            "- "
+            f"`normalized_command` ({mismatch.get('mismatch_category')}): "
+            f"gold {mismatch.get('gold_value_summary')}; "
+            f"prediction {mismatch.get('prediction_value_summary')}"
+        )
+        lines.append("")
+
+    markdown_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    return {"json": json_path, "markdown": markdown_path}
+
+
 def write_sft_target_template_alignment_report(
     diagnostics: dict[str, Any],
     output_dir: Path,

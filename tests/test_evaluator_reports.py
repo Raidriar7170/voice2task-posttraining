@@ -568,6 +568,84 @@ def test_confirmation_rerun_row_mismatch_diagnosis_buckets_three_residual_failur
     assert "strict_string_field_exact_match_mismatch" in report
 
 
+def test_normalized_command_string_mismatch_diagnosis_preserves_strict_boundaries(
+    tmp_path: Path,
+) -> None:
+    source_dir = Path("reports/public-sample/confirmation-rerun-row-mismatch-diagnosis")
+    row_mismatch_diagnosis = json.loads((source_dir / "row_mismatch_diagnosis.json").read_text(encoding="utf-8"))
+
+    diagnosis = evaluation.diagnose_normalized_command_string_mismatches(
+        row_mismatch_diagnosis,
+        source_artifacts={
+            "row_mismatch_diagnosis": (source_dir / "row_mismatch_diagnosis.json").as_posix(),
+            "row_mismatch_manifest": (source_dir / "manifest.json").as_posix(),
+        },
+    )
+
+    assert diagnosis["diagnostic_kind"] == "normalized_command_string_mismatch_diagnosis"
+    summary = diagnosis["summary"]
+    assert summary["normalized_command_mismatch_count"] == 3
+    assert summary["string_only_count"] == 1
+    assert summary["co_occurs_with_schema_failure_count"] == 1
+    assert summary["co_occurs_with_semantic_task_route_safety_count"] == 1
+    assert summary["context_counts"] == {
+        "co_occurs_with_schema_failure": 1,
+        "co_occurs_with_semantic_task_route_safety": 1,
+        "strict_string_only": 1,
+    }
+    assert summary["strict_metrics_preserved"] is True
+    assert summary["strict_final_json_valid_rate"] == row_mismatch_diagnosis["summary"][
+        "strict_final_json_valid_rate"
+    ]
+    assert summary["strict_final_task_type_accuracy"] == row_mismatch_diagnosis["summary"][
+        "strict_final_task_type_accuracy"
+    ]
+    assert summary["strict_final_route_accuracy"] == row_mismatch_diagnosis["summary"][
+        "strict_final_route_accuracy"
+    ]
+    assert summary["strict_final_confirmation_accuracy"] == row_mismatch_diagnosis["summary"][
+        "strict_final_confirmation_accuracy"
+    ]
+    assert summary["strict_final_slot_f1"] == row_mismatch_diagnosis["summary"]["strict_final_slot_f1"]
+    assert summary["strict_final_contract_exact_match"] == row_mismatch_diagnosis["summary"][
+        "strict_final_contract_exact_match"
+    ]
+
+    row_contexts = {row["row_id"]: row["context_kind"] for row in diagnosis["rows"]}
+    assert row_contexts == {
+        "seed-search-weather": "co_occurs_with_schema_failure",
+        "seed-search-weather-aug-1": "co_occurs_with_semantic_task_route_safety",
+        "seed-search-weather-aug-2": "strict_string_only",
+    }
+    assert all(row["mismatch"]["field_path"] == "normalized_command" for row in diagnosis["rows"])
+    assert all(row["mismatch"]["mismatch_category"] == "value_mismatch" for row in diagnosis["rows"])
+    assert diagnosis["claims"]["local_evidence_only_analysis"] is True
+    assert diagnosis["claims"]["semantic_equivalence_scoring_performed"] is False
+    assert diagnosis["claims"]["normalized_command_normalization_performed"] is False
+    assert diagnosis["claims"]["normalized_command_semantic_equivalence_marked"] is False
+    assert diagnosis["claims"]["search_query_terms_marked_equivalent"] is False
+    assert diagnosis["claims"]["predictions_repaired_or_replaced"] is False
+    assert diagnosis["claims"]["predictions_rescored"] is False
+    assert diagnosis["claims"]["does_not_repair_normalize_coerce_replace_or_rescore"] is True
+    assert diagnosis["source_artifact_policy"]["evaluator_metrics_changed"] is False
+    assert diagnosis["source_artifact_policy"]["primary_inputs_are_row_mismatch_artifacts"] is True
+    assert diagnosis["source_artifact_policy"]["transitive_rerun_artifacts_are_linked_for_traceability_only"] is True
+    assert set(diagnosis["source_artifacts"]) == {"row_mismatch_diagnosis", "row_mismatch_manifest"}
+    assert "predictions" in diagnosis["transitive_source_artifacts"]
+
+    paths = reports.write_normalized_command_mismatch_report(diagnosis, output_dir=tmp_path)
+    report = paths["markdown"].read_text(encoding="utf-8")
+    assert paths["json"].name == "normalized_command_mismatch_diagnosis.json"
+    assert paths["markdown"].name == "normalized_command_mismatch_diagnosis.md"
+    assert "local evidence-only analysis" in report
+    assert "does not normalize or semantically score" in report
+    assert "does not mark `搜索/查询` or `明天的天气/明天天气` as equivalent" in report
+    assert "does not repair, coerce, replace, or re-score predictions" in report
+    assert "Transitive Source Artifacts" in report
+    assert "traceability only" in report
+    assert "Strict final contract_exact_match remains `0.0`" in report
+
+
 def test_diagnose_alignment_cli_writes_public_safe_json_and_markdown(tmp_path: Path) -> None:
     row = _row("gold-1", "search_web", "天气")
     gold = tmp_path / "gold.jsonl"

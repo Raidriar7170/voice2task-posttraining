@@ -1,0 +1,13 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-05T08:24:18.838386+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "reports/public-sample/confirmation-rerun-normalized-command-string-mismatch-diagnosis",
+    "docs/human-briefs/2026-06-05-diagnose-normalized-command-string-mismatches.html",
+    "docs/human-briefs/2026-06-05-autonomous-loop-diagnose-normalized-command-string-mismatches.html",
+    "openspec/changes/archive/2026-06-05-diagnose-normalized-command-string-mismatches",
+    "openspec/specs/contract-evaluation/spec.md"
+  ]
+}
