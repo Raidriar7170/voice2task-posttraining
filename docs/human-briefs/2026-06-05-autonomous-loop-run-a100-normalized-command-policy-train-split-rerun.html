@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Autonomous Loop Closeout: A100 Normalized Command Policy Rerun</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; background: #f6f7f9; color: #20242a; }
+    main { max-width: 980px; margin: 0 auto; padding: 32px 20px 52px; }
+    h1 { font-size: 28px; margin: 0 0 8px; }
+    h2 { font-size: 18px; margin: 28px 0 10px; }
+    p, li { line-height: 1.65; }
+    .panel, .metric { background: #fff; border: 1px solid #d8dde6; border-radius: 8px; padding: 16px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin: 14px 0 20px; }
+    .metric strong { display: block; font-size: 22px; }
+    code { background: #eceff3; padding: 1px 5px; border-radius: 4px; }
+    a { color: #1957a6; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Autonomous loop: A100 normalized_command policy rerun</h1>
+  <section class="panel">
+    <p><strong>一句话结论：</strong>本轮已完成真实 private A100 prediction-only train-split rerun、public-safe evidence pack、full validation、Reviewer 复审、OpenSpec archive 和 post-archive validation；<code>normalized_command</code> exact-string 为 <code>2/3</code>，但 strict exact match 仍为 <code>0.0</code>，只能称为 train-internal 字段级观察。</p>
+  </section>
+  <div class="grid">
+    <div class="metric"><span>loop status</span><strong>completed</strong></div>
+    <div class="metric"><span>A100 run</span><strong>passed</strong></div>
+    <div class="metric"><span>normalized exact</span><strong>2/3</strong></div>
+    <div class="metric"><span>schema-valid</span><strong>1/3</strong></div>
+  </div>
+
+  <h2>停止原因</h2>
+  <p>停止条件：当前 A100 normalized-command policy evidence phase 已完成、归档，并通过 post-archive validation。继续下一阶段会改变当前 bounded phase，因此应作为新的 OpenSpec change 处理。</p>
+
+  <h2>项目阶段进度</h2>
+  <ul>
+    <li>当前项目目标：first-phase speech-to-contract normalization。来源：<a href="../../CONTEXT.md">CONTEXT.md</a> 和 <a href="../../README.md">README.md</a>。</li>
+    <li>本阶段推进：确认 normalized-command canonical prompt policy 进入真实 private-adapter A100 prediction path，并观察到 <code>normalized_command</code> exact-string 从 prior <code>0/3</code> 到 current <code>2/3</code>。</li>
+    <li>剩余能力差距：final schema-valid 只有 <code>1/3</code>，strict exact match 仍为 <code>0.0</code>，没有 held-out/generalization evidence。</li>
+    <li>下一阶段计划：单独开小阶段诊断剩余 row-level schema/task-route mismatch；这需要用户确认后再启动。</li>
+  </ul>
+
+  <h2>完成的阶段任务</h2>
+  <ul>
+    <li>OpenSpec archive：<a href="../../openspec/changes/archive/2026-06-05-run-a100-normalized-command-policy-train-split-rerun/proposal.md">2026-06-05-run-a100-normalized-command-policy-train-split-rerun</a>。</li>
+    <li>阶段 Human Brief：<a href="2026-06-05-run-a100-normalized-command-policy-train-split-rerun.html">2026-06-05-run-a100-normalized-command-policy-train-split-rerun.html</a>。</li>
+    <li>Evidence report：<a href="../../reports/public-sample/a100-normalized-command-policy-train-split-rerun/report.md">reports/public-sample/a100-normalized-command-policy-train-split-rerun/report.md</a>。</li>
+  </ul>
+
+  <h2>验证结果</h2>
+  <ul>
+    <li>OpenSpec proposal validation：passed。</li>
+    <li>A100 prediction-only run：passed，<code>private_a100_adapter</code>，<code>prediction_count=3</code>。</li>
+    <li>Evidence leak scan：ok true，0 findings。</li>
+    <li>Focused evidence test：passed。</li>
+    <li>Full pytest、ruff、mypy、data validate、DPO check、phase leak scan、git diff check 和 OpenSpec strict：passed。</li>
+    <li>Reviewer：Pass with fixes；状态一致性 fix pass 已应用。</li>
+    <li>Archive：completed；post-archive leak scan、focused/full tests、ruff、mypy、data validate、DPO check、git diff check 和 OpenSpec all strict：passed。</li>
+  </ul>
+
+  <h2>Review 和集成</h2>
+  <ul>
+    <li>Reviewer：Pass with fixes；Must Fix 为 brief/manifest 状态一致性，已在当前 fix pass 处理。</li>
+    <li>Auto integration：local commit completed；精确 commit hash 与 push skip reason 以 Codex final response 为准。</li>
+    <li>External Pro review：未运行；当前阶段主要风险由本地验证和 Reviewer 覆盖。</li>
+  </ul>
+
+  <h2>不要夸大的结论</h2>
+  <ul>
+    <li>这不是 full recovery：schema-valid 仍为 <code>1/3</code>，strict exact match 仍为 <code>0.0</code>。</li>
+    <li>这不是 dev/test 泛化、model-quality improvement、checkpoint/adapter release、production readiness 或 live-browser benchmark improvement。</li>
+    <li><code>2/3</code> normalized-command exact-string 是字段级 train-internal observation，不是 evaluator metric relaxation。</li>
+  </ul>
+</main>
+</body>
+</html>

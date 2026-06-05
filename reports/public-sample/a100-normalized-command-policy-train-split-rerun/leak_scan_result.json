@@ -1,0 +1,9 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-05T10:09:36.482644+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "reports/public-sample/a100-normalized-command-policy-train-split-rerun"
+  ]
+}

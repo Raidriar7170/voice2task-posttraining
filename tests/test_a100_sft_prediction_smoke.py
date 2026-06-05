@@ -325,6 +325,11 @@ def test_a100_confirmation_required_train_split_rerun_evidence_is_public_safe_an
         (evidence_dir / "post_archive_leak_scan_result.json").read_text(encoding="utf-8")
     )
     final_leak_scan = json.loads((evidence_dir / "final_leak_scan_result.json").read_text(encoding="utf-8"))
+    phase_leak_scan = json.loads((evidence_dir / "phase_validation_leak_scan_result.json").read_text(encoding="utf-8"))
+    post_archive_leak_scan = json.loads(
+        (evidence_dir / "post_archive_leak_scan_result.json").read_text(encoding="utf-8")
+    )
+    final_leak_scan = json.loads((evidence_dir / "final_leak_scan_result.json").read_text(encoding="utf-8"))
     prediction_rows = [
         json.loads(line)
         for line in (evidence_dir / "predictions.jsonl").read_text(encoding="utf-8").splitlines()
@@ -435,6 +440,166 @@ def test_a100_confirmation_required_train_split_rerun_evidence_is_public_safe_an
     assert "/Users/" not in serialized
     assert scan_paths([evidence_dir]).ok is True
     assert "volcano" not in serialized
+
+
+def test_a100_normalized_command_policy_train_split_rerun_evidence_is_public_safe_and_bounded() -> None:
+    evidence_dir = Path("reports/public-sample/a100-normalized-command-policy-train-split-rerun")
+    required_files = {
+        "predictions.jsonl",
+        "prediction_metadata.json",
+        "prompt_snapshot.json",
+        "raw_decoded_summary.jsonl",
+        "generation_trace.jsonl",
+        "train_split_gold.jsonl",
+        "metrics.json",
+        "metrics.md",
+        "schema_guard_summary.json",
+        "schema_guard_summary.md",
+        "normalized_command_diagnosis.json",
+        "normalized_command_diagnosis.md",
+        "manifest.json",
+        "report.md",
+        "leak_scan_result.json",
+        "phase_validation_leak_scan_result.json",
+        "post_archive_leak_scan_result.json",
+        "final_leak_scan_result.json",
+    }
+    expected_row_ids = ["seed-search-weather", "seed-search-weather-aug-1", "seed-search-weather-aug-2"]
+
+    assert evidence_dir.exists()
+    assert required_files <= {path.name for path in evidence_dir.iterdir()}
+
+    metadata = json.loads((evidence_dir / "prediction_metadata.json").read_text(encoding="utf-8"))
+    manifest = json.loads((evidence_dir / "manifest.json").read_text(encoding="utf-8"))
+    metrics = json.loads((evidence_dir / "metrics.json").read_text(encoding="utf-8"))
+    schema_guard = json.loads((evidence_dir / "schema_guard_summary.json").read_text(encoding="utf-8"))
+    diagnosis = json.loads((evidence_dir / "normalized_command_diagnosis.json").read_text(encoding="utf-8"))
+    prompt_snapshot = json.loads((evidence_dir / "prompt_snapshot.json").read_text(encoding="utf-8"))
+    leak_scan = json.loads((evidence_dir / "leak_scan_result.json").read_text(encoding="utf-8"))
+    phase_leak_scan = json.loads((evidence_dir / "phase_validation_leak_scan_result.json").read_text(encoding="utf-8"))
+    post_archive_leak_scan = json.loads(
+        (evidence_dir / "post_archive_leak_scan_result.json").read_text(encoding="utf-8")
+    )
+    final_leak_scan = json.loads((evidence_dir / "final_leak_scan_result.json").read_text(encoding="utf-8"))
+    prediction_rows = [
+        json.loads(line)
+        for line in (evidence_dir / "predictions.jsonl").read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    raw_rows = [
+        json.loads(line)
+        for line in (evidence_dir / "raw_decoded_summary.jsonl").read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    generation_trace_rows = [
+        json.loads(line)
+        for line in (evidence_dir / "generation_trace.jsonl").read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    train_gold_rows = [
+        json.loads(line)
+        for line in (evidence_dir / "train_split_gold.jsonl").read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    report = (evidence_dir / "report.md").read_text(encoding="utf-8")
+    metrics_markdown = (evidence_dir / "metrics.md").read_text(encoding="utf-8")
+    diagnosis_markdown = (evidence_dir / "normalized_command_diagnosis.md").read_text(encoding="utf-8")
+    serialized = (
+        json.dumps(metadata, ensure_ascii=False, sort_keys=True)
+        + json.dumps(manifest, ensure_ascii=False, sort_keys=True)
+        + json.dumps(metrics, ensure_ascii=False, sort_keys=True)
+        + json.dumps(schema_guard, ensure_ascii=False, sort_keys=True)
+        + json.dumps(diagnosis, ensure_ascii=False, sort_keys=True)
+        + report
+        + metrics_markdown
+        + diagnosis_markdown
+    )
+
+    assert metadata["prediction_status"] == "private_adapter_predictions_written"
+    assert metadata["prediction_source_kind"] == "private_a100_adapter"
+    assert metadata["prediction_count"] == 3
+    assert metadata["prediction_split"] == "train"
+    assert metadata["overfit_diagnostic"] is True
+    assert metadata["generalization_claim"] is False
+    assert metadata["prompt_constraints"]["normalized_command_canonical_policy_visible"] is True
+    assert metadata["prompt_constraints"]["normalized_command_public_examples_visible"] is True
+    assert metadata["prompt_constraints"]["normalized_command_no_metric_relaxation_visible"] is True
+    assert metadata["decoding_policy"]["schema_repair_applied"] is False
+    assert metadata["decoding_policy"]["schema_retry_enabled"] is True
+    assert manifest["evidence_kind"] == "a100_normalized_command_policy_train_split_rerun"
+    assert manifest["prediction_source_kind"] == "private_a100_adapter"
+    assert manifest["prediction_split"] == "train"
+    assert manifest["prediction_count"] == 3
+    assert manifest["training_rows_used"] == 3
+    assert manifest["training_row_ids"] == expected_row_ids
+    assert manifest["artifact_policy"]["private_configs_copied_to_git"] is False
+    assert manifest["artifact_policy"]["checkpoints_or_adapters_copied_to_git"] is False
+    assert manifest["artifact_policy"]["raw_logs_copied_to_git"] is False
+    assert manifest["claims"]["held_out_generalization_claim"] is False
+    assert manifest["claims"]["model_quality_evidence"] is False
+    assert manifest["claims"]["semantic_equivalence_scoring_performed"] is False
+    assert manifest["claims"]["normalized_command_normalization_performed"] is False
+    assert manifest["claims"]["prediction_repair_or_rescore_performed"] is False
+    assert manifest["claims"]["evaluator_metric_change_performed"] is False
+    assert manifest["diagnostic_artifacts"]["post_archive_leak_scan"].endswith(
+        "post_archive_leak_scan_result.json"
+    )
+    assert manifest["diagnostic_artifacts"]["final_leak_scan"].endswith("final_leak_scan_result.json")
+    assert manifest["observed_result"]["normalized_command_exact_match_count"] == 2
+    assert manifest["observed_result"]["normalized_command_mismatch_count"] == 1
+    assert manifest["observed_result"]["validated_output_schema_valid_count"] == 1
+    assert manifest["observed_result"]["train_internal_full_contract_recovery_observed"] is False
+    assert manifest["observed_result"]["train_internal_normalized_command_partial_improvement_observed"] is True
+    assert manifest["prior_context"]["prior_normalized_command_exact_match_count"] == 0
+    assert [row["id"] for row in prediction_rows] == expected_row_ids
+    assert [row["id"] for row in raw_rows] == expected_row_ids
+    assert [row["id"] for row in generation_trace_rows] == expected_row_ids
+    assert [row["id"] for row in train_gold_rows] == expected_row_ids
+    assert [row["id"] for row in prompt_snapshot["rows"]] == expected_row_ids
+    assert metrics["metadata"]["prediction_split"] == "train"
+    assert metrics["metadata"]["generalization_claim"] is False
+    assert metrics["metadata"]["strict_final_contract_metrics"] is True
+    assert metrics["metadata"]["normalized_command_exact_match_count"] == 2
+    assert metrics["metadata"]["normalized_command_mismatch_count"] == 1
+    assert metrics["metrics"]["json_valid_rate"] == 1 / 3
+    assert metrics["metrics"]["contract_exact_match"] == 0.0
+    assert metrics["normalized_command_counts"]["exact_match_count"] == 2
+    assert metrics["normalized_command_counts"]["mismatch_count"] == 1
+    assert metrics["normalized_command_counts"]["context_counts"]["co_occurs_with_schema_failure"] == 1
+    assert schema_guard["summary"]["prediction_count"] == 3
+    assert schema_guard["summary"]["raw_attempt_schema_valid_count"] == 1
+    assert schema_guard["summary"]["retry_attempted_count"] == 2
+    assert schema_guard["summary"]["retry_attempt_schema_valid_count"] == 0
+    assert schema_guard["summary"]["validated_output_schema_valid_count"] == 1
+    assert schema_guard["summary"]["strict_retry_parser_rejected_fragment_count"] == 2
+    assert schema_guard["summary"]["normalized_command_exact_match_count"] == 2
+    assert diagnosis["diagnostic_kind"] == "normalized_command_policy_train_split_diagnosis"
+    assert diagnosis["summary"]["prediction_count"] == 3
+    assert diagnosis["summary"]["normalized_command_exact_match_count"] == 2
+    assert diagnosis["summary"]["normalized_command_mismatch_count"] == 1
+    assert diagnosis["summary"]["strict_final_contract_exact_match"] == 0.0
+    assert diagnosis["summary"]["strict_metrics_preserved"] is True
+    assert diagnosis["claims"]["semantic_equivalence_scoring_performed"] is False
+    assert diagnosis["claims"]["normalized_command_normalization_performed"] is False
+    assert diagnosis["claims"]["prediction_repair_or_rescore_performed"] is False
+    assert leak_scan["ok"] is True
+    assert leak_scan["findings"] == []
+    assert phase_leak_scan["ok"] is True
+    assert phase_leak_scan["findings"] == []
+    assert post_archive_leak_scan["ok"] is True
+    assert post_archive_leak_scan["findings"] == []
+    assert final_leak_scan["ok"] is True
+    assert final_leak_scan["findings"] == []
+    assert "train-internal" in report
+    assert "no held-out generalization claim" in report
+    assert "normalized-command exact-string matches were `2/3`" in report
+    assert "must not be described as full train-row recovery" in report
+    assert "semantic-equivalence scoring performed: `False`" in metrics_markdown
+    assert "no normalization, no semantic-equivalence scoring, no prediction repair" in diagnosis_markdown
+    assert "/mnt/data/" not in serialized
+    assert "/Users/" not in serialized
+    assert "volcano" not in serialized
+    assert scan_paths([evidence_dir]).ok is True
 
 
 def test_confirmation_rerun_row_mismatch_diagnosis_pack_is_public_safe_and_bounded() -> None:

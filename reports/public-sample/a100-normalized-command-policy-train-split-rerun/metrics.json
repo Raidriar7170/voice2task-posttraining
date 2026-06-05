@@ -1,0 +1,101 @@
+{
+  "evidence_context": {
+    "normalized_command_canonical_policy_visible": true,
+    "normalized_command_no_metric_relaxation_visible": true,
+    "normalized_command_public_examples_visible": true,
+    "prediction_repair_or_rescore_performed": false,
+    "semantic_equivalence_scoring_performed": false,
+    "strict_string_only_evaluation": true,
+    "training_row_ids": [
+      "seed-search-weather",
+      "seed-search-weather-aug-1",
+      "seed-search-weather-aug-2"
+    ],
+    "training_rows_used": 3,
+    "validated_output_schema_valid_count": 1
+  },
+  "failure_slices": {
+    "confirmation": {
+      "count": 0,
+      "examples": []
+    },
+    "route": {
+      "count": 1,
+      "examples": [
+        "seed-search-weather-aug-1"
+      ]
+    },
+    "safety": {
+      "count": 0,
+      "examples": []
+    },
+    "schema": {
+      "count": 2,
+      "examples": [
+        "seed-search-weather",
+        "seed-search-weather-aug-2"
+      ]
+    },
+    "slot": {
+      "count": 1,
+      "examples": [
+        "seed-search-weather-aug-1"
+      ]
+    },
+    "task_type": {
+      "count": 1,
+      "examples": [
+        "seed-search-weather-aug-1"
+      ]
+    },
+    "unknown": {
+      "count": 0,
+      "examples": []
+    }
+  },
+  "metadata": {
+    "generalization_claim": false,
+    "normalized_command_diagnostic": true,
+    "normalized_command_exact_match_count": 2,
+    "normalized_command_mismatch_count": 1,
+    "overfit_diagnostic": true,
+    "prediction_count": 3,
+    "prediction_source_kind": "private_a100_adapter",
+    "prediction_split": "train",
+    "prediction_status": "private_adapter_predictions_written",
+    "schema_repair_applied": false,
+    "schema_retry_enabled": true,
+    "strict_final_contract_exact_match": 0.0,
+    "strict_final_contract_metrics": true
+  },
+  "metrics": {
+    "confirmation_accuracy": 0.3333333333333333,
+    "contract_exact_match": 0.0,
+    "json_valid_rate": 0.3333333333333333,
+    "route_accuracy": 0.0,
+    "safety_gold_stop_support": 0.0,
+    "safety_precision": 1.0,
+    "safety_predicted_stop_support": 0.0,
+    "safety_recall": 1.0,
+    "slot_f1": 0.0,
+    "task_type_accuracy": 0.0
+  },
+  "normalized_command_counts": {
+    "context_counts": {
+      "co_occurs_with_schema_failure": 1,
+      "co_occurs_with_task_route_safety": 0,
+      "strict_string_only": 0
+    },
+    "exact_match_count": 2,
+    "exact_match_rate": 0.6666666666666666,
+    "gold_value_counts": {
+      "搜索北京明天天气": 3
+    },
+    "mismatch_count": 1,
+    "prediction_count": 3,
+    "prediction_value_counts": {
+      "搜索北京明天天气": 2,
+      "搜索北京明天的天气": 1
+    }
+  }
+}
