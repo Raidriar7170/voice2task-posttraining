@@ -1,0 +1,11 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-05T10:32:04.938423+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "reports/public-sample/a100-normalized-rerun-row-mismatch-diagnosis",
+    "docs/human-briefs/2026-06-05-diagnose-a100-normalized-rerun-row-mismatches.html",
+    "openspec/changes/diagnose-a100-normalized-rerun-row-mismatches"
+  ]
+}

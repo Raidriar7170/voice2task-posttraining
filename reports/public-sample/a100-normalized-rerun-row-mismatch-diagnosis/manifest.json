@@ -1,0 +1,101 @@
+{
+  "change_name": "diagnose-a100-normalized-rerun-row-mismatches",
+  "claims": {
+    "a100_execution_performed": false,
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "does_not_repair_normalize_coerce_replace_or_rescore": true,
+    "held_out_generalization_claim": false,
+    "invalid_predictions_remain_invalid": true,
+    "live_browser_benchmark_improvement_claim": false,
+    "local_evidence_only_analysis": true,
+    "model_quality_improvement_claim": false,
+    "normalized_command_normalization_performed": false,
+    "normalized_command_semantic_equivalence_marked": false,
+    "prediction_repair_or_rescore_performed": false,
+    "predictions_repaired_or_replaced": false,
+    "predictions_rescored": false,
+    "production_readiness_claim": false,
+    "prompt_training_decoding_or_metric_logic_changed": false,
+    "public_full_corpus_release_claim": false,
+    "semantic_equivalence_scoring_performed": false,
+    "training_or_prediction_rerun_performed": false
+  },
+  "counts": {
+    "rows": 3,
+    "schema_invalid_predictions": 2,
+    "schema_invalid_task_type_enum": 1,
+    "schema_missing_confirmation_required": 1,
+    "schema_valid_task_route_safety_slot_mismatch": 1,
+    "validated_output_schema_valid": 1
+  },
+  "diagnostic_artifacts": {
+    "final_leak_scan": "reports/public-sample/a100-normalized-rerun-row-mismatch-diagnosis/final_leak_scan_result.json",
+    "human_brief": "docs/human-briefs/2026-06-05-diagnose-a100-normalized-rerun-row-mismatches.html",
+    "leak_scan": "reports/public-sample/a100-normalized-rerun-row-mismatch-diagnosis/leak_scan_result.json",
+    "manifest": "reports/public-sample/a100-normalized-rerun-row-mismatch-diagnosis/manifest.json",
+    "phase_validation_leak_scan": "reports/public-sample/a100-normalized-rerun-row-mismatch-diagnosis/phase_validation_leak_scan_result.json",
+    "post_archive_leak_scan": "reports/public-sample/a100-normalized-rerun-row-mismatch-diagnosis/post_archive_leak_scan_result.json",
+    "row_mismatch_diagnosis": "reports/public-sample/a100-normalized-rerun-row-mismatch-diagnosis/row_mismatch_diagnosis.json",
+    "row_mismatch_report": "reports/public-sample/a100-normalized-rerun-row-mismatch-diagnosis/row_mismatch_diagnosis.md"
+  },
+  "evidence_kind": "a100_normalized_rerun_row_mismatch_diagnosis",
+  "family_counts": {
+    "schema_invalid_task_type_enum": 1,
+    "schema_missing_confirmation_required": 1,
+    "schema_valid_task_route_safety_slot_mismatch": 1
+  },
+  "field_mismatch_counts": {
+    "confirmation_required": 1,
+    "normalized_command": 1,
+    "route": 1,
+    "safety.reason": 2,
+    "slots": 3,
+    "task_type": 2
+  },
+  "generated_at": "2026-06-05T10:32:04.934530+00:00",
+  "interpretation": {
+    "invalid_predictions_remain_invalid": true,
+    "no_semantic_equivalence_or_slot_repair": true,
+    "normalized_command_exact_match_is_field_level_context_only": true,
+    "row_level_diagnosis_only": true,
+    "strict_metrics_remain_authoritative": true
+  },
+  "metrics_preserved": {
+    "confirmation_accuracy": 0.3333333333333333,
+    "contract_exact_match": 0.0,
+    "json_valid_rate": 0.3333333333333333,
+    "route_accuracy": 0.0,
+    "slot_f1": 0.0,
+    "task_type_accuracy": 0.0
+  },
+  "normalized_command_counts_preserved": {
+    "exact_match_count": 2,
+    "mismatch_count": 1
+  },
+  "source_artifact_policy": {
+    "a100_execution_performed": false,
+    "evaluator_metrics_changed": false,
+    "normalization_or_semantic_equivalence_added": false,
+    "prediction_rerun_performed": false,
+    "prompt_changed": false,
+    "retry_changed": false,
+    "schema_or_parser_changed": false,
+    "training_or_decoding_changed": false,
+    "uses_prior_public_sample_artifacts_only": true
+  },
+  "source_artifacts": {
+    "manifest": "reports/public-sample/a100-normalized-command-policy-train-split-rerun/manifest.json",
+    "metrics": "reports/public-sample/a100-normalized-command-policy-train-split-rerun/metrics.json",
+    "normalized_command_diagnosis": "reports/public-sample/a100-normalized-command-policy-train-split-rerun/normalized_command_diagnosis.json",
+    "predictions": "reports/public-sample/a100-normalized-command-policy-train-split-rerun/predictions.jsonl",
+    "schema_guard_summary": "reports/public-sample/a100-normalized-command-policy-train-split-rerun/schema_guard_summary.json",
+    "train_split_gold": "reports/public-sample/a100-normalized-command-policy-train-split-rerun/train_split_gold.jsonl"
+  },
+  "source_evidence_kind": "a100_normalized_command_policy_train_split_rerun",
+  "source_generalization_claim": false,
+  "source_overfit_diagnostic": true,
+  "source_prediction_source_kind": "private_a100_adapter",
+  "source_prediction_split": "train",
+  "source_prior_phase": "reports/public-sample/a100-normalized-command-policy-train-split-rerun"
+}

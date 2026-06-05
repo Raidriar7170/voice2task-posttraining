@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>A100 normalized rerun row mismatch diagnosis</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; background: #f7f8fb; color: #20242a; }
+    main { max-width: 960px; margin: 0 auto; padding: 32px 20px 52px; }
+    h1 { font-size: 28px; margin: 0 0 8px; }
+    h2 { font-size: 18px; margin: 28px 0 10px; }
+    p, li { line-height: 1.65; }
+    .panel, .metric { background: #fff; border: 1px solid #d8dde6; border-radius: 8px; padding: 16px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin: 14px 0 20px; }
+    .metric strong { display: block; font-size: 22px; }
+    code { background: #eceff3; padding: 1px 5px; border-radius: 4px; }
+    a { color: #1957a6; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>A100 normalized rerun row mismatch diagnosis</h1>
+  <section class="panel">
+    <p><strong>一句话结论：</strong>本地 evidence-only 诊断已把剩余三行失败拆成三类：缺 <code>confirmation_required</code> schema failure、无效 <code>task_type</code> enum schema failure、以及 schema-valid 但 task/route/safety/slot 不一致；本阶段不使用 A100，不重跑 prediction，不改 strict evaluator metrics。</p>
+  </section>
+  <div class="grid">
+    <div class="metric"><span>phase status</span><strong>archived</strong></div>
+    <div class="metric"><span>rows diagnosed</span><strong>3</strong></div>
+    <div class="metric"><span>schema-invalid</span><strong>2/3</strong></div>
+    <div class="metric"><span>schema-valid mismatch</span><strong>1/3</strong></div>
+  </div>
+
+  <h2>本阶段改变</h2>
+  <ul>
+    <li>新增 public-safe evidence pack：<a href="../../reports/public-sample/a100-normalized-rerun-row-mismatch-diagnosis/row_mismatch_diagnosis.md">row_mismatch_diagnosis.md</a>。</li>
+    <li>OpenSpec archive：<a href="../../openspec/changes/archive/2026-06-05-diagnose-a100-normalized-rerun-row-mismatches/proposal.md">2026-06-05-diagnose-a100-normalized-rerun-row-mismatches</a>。</li>
+    <li>新增 focused tests，锁定 family counts、field mismatch counts、source strict metrics preserved 和 privacy/claim boundaries。</li>
+  </ul>
+
+  <h2>关键证据</h2>
+  <ul>
+    <li>source prior phase：<a href="../../reports/public-sample/a100-normalized-command-policy-train-split-rerun/report.md">a100-normalized-command-policy-train-split-rerun</a>。</li>
+    <li>strict source metrics 保持：<code>json_valid_rate=1/3</code>、<code>contract_exact_match=0.0</code>、<code>task_type_accuracy=0.0</code>、<code>route_accuracy=0.0</code>、<code>confirmation_accuracy=1/3</code>、<code>slot_f1=0.0</code>。</li>
+    <li><code>normalized_command</code> exact-string 仍只是字段级上下文：<code>2/3</code>，不代表 full recovery。</li>
+  </ul>
+
+  <h2>行级诊断</h2>
+  <ul>
+    <li><code>seed-search-weather</code>：primary family 为 <code>schema_missing_confirmation_required</code>，同时有 strict string 与 slots 形状差异。</li>
+    <li><code>seed-search-weather-aug-1</code>：primary family 为 <code>schema_valid_task_route_safety_slot_mismatch</code>，schema-valid 但 task/route/safety.reason/slot exact 不一致。</li>
+    <li><code>seed-search-weather-aug-2</code>：primary family 为 <code>schema_invalid_task_type_enum</code>，raw <code>task_type=search_web</code> 不在 contract enum 内。</li>
+  </ul>
+
+  <h2>验证计划</h2>
+  <ul>
+    <li>focused helper/report test 和 evidence-pack test：passed。</li>
+    <li>full <code>pytest</code>、<code>ruff</code>、<code>mypy</code>、data validate、DPO check、leak scan、<code>git diff --check</code>、<code>openspec validate --all --strict</code>：passed。</li>
+  </ul>
+
+  <h2>不要夸大的结论</h2>
+  <ul>
+    <li>这不是 A100 新运行、训练、prediction rerun、prompt/decoder/evaluator 改动或 metric relaxation。</li>
+    <li>这不是 semantic-equivalence scoring；不会把 <code>北京 明天 天气</code> 与 <code>北京明天天气</code> 自动视为等价。</li>
+    <li>这不是 held-out/generalization、model-quality improvement、production readiness、checkpoint/adapter release 或 live-browser benchmark improvement 证据。</li>
+  </ul>
+</main>
+</body>
+</html>

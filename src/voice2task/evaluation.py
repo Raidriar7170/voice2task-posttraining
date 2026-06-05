@@ -473,6 +473,153 @@ def diagnose_confirmation_rerun_row_mismatches(
     }
 
 
+def _primary_a100_normalized_rerun_failure_family(
+    *,
+    raw_prediction: Any,
+    mismatches: list[dict[str, str]],
+    schema_guard: dict[str, Any],
+) -> str:
+    mismatch_paths = {mismatch["field_path"] for mismatch in mismatches}
+    missing_fields = schema_guard.get("raw_attempt_missing_required_fields")
+    missing_required_fields = missing_fields if isinstance(missing_fields, list) else []
+    if "confirmation_required" in missing_required_fields or "confirmation_required" in mismatch_paths:
+        return "schema_missing_confirmation_required"
+
+    parsed_prediction = raw_prediction
+    if isinstance(raw_prediction, str):
+        try:
+            parsed_prediction = json.loads(raw_prediction)
+        except json.JSONDecodeError:
+            parsed_prediction = {}
+    if isinstance(parsed_prediction, dict):
+        task_type = parsed_prediction.get("task_type")
+        if isinstance(task_type, str) and task_type not in TASK_TYPES:
+            return "schema_invalid_task_type_enum"
+
+    if _prediction_to_contract(raw_prediction) is None:
+        return "schema_invalid_prediction_other"
+    if mismatch_paths & {"task_type", "route", "safety.allow", "safety.reason", "slots"}:
+        return "schema_valid_task_route_safety_slot_mismatch"
+    if mismatch_paths == {"normalized_command"}:
+        return "strict_string_field_exact_match_mismatch"
+    if "normalized_command" in mismatch_paths:
+        return "normalized_command_with_other_field_mismatch"
+    return "other_field_exact_match_mismatch"
+
+
+def _normalized_rerun_counts(
+    *,
+    metrics: dict[str, Any] | None,
+    schema_guard_summary: dict[str, Any] | None,
+) -> dict[str, Any]:
+    schema_summary = (
+        schema_guard_summary.get("summary", {}) if isinstance(schema_guard_summary, dict) else {}
+    )
+    metric_counts = metrics.get("normalized_command_counts", {}) if isinstance(metrics, dict) else {}
+    if not isinstance(schema_summary, dict):
+        schema_summary = {}
+    if not isinstance(metric_counts, dict):
+        metric_counts = {}
+    return {
+        "normalized_command_exact_match_count": schema_summary.get(
+            "normalized_command_exact_match_count", metric_counts.get("exact_match_count")
+        ),
+        "normalized_command_mismatch_count": schema_summary.get(
+            "normalized_command_mismatch_count", metric_counts.get("mismatch_count")
+        ),
+        "validated_output_schema_valid_count": schema_summary.get("validated_output_schema_valid_count"),
+    }
+
+
+def diagnose_a100_normalized_rerun_row_mismatches(
+    rows: list[SFTDatasetRow],
+    predictions: dict[str, Any],
+    *,
+    metrics: dict[str, Any] | None = None,
+    schema_guard_summary: dict[str, Any] | None = None,
+    source_artifacts: dict[str, str] | None = None,
+) -> dict[str, Any]:
+    alignment = diagnose_alignment_mismatches(rows, predictions)
+    guard_rows = _schema_guard_rows_by_id(schema_guard_summary)
+    alignment_rows = {row["row_id"]: row for row in alignment.get("rows", [])}
+    family_counts: dict[str, int] = {}
+    diagnostic_rows: list[dict[str, Any]] = []
+
+    for row in rows:
+        row_id = _sanitize_id(row.id)
+        alignment_row = alignment_rows.get(row_id, {"row_id": row_id, "mismatches": []})
+        mismatches = alignment_row["mismatches"]
+        schema_guard = guard_rows.get(row_id, {})
+        raw_prediction = predictions.get(row.id)
+        family = _primary_a100_normalized_rerun_failure_family(
+            raw_prediction=raw_prediction,
+            mismatches=mismatches,
+            schema_guard=schema_guard,
+        )
+        _increment_count(family_counts, family)
+        diagnostic_rows.append(
+            {
+                "row_id": row_id,
+                "primary_failure_family": family,
+                "source_prediction_status": {
+                    "schema_valid_prediction": _prediction_to_contract(raw_prediction) is not None,
+                    "validated_output_schema_valid": schema_guard.get("validated_output_schema_valid"),
+                    "validated_output_source": schema_guard.get("validated_output_source"),
+                    "raw_attempt_missing_required_fields": schema_guard.get(
+                        "raw_attempt_missing_required_fields", []
+                    ),
+                    "raw_attempt_validation_error": schema_guard.get("raw_attempt_validation_error"),
+                },
+                "mismatches": mismatches,
+            }
+        )
+
+    metric_values = _metrics_payload(metrics)
+    normalized_counts = _normalized_rerun_counts(metrics=metrics, schema_guard_summary=schema_guard_summary)
+    summary = {
+        **alignment["summary"],
+        "family_counts": dict(sorted(family_counts.items())),
+        "strict_final_json_valid_rate": metric_values.get("json_valid_rate"),
+        "strict_final_task_type_accuracy": metric_values.get("task_type_accuracy"),
+        "strict_final_route_accuracy": metric_values.get("route_accuracy"),
+        "strict_final_confirmation_accuracy": metric_values.get("confirmation_accuracy"),
+        "strict_final_slot_f1": metric_values.get("slot_f1"),
+        "strict_final_contract_exact_match": metric_values.get("contract_exact_match"),
+        "metrics_preserved_from_source": bool(metric_values),
+        **normalized_counts,
+    }
+    safe_source_artifacts = {
+        str(key): _sanitize_public_summary(str(value)) for key, value in (source_artifacts or {}).items()
+    }
+    return {
+        "diagnostic_kind": "a100_normalized_rerun_row_mismatch_diagnosis",
+        "summary": summary,
+        "rows": diagnostic_rows,
+        "source_artifacts": safe_source_artifacts,
+        "source_artifact_policy": {
+            "uses_prior_public_sample_artifacts_only": True,
+            "a100_execution_performed": False,
+            "prediction_rerun_performed": False,
+            "training_or_decoding_changed": False,
+            "prompt_changed": False,
+            "schema_or_parser_changed": False,
+            "retry_changed": False,
+            "evaluator_metrics_changed": False,
+            "normalization_or_semantic_equivalence_added": False,
+        },
+        "claims": {
+            **_confirmation_rerun_claims(),
+            "semantic_equivalence_scoring_performed": False,
+            "normalized_command_normalization_performed": False,
+            "normalized_command_semantic_equivalence_marked": False,
+            "prediction_repair_or_rescore_performed": False,
+            "predictions_repaired_or_replaced": False,
+            "predictions_rescored": False,
+            "invalid_predictions_remain_invalid": True,
+        },
+    }
+
+
 def _normalized_command_context_kind(row: dict[str, Any], mismatch_paths: set[str]) -> str:
     family = row.get("primary_failure_family")
     status = row.get("source_prediction_status")

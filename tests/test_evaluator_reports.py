@@ -568,6 +568,174 @@ def test_confirmation_rerun_row_mismatch_diagnosis_buckets_three_residual_failur
     assert "strict_string_field_exact_match_mismatch" in report
 
 
+def test_a100_normalized_rerun_row_mismatch_diagnosis_buckets_residual_schema_and_route_failures(
+    tmp_path: Path,
+) -> None:
+    rows = [
+        SFTDatasetRow(
+            id=row_id,
+            split="train",
+            input_text=input_text,
+            target_contract=BrowserTaskContract(
+                task_type="search",
+                route="search_web",
+                safety={"allow": True, "reason": "public_readonly"},
+                confirmation_required=False,
+                slots={"query": "北京 明天 天气"},
+                normalized_command="搜索北京明天天气",
+            ),
+            provenance={"source_id": "seed-search-weather", "public_safe": True},
+        )
+        for row_id, input_text in (
+            ("seed-search-weather", "帮我搜索北京明天的天气"),
+            ("seed-search-weather-aug-1", "查一下北京明天天气"),
+            ("seed-search-weather-aug-2", "搜北京明天的天气"),
+        )
+    ]
+    predictions = {
+        "seed-search-weather": {
+            "task_type": "search",
+            "route": "search_web",
+            "safety": {"allow": True, "reason": "public_readonly"},
+            "slots": {"city": "北京", "date": "明天"},
+            "normalized_command": "搜索北京明天的天气",
+            "language": "zh-CN",
+            "contract_version": "v1",
+        },
+        "seed-search-weather-aug-1": {
+            "task_type": "form_fill",
+            "route": "open_url",
+            "safety": {"allow": True, "reason": "form_fill"},
+            "confirmation_required": False,
+            "slots": {"query": "北京明天天气"},
+            "normalized_command": "搜索北京明天天气",
+            "language": "zh-CN",
+            "contract_version": "v1",
+        },
+        "seed-search-weather-aug-2": {
+            "task_type": "search_web",
+            "route": "search_web",
+            "safety": {"allow": True, "reason": "open_url"},
+            "confirmation_required": False,
+            "slots": {"query": "北京明天天气"},
+            "normalized_command": "搜索北京明天天气",
+            "language": "zh-CN",
+            "contract_version": "v1",
+        },
+    }
+    metrics = {
+        "metrics": {
+            "json_valid_rate": 1 / 3,
+            "task_type_accuracy": 0.0,
+            "route_accuracy": 0.0,
+            "confirmation_accuracy": 1 / 3,
+            "slot_f1": 0.0,
+            "contract_exact_match": 0.0,
+        },
+        "normalized_command_counts": {
+            "exact_match_count": 2,
+            "mismatch_count": 1,
+        },
+    }
+    schema_guard_summary = {
+        "summary": {
+            "normalized_command_exact_match_count": 2,
+            "normalized_command_mismatch_count": 1,
+            "validated_output_schema_valid_count": 1,
+        },
+        "rows": [
+            {
+                "id": "seed-search-weather",
+                "raw_attempt_missing_required_fields": ["confirmation_required"],
+                "raw_attempt_validation_error": "missing required fields: confirmation_required",
+                "validated_output_schema_valid": False,
+                "validated_output_source": "none",
+            },
+            {
+                "id": "seed-search-weather-aug-1",
+                "raw_attempt_missing_required_fields": [],
+                "raw_attempt_validation_error": None,
+                "validated_output_schema_valid": True,
+                "validated_output_source": "raw_attempt",
+            },
+            {
+                "id": "seed-search-weather-aug-2",
+                "raw_attempt_missing_required_fields": [],
+                "raw_attempt_validation_error": (
+                    "task_type must be one of "
+                    "['blocked', 'clarify', 'extract', 'form_fill', 'navigate', 'search']"
+                ),
+                "validated_output_schema_valid": False,
+                "validated_output_source": "none",
+            },
+        ],
+    }
+    prior_dir = "reports/public-sample/a100-normalized-command-policy-train-split-rerun"
+
+    diagnosis = evaluation.diagnose_a100_normalized_rerun_row_mismatches(
+        rows,
+        predictions,
+        metrics=metrics,
+        schema_guard_summary=schema_guard_summary,
+        source_artifacts={
+            "train_split_gold": f"{prior_dir}/train_split_gold.jsonl",
+            "predictions": f"{prior_dir}/predictions.jsonl",
+            "metrics": f"{prior_dir}/metrics.json",
+            "schema_guard_summary": f"{prior_dir}/schema_guard_summary.json",
+            "normalized_command_diagnosis": f"{prior_dir}/normalized_command_diagnosis.json",
+            "manifest": f"{prior_dir}/manifest.json",
+        },
+    )
+
+    assert diagnosis["diagnostic_kind"] == "a100_normalized_rerun_row_mismatch_diagnosis"
+    assert diagnosis["summary"]["gold_row_count"] == 3
+    assert diagnosis["summary"]["prediction_count"] == 3
+    assert diagnosis["summary"]["row_mismatch_count"] == 3
+    assert diagnosis["summary"]["schema_invalid_prediction_count"] == 2
+    assert diagnosis["summary"]["validated_output_schema_valid_count"] == 1
+    assert diagnosis["summary"]["normalized_command_exact_match_count"] == 2
+    assert diagnosis["summary"]["normalized_command_mismatch_count"] == 1
+    assert diagnosis["summary"]["strict_final_json_valid_rate"] == 1 / 3
+    assert diagnosis["summary"]["strict_final_contract_exact_match"] == 0.0
+    assert diagnosis["summary"]["field_mismatch_counts"] == {
+        "confirmation_required": 1,
+        "normalized_command": 1,
+        "route": 1,
+        "safety.reason": 2,
+        "slots": 3,
+        "task_type": 2,
+    }
+    assert diagnosis["summary"]["family_counts"] == {
+        "schema_invalid_task_type_enum": 1,
+        "schema_missing_confirmation_required": 1,
+        "schema_valid_task_route_safety_slot_mismatch": 1,
+    }
+    row_families = {row["row_id"]: row["primary_failure_family"] for row in diagnosis["rows"]}
+    assert row_families == {
+        "seed-search-weather": "schema_missing_confirmation_required",
+        "seed-search-weather-aug-1": "schema_valid_task_route_safety_slot_mismatch",
+        "seed-search-weather-aug-2": "schema_invalid_task_type_enum",
+    }
+    assert diagnosis["source_artifact_policy"]["uses_prior_public_sample_artifacts_only"] is True
+    assert diagnosis["source_artifact_policy"]["a100_execution_performed"] is False
+    assert diagnosis["source_artifact_policy"]["prediction_rerun_performed"] is False
+    assert diagnosis["claims"]["local_evidence_only_analysis"] is True
+    assert diagnosis["claims"]["semantic_equivalence_scoring_performed"] is False
+    assert diagnosis["claims"]["normalized_command_normalization_performed"] is False
+    assert diagnosis["claims"]["prediction_repair_or_rescore_performed"] is False
+    assert diagnosis["claims"]["model_quality_improvement_claim"] is False
+
+    paths = reports.write_a100_normalized_rerun_row_mismatch_report(diagnosis, output_dir=tmp_path)
+    report = paths["markdown"].read_text(encoding="utf-8")
+    assert paths["json"].name == "row_mismatch_diagnosis.json"
+    assert paths["markdown"].name == "row_mismatch_diagnosis.md"
+    assert "local evidence-only analysis" in report
+    assert "No A100 execution was performed in this phase" in report
+    assert "schema_missing_confirmation_required" in report
+    assert "schema_invalid_task_type_enum" in report
+    assert "schema_valid_task_route_safety_slot_mismatch" in report
+
+
 def test_normalized_command_string_mismatch_diagnosis_preserves_strict_boundaries(
     tmp_path: Path,
 ) -> None:
