@@ -1,0 +1,14 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-05T06:46:55.406178+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "reports/public-sample/a100-confirmation-required-train-split-rerun",
+    "docs/human-briefs/2026-06-05-run-a100-confirmation-required-train-split-rerun.html",
+    "docs/human-briefs/2026-06-05-autonomous-loop-run-a100-confirmation-required-train-split-rerun.html",
+    "openspec/changes/archive/2026-06-05-run-a100-confirmation-required-train-split-rerun",
+    "openspec/specs/contract-evaluation/spec.md",
+    "openspec/specs/supervised-contract-tuning/spec.md"
+  ]
+}

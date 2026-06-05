@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Autonomous Loop Closeout: A100 Confirmation Required Rerun</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; background: #f6f7f9; color: #20242a; }
+    main { max-width: 980px; margin: 0 auto; padding: 32px 20px 52px; }
+    h1 { font-size: 28px; margin: 0 0 8px; }
+    h2 { font-size: 18px; margin: 28px 0 10px; }
+    p, li { line-height: 1.65; }
+    .panel, .metric { background: #fff; border: 1px solid #d8dde6; border-radius: 8px; padding: 16px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin: 14px 0 20px; }
+    .metric strong { display: block; font-size: 22px; }
+    code { background: #eceff3; padding: 1px 5px; border-radius: 4px; }
+    a { color: #1957a6; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Autonomous loop: A100 confirmation_required train-split rerun</h1>
+  <section class="panel">
+    <p><strong>一句话结论：</strong>本轮已完成真实 private A100 prediction-only train-split rerun、Reviewer 复审、OpenSpec archive 和 post-archive validation；<code>confirmation_required</code> boolean emission 为 <code>2/3</code>，final schema-valid 为 <code>2/3</code>，但 strict exact match 仍为 <code>0.0</code>，因此只能称为 train-internal partial recovery。</p>
+  </section>
+  <div class="grid">
+    <div class="metric"><span>loop status</span><strong>completed</strong></div>
+    <div class="metric"><span>archived phases</span><strong>1</strong></div>
+    <div class="metric"><span>schema-valid</span><strong>2/3</strong></div>
+    <div class="metric"><span>exact match</span><strong>0.0</strong></div>
+  </div>
+
+  <h2>停止原因</h2>
+  <p>停止条件：当前 A100 evidence phase 已完成、归档并通过 post-archive validation。下一步如果继续，应作为新的 bounded OpenSpec change 来处理剩余 row-level mismatch 或训练/解码策略，而不是在本轮 evidence closeout 里扩大范围。</p>
+
+  <h2>项目阶段进度</h2>
+  <ul>
+    <li>当前项目目标：first-phase speech-to-contract normalization，即把中文 spoken command 或 ASR transcript 转成 schema-valid Browser Task Contract。来源：<a href="../../CONTEXT.md">CONTEXT.md</a>、<a href="../../README.md">README.md</a> 和 OpenSpec specs。</li>
+    <li>本阶段推进：验证 local <code>confirmation_required</code> prompt repair 已进入真实 private-adapter prediction path，并把上一轮缺字段失败从 <code>3/3</code> 降到 <code>1/3</code>。</li>
+    <li>剩余能力差距：一条 row 仍缺 <code>confirmation_required</code>；另一条 schema-valid row 的 <code>task_type/route</code> 与 gold 不匹配；strict exact match 仍为 <code>0.0</code>。</li>
+    <li>仍无 dev/test held-out generalization、checkpoint/adapter release、production readiness、public full-corpus release 或 live-browser benchmark evidence。</li>
+  </ul>
+
+  <h2>完成的阶段</h2>
+  <ul>
+    <li>OpenSpec archive：<a href="../../openspec/changes/archive/2026-06-05-run-a100-confirmation-required-train-split-rerun/proposal.md">2026-06-05-run-a100-confirmation-required-train-split-rerun</a>。</li>
+    <li>阶段 Human Brief：<a href="2026-06-05-run-a100-confirmation-required-train-split-rerun.html">2026-06-05-run-a100-confirmation-required-train-split-rerun.html</a>。</li>
+    <li>Evidence report：<a href="../../reports/public-sample/a100-confirmation-required-train-split-rerun/report.md">reports/public-sample/a100-confirmation-required-train-split-rerun/report.md</a>。</li>
+    <li>Specs updated：<a href="../../openspec/specs/contract-evaluation/spec.md">contract-evaluation</a> 和 <a href="../../openspec/specs/supervised-contract-tuning/spec.md">supervised-contract-tuning</a>。</li>
+  </ul>
+
+  <h2>验证结果</h2>
+  <ul>
+    <li>TDD red/green：new evidence test 先失败于缺少 evidence files，生成证据后通过。</li>
+    <li>Focused tests：16 passed after archive；pre-archive focused pack 为 17 passed。</li>
+    <li><code>PYTHONPATH=src pytest -q</code>：139 passed。</li>
+    <li><code>uv run ruff check .</code>：passed；<code>uv run mypy src</code>：16 source files passed。</li>
+    <li>Public data validate：ok true；DPO check：26 pairs checked。</li>
+    <li>Leak scan：ok true，0 findings，覆盖 evidence、stage brief、archived OpenSpec 和 synced specs。</li>
+    <li><code>git diff --check</code>：passed after cleaning OpenSpec EOF noise；<code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：4 passed，0 failed after archive。</li>
+  </ul>
+
+  <h2>Review 和集成</h2>
+  <ul>
+    <li>内部 Reviewer verdict：Pass；Must Fix/Should Fix 均为空；Re-plan Needed：No。</li>
+    <li>Reviewer 确认 bounded result：3 train rows、<code>private_a100_adapter</code>、prediction-only/no training、no dev/test generalization、boolean emission <code>2/3</code>、schema-valid <code>2/3</code>、exact match <code>0.0</code>、privacy boundary preserved。</li>
+    <li>Auto integration：pending，本报告提交前无法写入最终 commit hash；精确 commit/push 状态以 Codex final response 为准。</li>
+    <li>External Pro review：未运行。本阶段风险主要是 evidence consistency、privacy boundary 和 overclaim，已由内部 Reviewer、测试、OpenSpec strict 和 leak scan 覆盖。</li>
+  </ul>
+
+  <h2>不要夸大的结论</h2>
+  <ul>
+    <li>这不是 full model recovery：<code>confirmation_required</code> 仍缺 <code>1/3</code>，strict exact match 仍为 <code>0.0</code>。</li>
+    <li>这不是 dev/test 泛化、checkpoint release、adapter release、production readiness、public full-corpus release 或 live-browser benchmark improvement。</li>
+    <li><code>2/3</code> schema-valid 是 train-split、prediction-only、private-adapter 证据，只能说明 prompt repair 对同一组 train rows 产生了部分改善。</li>
+  </ul>
+</main>
+</body>
+</html>

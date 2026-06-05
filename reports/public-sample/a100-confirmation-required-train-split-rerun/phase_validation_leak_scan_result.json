@@ -1,0 +1,11 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-05T06:38:04.095081+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "reports/public-sample/a100-confirmation-required-train-split-rerun",
+    "docs/human-briefs/2026-06-05-run-a100-confirmation-required-train-split-rerun.html",
+    "openspec/changes/run-a100-confirmation-required-train-split-rerun"
+  ]
+}

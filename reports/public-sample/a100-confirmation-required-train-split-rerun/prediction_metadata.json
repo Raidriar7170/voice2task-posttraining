@@ -1,0 +1,79 @@
+{
+  "adapter_release_status": "not_released",
+  "base_model": "Qwen/Qwen2.5-0.5B-Instruct",
+  "command_summary": {
+    "config": "<private_prediction_config>",
+    "entrypoint": "voice2task-train sft-predict",
+    "manifest": "data/public-samples/manifest_public_sample.json",
+    "mode": "run_prediction",
+    "output": "<a100_prediction_output>",
+    "requires_cli_run_prediction": true,
+    "requires_config_allow_private_prediction": true
+  },
+  "created_at": "2026-06-05T06:27:11.994501+00:00",
+  "dataset_manifest_id": "public-sample-20260601T162313Z",
+  "dataset_manifest_path": "data/public-samples/manifest_public_sample.json",
+  "decoding_policy": {
+    "do_sample": false,
+    "generation_trace_sidecar_written": true,
+    "max_new_tokens": 256,
+    "raw_decoded_sidecar_written": true,
+    "schema_guard_enabled": true,
+    "schema_repair_applied": false,
+    "schema_retry_enabled": true,
+    "schema_retry_max_attempts": 1,
+    "strategy": "greedy"
+  },
+  "diagnostic_artifacts": {
+    "leak_scan": "<a100_leak_scan_result>",
+    "objective_inspection": "<a100_objective_inspection>"
+  },
+  "formatting_policy": {
+    "fallback": "deterministic_role_plain_text",
+    "policy": "shared_contract_chat_template",
+    "prediction_prompt": "shared_contract_chat_template",
+    "prediction_target_policy": "generation_prompt_without_gold_contract",
+    "sft_training_text": "shared_contract_chat_template",
+    "tokenizer_chat_template": "used_when_available_with_tokenize_false"
+  },
+  "generalization_claim": false,
+  "metadata_path": "<a100_prediction_metadata>",
+  "model_source": "modelscope_local_snapshot",
+  "notes": "Private A100 adapter predictions were written as sanitized public-sample contract prediction rows. No checkpoints, adapters, raw logs, or private paths were copied into the prediction artifact.",
+  "overfit_diagnostic": true,
+  "prediction_count": 3,
+  "prediction_gate": {
+    "adapter_configured": true,
+    "cli_run_prediction": true,
+    "config_allow_private_prediction": true,
+    "fixture_mode": false,
+    "will_run_private_prediction": true
+  },
+  "prediction_output_path": "<a100_prediction_output>",
+  "prediction_source_kind": "private_a100_adapter",
+  "prediction_split": "train",
+  "prediction_status": "private_adapter_predictions_written",
+  "prompt_constraints": {
+    "canonical_json_one_shot_visible": true,
+    "confirmation_required_boolean_visible": true,
+    "required_field_checklist_visible": true,
+    "required_field_skeleton_visible": true,
+    "route_domain_values_not_route_visible": true,
+    "route_enum_visible": true,
+    "route_execution_channel_visible": true,
+    "route_not_url_or_path_visible": true,
+    "slots_object_not_array_visible": true,
+    "task_type_enum_visible": true,
+    "weather_to_search_confirmation_false_visible": true,
+    "weather_to_search_route_example_visible": true,
+    "whole_object_boundary_visible": true
+  },
+  "release_status": "not_released",
+  "sidecars": {
+    "generation_trace": "<a100_generation_trace>",
+    "prompt_snapshot": "<a100_prompt_snapshot>",
+    "raw_decoded_summary": "<a100_raw_decoded_summary>"
+  },
+  "stack": "transformers+peft+trl",
+  "stage": "sft_prediction"
+}

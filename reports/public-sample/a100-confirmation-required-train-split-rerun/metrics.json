@@ -1,0 +1,84 @@
+{
+  "confirmation_required_counts": {
+    "confirmation_required_boolean_count": 2,
+    "confirmation_required_false_count": 2,
+    "full_confirmation_required_recovery_observed": false,
+    "missing_confirmation_required_count": 1,
+    "partial_confirmation_required_recovery_observed": true,
+    "prediction_count": 3,
+    "raw_attempt_missing_required_field_counts": {
+      "confirmation_required": 1
+    },
+    "raw_attempt_schema_valid_count": 2,
+    "retry_attempt_schema_valid_count": 0,
+    "retry_attempted_count": 1,
+    "strict_retry_parser_rejected_fragment_count": 1,
+    "train_internal_full_recovery_observed": false,
+    "train_internal_partial_recovery_observed": true,
+    "validated_output_schema_valid_count": 2,
+    "validated_output_source_counts": {
+      "none": 1,
+      "raw_attempt": 2
+    }
+  },
+  "failure_slices": {
+    "confirmation": {
+      "count": 0,
+      "examples": []
+    },
+    "route": {
+      "count": 1,
+      "examples": [
+        "seed-search-weather-aug-1"
+      ]
+    },
+    "safety": {
+      "count": 0,
+      "examples": []
+    },
+    "schema": {
+      "count": 1,
+      "examples": [
+        "seed-search-weather"
+      ]
+    },
+    "slot": {
+      "count": 0,
+      "examples": []
+    },
+    "task_type": {
+      "count": 1,
+      "examples": [
+        "seed-search-weather-aug-1"
+      ]
+    },
+    "unknown": {
+      "count": 0,
+      "examples": []
+    }
+  },
+  "metadata": {
+    "confirmation_required_diagnostic": true,
+    "generalization_claim": false,
+    "overfit_diagnostic": true,
+    "prediction_count": 3,
+    "prediction_source_kind": "private_a100_adapter",
+    "prediction_split": "train",
+    "prediction_status": "private_adapter_predictions_written",
+    "schema_repair_applied": false,
+    "schema_retry_enabled": true,
+    "strict_final_contract_metrics": true
+  },
+  "metrics": {
+    "confirmation_accuracy": 0.6666666666666666,
+    "contract_exact_match": 0.0,
+    "json_valid_rate": 0.6666666666666666,
+    "route_accuracy": 0.3333333333333333,
+    "safety_gold_stop_support": 0.0,
+    "safety_precision": 1.0,
+    "safety_predicted_stop_support": 0.0,
+    "safety_recall": 1.0,
+    "slot_f1": 0.6666666666666666,
+    "task_type_accuracy": 0.3333333333333333
+  }
+}

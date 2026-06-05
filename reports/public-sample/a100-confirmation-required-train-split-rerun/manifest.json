@@ -1,0 +1,189 @@
+{
+  "artifact_policy": {
+    "checkpoints_or_adapters_copied_to_git": false,
+    "host_or_ssh_details_copied_to_git": false,
+    "private_configs_copied_to_git": false,
+    "private_paths_omitted": true,
+    "raw_logs_copied_to_git": false,
+    "remote_caches_copied_to_git": false
+  },
+  "base_model": "Qwen/Qwen2.5-0.5B-Instruct",
+  "claims": {
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "held_out_generalization_claim": false,
+    "live_browser_benchmark_claim": false,
+    "model_quality_evidence": false,
+    "production_readiness_claim": false,
+    "release_claim": false,
+    "schema_repair_or_coercion_applied": false
+  },
+  "dataset_manifest_id": "public-sample-20260601T162313Z",
+  "decoding_policy": {
+    "do_sample": false,
+    "generation_trace_sidecar_written": true,
+    "max_new_tokens": 256,
+    "raw_decoded_sidecar_written": true,
+    "schema_guard_enabled": true,
+    "schema_repair_applied": false,
+    "schema_retry_enabled": true,
+    "schema_retry_max_attempts": 1,
+    "strategy": "greedy"
+  },
+  "diagnostic_artifacts": {
+    "confirmation_required_diagnosis": "reports/public-sample/a100-confirmation-required-train-split-rerun/confirmation_required_diagnosis.json",
+    "final_leak_scan": "reports/public-sample/a100-confirmation-required-train-split-rerun/final_leak_scan_result.json",
+    "leak_scan": "reports/public-sample/a100-confirmation-required-train-split-rerun/leak_scan_result.json",
+    "metrics": "reports/public-sample/a100-confirmation-required-train-split-rerun/metrics.json",
+    "phase_validation_leak_scan": "reports/public-sample/a100-confirmation-required-train-split-rerun/phase_validation_leak_scan_result.json",
+    "post_archive_leak_scan": "reports/public-sample/a100-confirmation-required-train-split-rerun/post_archive_leak_scan_result.json",
+    "schema_guard_summary": "reports/public-sample/a100-confirmation-required-train-split-rerun/schema_guard_summary.json"
+  },
+  "evidence_kind": "a100_confirmation_required_train_split_rerun",
+  "evidence_status": "private_adapter_predictions_written",
+  "final_leak_scan_result": {
+    "findings": [],
+    "generated_at": "2026-06-05T06:46:55.406178+00:00",
+    "max_public_jsonl_rows": 5000,
+    "ok": true,
+    "scanned_paths": [
+      "reports/public-sample/a100-confirmation-required-train-split-rerun",
+      "docs/human-briefs/2026-06-05-run-a100-confirmation-required-train-split-rerun.html",
+      "docs/human-briefs/2026-06-05-autonomous-loop-run-a100-confirmation-required-train-split-rerun.html",
+      "openspec/changes/archive/2026-06-05-run-a100-confirmation-required-train-split-rerun",
+      "openspec/specs/contract-evaluation/spec.md",
+      "openspec/specs/supervised-contract-tuning/spec.md"
+    ]
+  },
+  "generalization_claim": false,
+  "generated_at": "2026-06-05T06:35:27.270445+00:00",
+  "leak_scan_result": {
+    "findings": [],
+    "ok": true
+  },
+  "model_source": "modelscope_local_snapshot",
+  "observed_result": {
+    "confirmation_accuracy": 0.6666666666666666,
+    "confirmation_required_boolean_count": 2,
+    "confirmation_required_false_count": 2,
+    "contract_exact_match": 0.0,
+    "full_confirmation_required_recovery_observed": false,
+    "json_valid_rate": 0.6666666666666666,
+    "missing_confirmation_required_count": 1,
+    "partial_confirmation_required_recovery_observed": true,
+    "prediction_count": 3,
+    "raw_attempt_missing_required_field_counts": {
+      "confirmation_required": 1
+    },
+    "raw_attempt_schema_valid_count": 2,
+    "retry_attempt_schema_valid_count": 0,
+    "retry_attempted_count": 1,
+    "route_accuracy": 0.3333333333333333,
+    "safety_gold_stop_support": 0.0,
+    "safety_precision": 1.0,
+    "safety_predicted_stop_support": 0.0,
+    "safety_recall": 1.0,
+    "slot_f1": 0.6666666666666666,
+    "strict_final_contract_metrics": {
+      "confirmation_accuracy": 0.6666666666666666,
+      "contract_exact_match": 0.0,
+      "interpretation": "strict final-contract metrics require schema-valid Browser Task Contract predictions",
+      "json_valid_rate": 0.6666666666666666,
+      "route_accuracy": 0.3333333333333333,
+      "safety_gold_stop_support": 0.0,
+      "safety_precision": 1.0,
+      "safety_predicted_stop_support": 0.0,
+      "safety_recall": 1.0,
+      "slot_f1": 0.6666666666666666,
+      "task_type_accuracy": 0.3333333333333333
+    },
+    "strict_retry_parser_rejected_fragment_count": 1,
+    "task_type_accuracy": 0.3333333333333333,
+    "train_internal_full_recovery_observed": false,
+    "train_internal_partial_recovery_observed": true,
+    "validated_output_schema_valid_count": 2,
+    "validated_output_source_counts": {
+      "none": 1,
+      "raw_attempt": 2
+    }
+  },
+  "overfit_diagnostic": true,
+  "phase_validation_leak_scan_result": {
+    "findings": [],
+    "generated_at": "2026-06-05T06:38:04.095081+00:00",
+    "max_public_jsonl_rows": 5000,
+    "ok": true,
+    "scanned_paths": [
+      "reports/public-sample/a100-confirmation-required-train-split-rerun",
+      "docs/human-briefs/2026-06-05-run-a100-confirmation-required-train-split-rerun.html",
+      "openspec/changes/run-a100-confirmation-required-train-split-rerun"
+    ]
+  },
+  "post_archive_leak_scan_result": {
+    "findings": [],
+    "generated_at": "2026-06-05T06:46:01.669619+00:00",
+    "max_public_jsonl_rows": 5000,
+    "ok": true,
+    "scanned_paths": [
+      "reports/public-sample/a100-confirmation-required-train-split-rerun",
+      "docs/human-briefs/2026-06-05-run-a100-confirmation-required-train-split-rerun.html",
+      "openspec/changes/archive/2026-06-05-run-a100-confirmation-required-train-split-rerun",
+      "openspec/specs/contract-evaluation/spec.md",
+      "openspec/specs/supervised-contract-tuning/spec.md"
+    ]
+  },
+  "prediction_count": 3,
+  "prediction_source_kind": "private_a100_adapter",
+  "prediction_split": "train",
+  "prior_context": {
+    "baseline_evidence": "reports/public-sample/a100-route-ontology-train-split-rerun/",
+    "local_repair": "reports/public-sample/confirmation-required-emission-repair/"
+  },
+  "prompt_constraints": {
+    "canonical_json_one_shot_visible": true,
+    "confirmation_required_boolean_visible": true,
+    "required_field_checklist_visible": true,
+    "required_field_skeleton_visible": true,
+    "route_domain_values_not_route_visible": true,
+    "route_enum_visible": true,
+    "route_execution_channel_visible": true,
+    "route_not_url_or_path_visible": true,
+    "slots_object_not_array_visible": true,
+    "task_type_enum_visible": true,
+    "weather_to_search_confirmation_false_visible": true,
+    "weather_to_search_route_example_visible": true,
+    "whole_object_boundary_visible": true
+  },
+  "release_status": "not_released",
+  "schema_guard_policy": {
+    "schema_guard_enabled": true,
+    "schema_retry_enabled": true,
+    "schema_retry_max_attempts": 1,
+    "strict_parser": "whole_string_json_only_for_raw_and_retry"
+  },
+  "sidecars": {
+    "generation_trace": "reports/public-sample/a100-confirmation-required-train-split-rerun/generation_trace.jsonl",
+    "prediction_metadata": "reports/public-sample/a100-confirmation-required-train-split-rerun/prediction_metadata.json",
+    "predictions": "reports/public-sample/a100-confirmation-required-train-split-rerun/predictions.jsonl",
+    "prompt_snapshot": "reports/public-sample/a100-confirmation-required-train-split-rerun/prompt_snapshot.json",
+    "raw_decoded_summary": "reports/public-sample/a100-confirmation-required-train-split-rerun/raw_decoded_summary.jsonl",
+    "train_split_gold": "reports/public-sample/a100-confirmation-required-train-split-rerun/train_split_gold.jsonl"
+  },
+  "source_manifest_rows": {
+    "dpo_pairs": 26,
+    "seed_rows": 4,
+    "sft_rows": 12
+  },
+  "source_manifest_split_counts": {
+    "dev": 3,
+    "test": 6,
+    "train": 3
+  },
+  "training_row_ids": [
+    "seed-search-weather",
+    "seed-search-weather-aug-1",
+    "seed-search-weather-aug-2"
+  ],
+  "training_rows_used": 3,
+  "training_split": "train"
+}

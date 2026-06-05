@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>A100 Confirmation Required Train-Split Rerun Human Brief</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; background: #f6f7f9; color: #20242a; }
+    main { max-width: 980px; margin: 0 auto; padding: 32px 20px 52px; }
+    h1 { font-size: 28px; margin: 0 0 8px; }
+    h2 { font-size: 18px; margin: 28px 0 10px; }
+    p, li { line-height: 1.65; }
+    .panel, .metric { background: #fff; border: 1px solid #d8dde6; border-radius: 8px; padding: 16px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin: 14px 0 20px; }
+    .metric strong { display: block; font-size: 22px; }
+    code { background: #eceff3; padding: 1px 5px; border-radius: 4px; }
+    a { color: #1957a6; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>A100 confirmation_required train-split rerun</h1>
+  <section class="panel">
+    <p><strong>一句话结论：</strong>真实 private A100 prediction-only rerun 已跑完；同一组 3 条 train rows 中 <code>confirmation_required</code> boolean emission 从上一轮的 <code>0/3</code> 改善到 <code>2/3</code>，final schema-valid 为 <code>2/3</code>，但仍有 1 条缺字段，strict exact match 仍为 <code>0.0</code>，不能说成 full model recovery。</p>
+  </section>
+  <div class="grid">
+    <div class="metric"><span>当前状态</span><strong>archived</strong></div>
+    <div class="metric"><span>A100 run</span><strong>passed</strong></div>
+    <div class="metric"><span>schema-valid</span><strong>2/3</strong></div>
+    <div class="metric"><span>exact match</span><strong>0.0</strong></div>
+  </div>
+
+  <h2>本阶段变化</h2>
+  <ul>
+    <li>使用已授权 A100，只运行一次 prediction-only train-split rerun；未训练、未发布 checkpoint/adapter。</li>
+    <li>导入公开安全证据到 <a href="../../reports/public-sample/a100-confirmation-required-train-split-rerun/report.md">a100-confirmation-required-train-split-rerun report</a>。</li>
+    <li>新增 <code>confirmation_required_diagnosis</code>，把 raw attempt、retry attempt、validated output source、缺字段计数和最终严格指标分开记录。</li>
+    <li>新增 focused evidence test，锁住 private A100 source、train-only、no generalization claim、no private artifact leak、partial recovery 不能夸大。</li>
+  </ul>
+
+  <h2>项目阶段进度</h2>
+  <ul>
+    <li>当前项目目标：first-phase speech-to-contract normalization，即把中文 spoken command 或 ASR transcript 转成 schema-valid Browser Task Contract。来源：<a href="../../CONTEXT.md">CONTEXT.md</a>、<a href="../../README.md">README.md</a> 和 OpenSpec specs。</li>
+    <li>上一轮 A100 route ontology rerun 说明 raw route/gold match 已达 <code>3/3</code>，但 strict schema-valid 仍为 <code>0/3</code>，失败集中在缺 <code>confirmation_required</code>。</li>
+    <li>本轮验证了本地 prompt repair 已影响真实 private adapter prediction path：2 条 row 直接输出 boolean <code>confirmation_required=false</code>。</li>
+    <li>剩余差距：一条 row 仍缺字段，另一条 schema-valid row 的 task/route 不匹配 gold，strict exact match 仍为 <code>0.0</code>；没有 dev/test 泛化、release 或 live-browser benchmark evidence。</li>
+  </ul>
+
+  <h2>关键证据</h2>
+  <ul>
+    <li><a href="../../reports/public-sample/a100-confirmation-required-train-split-rerun/manifest.json">manifest.json</a></li>
+    <li><a href="../../reports/public-sample/a100-confirmation-required-train-split-rerun/metrics.md">metrics.md</a></li>
+    <li><a href="../../reports/public-sample/a100-confirmation-required-train-split-rerun/schema_guard_summary.md">schema_guard_summary.md</a></li>
+    <li><a href="../../reports/public-sample/a100-confirmation-required-train-split-rerun/confirmation_required_diagnosis.md">confirmation_required_diagnosis.md</a></li>
+    <li><a href="../../reports/public-sample/a100-confirmation-required-train-split-rerun/prompt_snapshot.json">prompt_snapshot.json</a></li>
+  </ul>
+
+  <h2>验证记录</h2>
+  <ul>
+    <li>TDD 红灯：新 evidence test 先因缺少 <code>metrics/manifest/diagnosis</code> 等产物失败。</li>
+    <li>Focused tests：<code>17 passed</code>，覆盖 prompt repair、上一轮 route-ontology evidence、和本轮 confirmation-required evidence。</li>
+    <li><code>PYTHONPATH=src pytest -q</code>：139 passed。</li>
+    <li><code>uv run ruff check .</code>：All checks passed；<code>uv run mypy src</code>：16 source files passed。</li>
+    <li>Public data validate：ok true，12 SFT rows，26 DPO pairs；DPO check：26 pairs checked。</li>
+    <li>Evidence/phase leak scan：<code>ok=true</code>，0 findings，覆盖本轮 public evidence、Human Brief 和 active OpenSpec change。</li>
+    <li>Reviewer：Pass，Must Fix/Should Fix 均为空。</li>
+    <li>OpenSpec archive 后：focused tests <code>16 passed</code>，<code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：4 passed，0 failed；<code>git diff --check</code>：passed。</li>
+  </ul>
+
+  <h2>不要夸大的结论</h2>
+  <ul>
+    <li>这是 train-internal、prediction-only、private-adapter 证据，不是 dev/test held-out generalization。</li>
+    <li>这是 partial recovery，不是 full model recovery：<code>confirmation_required</code> 仍缺 <code>1/3</code>，exact match 仍为 <code>0.0</code>。</li>
+    <li>没有 schema repair、default insertion、output coercion、checkpoint/adapter release、production readiness、public full-corpus release 或 live-browser benchmark improvement claim。</li>
+  </ul>
+
+  <h2>推荐下一步</h2>
+  <p>本阶段已归档。下一步若继续，应单独开一个很小的新阶段，分析剩余 row-level mismatch 或训练/解码策略，而不是把本轮 partial recovery 夸大成 full recovery。</p>
+</main>
+</body>
+</html>

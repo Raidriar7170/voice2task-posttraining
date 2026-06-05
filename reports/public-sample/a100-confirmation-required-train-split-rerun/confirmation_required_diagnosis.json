@@ -1,0 +1,144 @@
+{
+  "baseline_context": {
+    "local_repair": "reports/public-sample/confirmation-required-emission-repair/",
+    "prior_evidence": "reports/public-sample/a100-route-ontology-train-split-rerun/",
+    "prior_failure": "prior route-ontology rerun produced 3/3 raw route matches but 3/3 final schema-invalid rows because confirmation_required was absent"
+  },
+  "claims": {
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "held_out_generalization_claim": false,
+    "live_browser_benchmark_claim": false,
+    "model_quality_evidence": false,
+    "production_readiness_claim": false,
+    "schema_repair_or_coercion_applied": false,
+    "strict_final_contract_metrics_separated_from_raw_field_counts": true
+  },
+  "diagnostic_kind": "confirmation_required_train_split_diagnosis",
+  "generated_at": "2026-06-05T06:35:27.270445+00:00",
+  "prompt_constraints": {
+    "canonical_json_one_shot_visible": true,
+    "confirmation_required_boolean_visible": true,
+    "required_field_checklist_visible": true,
+    "required_field_skeleton_visible": true,
+    "route_domain_values_not_route_visible": true,
+    "route_enum_visible": true,
+    "route_execution_channel_visible": true,
+    "route_not_url_or_path_visible": true,
+    "slots_object_not_array_visible": true,
+    "task_type_enum_visible": true,
+    "weather_to_search_confirmation_false_visible": true,
+    "weather_to_search_route_example_visible": true,
+    "whole_object_boundary_visible": true
+  },
+  "rows": [
+    {
+      "confirmation_required_is_boolean": false,
+      "finish_state": "eos_observed",
+      "generated_token_count": 57,
+      "gold_confirmation_required": false,
+      "gold_route": "search_web",
+      "gold_task_type": "search",
+      "id": "seed-search-weather",
+      "prediction_confirmation_required": null,
+      "prediction_has_confirmation_required": false,
+      "raw_attempt_missing_required_fields": [
+        "confirmation_required"
+      ],
+      "raw_attempt_parse_status": "json_object",
+      "raw_attempt_schema_valid": false,
+      "raw_attempt_validation_error": "missing required fields: confirmation_required",
+      "retry_attempt_parse_status": "json_fragment_object",
+      "retry_attempt_schema_valid": false,
+      "retry_attempt_validation_error": "prediction must be a JSON object matching Browser Task Contract",
+      "retry_attempted": true,
+      "route": "search_web",
+      "task_type": "search",
+      "validated_output_schema_valid": false,
+      "validated_output_source": "none"
+    },
+    {
+      "confirmation_required_is_boolean": true,
+      "finish_state": "eos_observed",
+      "generated_token_count": 61,
+      "gold_confirmation_required": false,
+      "gold_route": "search_web",
+      "gold_task_type": "search",
+      "id": "seed-search-weather-aug-1",
+      "prediction_confirmation_required": false,
+      "prediction_has_confirmation_required": true,
+      "raw_attempt_missing_required_fields": [],
+      "raw_attempt_parse_status": "json_object",
+      "raw_attempt_schema_valid": true,
+      "raw_attempt_validation_error": null,
+      "retry_attempt_parse_status": null,
+      "retry_attempt_schema_valid": null,
+      "retry_attempt_validation_error": null,
+      "retry_attempted": false,
+      "route": "open_url",
+      "task_type": "form_fill",
+      "validated_output_schema_valid": true,
+      "validated_output_source": "raw_attempt"
+    },
+    {
+      "confirmation_required_is_boolean": true,
+      "finish_state": "eos_observed",
+      "generated_token_count": 62,
+      "gold_confirmation_required": false,
+      "gold_route": "search_web",
+      "gold_task_type": "search",
+      "id": "seed-search-weather-aug-2",
+      "prediction_confirmation_required": false,
+      "prediction_has_confirmation_required": true,
+      "raw_attempt_missing_required_fields": [],
+      "raw_attempt_parse_status": "json_object",
+      "raw_attempt_schema_valid": true,
+      "raw_attempt_validation_error": null,
+      "retry_attempt_parse_status": null,
+      "retry_attempt_schema_valid": null,
+      "retry_attempt_validation_error": null,
+      "retry_attempted": false,
+      "route": "search_web",
+      "task_type": "search",
+      "validated_output_schema_valid": true,
+      "validated_output_source": "raw_attempt"
+    }
+  ],
+  "summary": {
+    "confirmation_required_boolean_count": 2,
+    "confirmation_required_false_count": 2,
+    "confirmation_required_value_counts": {
+      "false": 2
+    },
+    "full_confirmation_required_recovery_observed": false,
+    "missing_confirmation_required_count": 1,
+    "partial_confirmation_required_recovery_observed": true,
+    "prediction_count": 3,
+    "raw_attempt_missing_required_field_counts": {
+      "confirmation_required": 1
+    },
+    "raw_attempt_schema_valid_count": 2,
+    "retry_attempt_schema_valid_count": 0,
+    "retry_attempted_count": 1,
+    "route_value_counts": {
+      "open_url": 1,
+      "search_web": 2
+    },
+    "strict_final_contract_exact_match": 0.0,
+    "strict_final_json_valid_rate": 0.6666666666666666,
+    "strict_final_route_accuracy": 0.3333333333333333,
+    "strict_final_task_type_accuracy": 0.3333333333333333,
+    "strict_retry_parser_rejected_fragment_count": 1,
+    "task_type_value_counts": {
+      "form_fill": 1,
+      "search": 2
+    },
+    "train_internal_full_recovery_observed": false,
+    "train_internal_partial_recovery_observed": true,
+    "validated_output_schema_valid_count": 2,
+    "validated_output_source_counts": {
+      "none": 1,
+      "raw_attempt": 2
+    }
+  }
+}
