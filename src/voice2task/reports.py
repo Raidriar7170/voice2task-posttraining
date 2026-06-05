@@ -858,6 +858,7 @@ def write_source_diagnostics_report(
         f"- Prediction path-like routes: `{prediction_symptoms['path_like_route_count']}`",
         f"- Prediction list-shaped slots: `{prediction_symptoms['list_slots_count']}`",
         f"- Schema-invalid predictions: `{prediction_symptoms['schema_invalid_prediction_count']}`",
+        f"- Missing `confirmation_required`: `{prediction_symptoms.get('missing_confirmation_required_count', 0)}`",
         "",
         "## Split And Training Coverage",
         "",
@@ -885,6 +886,10 @@ def write_source_diagnostics_report(
         f"`{current_prompt_constraints.get('route_domain_values_not_route_visible', False)}`",
         "- weather-to-search route example visible: "
         f"`{current_prompt_constraints.get('weather_to_search_route_example_visible', False)}`",
+        "- confirmation_required boolean visible: "
+        f"`{current_prompt_constraints.get('confirmation_required_boolean_visible', False)}`",
+        "- weather-to-search confirmation false visible: "
+        f"`{current_prompt_constraints.get('weather_to_search_confirmation_false_visible', False)}`",
         f"- slots object-not-array visible: `{current_prompt_constraints['slots_object_not_array_visible']}`",
         "",
         "## Prediction-Run Prompt Evidence",
@@ -920,7 +925,17 @@ def write_source_diagnostics_report(
         for example in prediction_symptoms["list_slots_examples"]:
             lines.append(f"- `{example['row_id']}`: {example['slots']}")
         lines.append("")
-    if not prediction_symptoms.get("path_like_route_examples") and not prediction_symptoms.get("list_slots_examples"):
+    if prediction_symptoms.get("missing_confirmation_required_examples"):
+        lines.append("### Missing Confirmation Required")
+        lines.append("")
+        for example in prediction_symptoms["missing_confirmation_required_examples"]:
+            lines.append(f"- `{example['row_id']}`: {example['prediction']}")
+        lines.append("")
+    if (
+        not prediction_symptoms.get("path_like_route_examples")
+        and not prediction_symptoms.get("list_slots_examples")
+        and not prediction_symptoms.get("missing_confirmation_required_examples")
+    ):
         lines.append("- none")
         lines.append("")
 

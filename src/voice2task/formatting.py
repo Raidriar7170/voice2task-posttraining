@@ -15,7 +15,8 @@ CONTRACT_REQUIRED_FIELD_SKELETON = (
     '"normalized_command":"<Chinese normalized command>","language":"zh-CN","contract_version":"v1"}。'
     "Required-field checklist: task_type, route, safety, confirmation_required, slots, "
     "normalized_command, language, contract_version. 每次输出都必须包含全部 8 个顶层字段；"
-    "即使字段值很简单，也不能省略 safety、normalized_command 或 contract_version。"
+    "confirmation_required 必须是 boolean；低风险公开只读搜索通常为 false。"
+    "即使字段值很简单，也不能省略 safety、confirmation_required、normalized_command 或 contract_version。"
 )
 CONTRACT_CANONICAL_ONE_SHOT = canonical_contract_json(
     BrowserTaskContract(
@@ -35,7 +36,8 @@ ROUTE_ONTOLOGY_RULES = (
     "route 是 Browser Task Contract execution channel，只能表示执行通道。"
     "route 不是 domain/topic/intent/URL/path；weather、shopping、email、media、URL host 等领域词"
     "必须放进 task_type, slots, normalized_command，不要当作 route。"
-    '天气请求示例: task_type="search", route="search_web", slots={"query":"北京 明天 天气"}。'
+    '天气请求示例: task_type="search", route="search_web", confirmation_required=false, '
+    'slots={"query":"北京 明天 天气"}。'
 )
 
 SYSTEM_PROMPT = (
@@ -88,6 +90,12 @@ def prompt_constraint_summary(prompt: str = SYSTEM_PROMPT) -> dict[str, bool]:
         and "weather、shopping、email、media" in prompt
         and "放进 task_type, slots, normalized_command" in prompt,
         "weather_to_search_route_example_visible": '天气请求示例: task_type="search", route="search_web"' in prompt
+        and 'route="weather"' not in prompt,
+        "confirmation_required_boolean_visible": "confirmation_required 必须是 boolean" in prompt
+        and "低风险公开只读搜索通常为 false" in prompt,
+        "weather_to_search_confirmation_false_visible": '天气请求示例: task_type="search", route="search_web"'
+        in prompt
+        and "confirmation_required=false" in prompt
         and 'route="weather"' not in prompt,
     }
 

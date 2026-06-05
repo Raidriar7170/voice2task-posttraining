@@ -231,10 +231,12 @@ def test_sft_training_text_exposes_route_execution_channel_ontology() -> None:
     assert "weather、shopping、email、media" in text
     assert "放进 task_type, slots, normalized_command" in text
     assert '天气请求示例: task_type="search", route="search_web"' in text
+    assert "confirmation_required=false" in text
     assert 'route="weather"' not in text
     assert summary["route_execution_channel_visible"] is True
     assert summary["route_domain_values_not_route_visible"] is True
     assert summary["weather_to_search_route_example_visible"] is True
+    assert summary["weather_to_search_confirmation_false_visible"] is True
 
 
 def test_sft_prediction_prompt_exposes_route_ontology_without_row_gold_target_or_bad_weather_route_example() -> None:
@@ -259,6 +261,7 @@ def test_sft_prediction_prompt_exposes_route_ontology_without_row_gold_target_or
     assert "route 不是 domain/topic/intent/URL/path" in prompt
     assert "weather、shopping、email、media" in prompt
     assert '天气请求示例: task_type="search", route="search_web"' in prompt
+    assert "confirmation_required=false" in prompt
     assert "gold-weather-token" not in prompt
     assert 'route="weather"' not in prompt
 
@@ -322,6 +325,8 @@ def test_system_prompt_enumerates_contract_fields_and_non_goals() -> None:
         assert field in SYSTEM_PROMPT
     for forbidden in ("不要解释", "Markdown", "GUI 动作"):
         assert forbidden in SYSTEM_PROMPT
+    assert "confirmation_required 必须是 boolean" in SYSTEM_PROMPT
+    assert "低风险公开只读搜索通常为 false" in SYSTEM_PROMPT
 
 
 def test_system_prompt_exposes_contract_value_constraints() -> None:
@@ -331,6 +336,9 @@ def test_system_prompt_exposes_contract_value_constraints() -> None:
     assert "route 必须使用上面的 enum 值" in SYSTEM_PROMPT
     assert "slots 必须是 JSON object" in SYSTEM_PROMPT
     assert "不是 array/list" in SYSTEM_PROMPT
+    summary = formatting.prompt_constraint_summary()
+    assert summary["confirmation_required_boolean_visible"] is True
+    assert summary["weather_to_search_confirmation_false_visible"] is True
 
 
 def test_dpo_formatter_keeps_same_prompt_with_chosen_and_rejected_contracts() -> None:

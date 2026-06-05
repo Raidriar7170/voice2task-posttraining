@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Autonomous Loop Closeout: Repair Confirmation Required Emission</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; background: #f6f7f9; color: #20242a; }
+    main { max-width: 980px; margin: 0 auto; padding: 32px 20px 52px; }
+    h1 { font-size: 28px; margin: 0 0 8px; }
+    h2 { font-size: 18px; margin: 28px 0 10px; }
+    p, li { line-height: 1.65; }
+    .panel, .metric { background: #fff; border: 1px solid #d8dde6; border-radius: 8px; padding: 16px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin: 14px 0 20px; }
+    .metric strong { display: block; font-size: 22px; }
+    code { background: #eceff3; padding: 1px 5px; border-radius: 4px; }
+    a { color: #1957a6; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Autonomous loop: repair confirmation_required emission</h1>
+  <section class="panel">
+    <p><strong>一句话结论：</strong>本轮已完成并归档 <code>repair-confirmation-required-emission</code>：本地 prompt/diagnostics 现在显式要求 <code>confirmation_required</code> 作为 required boolean，并能单独报告缺失该字段；没有运行 A100、没有重训、没有补字段或声称模型恢复。</p>
+  </section>
+  <div class="grid">
+    <div class="metric"><span>loop status</span><strong>completed</strong></div>
+    <div class="metric"><span>archived phases</span><strong>1</strong></div>
+    <div class="metric"><span>full pytest</span><strong>138 passed</strong></div>
+    <div class="metric"><span>OpenSpec strict</span><strong>4 passed</strong></div>
+  </div>
+
+  <h2>停止原因</h2>
+  <p>停止条件：当前 bounded local repair phase 已完成、Reviewer verdict 为 Pass、OpenSpec 已归档。下一步需要新的 A100 prediction-only train-split rerun 来产生运行证据；这是独立 OpenSpec phase，而不是继续修改本地 prompt repair。</p>
+
+  <h2>项目阶段进度</h2>
+  <ul>
+    <li>当前项目目标：first-phase speech-to-contract normalization，即把中文 spoken command 或 ASR transcript 转成 schema-valid Browser Task Contract。来源：<a href="../../CONTEXT.md">CONTEXT.md</a>、<a href="../../README.md">README.md</a> 和 OpenSpec specs。</li>
+    <li>本阶段推进：把上一轮 A100 route-ontology rerun 的剩余 strict schema failure 明确收敛到 <code>confirmation_required</code> required-field visibility 和 diagnostics。</li>
+    <li>剩余能力差距：尚未证明 private adapter 在真实 A100 prediction path 中会输出该字段；没有 dev/test 泛化、checkpoint/adapter release、production readiness、public full-corpus release 或 live-browser benchmark evidence。</li>
+    <li>下一阶段计划：新建 bounded A100 prediction-only train-split rerun phase，验证 strict schema-valid 是否从 <code>0/3</code> 改善；需要继续保持 train-split-only、no generalization claim。</li>
+  </ul>
+
+  <h2>完成的阶段</h2>
+  <ul>
+    <li>OpenSpec archive：<a href="../../openspec/changes/archive/2026-06-05-repair-confirmation-required-emission/proposal.md">2026-06-05-repair-confirmation-required-emission</a>。</li>
+    <li>阶段 Human Brief：<a href="2026-06-05-repair-confirmation-required-emission.html">2026-06-05-repair-confirmation-required-emission.html</a>。</li>
+    <li>Evidence summary：<a href="../../reports/public-sample/confirmation-required-emission-repair/repair_summary.md">reports/public-sample/confirmation-required-emission-repair/repair_summary.md</a>。</li>
+  </ul>
+
+  <h2>验证结果</h2>
+  <ul>
+    <li>TDD 红灯：formatting/source-diagnostics/evidence 测试先因缺 prompt flags、missing count 和 evidence 文件失败。</li>
+    <li>Focused tests：17 passed；evidence test：1 passed。</li>
+    <li><code>PYTHONPATH=src pytest -q</code>：138 passed before archive；138 passed after archive。</li>
+    <li><code>uv run ruff check .</code>：All checks passed；<code>uv run mypy src</code>：16 source files passed。</li>
+    <li>Public data validate：ok true，12 SFT rows，26 DPO pairs；DPO check：26 pairs checked。</li>
+    <li>Leak scan：active-phase scan and post-archive scan both ok true，0 findings。</li>
+    <li><code>git diff --check</code>：passed after EOF cleanup；<code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：4 passed，0 failed after archive。</li>
+  </ul>
+
+  <h2>Review 和集成</h2>
+  <ul>
+    <li>内部 Reviewer verdict：Pass；Must Fix、Should Fix、Nice to Have 均为 None；Re-plan Needed = No。</li>
+    <li>External Pro review：未运行。本阶段为窄本地修复，已由 TDD、Reviewer、full validation 和 leak scan 覆盖。</li>
+    <li>Auto integration：报告生成时尚未产生最终 commit hash；本线程最终回复会记录实际 commit hash、目标 branch 和 push 状态。</li>
+  </ul>
+
+  <h2>不要夸大的结论</h2>
+  <ul>
+    <li>这不是 A100 运行结果，也不是模型恢复证明。</li>
+    <li>这不是 schema repair：缺失 <code>confirmation_required</code> 的预测仍然无效。</li>
+    <li>这不是 dev/test 泛化、checkpoint release、adapter release、production readiness、public full-corpus release 或 live-browser benchmark improvement。</li>
+  </ul>
+</main>
+</body>
+</html>

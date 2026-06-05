@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Repair Confirmation Required Emission Human Brief</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; color: #20242a; background: #f6f7f9; }
+    main { max-width: 920px; margin: 0 auto; padding: 32px 20px 48px; }
+    h1 { font-size: 28px; margin: 0 0 8px; }
+    h2 { font-size: 18px; margin: 28px 0 10px; }
+    p, li { line-height: 1.65; }
+    .status { background: #ffffff; border: 1px solid #d8dde6; border-radius: 8px; padding: 16px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-top: 14px; }
+    .metric { background: #ffffff; border: 1px solid #d8dde6; border-radius: 8px; padding: 14px; }
+    .metric strong { display: block; font-size: 22px; }
+    code { background: #eceff3; padding: 1px 5px; border-radius: 4px; }
+    a { color: #1957a6; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Repair confirmation_required emission</h1>
+  <section class="status">
+    <p><strong>一句话结论：</strong>本地修复已让 <code>confirmation_required</code> 在共享 SFT/prediction prompt 中显式成为 required boolean，并让低风险 weather/search 示例写出 <code>confirmation_required=false</code>；同时 source diagnostics 能单独报告缺失该字段，但不会补字段或把无效输出算作 schema-valid。</p>
+  </section>
+  <div class="grid">
+    <div class="metric"><span>当前状态</span><strong>applying</strong></div>
+    <div class="metric"><span>A100 execution</span><strong>false</strong></div>
+    <div class="metric"><span>full pytest</span><strong>138 passed</strong></div>
+    <div class="metric"><span>OpenSpec strict</span><strong>5 passed</strong></div>
+  </div>
+
+  <h2>本阶段变化</h2>
+  <ul>
+    <li>强化 <code>src/voice2task/formatting.py</code>：<code>confirmation_required</code> 必须是 boolean，低风险公开只读搜索通常为 <code>false</code>。</li>
+    <li>更新天气搜索示例：保留 <code>task_type=search</code>、<code>route=search_web</code>，并显式加入 <code>confirmation_required=false</code>。</li>
+    <li>更新 <code>src/voice2task/evaluation.py</code> 和 <code>src/voice2task/reports.py</code>：source diagnostics 现在能报告 missing <code>confirmation_required</code> count/examples。</li>
+    <li>生成本地 evidence summary：<a href="../../reports/public-sample/confirmation-required-emission-repair/repair_summary.md">confirmation-required repair summary</a>。</li>
+  </ul>
+
+  <h2>项目阶段进度</h2>
+  <ul>
+    <li>当前目标：first-phase speech-to-contract normalization，来源为 <a href="../../CONTEXT.md">CONTEXT.md</a>、<a href="../../README.md">README.md</a> 和 OpenSpec specs。</li>
+    <li>本阶段推进：把上一轮 A100 route-ontology rerun 暴露出的剩余 strict schema failure 收窄到一个本地可测的 prompt/evidence 修复点。</li>
+    <li>剩余差距：尚未证明 private adapter 会在 A100 train-split prediction 中实际补出 <code>confirmation_required</code>；仍没有 dev/test 泛化、模型恢复、release 或 live-browser benchmark 证据。</li>
+    <li>下一阶段计划：归档并集成本地修复后，单独开一个 A100 prediction-only train-split rerun 阶段，验证 strict schema-valid 是否从 <code>0/3</code> 改善。</li>
+  </ul>
+
+  <h2>关键文件</h2>
+  <ul>
+    <li><a href="../../openspec/changes/repair-confirmation-required-emission/proposal.md">OpenSpec proposal</a></li>
+    <li><a href="../../reports/public-sample/confirmation-required-emission-repair/repair_summary.json">repair summary JSON</a></li>
+    <li><a href="../../reports/public-sample/a100-route-ontology-train-split-rerun/route_ontology_diagnosis.md">prior route ontology diagnosis</a></li>
+    <li><a href="../../tests/test_formatting_training.py">formatting tests</a> 和 <a href="../../tests/test_evaluator_reports.py">diagnostic tests</a></li>
+  </ul>
+
+  <h2>验证记录</h2>
+  <ul>
+    <li>TDD 红灯：新增 formatting/source-diagnostics/evidence 测试先因缺少 prompt flags、missing count 和 evidence 文件失败。</li>
+    <li>Focused tests：<code>17 passed</code>；evidence test：<code>1 passed</code>。</li>
+    <li><code>PYTHONPATH=src pytest -q</code>：138 passed。</li>
+    <li><code>uv run ruff check .</code>：All checks passed；<code>uv run mypy src</code>：16 source files passed。</li>
+    <li>Public data validate：ok true，12 SFT rows，26 DPO pairs；DPO check：26 pairs checked。</li>
+    <li><code>git diff --check</code>：passed；<code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：5 passed，0 failed。</li>
+  </ul>
+
+  <h2>剩余风险</h2>
+  <p>这不是 A100 结果，不是模型恢复证明，也不是 schema repair。它只说明本地 prompt 和 diagnostics 已经能清楚表达并观测 <code>confirmation_required</code> 缺失。后续若要判断 private adapter 是否真的改善，需要单独 rerun，并继续保持 train-split-only、no generalization claim 的边界。</p>
+</main>
+</body>
+</html>

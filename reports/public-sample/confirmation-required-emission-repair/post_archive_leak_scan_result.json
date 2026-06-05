@@ -1,0 +1,13 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-05T04:26:02.828080+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "reports/public-sample/confirmation-required-emission-repair",
+    "docs/human-briefs/2026-06-05-repair-confirmation-required-emission.html",
+    "openspec/changes/archive/2026-06-05-repair-confirmation-required-emission",
+    "openspec/specs/supervised-contract-tuning/spec.md",
+    "openspec/specs/contract-evaluation/spec.md"
+  ]
+}

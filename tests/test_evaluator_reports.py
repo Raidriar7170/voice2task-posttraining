@@ -476,7 +476,6 @@ def test_source_diagnostics_report_targets_prompt_split_prediction_and_decoding_
             "task_type": "query_weather",
             "route": "/weather/query",
             "safety": {"allow": True, "reason": ""},
-            "confirmation_required": False,
             "slots": ["city"],
             "normalized_command": "",
             "language": "zh-CN",
@@ -498,6 +497,7 @@ def test_source_diagnostics_report_targets_prompt_split_prediction_and_decoding_
     assert diagnostics["prediction_symptoms"]["path_like_route_count"] == 1
     assert diagnostics["prediction_symptoms"]["list_slots_count"] == 1
     assert diagnostics["prediction_symptoms"]["schema_invalid_prediction_count"] == 1
+    assert diagnostics["prediction_symptoms"]["missing_confirmation_required_count"] == 1
     assert diagnostics["prediction_symptoms"]["invalid_predictions_remain_invalid"] is True
     assert diagnostics["split_coverage"]["configured_training_split"] == "train"
     assert diagnostics["split_coverage"]["configured_prediction_split"] == "all"
@@ -511,6 +511,8 @@ def test_source_diagnostics_report_targets_prompt_split_prediction_and_decoding_
     assert diagnostics["current_prompt_constraints"]["route_execution_channel_visible"] is True
     assert diagnostics["current_prompt_constraints"]["route_domain_values_not_route_visible"] is True
     assert diagnostics["current_prompt_constraints"]["weather_to_search_route_example_visible"] is True
+    assert diagnostics["current_prompt_constraints"]["confirmation_required_boolean_visible"] is True
+    assert diagnostics["current_prompt_constraints"]["weather_to_search_confirmation_false_visible"] is True
     assert diagnostics["current_prompt_constraints"]["slots_object_not_array_visible"] is True
     assert diagnostics["prediction_run_prompt_evidence"]["prompt_constraints_present"] is False
     assert "prompt_constraints_at_prediction_time" in diagnostics["prediction_run_prompt_evidence"]["evidence_gaps"]
@@ -539,6 +541,9 @@ def test_source_diagnostics_report_targets_prompt_split_prediction_and_decoding_
     assert "route execution-channel ontology visible: `True`" in markdown
     assert "route domain/topic values excluded from route visible: `True`" in markdown
     assert "weather-to-search route example visible: `True`" in markdown
+    assert "confirmation_required boolean visible: `True`" in markdown
+    assert "weather-to-search confirmation false visible: `True`" in markdown
+    assert "Missing `confirmation_required`: `1`" in markdown
     assert "Current Prompt Constraints" in markdown
     assert "Prediction-Run Prompt Evidence" in markdown
     assert "prompt_constraints_at_prediction_time" in markdown

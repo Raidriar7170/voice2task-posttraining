@@ -395,6 +395,7 @@ def _target_shape_summary(rows: list[SFTDatasetRow]) -> dict[str, Any]:
 def _prediction_symptom_summary(rows: list[SFTDatasetRow], predictions: dict[str, Any]) -> dict[str, Any]:
     path_like_examples: list[dict[str, str]] = []
     list_slots_examples: list[dict[str, str]] = []
+    missing_confirmation_required_examples: list[dict[str, str]] = []
     schema_invalid_prediction_count = 0
     missing_prediction_count = 0
     for row in rows:
@@ -407,6 +408,13 @@ def _prediction_symptom_summary(rows: list[SFTDatasetRow], predictions: dict[str
             schema_invalid_prediction_count += 1
         if not isinstance(parsed_prediction, dict):
             continue
+        if "confirmation_required" not in parsed_prediction:
+            missing_confirmation_required_examples.append(
+                {
+                    "row_id": _sanitize_id(row.id),
+                    "prediction": _observed_value_summary(parsed_prediction),
+                }
+            )
         route = parsed_prediction.get("route")
         if _is_path_like_route(route):
             path_like_examples.append(
@@ -429,9 +437,11 @@ def _prediction_symptom_summary(rows: list[SFTDatasetRow], predictions: dict[str
         "path_like_route_count": len(path_like_examples),
         "list_slots_count": len(list_slots_examples),
         "schema_invalid_prediction_count": schema_invalid_prediction_count,
+        "missing_confirmation_required_count": len(missing_confirmation_required_examples),
         "invalid_predictions_remain_invalid": True,
         "path_like_route_examples": _limited_examples(path_like_examples),
         "list_slots_examples": _limited_examples(list_slots_examples),
+        "missing_confirmation_required_examples": _limited_examples(missing_confirmation_required_examples),
     }
 
 
@@ -471,6 +481,8 @@ _PROMPT_CONSTRAINT_FIELDS = (
     "route_execution_channel_visible",
     "route_domain_values_not_route_visible",
     "weather_to_search_route_example_visible",
+    "confirmation_required_boolean_visible",
+    "weather_to_search_confirmation_false_visible",
     "slots_object_not_array_visible",
 )
 

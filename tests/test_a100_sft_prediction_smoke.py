@@ -159,6 +159,37 @@ def test_route_task_ontology_output_repair_evidence_is_public_safe_and_bounded()
     assert "/Users/" not in serialized
 
 
+def test_confirmation_required_emission_repair_evidence_is_public_safe_and_bounded() -> None:
+    evidence_dir = Path("reports/public-sample/confirmation-required-emission-repair")
+    summary = json.loads((evidence_dir / "repair_summary.json").read_text(encoding="utf-8"))
+    markdown = (evidence_dir / "repair_summary.md").read_text(encoding="utf-8")
+    leak_scan = json.loads((evidence_dir / "leak_scan_result.json").read_text(encoding="utf-8"))
+    serialized = json.dumps(summary, ensure_ascii=False, sort_keys=True) + markdown
+
+    assert summary["evidence_kind"] == "confirmation_required_emission_repair_local"
+    assert summary["a100_execution"] is False
+    assert summary["private_prediction_run"] is False
+    assert summary["training_run"] is False
+    assert summary["schema_repair_applied"] is False
+    assert summary["output_coercion_applied"] is False
+    assert summary["source_prior_phase"] == "reports/public-sample/a100-route-ontology-train-split-rerun"
+    assert summary["prior_failure_context"]["missing_confirmation_required_count"] == 3
+    assert summary["prompt_constraints"]["confirmation_required_boolean_visible"] is True
+    assert summary["prompt_constraints"]["weather_to_search_confirmation_false_visible"] is True
+    assert summary["diagnostic_changes"]["missing_confirmation_required_count_visible"] is True
+    assert summary["claims"]["a100_model_recovery_claim"] is False
+    assert summary["claims"]["held_out_generalization_claim"] is False
+    assert summary["claims"]["production_readiness_claim"] is False
+    assert summary["claims"]["live_browser_benchmark_claim"] is False
+    assert leak_scan["ok"] is True
+    assert leak_scan["findings"] == []
+    assert "did not train" in serialized
+    assert "did not run private prediction or A100 execution" in serialized
+    assert "does not fill missing confirmation_required" in serialized
+    assert "/mnt/data/" not in serialized
+    assert "/Users/" not in serialized
+
+
 def test_a100_route_ontology_train_split_rerun_evidence_is_public_safe_and_bounded() -> None:
     evidence_dir = Path("reports/public-sample/a100-route-ontology-train-split-rerun")
     required_files = {
