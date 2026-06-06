@@ -1,0 +1,155 @@
+{
+  "artifact_policy": {
+    "checkpoints_or_adapters_copied_to_git": false,
+    "host_details_copied_to_git": false,
+    "private_configs_copied_to_git": false,
+    "raw_logs_copied_to_git": false,
+    "remote_caches_copied_to_git": false,
+    "remote_paths_copied_to_git": false
+  },
+  "artifacts": {
+    "diagnosis": "reports/public-sample/a100-retry-generation-trace-rerun/retry_trace_diagnosis.json",
+    "diagnosis_markdown": "reports/public-sample/a100-retry-generation-trace-rerun/retry_trace_diagnosis.md",
+    "generation_trace": "reports/public-sample/a100-retry-generation-trace-rerun/generation_trace.jsonl",
+    "metrics_json": "reports/public-sample/a100-retry-generation-trace-rerun/metrics.json",
+    "metrics_markdown": "reports/public-sample/a100-retry-generation-trace-rerun/metrics.md",
+    "prediction_metadata": "reports/public-sample/a100-retry-generation-trace-rerun/prediction_metadata.json",
+    "predictions": "reports/public-sample/a100-retry-generation-trace-rerun/predictions.jsonl",
+    "prompt_snapshot": "reports/public-sample/a100-retry-generation-trace-rerun/prompt_snapshot.json",
+    "raw_decoded_summary": "reports/public-sample/a100-retry-generation-trace-rerun/raw_decoded_summary.jsonl",
+    "schema_guard_summary": "reports/public-sample/a100-retry-generation-trace-rerun/schema_guard_summary.json",
+    "schema_guard_summary_markdown": "reports/public-sample/a100-retry-generation-trace-rerun/schema_guard_summary.md",
+    "train_split_gold": "reports/public-sample/a100-retry-generation-trace-rerun/train_split_gold.jsonl"
+  },
+  "change_name": "run-a100-retry-generation-trace-rerun",
+  "claims": {
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "evaluator_metric_change_performed": false,
+    "generation_trace_sidecar_written": true,
+    "held_out_generalization_claim": false,
+    "live_browser_benchmark_claim": false,
+    "model_quality_improvement_claim": false,
+    "model_recovery_claim": false,
+    "parser_relaxation_performed": false,
+    "prediction_repair_or_rescore_performed": false,
+    "production_readiness_claim": false,
+    "raw_json_field_observation_not_metric_relaxation": true,
+    "schema_repair_or_coercion_applied": false,
+    "schema_trace_instrumentation_observed": true,
+    "semantic_equivalence_scoring_performed": false,
+    "slot_normalization_performed": false,
+    "strict_final_contract_metrics": true,
+    "train_split_only": true,
+    "training_performed": false
+  },
+  "evidence_kind": "a100_retry_generation_trace_train_split_rerun",
+  "generated_at": "2026-06-06T06:54:26.095232+00:00",
+  "observed_result": {
+    "family_counts": {
+      "missing_task_type": 3,
+      "raw_json_object_with_missing_task_type": 3,
+      "retry_forbidden_preface_visible": 3,
+      "retry_json_fragment_object": 3,
+      "retry_prose_markdown_wrapper_after_trace_rerun": 3,
+      "retry_task_type_search_visible_but_wrapped": 3,
+      "retry_trailing_analysis_visible": 3,
+      "schema_invalid_retry_wrapper_persisted_with_retry_trace": 3
+    },
+    "field_match_counts_from_raw_json_observation_only": {
+      "confirmation_required": 3,
+      "normalized_command": 3,
+      "route": 3,
+      "safety.reason": 3,
+      "slots": 3
+    },
+    "model_recovery_observed": false,
+    "prediction_count": 3,
+    "prediction_source_kind": "private_a100_adapter",
+    "prediction_split": "train",
+    "prior_strict_final_contract_exact_match": 0.0,
+    "prior_strict_final_json_valid_rate": 0.0,
+    "raw_json_object_count": 3,
+    "raw_missing_task_type_count": 3,
+    "retry_json_fragment_object_count": 3,
+    "retry_prose_markdown_wrapper_count": 3,
+    "retry_stop_boundary_claim_proven": false,
+    "retry_stop_boundary_observation": "retry_attempt_trace_rows_show_no_eos_observed_for_3_of_3_retry_attempts",
+    "retry_task_type_search_visible_count": 3,
+    "retry_trace_instrumentation_observed": true,
+    "schema_recovery_observed": false,
+    "strict_final_contract_exact_match": 0.0,
+    "strict_final_json_valid_rate": 0.0,
+    "strict_metrics_preserved": true,
+    "trace_summary": {
+      "attempt_counts": {
+        "raw_attempt": 3,
+        "retry_attempt": 3
+      },
+      "eos_seen_counts": {
+        "raw_attempt": {
+          "True": 3
+        },
+        "retry_attempt": {
+          "False": 3
+        }
+      },
+      "finish_state_counts": {
+        "raw_attempt": {
+          "eos_observed": 3
+        },
+        "retry_attempt": {
+          "no_eos_observed": 3
+        }
+      },
+      "generated_token_counts": {
+        "raw_attempt": {
+          "count": 3,
+          "max": 54,
+          "min": 52,
+          "values": [
+            54,
+            54,
+            52
+          ]
+        },
+        "retry_attempt": {
+          "count": 3,
+          "max": 165,
+          "min": 146,
+          "values": [
+            165,
+            155,
+            146
+          ]
+        }
+      },
+      "prior_trace_row_count": 3,
+      "raw_attempt_eos_observed_count": 3,
+      "retry_attempt_no_eos_observed_count": 3,
+      "retry_trace_instrumentation_observed": true,
+      "row_count_with_raw_attempt_trace": 3,
+      "row_count_with_retry_attempt_trace": 3,
+      "trace_row_count": 6
+    },
+    "validated_output_schema_valid_count": 0
+  },
+  "prediction_count": 3,
+  "prediction_source_kind": "private_a100_adapter",
+  "prediction_split": "train",
+  "prior_context": {
+    "baseline_evidence": "reports/public-sample/a100-schema-retry-wrapper-boundary-rerun",
+    "local_retry_generation_trace_instrumentation": "reports/public-sample/retry-generation-trace-instrumentation",
+    "prior_contract_exact_match": 0.0,
+    "prior_generation_trace_rows": 3,
+    "prior_json_valid_rate": 0.0,
+    "prior_retry_attempt_trace_rows": 0,
+    "prior_retry_attempted_count": 3
+  },
+  "training_row_ids": [
+    "seed-search-weather",
+    "seed-search-weather-aug-1",
+    "seed-search-weather-aug-2"
+  ],
+  "training_rows_used": 3
+}

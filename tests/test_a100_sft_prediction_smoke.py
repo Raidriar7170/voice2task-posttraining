@@ -922,6 +922,11 @@ def test_a100_public_readonly_search_policy_train_split_rerun_evidence_is_public
             json.dumps(metrics, ensure_ascii=False, sort_keys=True),
             json.dumps(schema_guard, ensure_ascii=False, sort_keys=True),
             json.dumps(diagnosis, ensure_ascii=False, sort_keys=True),
+            json.dumps(prompt_snapshot, ensure_ascii=False, sort_keys=True),
+            json.dumps(prediction_rows, ensure_ascii=False, sort_keys=True),
+            json.dumps(raw_rows, ensure_ascii=False, sort_keys=True),
+            json.dumps(generation_trace_rows, ensure_ascii=False, sort_keys=True),
+            json.dumps(train_gold_rows, ensure_ascii=False, sort_keys=True),
             json.dumps(leak_scan, ensure_ascii=False, sort_keys=True),
             json.dumps(phase_leak_scan, ensure_ascii=False, sort_keys=True),
             json.dumps(post_archive_leak_scan, ensure_ascii=False, sort_keys=True),
@@ -1662,6 +1667,252 @@ def test_a100_schema_retry_wrapper_boundary_rerun_evidence_is_public_safe_and_bo
     assert "/Users/" not in serialized
     assert "volcano" not in serialized
     assert "private-overrides" not in serialized
+    assert scan_paths([evidence_dir, human_brief_path, *existing_change_dirs]).ok is True
+
+
+def test_a100_retry_generation_trace_rerun_evidence_is_public_safe_and_bounded() -> None:
+    prior_dir = Path("reports/public-sample/a100-schema-retry-wrapper-boundary-rerun")
+    local_instrumentation_dir = Path("reports/public-sample/retry-generation-trace-instrumentation")
+    evidence_dir = Path("reports/public-sample/a100-retry-generation-trace-rerun")
+    human_brief_path = Path("docs/human-briefs/2026-06-06-run-a100-retry-generation-trace-rerun.html")
+    archive_dir = Path("openspec/changes/archive/2026-06-06-run-a100-retry-generation-trace-rerun")
+    change_dirs = [
+        Path("openspec/changes/run-a100-retry-generation-trace-rerun"),
+        archive_dir,
+    ]
+    required_files = {
+        "predictions.jsonl",
+        "prediction_metadata.json",
+        "prompt_snapshot.json",
+        "raw_decoded_summary.jsonl",
+        "generation_trace.jsonl",
+        "train_split_gold.jsonl",
+        "metrics.json",
+        "metrics.md",
+        "schema_guard_summary.json",
+        "schema_guard_summary.md",
+        "retry_trace_diagnosis.json",
+        "retry_trace_diagnosis.md",
+        "manifest.json",
+        "report.md",
+        "leak_scan_result.json",
+        "phase_validation_leak_scan_result.json",
+    }
+    expected_row_ids = ["seed-search-weather", "seed-search-weather-aug-1", "seed-search-weather-aug-2"]
+
+    assert evidence_dir.exists()
+    assert required_files <= {path.name for path in evidence_dir.iterdir()}
+    if archive_dir.exists():
+        assert {"post_archive_leak_scan_result.json", "final_leak_scan_result.json"} <= {
+            path.name for path in evidence_dir.iterdir()
+        }
+    assert human_brief_path.exists()
+    existing_change_dirs = [path for path in change_dirs if path.exists()]
+    assert existing_change_dirs
+
+    metadata = json.loads((evidence_dir / "prediction_metadata.json").read_text(encoding="utf-8"))
+    manifest = json.loads((evidence_dir / "manifest.json").read_text(encoding="utf-8"))
+    metrics = json.loads((evidence_dir / "metrics.json").read_text(encoding="utf-8"))
+    schema_guard = json.loads((evidence_dir / "schema_guard_summary.json").read_text(encoding="utf-8"))
+    diagnosis = json.loads((evidence_dir / "retry_trace_diagnosis.json").read_text(encoding="utf-8"))
+    prompt_snapshot = json.loads((evidence_dir / "prompt_snapshot.json").read_text(encoding="utf-8"))
+    prediction_rows = [json.loads(line) for line in (evidence_dir / "predictions.jsonl").read_text().splitlines()]
+    raw_rows = [json.loads(line) for line in (evidence_dir / "raw_decoded_summary.jsonl").read_text().splitlines()]
+    generation_trace_rows = [
+        json.loads(line) for line in (evidence_dir / "generation_trace.jsonl").read_text().splitlines()
+    ]
+    train_gold_rows = [json.loads(line) for line in (evidence_dir / "train_split_gold.jsonl").read_text().splitlines()]
+    leak_scan = json.loads((evidence_dir / "leak_scan_result.json").read_text(encoding="utf-8"))
+    phase_leak_scan = json.loads((evidence_dir / "phase_validation_leak_scan_result.json").read_text(encoding="utf-8"))
+    post_archive_leak_scan = (
+        json.loads((evidence_dir / "post_archive_leak_scan_result.json").read_text(encoding="utf-8"))
+        if (evidence_dir / "post_archive_leak_scan_result.json").exists()
+        else {"ok": True, "findings": []}
+    )
+    final_leak_scan = (
+        json.loads((evidence_dir / "final_leak_scan_result.json").read_text(encoding="utf-8"))
+        if (evidence_dir / "final_leak_scan_result.json").exists()
+        else {"ok": True, "findings": []}
+    )
+    report = (evidence_dir / "report.md").read_text(encoding="utf-8")
+    metrics_markdown = (evidence_dir / "metrics.md").read_text(encoding="utf-8")
+    diagnosis_markdown = (evidence_dir / "retry_trace_diagnosis.md").read_text(encoding="utf-8")
+    human_brief = human_brief_path.read_text(encoding="utf-8")
+    prior_manifest = json.loads((prior_dir / "manifest.json").read_text(encoding="utf-8"))
+    local_instrumentation_manifest = json.loads(
+        (local_instrumentation_dir / "manifest.json").read_text(encoding="utf-8")
+    )
+    serialized = "\n".join(
+        [
+            json.dumps(metadata, ensure_ascii=False, sort_keys=True),
+            json.dumps(manifest, ensure_ascii=False, sort_keys=True),
+            json.dumps(metrics, ensure_ascii=False, sort_keys=True),
+            json.dumps(schema_guard, ensure_ascii=False, sort_keys=True),
+            json.dumps(diagnosis, ensure_ascii=False, sort_keys=True),
+            json.dumps(leak_scan, ensure_ascii=False, sort_keys=True),
+            json.dumps(phase_leak_scan, ensure_ascii=False, sort_keys=True),
+            json.dumps(post_archive_leak_scan, ensure_ascii=False, sort_keys=True),
+            json.dumps(final_leak_scan, ensure_ascii=False, sort_keys=True),
+            report,
+            metrics_markdown,
+            diagnosis_markdown,
+            human_brief,
+        ]
+    )
+
+    assert metadata["prediction_status"] == "private_adapter_predictions_written"
+    assert metadata["prediction_source_kind"] == "private_a100_adapter"
+    assert metadata["prediction_count"] == 3
+    assert metadata["prediction_split"] == "train"
+    assert metadata["overfit_diagnostic"] is True
+    assert metadata["generalization_claim"] is False
+    assert metadata["decoding_policy"]["schema_retry_enabled"] is True
+    assert metadata["decoding_policy"]["schema_repair_applied"] is False
+    assert metadata["decoding_policy"]["generation_trace_sidecar_written"] is True
+    assert metadata["command_summary"]["config"] == "<private_prediction_config>"
+    assert metadata["command_summary"]["output"] == "<a100_prediction_output>"
+    assert prompt_snapshot["claims"]["contains_gold_contract"] is False
+
+    assert manifest["evidence_kind"] == "a100_retry_generation_trace_train_split_rerun"
+    assert manifest["prediction_source_kind"] == "private_a100_adapter"
+    assert manifest["prediction_split"] == "train"
+    assert manifest["prediction_count"] == 3
+    assert manifest["training_rows_used"] == 3
+    assert manifest["training_row_ids"] == expected_row_ids
+    assert manifest["prior_context"]["baseline_evidence"] == prior_dir.as_posix()
+    assert manifest["prior_context"]["local_retry_generation_trace_instrumentation"] == (
+        local_instrumentation_dir.as_posix()
+    )
+    assert manifest["prior_context"]["prior_generation_trace_rows"] == 3
+    assert manifest["prior_context"]["prior_retry_attempt_trace_rows"] == 0
+    assert prior_manifest["observed_result"]["strict_final_json_valid_rate"] == 0.0
+    assert local_instrumentation_manifest["claims"]["a100_execution_performed"] is False
+    assert manifest["artifact_policy"]["private_configs_copied_to_git"] is False
+    assert manifest["artifact_policy"]["checkpoints_or_adapters_copied_to_git"] is False
+    assert manifest["artifact_policy"]["raw_logs_copied_to_git"] is False
+    assert manifest["artifact_policy"]["remote_paths_copied_to_git"] is False
+    assert manifest["artifact_policy"]["host_details_copied_to_git"] is False
+    assert manifest["claims"]["held_out_generalization_claim"] is False
+    assert manifest["claims"]["model_recovery_claim"] is False
+    assert manifest["claims"]["model_quality_improvement_claim"] is False
+    assert manifest["claims"]["parser_relaxation_performed"] is False
+    assert manifest["claims"]["prediction_repair_or_rescore_performed"] is False
+    assert manifest["claims"]["semantic_equivalence_scoring_performed"] is False
+    assert manifest["claims"]["slot_normalization_performed"] is False
+    assert manifest["claims"]["evaluator_metric_change_performed"] is False
+
+    assert manifest["observed_result"]["strict_final_json_valid_rate"] == 0.0
+    assert manifest["observed_result"]["strict_final_contract_exact_match"] == 0.0
+    assert manifest["observed_result"]["validated_output_schema_valid_count"] == 0
+    assert manifest["observed_result"]["raw_json_object_count"] == 3
+    assert manifest["observed_result"]["raw_missing_task_type_count"] == 3
+    assert manifest["observed_result"]["retry_json_fragment_object_count"] == 3
+    assert manifest["observed_result"]["retry_prose_markdown_wrapper_count"] == 3
+    assert manifest["observed_result"]["retry_trace_instrumentation_observed"] is True
+    assert manifest["observed_result"]["schema_recovery_observed"] is False
+    assert manifest["observed_result"]["model_recovery_observed"] is False
+    assert manifest["observed_result"]["retry_stop_boundary_claim_proven"] is False
+
+    assert [row["id"] for row in prediction_rows] == expected_row_ids
+    assert [row["id"] for row in raw_rows] == expected_row_ids
+    assert [row["id"] for row in train_gold_rows] == expected_row_ids
+    assert [row["id"] for row in prompt_snapshot["rows"]] == expected_row_ids
+    assert [row["id"] for row in generation_trace_rows] == [
+        "seed-search-weather",
+        "seed-search-weather",
+        "seed-search-weather-aug-1",
+        "seed-search-weather-aug-1",
+        "seed-search-weather-aug-2",
+        "seed-search-weather-aug-2",
+    ]
+    assert [row["attempt"] for row in generation_trace_rows] == [
+        "raw_attempt",
+        "retry_attempt",
+        "raw_attempt",
+        "retry_attempt",
+        "raw_attempt",
+        "retry_attempt",
+    ]
+    assert all(row["prediction_source_kind"] == "private_a100_adapter" for row in generation_trace_rows)
+
+    raw_trace_rows = [row for row in generation_trace_rows if row["attempt"] == "raw_attempt"]
+    retry_trace_rows = [row for row in generation_trace_rows if row["attempt"] == "retry_attempt"]
+    assert len(raw_trace_rows) == 3
+    assert len(retry_trace_rows) == 3
+    assert all(row["finish_state"] == "eos_observed" for row in raw_trace_rows)
+    assert all(row["eos_token_seen"] is True for row in raw_trace_rows)
+    assert all(row["finish_state"] == "no_eos_observed" for row in retry_trace_rows)
+    assert all(row["eos_token_seen"] is False for row in retry_trace_rows)
+    assert all(row["generated_token_count"] < row["max_new_tokens"] for row in generation_trace_rows)
+
+    assert metrics["metrics"]["json_valid_rate"] == 0.0
+    assert metrics["metrics"]["contract_exact_match"] == 0.0
+    assert metrics["failure_slices"]["schema"]["count"] == 3
+
+    assert schema_guard["evidence_kind"] == "a100_retry_generation_trace_schema_guard_summary"
+    assert schema_guard["summary"]["prediction_count"] == 3
+    assert schema_guard["summary"]["raw_attempt_schema_valid_count"] == 0
+    assert schema_guard["summary"]["retry_attempted_count"] == 3
+    assert schema_guard["summary"]["retry_attempt_schema_valid_count"] == 0
+    assert schema_guard["summary"]["validated_output_schema_valid_count"] == 0
+    assert schema_guard["summary"]["raw_json_object_count"] == 3
+    assert schema_guard["summary"]["raw_missing_task_type_count"] == 3
+    assert schema_guard["summary"]["retry_attempt_trace_row_count"] == 3
+    assert schema_guard["parse_status_counts"]["raw_attempt"] == {"json_object": 3}
+    assert schema_guard["parse_status_counts"]["retry_attempt"] == {"json_fragment_object": 3}
+    assert schema_guard["trace_summary"]["trace_row_count"] == 6
+    assert schema_guard["trace_summary"]["prior_trace_row_count"] == 3
+    assert schema_guard["trace_summary"]["attempt_counts"] == {"raw_attempt": 3, "retry_attempt": 3}
+    assert schema_guard["trace_summary"]["finish_state_counts"]["raw_attempt"] == {"eos_observed": 3}
+    assert schema_guard["trace_summary"]["finish_state_counts"]["retry_attempt"] == {"no_eos_observed": 3}
+    assert schema_guard["trace_summary"]["retry_trace_instrumentation_observed"] is True
+
+    assert diagnosis["diagnostic_kind"] == "retry_generation_trace_train_split_diagnosis"
+    assert diagnosis["summary"]["strict_final_json_valid_rate"] == 0.0
+    assert diagnosis["summary"]["strict_final_contract_exact_match"] == 0.0
+    assert diagnosis["summary"]["retry_trace_instrumentation_observed"] is True
+    assert diagnosis["summary"]["trace_summary"]["retry_attempt_no_eos_observed_count"] == 3
+    assert diagnosis["summary"]["trace_summary"]["raw_attempt_eos_observed_count"] == 3
+    assert diagnosis["summary"]["schema_recovery_observed"] is False
+    assert diagnosis["summary"]["model_recovery_observed"] is False
+    assert diagnosis["summary"]["retry_stop_boundary_claim_proven"] is False
+    assert diagnosis["summary"]["family_counts"]["schema_invalid_retry_wrapper_persisted_with_retry_trace"] == 3
+    assert diagnosis["evidence_gaps"]["retry_stop_boundary_claim_unproven"] is True
+    assert all(row["trace"]["raw_attempt_max_new_tokens"] == 256 for row in diagnosis["rows"])
+    assert all(row["trace"]["retry_attempt_max_new_tokens"] == 256 for row in diagnosis["rows"])
+    assert all(row["trace"]["shared_max_new_tokens"] == 256 for row in diagnosis["rows"])
+    assert all(row["trace"]["retry_stop_boundary_claim_proven"] is False for row in diagnosis["rows"])
+    assert diagnosis["claims"]["generation_trace_sidecar_written"] is True
+    assert diagnosis["claims"]["schema_trace_instrumentation_observed"] is True
+    assert diagnosis["claims"]["model_recovery_claim"] is False
+    assert diagnosis["claims"]["model_quality_improvement_claim"] is False
+
+    assert leak_scan["ok"] is True
+    assert leak_scan["findings"] == []
+    assert phase_leak_scan["ok"] is True
+    assert phase_leak_scan["findings"] == []
+    assert post_archive_leak_scan["ok"] is True
+    assert post_archive_leak_scan["findings"] == []
+    assert final_leak_scan["ok"] is True
+    assert final_leak_scan["findings"] == []
+    assert "retry-attempt rows" in report
+    assert "not model recovery" in report
+    assert "decoding behavior change" in report
+    assert "retry prompt change" in report
+    assert "public full-corpus release" in report
+    assert "Retry Trace Boundary" in metrics_markdown
+    assert "retry attempts now have trace rows" in diagnosis_markdown
+    assert "retry stop-boundary claim remains unproven" in diagnosis_markdown
+    assert "retry attempt trace 已补齐" in human_brief
+    assert "不是模型恢复" in human_brief
+    assert "decoding behavior change" in human_brief
+    assert "retry prompt change" in human_brief
+    assert "public full-corpus release" in human_brief
+    assert "/mnt/data/" not in serialized
+    assert "/Users/" not in serialized
+    assert "volcano" not in serialized
+    assert "private-overrides" not in serialized
+    assert "private-configs" not in serialized
     assert scan_paths([evidence_dir, human_brief_path, *existing_change_dirs]).ok is True
 
 
