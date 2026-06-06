@@ -1,0 +1,13 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-06T04:22:11.384668+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "reports/public-sample/schema-retry-wrapper-boundary-policy",
+    "docs/human-briefs/2026-06-06-repair-schema-retry-wrapper-boundary.html",
+    "openspec/changes/archive/2026-06-06-repair-schema-retry-wrapper-boundary",
+    "openspec/specs/contract-evaluation/spec.md",
+    "openspec/specs/supervised-contract-tuning/spec.md"
+  ]
+}

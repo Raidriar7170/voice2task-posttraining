@@ -601,6 +601,7 @@ The system SHALL publish public-safe train-split evidence for the public-readonl
 #### Scenario: Bound public-readonly search rerun interpretation
 - **WHEN** public documentation or Human Briefs describe the public-readonly search policy rerun
 - **THEN** they MUST state that the phase performs no training, checkpoint release, adapter release, evaluator metric change, semantic-equivalence scoring, slot normalization, prediction repair, prediction re-score, production-readiness claim, held-out generalization claim, public full-corpus release, model-quality claim, or live-browser benchmark improvement claim
+
 ### Requirement: Publish output-boundary retry-policy repair evidence
 The system SHALL publish public-safe local evidence for the public-readonly output-boundary and retry-prompt repair while preserving strict metrics and prior A100 negative evidence.
 
@@ -638,3 +639,18 @@ The system SHALL publish public-safe train-split evidence for the output-boundar
 #### Scenario: Bound output-boundary retry rerun interpretation
 - **WHEN** public documentation or Human Briefs describe the output-boundary retry-policy rerun
 - **THEN** they MUST state that the phase performs no training, checkpoint release, adapter release, evaluator metric change, semantic-equivalence scoring, slot normalization, prediction repair, prediction re-score, production-readiness claim, held-out generalization claim, public full-corpus release, model-quality claim, or live-browser benchmark improvement claim
+
+### Requirement: Publish schema retry wrapper-boundary evidence
+The system SHALL publish public-safe local evidence for schema retry wrapper-boundary hardening that connects the repair to prior A100 diagnosis without changing strict metrics or claiming model recovery.
+
+#### Scenario: Generate retry wrapper-boundary manifest
+- **WHEN** local retry-wrapper repair evidence is prepared
+- **THEN** the manifest MUST record the source A100 diagnosis, prompt boundary constraints, generated artifacts, validation commands, leak-scan results, and non-claim boundaries
+
+#### Scenario: Bound retry wrapper-boundary claims
+- **WHEN** evidence, reports, tests, specs, or Human Briefs describe this phase
+- **THEN** they MUST state that no A100 execution, training, private prediction rerun, parser relaxation, evaluator metric change, prediction repair, prediction re-score, semantic-equivalence scoring, slot normalization, checkpoint release, adapter release, held-out generalization claim, model-quality claim, or live-browser benchmark improvement claim is made
+
+#### Scenario: Validate retry wrapper-boundary privacy
+- **WHEN** the evidence pack is prepared for commit
+- **THEN** leak-scan validation MUST reject raw private rows, local or remote private paths, secrets, private IP addresses, SSH details, raw logs, checkpoints, adapters, caches, private overrides, and private remote paths

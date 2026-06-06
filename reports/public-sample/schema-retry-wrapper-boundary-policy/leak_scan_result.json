@@ -1,0 +1,7 @@
+{
+  "findings": [],
+  "ok": true,
+  "scanned_paths": [
+    "reports/public-sample/schema-retry-wrapper-boundary-policy"
+  ]
+}

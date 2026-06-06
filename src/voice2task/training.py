@@ -1030,6 +1030,9 @@ def _schema_retry_prompt(row: SFTDatasetRow, raw_prediction: Any, guard_status: 
             "不要在 normalized_command 之前提前关闭 root object。",
             "第一个非空字符必须是 `{`；最后一个非空字符必须是 `}`。",
             "不要 Markdown/code fences/prose；不要解释、不要自然语言前后缀。",
+            "不要输出任何前缀或后缀文本；不要以“这是”或“以下”开头；不要使用 Here is。",
+            "不要在 JSON 后添加解释、分析或用户输入复述；不要输出第二个 JSON object。",
+            "否则 strict parser 会拒绝 retry attempt。",
             f"用户输入: {row.input_text}",
             f"上一轮输出摘要: {raw_summary[:500]}",
         ]

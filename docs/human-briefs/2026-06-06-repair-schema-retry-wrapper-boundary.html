@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Schema retry wrapper-boundary repair</title>
+  <style>
+    :root { --ink: #1f2933; --muted: #52606d; --line: #d9e2ec; --paper: #ffffff; --soft: #f5f7fa; --accent: #0f766e; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--ink); background: var(--soft); }
+    main { max-width: 900px; margin: 0 auto; padding: 32px 20px 48px; }
+    header { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 22px 24px; }
+    h1 { margin: 0 0 8px; font-size: 26px; line-height: 1.2; letter-spacing: 0; }
+    h2 { margin: 26px 0 10px; font-size: 18px; letter-spacing: 0; }
+    p, li { line-height: 1.65; }
+    .status { display: inline-block; margin-top: 10px; padding: 4px 9px; border-radius: 999px; background: #dcfce7; color: #166534; font-size: 13px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-top: 12px; }
+    .metric { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
+    .metric b { display: block; font-size: 22px; margin-bottom: 4px; }
+    code { background: #eef2f7; padding: 1px 5px; border-radius: 4px; }
+    a { color: var(--accent); }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Schema retry wrapper-boundary repair</h1>
+    <p><strong>一句话结论：</strong>本地 retry prompt 已补强 wrapper boundary：明确禁止前缀/后缀说明、Markdown fence、<code>Here is</code>、JSON 后分析和第二个 JSON object；这不证明模型恢复。</p>
+    <span class="status">当前状态：archived，验证通过</span>
+  </header>
+
+  <h2>为什么做</h2>
+  <p>上一轮 A100 证据显示 retry 中已经可见 <code>task_type="search"</code>，但被说明文字/Markdown 包住，因此 strict parser 仍拒绝。这个阶段只把失败形态写进 retry prompt 和本地证据。</p>
+
+  <h2>本地边界信号</h2>
+  <div class="grid">
+    <div class="metric"><b>1</b>no prefix/suffix</div>
+    <div class="metric"><b>1</b>no Here is</div>
+    <div class="metric"><b>1</b>no trailing analysis</div>
+    <div class="metric"><b>1</b>no second object</div>
+  </div>
+
+  <h2>关键文件</h2>
+  <ul>
+    <li><a href="../../reports/public-sample/schema-retry-wrapper-boundary-policy/repair_summary.md">repair_summary.md</a></li>
+    <li><a href="../../reports/public-sample/schema-retry-wrapper-boundary-policy/repair_summary.json">repair_summary.json</a></li>
+    <li><a href="../../openspec/changes/archive/2026-06-06-repair-schema-retry-wrapper-boundary/tasks.md">OpenSpec archived tasks.md</a></li>
+  </ul>
+
+  <h2>不能夸大的点</h2>
+  <ul>
+    <li>不运行 A100，不训练，不做 private prediction rerun。</li>
+    <li>不改 strict parser，不改 evaluator metrics，不 repair/re-score prediction。</li>
+    <li>不证明模型质量提升、泛化、生产可用或 live browser benchmark 改善。</li>
+  </ul>
+
+  <h2>推荐下一步</h2>
+  <p>下一阶段可做一次很小的 A100 retry-boundary 复验；如果复验仍出现 wrapper，应继续保留严格失败证据，不做 parser relaxation 或 prediction repair。</p>
+</main>
+</body>
+</html>
