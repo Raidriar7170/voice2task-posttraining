@@ -1,0 +1,13 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-06T05:03:27.033296+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "reports/public-sample/a100-schema-retry-wrapper-boundary-rerun",
+    "docs/human-briefs/2026-06-06-run-a100-schema-retry-wrapper-boundary-rerun.html",
+    "openspec/changes/archive/2026-06-06-run-a100-schema-retry-wrapper-boundary-rerun",
+    "openspec/specs/contract-evaluation/spec.md",
+    "openspec/specs/supervised-contract-tuning/spec.md"
+  ]
+}

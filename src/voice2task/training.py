@@ -696,6 +696,7 @@ def _prediction_metadata_common(
         "adapter_release_status": "not_released",
         "formatting_policy": dict(FORMATTING_POLICY),
         "prompt_constraints": prompt_constraint_summary(),
+        "retry_prompt_constraints": schema_retry_prompt_constraint_summary(),
         "decoding_policy": _decoding_policy(config),
         "sidecars": _public_sidecar_paths(sidecar_paths),
         "diagnostic_artifacts": _diagnostic_artifact_paths(
@@ -766,6 +767,7 @@ def _write_prompt_snapshot(rows: list[dict[str, Any]], path: Path, *, prediction
             "prediction_split": prediction_split,
             "formatting_policy": dict(FORMATTING_POLICY),
             "prompt_constraints": prompt_constraint_summary(),
+            "retry_prompt_constraints": schema_retry_prompt_constraint_summary(),
             "rows": rows,
             "claims": {
                 "prompt_snapshot_only": True,
@@ -1037,6 +1039,50 @@ def _schema_retry_prompt(row: SFTDatasetRow, raw_prediction: Any, guard_status: 
             f"上一轮输出摘要: {raw_summary[:500]}",
         ]
     )
+
+
+def schema_retry_prompt_constraint_summary(prompt: str | None = None) -> dict[str, bool]:
+    if prompt is None:
+        row = SFTDatasetRow(
+            id="retry-constraint-summary",
+            split="test",
+            input_text="帮我搜索北京明天的天气",
+            target_contract={
+                "task_type": "search",
+                "route": "search_web",
+                "safety": {"allow": True, "reason": "public_readonly"},
+                "confirmation_required": False,
+                "slots": {"query": "北京 明天 天气"},
+                "normalized_command": "搜索北京明天天气",
+                "language": "zh-CN",
+                "contract_version": "v1",
+            },
+            provenance={"source_id": "retry-constraint-summary", "public_safe": True},
+        )
+        raw_prediction = {
+            "route": "search_web",
+            "safety": {"allow": True, "reason": "public_readonly"},
+            "confirmation_required": False,
+            "slots": {"query": "北京明天天气"},
+            "normalized_command": "搜索北京明天天气",
+            "language": "zh-CN",
+            "contract_version": "v1",
+        }
+        prompt = _schema_retry_prompt(row, raw_prediction, _schema_guard_status(raw_prediction))
+    return {
+        "minified_json_only_visible": "只输出一个 minified JSON object" in prompt,
+        "single_root_json_object_visible": "同一个 root object" in prompt,
+        "first_last_brace_visible": "第一个非空字符必须是 `{`" in prompt
+        and "最后一个非空字符必须是 `}`" in prompt,
+        "no_markdown_prose_visible": "不要 Markdown/code fences/prose" in prompt,
+        "no_prefix_suffix_text_visible": "不要输出任何前缀或后缀文本" in prompt,
+        "no_zh_this_following_prefix_visible": "不要以“这是”或“以下”开头" in prompt,
+        "no_here_is_visible": "不要使用 Here is" in prompt,
+        "no_trailing_analysis_visible": "不要在 JSON 后添加解释、分析或用户输入复述" in prompt,
+        "no_second_json_object_visible": "不要输出第二个 JSON object" in prompt,
+        "strict_parser_rejection_warning_visible": "否则 strict parser 会拒绝 retry attempt" in prompt,
+        "task_type_search_not_search_web_visible": "task_type 必须是 search，不能是 search_web" in prompt,
+    }
 
 
 def _decode_prediction_attempt(

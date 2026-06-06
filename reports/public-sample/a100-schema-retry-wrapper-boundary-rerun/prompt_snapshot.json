@@ -1,0 +1,91 @@
+{
+  "artifact_kind": "sft_prediction_prompt_snapshot",
+  "claims": {
+    "contains_gold_contract": false,
+    "prompt_snapshot_only": true,
+    "public_safe": true
+  },
+  "formatting_policy": {
+    "fallback": "deterministic_role_plain_text",
+    "normalized_command_policy": "canonical_chinese_intent_phrase_not_verbatim_transcript",
+    "policy": "shared_contract_chat_template",
+    "prediction_prompt": "shared_contract_chat_template",
+    "prediction_target_policy": "generation_prompt_without_gold_contract",
+    "sft_training_text": "shared_contract_chat_template",
+    "tokenizer_chat_template": "used_when_available_with_tokenize_false"
+  },
+  "prediction_split": "train",
+  "prompt_constraints": {
+    "canonical_json_one_shot_visible": true,
+    "confirmation_required_boolean_visible": true,
+    "no_premature_root_close_visible": true,
+    "normalized_command_canonical_policy_visible": true,
+    "normalized_command_no_metric_relaxation_visible": true,
+    "normalized_command_public_examples_visible": true,
+    "public_readonly_safety_reason_visible": true,
+    "public_readonly_search_policy_visible": true,
+    "public_readonly_task_type_search_not_search_web_visible": true,
+    "required_field_checklist_visible": true,
+    "required_field_skeleton_visible": true,
+    "route_domain_values_not_route_visible": true,
+    "route_enum_visible": true,
+    "route_execution_channel_visible": true,
+    "route_not_url_or_path_visible": true,
+    "search_query_slot_guidance_visible": true,
+    "single_root_json_object_visible": true,
+    "slots_object_not_array_visible": true,
+    "task_type_enum_visible": true,
+    "task_type_not_route_enum_visible": true,
+    "weather_to_search_confirmation_false_visible": true,
+    "weather_to_search_route_example_visible": true,
+    "whole_object_boundary_visible": true
+  },
+  "retry_prompt_constraints": {
+    "first_last_brace_visible": true,
+    "minified_json_only_visible": true,
+    "no_here_is_visible": true,
+    "no_markdown_prose_visible": true,
+    "no_prefix_suffix_text_visible": true,
+    "no_second_json_object_visible": true,
+    "no_trailing_analysis_visible": true,
+    "no_zh_this_following_prefix_visible": true,
+    "single_root_json_object_visible": true,
+    "strict_parser_rejection_warning_visible": true,
+    "task_type_search_not_search_web_visible": true
+  },
+  "rows": [
+    {
+      "id": "seed-search-weather",
+      "input_text_preview": "帮我搜索北京明天的天气",
+      "prompt_char_count": 1842,
+      "prompt_preview": "<|im_start|>system\nVoice2Task contract normalizer。task_type enum: blocked, clarify, extract, form_fill, navigate, search。route enum: clarify, deny, extract_page, fill_form, open_url, search_web；route 不是 URL/path；route 必须使用上面的 enum 值。route 是",
+      "prompt_sha256": "72a516aed0b6b35fb8e6a6103a573f0fe61b272ecf6db90770da3ebf880e9cbe",
+      "provenance": {
+        "public_safe": true,
+        "source_id": "seed-search-weather"
+      }
+    },
+    {
+      "id": "seed-search-weather-aug-1",
+      "input_text_preview": "查一下北京明天天气",
+      "prompt_char_count": 1840,
+      "prompt_preview": "<|im_start|>system\nVoice2Task contract normalizer。task_type enum: blocked, clarify, extract, form_fill, navigate, search。route enum: clarify, deny, extract_page, fill_form, open_url, search_web；route 不是 URL/path；route 必须使用上面的 enum 值。route 是",
+      "prompt_sha256": "75a684afde487305abe27a10e7dc22e49eaf02651b6c991dde13ebf3f3e0cd23",
+      "provenance": {
+        "public_safe": true,
+        "source_id": "seed-search-weather"
+      }
+    },
+    {
+      "id": "seed-search-weather-aug-2",
+      "input_text_preview": "搜北京明天的天气",
+      "prompt_char_count": 1839,
+      "prompt_preview": "<|im_start|>system\nVoice2Task contract normalizer。task_type enum: blocked, clarify, extract, form_fill, navigate, search。route enum: clarify, deny, extract_page, fill_form, open_url, search_web；route 不是 URL/path；route 必须使用上面的 enum 值。route 是",
+      "prompt_sha256": "3fc83c90b7473533eac6d59b628f3916948e19d9d787368d5e3d5711030555de",
+      "provenance": {
+        "public_safe": true,
+        "source_id": "seed-search-weather"
+      }
+    }
+  ]
+}
