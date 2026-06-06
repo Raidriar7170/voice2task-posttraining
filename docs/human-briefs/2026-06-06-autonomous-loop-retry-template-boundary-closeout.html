@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Autonomous loop retry template boundary closeout</title>
+  <style>
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:0;background:#f7f8fb;color:#20242a}
+    main{max-width:1000px;margin:0 auto;padding:32px 20px 56px}
+    h1{font-size:28px;margin:0 0 10px}
+    h2{font-size:18px;margin:26px 0 10px}
+    p,li{line-height:1.65}
+    .panel,.metric{background:white;border:1px solid #d8dde6;border-radius:8px;padding:16px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin:14px 0 20px}
+    .metric strong{display:block;font-size:22px}
+    code{background:#eceff3;border-radius:4px;padding:1px 5px}
+    a{color:#1957a6}
+  </style>
+</head>
+<body>
+<main>
+  <h1>Autonomous loop retry template boundary closeout</h1>
+  <section class="panel">
+    <p><strong>一句话结论：</strong>本轮 `/opsx auto` 完成了一个真实 A100 prediction-only rerun 和一个本地 slot exact-match 诊断：schema-valid 已恢复到 <code>3/3</code>，但 exact match 仍为 <code>0/3</code>，剩余失败集中在严格 slot 目标形状/字符串。</p>
+  </section>
+
+  <div class="grid">
+    <div class="metric"><span>loop status</span><strong>stopped</strong></div>
+    <div class="metric"><span>stop condition</span><strong>hard stop #2</strong></div>
+    <div class="metric"><span>archived phases</span><strong>2</strong></div>
+    <div class="metric"><span>open changes</span><strong>0</strong></div>
+  </div>
+
+  <h2>停止原因</h2>
+  <p>精确 stop condition：`opsx-auto` hard stop #2。推荐下一步会从证据诊断转向修改 slot policy、训练目标、prompt/data 策略或成功标准；这会改变行为边界和后续质量主张，必须先由用户确认。</p>
+
+  <h2>已完成阶段</h2>
+  <ul>
+    <li><code>run-a100-retry-template-boundary-rerun</code>：真实 A100 prediction-only train-split rerun，已归档并提交为 <code>cc24e32</code>。Human Brief：<a href="2026-06-06-run-a100-retry-template-boundary-rerun.html">run-a100-retry-template-boundary-rerun.html</a>。</li>
+    <li><code>diagnose-retry-template-slot-exact-match-mismatch</code>：本地 evidence-only 诊断，已归档并提交为 <code>b9c19ac</code>。Human Brief：<a href="2026-06-06-diagnose-retry-template-slot-exact-match-mismatch.html">diagnose-retry-template-slot-exact-match-mismatch.html</a>。</li>
+  </ul>
+
+  <h2>项目阶段进度</h2>
+  <ul>
+    <li>current project-stage target：not explicitly defined。</li>
+    <li>source：当前 repo 没有单一明确 milestone 文档；本轮以 OpenSpec artifacts、public evidence、Human Briefs 和 strict validation 作为阶段事实源。</li>
+    <li>phase contribution：证明 retry template boundary 在当前私有 adapter 的 bounded train split 上能产出 schema-valid final outputs；同时确认 exact match 仍未恢复，主要卡在 slot exact-match。</li>
+    <li>remaining gaps：capability 层面还需要 slot target/prompt/data policy；evidence 层面需要 policy change 后再做 bounded rerun；documentation 层面需要继续保持 no held-out/no production/no model-quality overclaim。</li>
+    <li>next-stage plan：建议开一个用户确认后的 OpenSpec change，先定义并实现 search query slot target policy，再视本地验证结果决定是否做 A100 prediction-only rerun。</li>
+  </ul>
+
+  <h2>关键证据</h2>
+  <ul>
+    <li>A100 rerun evidence：<a href="../../reports/public-sample/a100-retry-template-boundary-rerun/report.md">a100-retry-template-boundary-rerun/report.md</a>。</li>
+    <li>Slot diagnosis evidence：<a href="../../reports/public-sample/retry-template-slot-exact-match-mismatch-diagnosis/slot_exact_match_mismatch_diagnosis.md">slot_exact_match_mismatch_diagnosis.md</a>。</li>
+    <li>OpenSpec archives：<a href="../../openspec/changes/archive/2026-06-06-run-a100-retry-template-boundary-rerun/proposal.md">A100 rerun archive</a> and <a href="../../openspec/changes/archive/2026-06-06-diagnose-retry-template-slot-exact-match-mismatch/proposal.md">slot diagnosis archive</a>。</li>
+  </ul>
+
+  <h2>验证结果</h2>
+  <ul>
+    <li><code>PYTHONPATH=src pytest -q</code>：<code>173 passed</code>。</li>
+    <li><code>uv run ruff check .</code>：passed。</li>
+    <li><code>uv run mypy src</code>：passed，16 source files。</li>
+    <li><code>voice2task.cli.data validate --public</code>：ok true，12 SFT rows / 26 DPO pairs。</li>
+    <li><code>voice2task.cli.data dpo-check</code>：26 pairs。</li>
+    <li>phase/post/final leak scans：ok true，findings empty。</li>
+    <li><code>git diff --check</code>：passed。</li>
+    <li><code>openspec validate --all --strict</code>：4 specs passed，0 failed。</li>
+  </ul>
+
+  <h2>自动集成状态</h2>
+  <ul>
+    <li>committed：<code>cc24e32</code> A100 retry template boundary rerun。</li>
+    <li>committed：<code>b9c19ac</code> retry template slot mismatch diagnosis。</li>
+    <li>merge target：<code>main</code>。</li>
+    <li>push：skipped，因为当前 repo 没有配置 remote/upstream。</li>
+    <li>external review：未使用 ChatGPT Pro；使用了只读 Reviewer subagent，verdict 为 pass for archive。</li>
+  </ul>
+
+  <h2>不要过度声称</h2>
+  <ul>
+    <li>不能声称 held-out generalization、production readiness、model-quality improvement、checkpoint/adapter release 或 live-browser benchmark improvement。</li>
+    <li>不能把 schema-valid recovery 等同于 full contract recovery；strict exact match 仍为 <code>0/3</code>。</li>
+    <li>slot 诊断不是 slot normalization，也不是 semantic-equivalence scoring。</li>
+  </ul>
+
+  <h2>推荐下一步</h2>
+  <p>需要用户确认：开启一个小的 OpenSpec 阶段定义并实现 search-query slot target policy，先本地验证 gold/prediction contract expectation，再决定是否运行 A100 prediction-only rerun。</p>
+</main>
+</body>
+</html>
