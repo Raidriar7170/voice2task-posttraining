@@ -862,7 +862,17 @@ def _generation_trace_row(
 ) -> dict[str, Any]:
     tokens = _token_list(generated_tokens)
     eos_seen = eos_token_id is not None and eos_token_id in tokens
+    max_new_tokens_hit = max_new_tokens > 0 and len(tokens) >= max_new_tokens
     resolved_finish_state = finish_state or ("eos_observed" if eos_seen else "no_eos_observed")
+    finish_state_basis = "explicit_fixture_status" if finish_state else "tokenizer_eos_membership"
+    if finish_state == "fixture_no_generation":
+        stop_reason_evidence = "fixture_no_generation"
+    elif eos_seen:
+        stop_reason_evidence = "tokenizer_eos_observed"
+    elif max_new_tokens_hit:
+        stop_reason_evidence = "max_new_tokens_reached_without_tokenizer_eos"
+    else:
+        stop_reason_evidence = "not_recorded_below_max_without_tokenizer_eos"
     return {
         "id": row_id,
         "attempt": attempt,
@@ -871,9 +881,14 @@ def _generation_trace_row(
         "do_sample": False,
         "max_new_tokens": max_new_tokens,
         "generated_token_count": len(tokens),
+        "max_new_tokens_hit": max_new_tokens_hit,
         "eos_token_id_available": eos_token_id is not None,
         "eos_token_seen": eos_seen,
         "finish_state": resolved_finish_state,
+        "finish_state_basis": finish_state_basis,
+        "stop_reason_evidence": stop_reason_evidence,
+        "actual_stop_reason_recorded": False,
+        "actual_stop_reason": None,
     }
 
 

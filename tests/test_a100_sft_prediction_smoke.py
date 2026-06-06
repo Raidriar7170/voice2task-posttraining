@@ -2084,6 +2084,119 @@ def test_retry_trace_finish_state_boundary_diagnosis_pack_is_public_safe_and_bou
     assert scan_paths([evidence_dir, human_brief_path, *existing_change_dirs]).ok is True
 
 
+def test_generation_stop_reason_boundary_instrumentation_pack_is_public_safe_and_bounded() -> None:
+    evidence_dir = Path("reports/public-sample/generation-stop-reason-boundary-instrumentation")
+    human_brief_path = Path("docs/human-briefs/2026-06-06-instrument-generation-stop-reason-boundary.html")
+    archive_dir = Path("openspec/changes/archive/2026-06-06-instrument-generation-stop-reason-boundary")
+    change_dirs = [
+        Path("openspec/changes/instrument-generation-stop-reason-boundary"),
+        archive_dir,
+    ]
+    required_files = {
+        "instrumentation_summary.json",
+        "instrumentation_summary.md",
+        "manifest.json",
+        "leak_scan_result.json",
+        "phase_validation_leak_scan_result.json",
+    }
+    new_trace_fields = {
+        "max_new_tokens_hit",
+        "finish_state_basis",
+        "stop_reason_evidence",
+        "actual_stop_reason_recorded",
+        "actual_stop_reason",
+    }
+
+    assert evidence_dir.exists()
+    assert required_files <= {path.name for path in evidence_dir.iterdir()}
+    if archive_dir.exists():
+        assert {"post_archive_leak_scan_result.json", "final_leak_scan_result.json"} <= {
+            path.name for path in evidence_dir.iterdir()
+        }
+    assert human_brief_path.exists()
+    existing_change_dirs = [path for path in change_dirs if path.exists()]
+    assert existing_change_dirs
+
+    summary = json.loads((evidence_dir / "instrumentation_summary.json").read_text(encoding="utf-8"))
+    manifest = json.loads((evidence_dir / "manifest.json").read_text(encoding="utf-8"))
+    report = (evidence_dir / "instrumentation_summary.md").read_text(encoding="utf-8")
+    human_brief = human_brief_path.read_text(encoding="utf-8")
+    leak_scan = json.loads((evidence_dir / "leak_scan_result.json").read_text(encoding="utf-8"))
+    phase_leak_scan = json.loads((evidence_dir / "phase_validation_leak_scan_result.json").read_text(encoding="utf-8"))
+    post_archive_leak_scan = (
+        json.loads((evidence_dir / "post_archive_leak_scan_result.json").read_text(encoding="utf-8"))
+        if (evidence_dir / "post_archive_leak_scan_result.json").exists()
+        else {"ok": True, "findings": []}
+    )
+    final_leak_scan = (
+        json.loads((evidence_dir / "final_leak_scan_result.json").read_text(encoding="utf-8"))
+        if (evidence_dir / "final_leak_scan_result.json").exists()
+        else {"ok": True, "findings": []}
+    )
+    serialized = "\n".join(
+        [
+            json.dumps(summary, ensure_ascii=False, sort_keys=True),
+            json.dumps(manifest, ensure_ascii=False, sort_keys=True),
+            json.dumps(leak_scan, ensure_ascii=False, sort_keys=True),
+            json.dumps(phase_leak_scan, ensure_ascii=False, sort_keys=True),
+            json.dumps(post_archive_leak_scan, ensure_ascii=False, sort_keys=True),
+            json.dumps(final_leak_scan, ensure_ascii=False, sort_keys=True),
+            report,
+            human_brief,
+        ]
+    )
+
+    assert summary["evidence_kind"] == "generation_stop_reason_boundary_instrumentation_local"
+    assert summary["instrumentation_kind"] == "generation_trace_stop_boundary_evidence_fields"
+    assert new_trace_fields <= set(summary["code_change"]["new_trace_row_fields"])
+    assert "finish_state" in summary["code_change"]["trace_row_fields_preserved"]
+    assert summary["stop_boundary_semantics"]["finish_state_basis"] == "tokenizer_eos_membership"
+    assert summary["stop_boundary_semantics"]["actual_stop_reason_recorded_by_current_code"] is False
+    assert summary["stop_boundary_semantics"]["max_token_hit_is_boundary_signal_not_full_stop_reason"] is True
+    assert summary["tdd_evidence"]["red_test_observed"] is True
+    assert "max_new_tokens_hit" in summary["tdd_evidence"]["red_failure_reason"]
+    assert summary["tdd_evidence"]["green_test_observed"] is True
+    assert len(summary["tdd_evidence"]["focused_tests"]) == 4
+    assert any(command["result"] == "164 passed" for command in summary["validation_commands"])
+    assert any(command["result"] == "5 passed, 0 failed" for command in summary["validation_commands"])
+
+    assert manifest["evidence_kind"] == "generation_stop_reason_boundary_instrumentation_local"
+    for artifact_path in manifest["diagnostic_artifacts"].values():
+        assert Path(artifact_path).exists()
+    assert manifest["counts"]["new_trace_row_fields"] == len(new_trace_fields)
+    assert len(manifest["source_artifacts"]["focused_tests"]) == 4
+    assert any(command["result"] == "164 passed" for command in manifest["validation_commands"])
+    assert any(command["result"] == "5 passed, 0 failed" for command in manifest["validation_commands"])
+    assert manifest["claims"]["local_instrumentation_only"] is True
+    assert manifest["claims"]["a100_execution_performed"] is False
+    assert manifest["claims"]["training_or_prediction_rerun_performed"] is False
+    assert manifest["claims"]["decoding_change_performed"] is False
+    assert manifest["claims"]["parser_relaxation_performed"] is False
+    assert manifest["claims"]["prediction_repair_or_rescore_performed"] is False
+    assert manifest["claims"]["model_recovery_claim"] is False
+    assert manifest["claims"]["model_quality_improvement_claim"] is False
+    assert manifest["claims"]["live_browser_benchmark_improvement_claim"] is False
+
+    assert leak_scan["ok"] is True
+    assert leak_scan["findings"] == []
+    assert phase_leak_scan["ok"] is True
+    assert phase_leak_scan["findings"] == []
+    assert post_archive_leak_scan["ok"] is True
+    assert post_archive_leak_scan["findings"] == []
+    assert final_leak_scan["ok"] is True
+    assert final_leak_scan["findings"] == []
+    assert "actual stop reason remains unrecorded" in report
+    assert "不运行 A100" in human_brief
+    assert "不改变 decoding" in human_brief
+    assert "不能证明真实 stop reason" in human_brief
+    assert "/mnt/data/" not in serialized
+    assert "/Users/" not in serialized
+    assert "volcano" not in serialized
+    assert "private-overrides" not in serialized
+    assert "private-configs" not in serialized
+    assert scan_paths([evidence_dir, human_brief_path, *existing_change_dirs]).ok is True
+
+
 def test_retry_decoding_stop_boundary_diagnosis_pack_is_public_safe_and_bounded() -> None:
     source_dir = Path("reports/public-sample/a100-schema-retry-wrapper-boundary-rerun")
     evidence_dir = Path("reports/public-sample/retry-decoding-stop-boundary-diagnosis")
@@ -2831,6 +2944,54 @@ class _FakeNoGrad:
         return None
 
 
+def test_generation_trace_row_records_stop_boundary_evidence_without_actual_stop_reason() -> None:
+    eos_row = training._generation_trace_row(
+        row_id="sft-test-1",
+        attempt="raw_attempt",
+        prediction_source_kind="private_a100_adapter",
+        generated_tokens=[101, 0],
+        max_new_tokens=256,
+        eos_token_id=0,
+    )
+    below_max_row = training._generation_trace_row(
+        row_id="sft-test-2",
+        attempt="retry_attempt",
+        prediction_source_kind="private_a100_adapter",
+        generated_tokens=[101, 102],
+        max_new_tokens=256,
+        eos_token_id=0,
+    )
+    max_hit_row = training._generation_trace_row(
+        row_id="sft-test-3",
+        attempt="retry_attempt",
+        prediction_source_kind="private_a100_adapter",
+        generated_tokens=[101, 102],
+        max_new_tokens=2,
+        eos_token_id=0,
+    )
+
+    assert eos_row["finish_state"] == "eos_observed"
+    assert eos_row["max_new_tokens_hit"] is False
+    assert eos_row["finish_state_basis"] == "tokenizer_eos_membership"
+    assert eos_row["stop_reason_evidence"] == "tokenizer_eos_observed"
+    assert eos_row["actual_stop_reason_recorded"] is False
+    assert eos_row["actual_stop_reason"] is None
+
+    assert below_max_row["finish_state"] == "no_eos_observed"
+    assert below_max_row["max_new_tokens_hit"] is False
+    assert below_max_row["finish_state_basis"] == "tokenizer_eos_membership"
+    assert below_max_row["stop_reason_evidence"] == "not_recorded_below_max_without_tokenizer_eos"
+    assert below_max_row["actual_stop_reason_recorded"] is False
+    assert below_max_row["actual_stop_reason"] is None
+
+    assert max_hit_row["finish_state"] == "no_eos_observed"
+    assert max_hit_row["max_new_tokens_hit"] is True
+    assert max_hit_row["finish_state_basis"] == "tokenizer_eos_membership"
+    assert max_hit_row["stop_reason_evidence"] == "max_new_tokens_reached_without_tokenizer_eos"
+    assert max_hit_row["actual_stop_reason_recorded"] is False
+    assert max_hit_row["actual_stop_reason"] is None
+
+
 def test_real_sft_prediction_preserves_non_json_decoded_output(
     monkeypatch: Any,
     tmp_path: Path,
@@ -2931,8 +3092,13 @@ def test_real_sft_prediction_sidecars_summarize_sanitized_decoded_and_generation
     assert raw_rows[0]["private_values_sanitized"] is True
     assert trace_rows[0]["generated_token_count"] == 2
     assert trace_rows[0]["max_new_tokens"] == 256
+    assert trace_rows[0]["max_new_tokens_hit"] is False
     assert trace_rows[0]["eos_token_seen"] is False
     assert trace_rows[0]["finish_state"] == "no_eos_observed"
+    assert trace_rows[0]["finish_state_basis"] == "tokenizer_eos_membership"
+    assert trace_rows[0]["stop_reason_evidence"] == "not_recorded_below_max_without_tokenizer_eos"
+    assert trace_rows[0]["actual_stop_reason_recorded"] is False
+    assert trace_rows[0]["actual_stop_reason"] is None
     assert prompt_payload["rows"][0]["id"] == "sft-test-1"
     assert "/mnt/data/" not in json.dumps(raw_rows + trace_rows + prompt_payload["rows"], ensure_ascii=False)
 
@@ -3000,6 +3166,11 @@ def test_real_sft_prediction_generation_trace_records_retry_attempt(
     assert all(row["eos_token_id_available"] is True for row in trace_rows)
     assert all(row["eos_token_seen"] is False for row in trace_rows)
     assert all(row["finish_state"] == "no_eos_observed" for row in trace_rows)
+    assert all(row["max_new_tokens_hit"] is False for row in trace_rows)
+    assert all(row["finish_state_basis"] == "tokenizer_eos_membership" for row in trace_rows)
+    assert all(row["stop_reason_evidence"] == "not_recorded_below_max_without_tokenizer_eos" for row in trace_rows)
+    assert all(row["actual_stop_reason_recorded"] is False for row in trace_rows)
+    assert all(row["actual_stop_reason"] is None for row in trace_rows)
     assert scan_paths([tmp_path / "generation_trace.jsonl"]).ok is True
 
 

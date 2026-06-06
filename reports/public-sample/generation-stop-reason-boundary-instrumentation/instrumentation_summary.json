@@ -1,0 +1,154 @@
+{
+  "evidence_kind": "generation_stop_reason_boundary_instrumentation_local",
+  "instrumentation_kind": "generation_trace_stop_boundary_evidence_fields",
+  "generated_at": "2026-06-06T00:00:00+00:00",
+  "project_stage_target": "first-phase speech-to-contract normalization",
+  "project_stage_source": [
+    "CONTEXT.md",
+    "openspec/specs/supervised-contract-tuning/spec.md",
+    "openspec/specs/contract-evaluation/spec.md"
+  ],
+  "source_artifacts": {
+    "prior_finish_state_boundary_diagnosis": "reports/public-sample/retry-trace-finish-state-boundary-diagnosis/finish_state_boundary_diagnosis.json",
+    "prior_a100_retry_generation_trace": "reports/public-sample/a100-retry-generation-trace-rerun/generation_trace.jsonl",
+    "training_code": "src/voice2task/training.py",
+    "direct_trace_test": "tests/test_a100_sft_prediction_smoke.py::test_generation_trace_row_records_stop_boundary_evidence_without_actual_stop_reason",
+    "raw_trace_sidecar_test": "tests/test_a100_sft_prediction_smoke.py::test_real_sft_prediction_sidecars_summarize_sanitized_decoded_and_generation_trace",
+    "retry_trace_sidecar_test": "tests/test_a100_sft_prediction_smoke.py::test_real_sft_prediction_generation_trace_records_retry_attempt",
+    "evidence_pack_test": "tests/test_a100_sft_prediction_smoke.py::test_generation_stop_reason_boundary_instrumentation_pack_is_public_safe_and_bounded"
+  },
+  "diagnostic_artifacts": {
+    "summary": "reports/public-sample/generation-stop-reason-boundary-instrumentation/instrumentation_summary.json",
+    "report": "reports/public-sample/generation-stop-reason-boundary-instrumentation/instrumentation_summary.md",
+    "manifest": "reports/public-sample/generation-stop-reason-boundary-instrumentation/manifest.json",
+    "leak_scan": "reports/public-sample/generation-stop-reason-boundary-instrumentation/leak_scan_result.json",
+    "phase_validation_leak_scan": "reports/public-sample/generation-stop-reason-boundary-instrumentation/phase_validation_leak_scan_result.json",
+    "post_archive_leak_scan": "reports/public-sample/generation-stop-reason-boundary-instrumentation/post_archive_leak_scan_result.json",
+    "final_leak_scan": "reports/public-sample/generation-stop-reason-boundary-instrumentation/final_leak_scan_result.json",
+    "human_brief": "docs/human-briefs/2026-06-06-instrument-generation-stop-reason-boundary.html"
+  },
+  "code_change": {
+    "generation_trace_stop_boundary_fields_added": true,
+    "trace_sidecar_path_unchanged": "generation_trace.jsonl",
+    "trace_row_fields_preserved": [
+      "id",
+      "attempt",
+      "prediction_source_kind",
+      "strategy",
+      "do_sample",
+      "max_new_tokens",
+      "generated_token_count",
+      "eos_token_id_available",
+      "eos_token_seen",
+      "finish_state"
+    ],
+    "new_trace_row_fields": [
+      "max_new_tokens_hit",
+      "finish_state_basis",
+      "stop_reason_evidence",
+      "actual_stop_reason_recorded",
+      "actual_stop_reason"
+    ],
+    "stop_reason_evidence_values": [
+      "tokenizer_eos_observed",
+      "max_new_tokens_reached_without_tokenizer_eos",
+      "not_recorded_below_max_without_tokenizer_eos",
+      "fixture_no_generation"
+    ]
+  },
+  "stop_boundary_semantics": {
+    "finish_state_basis": "tokenizer_eos_membership",
+    "fixture_finish_state_basis": "explicit_fixture_status",
+    "actual_stop_reason_recorded_by_current_code": false,
+    "actual_stop_reason_default": null,
+    "tokenizer_eos_visibility_is_not_full_stop_reason": true,
+    "max_token_hit_is_boundary_signal_not_full_stop_reason": true,
+    "historical_a100_trace_rewritten": false,
+    "future_a100_or_private_adapter_rerun_required_to_observe_real_stop_boundary": true
+  },
+  "tdd_evidence": {
+    "red_test_observed": true,
+    "red_failure_reason": "focused tests failed with KeyError for missing max_new_tokens_hit before production code changes",
+    "green_test_observed": true,
+    "focused_test_command": "PYTHONPATH=src pytest -q tests/test_a100_sft_prediction_smoke.py::test_generation_trace_row_records_stop_boundary_evidence_without_actual_stop_reason tests/test_a100_sft_prediction_smoke.py::test_real_sft_prediction_sidecars_summarize_sanitized_decoded_and_generation_trace tests/test_a100_sft_prediction_smoke.py::test_real_sft_prediction_generation_trace_records_retry_attempt tests/test_a100_sft_prediction_smoke.py::test_generation_stop_reason_boundary_instrumentation_pack_is_public_safe_and_bounded",
+    "focused_tests": [
+      "tests/test_a100_sft_prediction_smoke.py::test_generation_trace_row_records_stop_boundary_evidence_without_actual_stop_reason",
+      "tests/test_a100_sft_prediction_smoke.py::test_real_sft_prediction_sidecars_summarize_sanitized_decoded_and_generation_trace",
+      "tests/test_a100_sft_prediction_smoke.py::test_real_sft_prediction_generation_trace_records_retry_attempt",
+      "tests/test_a100_sft_prediction_smoke.py::test_generation_stop_reason_boundary_instrumentation_pack_is_public_safe_and_bounded"
+    ],
+    "focused_tests_passed": true,
+    "evidence_pack_test_added": true
+  },
+  "validation_commands": [
+    {
+      "command": "PYTHONPATH=src pytest -q tests/test_a100_sft_prediction_smoke.py::test_generation_trace_row_records_stop_boundary_evidence_without_actual_stop_reason tests/test_a100_sft_prediction_smoke.py::test_real_sft_prediction_sidecars_summarize_sanitized_decoded_and_generation_trace tests/test_a100_sft_prediction_smoke.py::test_real_sft_prediction_generation_trace_records_retry_attempt tests/test_a100_sft_prediction_smoke.py::test_generation_stop_reason_boundary_instrumentation_pack_is_public_safe_and_bounded",
+      "result": "4 passed"
+    },
+    {
+      "command": "PYTHONPATH=src pytest -q",
+      "result": "164 passed"
+    },
+    {
+      "command": "uv run ruff check .",
+      "result": "All checks passed"
+    },
+    {
+      "command": "uv run mypy src",
+      "result": "Success: no issues found in 16 source files"
+    },
+    {
+      "command": "PYTHONPATH=src python -m voice2task.cli.data validate --sft data/public-samples/sft_public_sample.jsonl --dpo data/public-samples/dpo_public_sample.jsonl --manifest data/public-samples/manifest_public_sample.json --public",
+      "result": "ok=true, sft_rows=12, dpo_pairs=26"
+    },
+    {
+      "command": "PYTHONPATH=src python -m voice2task.cli.data dpo-check --dpo data/public-samples/dpo_public_sample.jsonl",
+      "result": "total_pairs=26"
+    },
+    {
+      "command": "PYTHONPATH=src python -m voice2task.cli.report leak-scan reports/public-sample/generation-stop-reason-boundary-instrumentation docs/human-briefs/2026-06-06-instrument-generation-stop-reason-boundary.html openspec/changes/instrument-generation-stop-reason-boundary --output reports/public-sample/generation-stop-reason-boundary-instrumentation/phase_validation_leak_scan_result.json",
+      "result": "ok=true, findings=[]"
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed"
+    },
+    {
+      "command": "OPENSPEC_TELEMETRY=0 openspec validate --all --strict",
+      "result": "5 passed, 0 failed"
+    },
+    {
+      "command": "OPENSPEC_TELEMETRY=0 openspec validate --all --strict",
+      "result": "post-archive: 4 passed, 0 failed"
+    }
+  ],
+  "preservation": {
+    "retry_prompt_text_changed": false,
+    "decoding_parameters_changed": false,
+    "strict_parser_semantics_changed": false,
+    "schema_guard_source_selection_changed": false,
+    "final_prediction_selection_changed": false,
+    "evaluator_metrics_changed": false,
+    "historical_a100_metrics_reinterpreted": false
+  },
+  "claims": {
+    "local_instrumentation_only": true,
+    "a100_execution_performed": false,
+    "private_prediction_rerun_performed": false,
+    "training_or_prediction_rerun_performed": false,
+    "decoding_change_performed": false,
+    "retry_prompt_changed": false,
+    "parser_relaxation_performed": false,
+    "evaluator_metric_change_performed": false,
+    "schema_repair_or_coercion_applied": false,
+    "prediction_repair_or_rescore_performed": false,
+    "semantic_equivalence_scoring_performed": false,
+    "slot_normalization_performed": false,
+    "checkpoint_release": false,
+    "adapter_release": false,
+    "model_recovery_claim": false,
+    "model_quality_improvement_claim": false,
+    "public_full_corpus_release": false,
+    "live_browser_benchmark_improvement_claim": false
+  }
+}

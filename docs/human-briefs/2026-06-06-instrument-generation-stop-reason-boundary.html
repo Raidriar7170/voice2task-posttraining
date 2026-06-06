@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Generation Stop-Reason Boundary Instrumentation</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17202a;
+      --muted: #5b6670;
+      --line: #d9e1e8;
+      --paper: #ffffff;
+      --band: #f6f8fa;
+      --ok: #0b6b42;
+      --warn: #91620d;
+      --accent: #245f73;
+    }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+    }
+    header {
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 24px;
+      padding-bottom: 18px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      letter-spacing: 0;
+    }
+    h2 {
+      margin: 24px 0 10px;
+      font-size: 18px;
+    }
+    p { margin: 8px 0; }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.94em;
+    }
+    a { color: var(--accent); }
+    ul { padding-left: 20px; }
+    li { margin: 6px 0; }
+    .summary {
+      max-width: 850px;
+      font-size: 18px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 10px;
+      margin: 16px 0;
+    }
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--band);
+      padding: 12px;
+    }
+    .metric strong {
+      display: block;
+      font-size: 24px;
+      margin-bottom: 2px;
+    }
+    .metric span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .ok { color: var(--ok); }
+    .warn { color: var(--warn); }
+    .note {
+      margin: 14px 0;
+      padding: 10px 12px;
+      border-left: 4px solid var(--accent);
+      background: var(--band);
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Generation Stop-Reason Boundary Instrumentation</h1>
+    <p class="summary">结论：本阶段给未来 <code>generation_trace.jsonl</code> 增加 stop-boundary evidence 字段；它能说明 <code>finish_state</code> 的证据基础，但不能证明真实 stop reason，也不运行 A100。</p>
+  </header>
+
+  <section>
+    <h2>Current Status</h2>
+    <p><strong class="ok">archived</strong>：OpenSpec change <code>instrument-generation-stop-reason-boundary</code> 已归档；本阶段是本地 instrumentation，不改变 decoding、parser、metrics 或历史 A100 解释。</p>
+  </section>
+
+  <section>
+    <h2>What Changed</h2>
+    <div class="grid">
+      <div class="metric"><strong>5</strong><span>new trace evidence fields</span></div>
+      <div class="metric"><strong>0</strong><span>A100/private reruns</span></div>
+      <div class="metric"><strong>0</strong><span>decoding/parser changes</span></div>
+      <div class="metric"><strong>0</strong><span>model-quality claims</span></div>
+    </div>
+    <ul>
+      <li>新增 <code>max_new_tokens_hit</code>、<code>finish_state_basis</code>、<code>stop_reason_evidence</code>、<code>actual_stop_reason_recorded</code>、<code>actual_stop_reason</code>。</li>
+      <li><code>finish_state</code> 保持兼容；新增字段明确它来自 tokenizer EOS membership，而不是真实 stop reason。</li>
+      <li>raw/retry trace 的 attempt、token count、EOS visibility、finish state 和 sidecar 路径保持不变。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Evidence</h2>
+    <ul>
+      <li><a href="../../reports/public-sample/generation-stop-reason-boundary-instrumentation/instrumentation_summary.json">instrumentation_summary.json</a></li>
+      <li><a href="../../reports/public-sample/generation-stop-reason-boundary-instrumentation/instrumentation_summary.md">instrumentation_summary.md</a></li>
+      <li><a href="../../reports/public-sample/generation-stop-reason-boundary-instrumentation/manifest.json">manifest.json</a></li>
+      <li><a href="../../openspec/changes/archive/2026-06-06-instrument-generation-stop-reason-boundary/tasks.md">OpenSpec tasks.md</a></li>
+    </ul>
+    <div class="note">历史 A100 trace 不会被 retroactively 改写；未来如果要观察真实 trained-adapter stop-boundary，需要单独 rerun。</div>
+  </section>
+
+  <section>
+    <h2>Verification</h2>
+    <ul>
+      <li>TDD RED：focused tests 先因缺少 <code>max_new_tokens_hit</code> 失败。</li>
+      <li>TDD GREEN：direct trace-row、raw sidecar、retry sidecar、evidence-pack tests：<code>4 passed</code>。</li>
+      <li>Full tests：<code>PYTHONPATH=src pytest -q</code>，<code>164 passed</code>。</li>
+      <li>Lint/type：<code>uv run ruff check .</code> passed；<code>uv run mypy src</code> passed。</li>
+      <li>Public data：validate passed，<code>sft_rows=12</code>、<code>dpo_pairs=26</code>；DPO check <code>total_pairs=26</code>。</li>
+      <li>Safety gates：phase/post/final leak scans <code>ok=true</code>，<code>git diff --check</code> passed，OpenSpec strict validate pre-archive <code>5 passed, 0 failed</code>、post-archive <code>4 passed, 0 failed</code>。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Boundaries</h2>
+    <ul>
+      <li>不运行 A100、不训练、不 rerun private prediction。</li>
+      <li>不改变 decoding、retry prompt、strict parser、schema guard source selection、final prediction 或 evaluator metrics。</li>
+      <li>不做 prediction repair/re-score、semantic-equivalence scoring、slot normalization、checkpoint/adapter release。</li>
+      <li>不宣称 model recovery、model-quality improvement、held-out generalization、production readiness 或 live-browser benchmark improvement。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Recommended Next Step</h2>
+    <p>本阶段归档后，下一步建议是一个小型 A100 prediction-only rerun，用新 trace 字段观察真实 raw/retry stop-boundary；只有 rerun evidence 出来后才讨论解码策略。</p>
+  </section>
+</main>
+</body>
+</html>
