@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Autonomous Loop: A100 Generation Stop-Boundary Rerun</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17202a;
+      --muted: #5b6670;
+      --line: #d9e1e8;
+      --paper: #ffffff;
+      --band: #f6f8fa;
+      --ok: #0b6b42;
+      --warn: #91620d;
+      --accent: #245f73;
+    }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+    }
+    header {
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 24px;
+      padding-bottom: 18px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      letter-spacing: 0;
+    }
+    h2 {
+      margin: 24px 0 10px;
+      font-size: 18px;
+    }
+    p { margin: 8px 0; }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.94em;
+    }
+    a { color: var(--accent); }
+    ul { padding-left: 20px; }
+    li { margin: 6px 0; }
+    .summary {
+      max-width: 860px;
+      font-size: 18px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 10px;
+      margin: 16px 0;
+    }
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--band);
+      padding: 12px;
+    }
+    .metric strong {
+      display: block;
+      font-size: 24px;
+      margin-bottom: 2px;
+    }
+    .metric span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .ok { color: var(--ok); }
+    .warn { color: var(--warn); }
+    .note {
+      margin: 14px 0;
+      padding: 10px 12px;
+      border-left: 4px solid var(--accent);
+      background: var(--band);
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Autonomous Loop: A100 Generation Stop-Boundary Rerun</h1>
+    <p class="summary">结论：本轮完成并归档了 A100 prediction-only stop-boundary rerun；新 trace 字段在 3-row train split 上覆盖 raw/retry attempts，但 strict contract 仍是 <code>0/3</code>，下一步涉及 retry decoding/prompt 或 stopping instrumentation 范围变更，因此 loop 停在用户确认点。</p>
+  </header>
+
+  <section>
+    <h2>Loop Status</h2>
+    <p><strong class="warn">stopped: needs review</strong>。精确 stop condition：推荐下一步会改变 retry decoding/prompt policy 或更深的 generation stopping instrumentation scope，属于 opsx-auto hard stop，需要用户确认后才能继续。</p>
+  </section>
+
+  <section>
+    <h2>Completed Phase</h2>
+    <div class="grid">
+      <div class="metric"><strong>1</strong><span>OpenSpec phase archived</span></div>
+      <div class="metric"><strong>06e33ca</strong><span>local commit</span></div>
+      <div class="metric"><strong>165</strong><span>tests passed</span></div>
+      <div class="metric"><strong>0</strong><span>active OpenSpec changes</span></div>
+    </div>
+    <ul>
+      <li>Archived: <code>run-a100-generation-stop-reason-boundary-rerun</code>。</li>
+      <li>A100 private-adapter train-split prediction-only rerun completed with sanitized public evidence。</li>
+      <li>OpenSpec specs synced into <code>contract-evaluation</code> and <code>supervised-contract-tuning</code>。</li>
+      <li>Internal Reviewer pass returned <code>Pass</code> after one focused Must Fix artifact/test alignment pass。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Project Stage Progress</h2>
+    <p><strong>Current target:</strong> not explicitly defined as MVP/v1/v2/release/interview-ready in the current authoritative artifacts reviewed during this loop。</p>
+    <p><strong>Source:</strong> current OpenSpec artifacts and public evidence packs. This loop advances the diagnostic evidence stage for Voice2Task post-training by replacing an unproven stop-boundary guess with trace-field evidence on a bounded A100 train split。</p>
+    <ul>
+      <li>Advanced: raw/retry generation trace rows now include <code>max_new_tokens_hit</code>、<code>finish_state_basis</code>、<code>stop_reason_evidence</code>、<code>actual_stop_reason_recorded</code>、<code>actual_stop_reason</code>。</li>
+      <li>Remaining capability gap: retry outputs still remain prose/markdown JSON fragments and strict schema-invalid。</li>
+      <li>Remaining evidence gap: actual model API stop reason is still not recorded；tokenizer EOS/no-EOS evidence must not be overstated。</li>
+      <li>Next-stage plan: decide whether to change retry decoding/prompt policy or add deeper generation-stop instrumentation；this requires user confirmation。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Key Files</h2>
+    <ul>
+      <li><a href="../../docs/human-briefs/2026-06-06-run-a100-generation-stop-reason-boundary-rerun.html">phase Human Brief</a></li>
+      <li><a href="../../reports/public-sample/a100-generation-stop-reason-boundary-rerun/report.md">evidence report.md</a></li>
+      <li><a href="../../reports/public-sample/a100-generation-stop-reason-boundary-rerun/generation_stop_boundary_diagnosis.json">generation_stop_boundary_diagnosis.json</a></li>
+      <li><a href="../../reports/public-sample/a100-generation-stop-reason-boundary-rerun/schema_guard_summary.json">schema_guard_summary.json</a></li>
+      <li><a href="../../reports/public-sample/a100-generation-stop-reason-boundary-rerun/final_leak_scan_result.json">final_leak_scan_result.json</a></li>
+      <li><a href="../../openspec/changes/archive/2026-06-06-run-a100-generation-stop-reason-boundary-rerun/tasks.md">archived OpenSpec tasks.md</a></li>
+      <li><a href="../../openspec/specs/contract-evaluation/spec.md">contract-evaluation spec</a></li>
+      <li><a href="../../openspec/specs/supervised-contract-tuning/spec.md">supervised-contract-tuning spec</a></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Validation</h2>
+    <ul>
+      <li><code>PYTHONPATH=src pytest -q</code>: <code>165 passed</code>。</li>
+      <li><code>uv run ruff check .</code>: passed。</li>
+      <li><code>uv run mypy src</code>: passed, <code>16 source files</code>。</li>
+      <li><code>voice2task.cli.data validate --public</code>: <code>ok=true</code>, <code>sft_rows=12</code>, <code>dpo_pairs=26</code>。</li>
+      <li><code>voice2task.cli.data dpo-check</code>: <code>total_pairs=26</code>。</li>
+      <li>Leak scans: initial, phase, post-archive, and final all <code>ok=true</code> with no findings。</li>
+      <li><code>git diff --check</code> and <code>git diff --cached --check</code>: passed。</li>
+      <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>: pre-archive <code>5 passed, 0 failed</code>; post-archive <code>4 passed, 0 failed</code>。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Auto Integration</h2>
+    <ul>
+      <li>Status: staged and committed locally。</li>
+      <li>Commit: <code>06e33ca Archive A100 generation stop-boundary rerun</code>。</li>
+      <li>Target branch: <code>main</code>。</li>
+      <li>Merge/submit: not needed; work was performed in the main checkout。</li>
+      <li>Push: skipped because this checkout has no configured remote/upstream。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Review</h2>
+    <ul>
+      <li>External Pro review: not used；no external review files generated。</li>
+      <li>Internal Reviewer: first pass returned <code>Pass with fixes</code>; Must Fix items were manifest/spec alignment and per-row retry wrapper fields。</li>
+      <li>Internal Reviewer follow-up: <code>Pass</code>, <code>Re-plan Needed: No</code>。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Do Not Overstate</h2>
+    <ul>
+      <li>Do not claim model recovery, model-quality improvement, held-out generalization, production readiness, or live-browser benchmark improvement。</li>
+      <li>Do not claim the actual model API stop reason is known；the current code records <code>actual_stop_reason_recorded=false</code>。</li>
+      <li>Do not claim decoding behavior, retry prompt, parser, evaluator metric, semantic scoring, slot normalization, prediction repair, or re-score changed in this phase。</li>
+      <li>Do not claim full-corpus or public release coverage；this is a 3-row train-split diagnostic rerun。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Recommended Manual Decision</h2>
+    <p>建议你确认下一阶段方向：要么开一个小 OpenSpec 阶段改 retry decoding/prompt policy，要么先开一个更窄的 instrumentation 阶段记录更接近真实 generation stop 的信号。两者都会改变当前阶段范围，所以本 loop 在此停止等待确认。</p>
+  </section>
+</main>
+</body>
+</html>

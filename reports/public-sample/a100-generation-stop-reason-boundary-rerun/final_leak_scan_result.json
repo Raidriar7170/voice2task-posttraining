@@ -1,11 +1,12 @@
 {
   "findings": [],
-  "generated_at": "2026-06-06T08:05:30.741421+00:00",
+  "generated_at": "2026-06-06T08:07:27.823341+00:00",
   "max_public_jsonl_rows": 5000,
   "ok": true,
   "scanned_paths": [
     "reports/public-sample/a100-generation-stop-reason-boundary-rerun",
     "docs/human-briefs/2026-06-06-run-a100-generation-stop-reason-boundary-rerun.html",
+    "docs/human-briefs/2026-06-06-autonomous-loop-a100-generation-stop-reason-boundary-rerun.html",
     "openspec/changes/archive/2026-06-06-run-a100-generation-stop-reason-boundary-rerun",
     "openspec/specs/contract-evaluation/spec.md",
     "openspec/specs/supervised-contract-tuning/spec.md"
