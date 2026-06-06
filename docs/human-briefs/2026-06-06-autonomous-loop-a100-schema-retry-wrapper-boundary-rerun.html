@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Autonomous loop closeout: A100 schema retry wrapper boundary</title>
+  <style>
+    :root { --ink:#1f2933; --muted:#52606d; --line:#d9e2ec; --paper:#fff; --soft:#f5f7fa; --accent:#0f766e; --warn:#92400e; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; color:var(--ink); background:var(--soft); }
+    main { max-width:980px; margin:0 auto; padding:32px 20px 52px; }
+    header, section { background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:22px 24px; margin:0 0 16px; }
+    h1 { margin:0 0 8px; font-size:26px; line-height:1.2; letter-spacing:0; }
+    h2 { margin:0 0 10px; font-size:18px; letter-spacing:0; }
+    p, li { line-height:1.65; }
+    ul { padding-left:20px; }
+    code { background:#eef2f7; padding:1px 5px; border-radius:4px; }
+    a { color:var(--accent); }
+    .status { display:inline-block; margin-top:10px; padding:4px 9px; border-radius:999px; background:#fef3c7; color:var(--warn); font-size:13px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:10px; }
+    .metric { border:1px solid var(--line); border-radius:8px; padding:12px; background:#fbfdff; }
+    .metric b { display:block; font-size:20px; }
+  </style>
+</head>
+<body><main>
+<header>
+  <h1>Autonomous loop closeout: A100 schema retry wrapper boundary</h1>
+  <p><strong>一句话结论：</strong>本轮自动循环完成并归档 3 个 bounded phase；最新 A100 复验证明 retry boundary prompt 已进入真实 A100 metadata，但模型仍 3/3 输出 prose/Markdown-wrapped retry，下一步进入 decoding/stop-boundary 行为选择，需要用户确认。</p>
+  <span class="status">loop status: stopped by hard stop</span>
+</header>
+
+<section>
+  <h2>停止原因</h2>
+  <p>精确 stop condition：推荐下一步会从“记录严格失败证据”转向选择 decoding stop/boundary 参数、parser-adjacent 成功路径或 instruction-following 抑制策略。这会改变解码行为或下一阶段成功标准，触发 <code>$opsx-auto</code> hard stop，需要用户确认后才能继续。</p>
+</section>
+
+<section>
+  <h2>项目阶段进度</h2>
+  <ul>
+    <li>当前目标：first-phase SFT/DPO companion evidence；来源：<a href="../../README.md">README.md</a> 与 <a href="../../CONTEXT.md">CONTEXT.md</a>。</li>
+    <li>本轮推进：把 public-readonly train-split schema failure 从宽泛的 row mismatch 收窄到明确的 retry wrapper persistence：prompt constraints 可见，但模型仍输出 wrapper。</li>
+    <li>剩余能力缺口：schema-valid Browser Task Contract 仍未恢复；raw output 仍 3/3 缺 <code>task_type</code>。</li>
+    <li>剩余证据缺口：没有 held-out/dev/test 泛化证据，没有 live-browser benchmark 改善证据。</li>
+    <li>下一阶段计划：由用户确认是否进入 decoding stop/boundary 或 instruction-following suppression 小阶段；继续禁止 parser relaxation 和 prediction repair。</li>
+  </ul>
+</section>
+
+<section>
+  <h2>完成阶段</h2>
+  <div class="grid">
+    <div class="metric"><b>d6b2711</b><code>run-a100-output-boundary-retry-policy-train-split-rerun</code><br>raw output 3/3 变为 whole JSON object，但仍 3/3 缺 <code>task_type</code>，retry wrapper 3/3。</div>
+    <div class="metric"><b>1e4899b</b><code>repair-schema-retry-wrapper-boundary</code><br>本地补强 retry prompt：no prefix/suffix、no Here is、no trailing analysis、no second JSON object。</div>
+    <div class="metric"><b>a278bbf</b><code>run-a100-schema-retry-wrapper-boundary-rerun</code><br>A100 复验确认 retry constraints 可见，但 wrapper 仍 3/3，schema-valid 0/3。</div>
+  </div>
+</section>
+
+<section>
+  <h2>Human Briefs</h2>
+  <ul>
+    <li><a href="2026-06-06-run-a100-output-boundary-retry-policy-train-split-rerun.html">A100 output-boundary retry-policy rerun</a></li>
+    <li><a href="2026-06-06-repair-schema-retry-wrapper-boundary.html">Schema retry wrapper-boundary repair</a></li>
+    <li><a href="2026-06-06-run-a100-schema-retry-wrapper-boundary-rerun.html">A100 schema retry wrapper-boundary rerun</a></li>
+  </ul>
+</section>
+
+<section>
+  <h2>关键证据</h2>
+  <ul>
+    <li><a href="../../reports/public-sample/a100-output-boundary-retry-policy-train-split-rerun/report.md">output-boundary A100 report</a></li>
+    <li><a href="../../reports/public-sample/schema-retry-wrapper-boundary-policy/repair_summary.md">local retry wrapper-boundary repair summary</a></li>
+    <li><a href="../../reports/public-sample/a100-schema-retry-wrapper-boundary-rerun/report.md">A100 retry wrapper-boundary rerun report</a></li>
+    <li><a href="../../reports/public-sample/a100-schema-retry-wrapper-boundary-rerun/schema_retry_wrapper_boundary_diagnosis.json">latest row-level diagnosis</a></li>
+  </ul>
+</section>
+
+<section>
+  <h2>验证结果</h2>
+  <ul>
+    <li><code>PYTHONPATH=src pytest -q</code>: 157 passed。</li>
+    <li><code>uv run ruff check .</code>: All checks passed。</li>
+    <li><code>uv run mypy src</code>: no issues in 16 source files。</li>
+    <li><code>voice2task.cli.data validate --public</code>: ok true，12 SFT rows / 26 DPO pairs。</li>
+    <li><code>voice2task.cli.data dpo-check</code>: 26 pairs checked。</li>
+    <li><code>git diff --check</code>: passed。</li>
+    <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>: 4 specs passed。</li>
+    <li>Final leak scans for all three phase evidence packs: ok true，0 findings。</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Auto Integration</h2>
+  <ul>
+    <li>Committed on <code>main</code>: <code>d6b2711</code>, <code>1e4899b</code>, <code>a278bbf</code>。</li>
+    <li>Push skipped: this repo has no configured remote in the current checkout。</li>
+    <li>External review skipped: local validation and evidence were sufficient; no sanitized external review was requested for this stop.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>不能夸大的点</h2>
+  <ul>
+    <li>不能说模型恢复、质量提升、生产可用、held-out 泛化或 live-browser benchmark 改善。</li>
+    <li>不能说 parser 已放宽或 evaluator metric 已改进；本轮保留 strict failure。</li>
+    <li>不能把 train-split overfit diagnostic 当 dev/test benchmark。</li>
+  </ul>
+</section>
+
+<section>
+  <h2>推荐人工决策</h2>
+  <p>建议确认一个新的很小阶段：<code>diagnose-retry-decoding-stop-boundary</code>。目标是在本地分析 tokenizer stop/eos、chat-template continuation、retry prompt length 和 instruction-following preface，而不是直接放宽 parser 或修补 prediction。</p>
+</section>
+</main></body></html>
