@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Autonomous Loop: A100 retry trace and finish-state boundary</title>
+  <style>
+    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f6f8fb;color:#1f2933}
+    main{max-width:980px;margin:0 auto;padding:32px 20px 52px}
+    header,section{background:#fff;border:1px solid #d9e2ec;border-radius:8px;padding:22px 24px;margin:0 0 16px}
+    h1{margin:0 0 8px;font-size:27px;line-height:1.2;letter-spacing:0}
+    h2{margin:0 0 12px;font-size:18px;letter-spacing:0}
+    p,li{line-height:1.65}
+    .status{display:inline-block;margin-top:10px;padding:4px 9px;border-radius:999px;background:#fee2e2;color:#991b1b;font-size:13px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-top:12px}
+    .metric{border:1px solid #d9e2ec;border-radius:8px;padding:14px;background:#fbfdff}
+    .metric b{display:block;font-size:22px;margin-bottom:4px}
+    code{background:#eef2f7;padding:1px 5px;border-radius:4px}
+    a{color:#0f766e}
+  </style>
+</head>
+<body><main>
+  <header>
+    <h1>Autonomous Loop: A100 retry trace and finish-state boundary</h1>
+    <p><strong>一句话结论：</strong>本轮把 retry generation trace 从本地 instrumentation 推到真实 A100 train-split rerun，并进一步证明 <code>no_eos_observed</code> 只是 tokenizer EOS 可见性边界；strict schema 仍为 <code>0/3</code>，下一步若要改 instrumentation/decoding 需要用户确认。</p>
+    <span class="status">loop status: stopped by hard stop</span>
+  </header>
+
+  <section>
+    <h2>完成的阶段</h2>
+    <ul>
+      <li><code>instrument-retry-generation-trace</code>：归档并提交 <code>667d834</code>，为 retry attempt 写入 attempt-level trace 行。</li>
+      <li><code>run-a100-retry-generation-trace-rerun</code>：归档并提交 <code>07e8683</code>，真实 A100 prediction-only train-split rerun 产出 6 条 generation trace，其中 3 条为 retry attempt。</li>
+      <li><code>diagnose-retry-trace-finish-state-boundary</code>：归档并提交 <code>cd85cc5</code>，本地诊断确认 stop reason 未被当前 trace 直接记录。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>停止原因</h2>
+    <p>精确停止条件：hard stop。下一步高价值方向是 instrument model/generation-config stop reason，或调整 decoding/retry prompt 语义；这会改变当前 evidence-only 诊断边界，属于新的 instrumentation/decoding-policy 设计决策，需要用户确认。</p>
+  </section>
+
+  <section>
+    <h2>项目阶段进度</h2>
+    <ul>
+      <li>当前项目阶段目标：first-phase speech-to-contract normalization。</li>
+      <li>目标来源：<a href="../../README.md">README.md</a> 和 <a href="../../CONTEXT.md">CONTEXT.md</a>。</li>
+      <li>本轮推进：把 Browser Task Contract schema failure 的观察粒度推进到 retry attempt trace 与 finish-state 语义，不再只知道 retry wrapper 失败。</li>
+      <li>剩余能力差距：strict schema 仍为 <code>0/3</code>，retry output 仍是 prose/Markdown wrapped JSON fragment；还没有 dev/test generalization、release readiness 或 live-browser benchmark evidence。</li>
+      <li>下一阶段计划：用户确认后，提出一个新的 bounded OpenSpec change，专门 instrument generation stop reason 或调整 retry decoding policy；未确认前不改 decoder、不放宽 parser。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>关键证据</h2>
+    <div class="grid">
+      <div class="metric"><b>6</b>A100 generation trace rows</div>
+      <div class="metric"><b>3/3</b>retry attempt trace rows</div>
+      <div class="metric"><b>0/3</b>schema-valid final outputs</div>
+      <div class="metric"><b>0/3</b>retry max_new_tokens hit</div>
+    </div>
+    <ul>
+      <li><a href="./2026-06-06-run-a100-retry-generation-trace-rerun.html">A100 retry generation trace Human Brief</a></li>
+      <li><a href="./2026-06-06-diagnose-retry-trace-finish-state-boundary.html">finish-state boundary Human Brief</a></li>
+      <li><a href="../../reports/public-sample/a100-retry-generation-trace-rerun/retry_trace_diagnosis.md">retry_trace_diagnosis.md</a></li>
+      <li><a href="../../reports/public-sample/retry-trace-finish-state-boundary-diagnosis/finish_state_boundary_diagnosis.md">finish_state_boundary_diagnosis.md</a></li>
+      <li><a href="../../openspec/changes/archive/2026-06-06-run-a100-retry-generation-trace-rerun/tasks.md">A100 rerun OpenSpec archive</a></li>
+      <li><a href="../../openspec/changes/archive/2026-06-06-diagnose-retry-trace-finish-state-boundary/tasks.md">finish-state diagnosis OpenSpec archive</a></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>验证结果</h2>
+    <ul>
+      <li><code>PYTHONPATH=src pytest -q</code>：162 passed。</li>
+      <li><code>uv run ruff check .</code>：passed。</li>
+      <li><code>uv run mypy src</code>：passed，16 source files。</li>
+      <li><code>voice2task.cli.data validate</code>：passed，12 SFT rows，26 DPO pairs。</li>
+      <li><code>voice2task.cli.data dpo-check</code>：passed，26 pairs。</li>
+      <li><code>voice2task.cli.report leak-scan</code>：final public surface scan passed。</li>
+      <li><code>git diff --check</code>：passed。</li>
+      <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：4 passed，0 failed。</li>
+      <li><code>OPENSPEC_TELEMETRY=0 openspec list --json</code>：<code>{"changes":[]}</code>。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>集成状态</h2>
+    <ul>
+      <li>Auto integration：已 stage 并 commit 到 <code>main</code>。</li>
+      <li>提交：<code>667d834</code>、<code>07e8683</code>、<code>cd85cc5</code>。</li>
+      <li>Push：跳过；当前 repo 未配置明确 upstream/remote 输出。</li>
+      <li>External Pro Review：未使用；无 <code>docs/external-reviews/</code> 新文件。使用了内部只读 Reviewer，两个阶段的 Must Fix 均已修复并复验。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>不要夸大的点</h2>
+    <ul>
+      <li>这不是 checkpoint release、adapter release、production readiness、public full-corpus release 或 live-browser benchmark improvement。</li>
+      <li>这不是 held-out generalization，也不是 model-quality improvement。</li>
+      <li>本轮没有 parser relaxation、prediction repair/re-score、slot normalization 或 semantic-equivalence scoring。</li>
+      <li><code>no_eos_observed</code> 不等于真实 stop reason；当前 evidence 只证明 tokenizer EOS 未出现在 generated token slice 中。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>推荐的手动决定</h2>
+    <p>建议你确认是否进入新阶段：<code>instrument-generation-stop-reason-boundary</code>。目标是只补 public-safe stop-reason instrumentation，而不是改变 parser 或宣称模型恢复。若你同意，下一轮可以继续用 <code>/opsx auto</code>，但我需要把这个视为新的 OpenSpec scope。</p>
+  </section>
+</main></body></html>
