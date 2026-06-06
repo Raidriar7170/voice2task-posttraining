@@ -1,0 +1,256 @@
+{
+  "evidence_kind": "retry_decoding_stop_boundary_diagnosis_local",
+  "diagnostic_kind": "retry_decoding_stop_boundary_diagnosis",
+  "generated_at": "2026-06-06T00:00:00+00:00",
+  "source_prior_phase": "reports/public-sample/a100-schema-retry-wrapper-boundary-rerun",
+  "source_artifacts": {
+    "source_diagnosis": "reports/public-sample/a100-schema-retry-wrapper-boundary-rerun/schema_retry_wrapper_boundary_diagnosis.json",
+    "prediction_metadata": "reports/public-sample/a100-schema-retry-wrapper-boundary-rerun/prediction_metadata.json",
+    "schema_guard_summary": "reports/public-sample/a100-schema-retry-wrapper-boundary-rerun/schema_guard_summary.json",
+    "metrics": "reports/public-sample/a100-schema-retry-wrapper-boundary-rerun/metrics.json",
+    "generation_trace": "reports/public-sample/a100-schema-retry-wrapper-boundary-rerun/generation_trace.jsonl",
+    "raw_decoded_summary": "reports/public-sample/a100-schema-retry-wrapper-boundary-rerun/raw_decoded_summary.jsonl"
+  },
+  "diagnostic_artifacts": {
+    "diagnosis": "reports/public-sample/retry-decoding-stop-boundary-diagnosis/decoding_stop_boundary_diagnosis.json",
+    "report": "reports/public-sample/retry-decoding-stop-boundary-diagnosis/decoding_stop_boundary_diagnosis.md",
+    "manifest": "reports/public-sample/retry-decoding-stop-boundary-diagnosis/manifest.json",
+    "leak_scan": "reports/public-sample/retry-decoding-stop-boundary-diagnosis/leak_scan_result.json",
+    "phase_validation_leak_scan": "reports/public-sample/retry-decoding-stop-boundary-diagnosis/phase_validation_leak_scan_result.json",
+    "post_archive_leak_scan": "reports/public-sample/retry-decoding-stop-boundary-diagnosis/post_archive_leak_scan_result.json",
+    "final_leak_scan": "reports/public-sample/retry-decoding-stop-boundary-diagnosis/final_leak_scan_result.json",
+    "human_brief": "docs/human-briefs/2026-06-06-diagnose-retry-decoding-stop-boundary.html"
+  },
+  "source_artifact_policy": {
+    "uses_prior_public_sample_artifacts_only": true,
+    "source_predictions_preserved": true,
+    "source_metrics_preserved": true,
+    "source_generation_trace_preserved": true,
+    "source_raw_decoded_summary_preserved": true,
+    "no_private_raw_logs_or_adapters_read": true
+  },
+  "decoding_policy_observed": {
+    "do_sample": false,
+    "generation_trace_sidecar_written": true,
+    "max_new_tokens": 256,
+    "raw_decoded_sidecar_written": true,
+    "schema_guard_enabled": true,
+    "schema_repair_applied": false,
+    "schema_retry_enabled": true,
+    "schema_retry_max_attempts": 1,
+    "strategy": "greedy"
+  },
+  "retry_prompt_constraints_observed": {
+    "first_last_brace_visible": true,
+    "minified_json_only_visible": true,
+    "no_here_is_visible": true,
+    "no_markdown_prose_visible": true,
+    "no_prefix_suffix_text_visible": true,
+    "no_second_json_object_visible": true,
+    "no_trailing_analysis_visible": true,
+    "no_zh_this_following_prefix_visible": true,
+    "single_root_json_object_visible": true,
+    "strict_parser_rejection_warning_visible": true,
+    "task_type_search_not_search_web_visible": true
+  },
+  "summary": {
+    "prediction_count": 3,
+    "row_ids": [
+      "seed-search-weather",
+      "seed-search-weather-aug-1",
+      "seed-search-weather-aug-2"
+    ],
+    "strict_final_json_valid_rate": 0,
+    "strict_final_contract_exact_match": 0,
+    "validated_output_schema_valid_count": 0,
+    "retry_wrapper_reduction_observed": false,
+    "schema_recovery_observed": false,
+    "raw_json_object_count": 3,
+    "raw_missing_task_type_count": 3,
+    "retry_prose_markdown_wrapper_count": 3,
+    "retry_markdown_fence_visible_count": 3,
+    "retry_forbidden_preface_visible_count": 2,
+    "retry_trailing_analysis_visible_count": 3,
+    "retry_task_type_search_visible_count": 3,
+    "retry_parse_status_counts": {
+      "json_fragment_object": 3
+    },
+    "raw_parse_status_counts": {
+      "json_object": 3
+    },
+    "raw_generation_trace_available": true,
+    "retry_generation_trace_available": false,
+    "raw_generation_finish_state_counts": {
+      "eos_observed": 3
+    },
+    "raw_generation_eos_seen_count": 3,
+    "raw_generation_eos_token_id_available_count": 3,
+    "raw_generation_generated_token_count_min": 52,
+    "raw_generation_generated_token_count_max": 54,
+    "raw_generation_max_new_tokens": 256,
+    "raw_generation_max_new_tokens_hit_count": 0,
+    "raw_generation_token_counts_below_max_count": 3
+  },
+  "rows": [
+    {
+      "row_id": "seed-search-weather",
+      "raw_generation": {
+        "trace_available": true,
+        "finish_state": "eos_observed",
+        "eos_token_seen": true,
+        "eos_token_id_available": true,
+        "generated_token_count": 54,
+        "max_new_tokens": 256,
+        "max_new_tokens_hit": false
+      },
+      "raw_attempt": {
+        "parse_status": "json_object",
+        "missing_task_type": true,
+        "schema_valid": false
+      },
+      "retry_attempt": {
+        "generation_trace_available": false,
+        "parse_status": "json_fragment_object",
+        "decoded_char_count": 441,
+        "markdown_fence_visible": true,
+        "forbidden_preface_visible": true,
+        "trailing_analysis_visible": true,
+        "task_type_search_visible": true,
+        "schema_valid": false
+      },
+      "validated_output": {
+        "schema_valid": false,
+        "source": "none"
+      }
+    },
+    {
+      "row_id": "seed-search-weather-aug-1",
+      "raw_generation": {
+        "trace_available": true,
+        "finish_state": "eos_observed",
+        "eos_token_seen": true,
+        "eos_token_id_available": true,
+        "generated_token_count": 54,
+        "max_new_tokens": 256,
+        "max_new_tokens_hit": false
+      },
+      "raw_attempt": {
+        "parse_status": "json_object",
+        "missing_task_type": true,
+        "schema_valid": false
+      },
+      "retry_attempt": {
+        "generation_trace_available": false,
+        "parse_status": "json_fragment_object",
+        "decoded_char_count": 410,
+        "markdown_fence_visible": true,
+        "forbidden_preface_visible": false,
+        "trailing_analysis_visible": true,
+        "task_type_search_visible": true,
+        "schema_valid": false
+      },
+      "validated_output": {
+        "schema_valid": false,
+        "source": "none"
+      }
+    },
+    {
+      "row_id": "seed-search-weather-aug-2",
+      "raw_generation": {
+        "trace_available": true,
+        "finish_state": "eos_observed",
+        "eos_token_seen": true,
+        "eos_token_id_available": true,
+        "generated_token_count": 52,
+        "max_new_tokens": 256,
+        "max_new_tokens_hit": false
+      },
+      "raw_attempt": {
+        "parse_status": "json_object",
+        "missing_task_type": true,
+        "schema_valid": false
+      },
+      "retry_attempt": {
+        "generation_trace_available": false,
+        "parse_status": "json_fragment_object",
+        "decoded_char_count": 406,
+        "markdown_fence_visible": true,
+        "forbidden_preface_visible": true,
+        "trailing_analysis_visible": true,
+        "task_type_search_visible": true,
+        "schema_valid": false
+      },
+      "validated_output": {
+        "schema_valid": false,
+        "source": "none"
+      }
+    }
+  ],
+  "evidence_gaps": {
+    "retry_generation_trace_missing": true,
+    "retry_generation_trace_missing_fields": [
+      "retry_generated_token_count",
+      "retry_max_new_tokens",
+      "retry_eos_token_seen",
+      "retry_finish_state",
+      "retry_stop_reason"
+    ],
+    "raw_trace_must_not_be_used_for_retry_stop_claim": true,
+    "retry_eos_or_stop_token_behavior_unproven": true,
+    "retry_generated_token_count_unproven": true
+  },
+  "interpretation": {
+    "raw_generation_max_token_truncation_likely": false,
+    "raw_generation_stop_boundary_observed": true,
+    "retry_stop_boundary_cause_proven": false,
+    "retry_wrapper_is_observed_model_output_not_parser_behavior": true,
+    "instruction_following_explanatory_style_hypothesis": true,
+    "parser_relaxation_recommended": false,
+    "prediction_repair_recommended": false,
+    "next_recommended_phase": "instrument-retry-generation-trace-before-changing-decoding-behavior"
+  },
+  "preserved_metrics": {
+    "confirmation_accuracy": 0,
+    "contract_exact_match": 0,
+    "json_valid_rate": 0,
+    "route_accuracy": 0,
+    "safety_gold_stop_support": 0,
+    "safety_precision": 1,
+    "safety_predicted_stop_support": 0,
+    "safety_recall": 1,
+    "slot_f1": 0,
+    "task_type_accuracy": 0
+  },
+  "preserved_schema_guard_summary": {
+    "prediction_count": 3,
+    "public_readonly_raw_field_emission_count": 3,
+    "raw_attempt_schema_valid_count": 0,
+    "raw_json_object_count": 3,
+    "raw_missing_task_type_count": 3,
+    "retry_attempt_schema_valid_count": 0,
+    "retry_attempted_count": 3,
+    "retry_forbidden_preface_visible_count": 2,
+    "retry_prose_markdown_wrapper_count": 3,
+    "retry_task_type_search_visible_count": 3,
+    "retry_trailing_analysis_visible_count": 3,
+    "validated_output_schema_valid_count": 0
+  },
+  "claims": {
+    "local_diagnosis_only": true,
+    "a100_execution_performed": false,
+    "private_prediction_rerun_performed": false,
+    "training_or_prediction_rerun_performed": false,
+    "decoding_change_performed": false,
+    "parser_relaxation_performed": false,
+    "evaluator_metric_change_performed": false,
+    "schema_repair_or_coercion_applied": false,
+    "prediction_repair_or_rescore_performed": false,
+    "semantic_equivalence_scoring_performed": false,
+    "slot_normalization_performed": false,
+    "checkpoint_release": false,
+    "adapter_release": false,
+    "model_recovery_claim": false,
+    "model_quality_improvement_claim": false,
+    "live_browser_benchmark_improvement_claim": false
+  }
+}

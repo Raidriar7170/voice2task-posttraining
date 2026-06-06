@@ -1,0 +1,74 @@
+{
+  "evidence_kind": "retry_decoding_stop_boundary_diagnosis_local",
+  "source_prior_phase": "reports/public-sample/a100-schema-retry-wrapper-boundary-rerun",
+  "generated_at": "2026-06-06T00:00:00+00:00",
+  "source_artifacts": {
+    "source_diagnosis": "reports/public-sample/a100-schema-retry-wrapper-boundary-rerun/schema_retry_wrapper_boundary_diagnosis.json",
+    "prediction_metadata": "reports/public-sample/a100-schema-retry-wrapper-boundary-rerun/prediction_metadata.json",
+    "schema_guard_summary": "reports/public-sample/a100-schema-retry-wrapper-boundary-rerun/schema_guard_summary.json",
+    "metrics": "reports/public-sample/a100-schema-retry-wrapper-boundary-rerun/metrics.json",
+    "generation_trace": "reports/public-sample/a100-schema-retry-wrapper-boundary-rerun/generation_trace.jsonl",
+    "raw_decoded_summary": "reports/public-sample/a100-schema-retry-wrapper-boundary-rerun/raw_decoded_summary.jsonl"
+  },
+  "diagnostic_artifacts": {
+    "diagnosis": "reports/public-sample/retry-decoding-stop-boundary-diagnosis/decoding_stop_boundary_diagnosis.json",
+    "report": "reports/public-sample/retry-decoding-stop-boundary-diagnosis/decoding_stop_boundary_diagnosis.md",
+    "manifest": "reports/public-sample/retry-decoding-stop-boundary-diagnosis/manifest.json",
+    "leak_scan": "reports/public-sample/retry-decoding-stop-boundary-diagnosis/leak_scan_result.json",
+    "phase_validation_leak_scan": "reports/public-sample/retry-decoding-stop-boundary-diagnosis/phase_validation_leak_scan_result.json",
+    "post_archive_leak_scan": "reports/public-sample/retry-decoding-stop-boundary-diagnosis/post_archive_leak_scan_result.json",
+    "final_leak_scan": "reports/public-sample/retry-decoding-stop-boundary-diagnosis/final_leak_scan_result.json",
+    "human_brief": "docs/human-briefs/2026-06-06-diagnose-retry-decoding-stop-boundary.html"
+  },
+  "source_artifact_policy": {
+    "uses_prior_public_sample_artifacts_only": true,
+    "source_predictions_preserved": true,
+    "source_metrics_preserved": true,
+    "source_generation_trace_preserved": true,
+    "source_raw_decoded_summary_preserved": true,
+    "no_private_raw_logs_or_adapters_read": true
+  },
+  "counts": {
+    "prediction_count": 3,
+    "raw_generation_trace_rows": 3,
+    "retry_generation_trace_rows": 0,
+    "raw_generation_eos_seen_count": 3,
+    "raw_generation_max_new_tokens_hit_count": 0,
+    "retry_prose_markdown_wrapper_count": 3,
+    "retry_markdown_fence_visible_count": 3,
+    "retry_forbidden_preface_visible_count": 2,
+    "retry_trailing_analysis_visible_count": 3,
+    "validated_output_schema_valid_count": 0
+  },
+  "evidence_gaps": {
+    "retry_generation_trace_missing": true,
+    "retry_generation_trace_missing_fields": [
+      "retry_generated_token_count",
+      "retry_max_new_tokens",
+      "retry_eos_token_seen",
+      "retry_finish_state",
+      "retry_stop_reason"
+    ],
+    "raw_trace_must_not_be_used_for_retry_stop_claim": true,
+    "retry_eos_or_stop_token_behavior_unproven": true,
+    "retry_generated_token_count_unproven": true
+  },
+  "claims": {
+    "local_diagnosis_only": true,
+    "a100_execution_performed": false,
+    "private_prediction_rerun_performed": false,
+    "training_or_prediction_rerun_performed": false,
+    "decoding_change_performed": false,
+    "parser_relaxation_performed": false,
+    "evaluator_metric_change_performed": false,
+    "schema_repair_or_coercion_applied": false,
+    "prediction_repair_or_rescore_performed": false,
+    "semantic_equivalence_scoring_performed": false,
+    "slot_normalization_performed": false,
+    "checkpoint_release": false,
+    "adapter_release": false,
+    "model_recovery_claim": false,
+    "model_quality_improvement_claim": false,
+    "live_browser_benchmark_improvement_claim": false
+  }
+}

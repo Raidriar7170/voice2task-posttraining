@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Retry Decoding Stop Boundary 本地诊断</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17202a;
+      --muted: #5c6670;
+      --line: #d8dee4;
+      --ok: #0b6b42;
+      --warn: #9a5b00;
+      --paper: #ffffff;
+      --band: #f5f7f9;
+      --accent: #1d5f7a;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+      line-height: 1.55;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+    }
+    header {
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 18px;
+      margin-bottom: 24px;
+    }
+    h1 {
+      font-size: 30px;
+      margin: 0 0 8px;
+      letter-spacing: 0;
+    }
+    h2 {
+      font-size: 18px;
+      margin: 24px 0 10px;
+    }
+    p {
+      margin: 8px 0;
+    }
+    a {
+      color: var(--accent);
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.94em;
+    }
+    .summary {
+      font-size: 18px;
+      color: var(--ink);
+      max-width: 820px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 10px;
+      margin: 18px 0;
+    }
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 12px;
+      background: var(--band);
+    }
+    .metric .value {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+    .metric .label {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .ok { color: var(--ok); }
+    .warn { color: var(--warn); }
+    ul {
+      padding-left: 20px;
+    }
+    li {
+      margin: 6px 0;
+    }
+    .note {
+      border-left: 4px solid var(--accent);
+      padding: 10px 12px;
+      background: var(--band);
+      margin: 14px 0;
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Retry Decoding Stop Boundary 本地诊断</h1>
+    <p class="summary">结论：raw generation 已观察到 EOS 且未打满 <code>max_new_tokens</code>，但 retry attempt 目前没有 token/finish/stop trace，因此不能把 raw EOS 证据外推成 retry stop-boundary 结论。</p>
+  </header>
+
+  <section>
+    <h2>Current Status</h2>
+    <p><strong class="ok">archived</strong>：本阶段是小型本地诊断，只读取已提交的 public-safe A100 sidecar，不运行 A100、不重训、不改 decoding/parser/evaluator。</p>
+  </section>
+
+  <section>
+    <h2>What Changed</h2>
+    <ul>
+      <li>新增 <a href="../../reports/public-sample/retry-decoding-stop-boundary-diagnosis/decoding_stop_boundary_diagnosis.json">decoding_stop_boundary_diagnosis.json</a> 与 <a href="../../reports/public-sample/retry-decoding-stop-boundary-diagnosis/decoding_stop_boundary_diagnosis.md">Markdown diagnosis</a>。</li>
+      <li>把 latest A100 结果拆成三类：raw generation 已知事实、retry wrapper 症状、retry stop-boundary 证据缺口。</li>
+      <li>明确记录：现有 <code>generation_trace.jsonl</code> 只覆盖 raw attempt，不覆盖 retry attempt。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Key Evidence</h2>
+    <div class="grid">
+      <div class="metric"><div class="value">3/3</div><div class="label">raw trace rows: EOS observed</div></div>
+      <div class="metric"><div class="value">52-54</div><div class="label">raw generated tokens, below 256</div></div>
+      <div class="metric"><div class="value">0/3</div><div class="label">strict final schema-valid outputs</div></div>
+      <div class="metric"><div class="value">3/3</div><div class="label">retry attempts still prose/Markdown wrapped</div></div>
+    </div>
+    <div class="note">这支持“raw 不是简单 max-token 截断”的判断；不支持“retry 已经/没有遇到 EOS 或 stop token”的强结论，因为 Retry generation trace 缺失。</div>
+  </section>
+
+  <section>
+    <h2>Source Files</h2>
+    <ul>
+      <li><a href="../../reports/public-sample/a100-schema-retry-wrapper-boundary-rerun/schema_retry_wrapper_boundary_diagnosis.json">source A100 retry-wrapper diagnosis</a></li>
+      <li><a href="../../reports/public-sample/a100-schema-retry-wrapper-boundary-rerun/generation_trace.jsonl">source generation_trace.jsonl</a></li>
+      <li><a href="../../reports/public-sample/a100-schema-retry-wrapper-boundary-rerun/raw_decoded_summary.jsonl">source raw_decoded_summary.jsonl</a></li>
+      <li><a href="../../openspec/changes/archive/2026-06-06-diagnose-retry-decoding-stop-boundary/proposal.md">OpenSpec proposal</a>、<a href="../../openspec/changes/archive/2026-06-06-diagnose-retry-decoding-stop-boundary/tasks.md">tasks</a></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Verification</h2>
+    <ul>
+      <li><code>OPENSPEC_TELEMETRY=0 openspec validate diagnose-retry-decoding-stop-boundary --strict</code>：passed。</li>
+      <li>Focused tests、full tests、ruff、mypy、public data validation、DPO check、leak-scan、<code>git diff --check</code>、<code>openspec validate --all --strict</code>：passed。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Boundaries</h2>
+    <ul>
+      <li>没有 A100 execution、private prediction rerun、training、decoding change、parser relaxation、evaluator metric change。</li>
+      <li>没有 output repair、prediction re-score、semantic-equivalence scoring、slot normalization。</li>
+      <li>不宣称 model recovery、model-quality improvement、checkpoint/adapter release 或 live-browser benchmark improvement。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Recommended Next Step</h2>
+    <p>下一步建议单独开极小阶段：给 retry attempt 增加 generation trace instrumentation，再决定是否需要本地 decoding stop-boundary 实验或 A100 rerun。</p>
+  </section>
+</main>
+</body>
+</html>

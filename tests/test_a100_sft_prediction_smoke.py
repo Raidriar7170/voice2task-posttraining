@@ -1665,6 +1665,179 @@ def test_a100_schema_retry_wrapper_boundary_rerun_evidence_is_public_safe_and_bo
     assert scan_paths([evidence_dir, human_brief_path, *existing_change_dirs]).ok is True
 
 
+def test_retry_decoding_stop_boundary_diagnosis_pack_is_public_safe_and_bounded() -> None:
+    source_dir = Path("reports/public-sample/a100-schema-retry-wrapper-boundary-rerun")
+    evidence_dir = Path("reports/public-sample/retry-decoding-stop-boundary-diagnosis")
+    human_brief_path = Path("docs/human-briefs/2026-06-06-diagnose-retry-decoding-stop-boundary.html")
+    change_dirs = [
+        Path("openspec/changes/diagnose-retry-decoding-stop-boundary"),
+        Path("openspec/changes/archive/2026-06-06-diagnose-retry-decoding-stop-boundary"),
+    ]
+    required_files = {
+        "decoding_stop_boundary_diagnosis.json",
+        "decoding_stop_boundary_diagnosis.md",
+        "manifest.json",
+        "leak_scan_result.json",
+        "phase_validation_leak_scan_result.json",
+        "post_archive_leak_scan_result.json",
+        "final_leak_scan_result.json",
+    }
+    expected_row_ids = ["seed-search-weather", "seed-search-weather-aug-1", "seed-search-weather-aug-2"]
+
+    assert evidence_dir.exists()
+    assert required_files <= {path.name for path in evidence_dir.iterdir()}
+    assert human_brief_path.exists()
+    existing_change_dirs = [path for path in change_dirs if path.exists()]
+    assert existing_change_dirs
+
+    diagnosis = json.loads((evidence_dir / "decoding_stop_boundary_diagnosis.json").read_text(encoding="utf-8"))
+    manifest = json.loads((evidence_dir / "manifest.json").read_text(encoding="utf-8"))
+    report = (evidence_dir / "decoding_stop_boundary_diagnosis.md").read_text(encoding="utf-8")
+    human_brief = human_brief_path.read_text(encoding="utf-8")
+    leak_scan = json.loads((evidence_dir / "leak_scan_result.json").read_text(encoding="utf-8"))
+    phase_validation_leak_scan = json.loads(
+        (evidence_dir / "phase_validation_leak_scan_result.json").read_text(encoding="utf-8")
+    )
+    post_archive_leak_scan = json.loads(
+        (evidence_dir / "post_archive_leak_scan_result.json").read_text(encoding="utf-8")
+    )
+    final_leak_scan = json.loads((evidence_dir / "final_leak_scan_result.json").read_text(encoding="utf-8"))
+    source_diagnosis = json.loads(
+        (source_dir / "schema_retry_wrapper_boundary_diagnosis.json").read_text(encoding="utf-8")
+    )
+    generation_trace_rows = [
+        json.loads(line)
+        for line in (source_dir / "generation_trace.jsonl").read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    serialized = "\n".join(
+        [
+            json.dumps(diagnosis, ensure_ascii=False, sort_keys=True),
+            json.dumps(manifest, ensure_ascii=False, sort_keys=True),
+            json.dumps(leak_scan, ensure_ascii=False, sort_keys=True),
+            json.dumps(phase_validation_leak_scan, ensure_ascii=False, sort_keys=True),
+            json.dumps(post_archive_leak_scan, ensure_ascii=False, sort_keys=True),
+            json.dumps(final_leak_scan, ensure_ascii=False, sort_keys=True),
+            report,
+            human_brief,
+        ]
+    )
+
+    assert diagnosis["evidence_kind"] == "retry_decoding_stop_boundary_diagnosis_local"
+    assert diagnosis["diagnostic_kind"] == "retry_decoding_stop_boundary_diagnosis"
+    assert diagnosis["source_prior_phase"] == source_dir.as_posix()
+    assert diagnosis["source_artifacts"]["source_diagnosis"].endswith(
+        "schema_retry_wrapper_boundary_diagnosis.json"
+    )
+    assert diagnosis["source_artifact_policy"]["uses_prior_public_sample_artifacts_only"] is True
+    assert diagnosis["source_artifact_policy"]["source_predictions_preserved"] is True
+    assert diagnosis["source_artifact_policy"]["source_metrics_preserved"] is True
+    assert diagnosis["source_artifact_policy"]["no_private_raw_logs_or_adapters_read"] is True
+
+    summary = diagnosis["summary"]
+    assert summary["prediction_count"] == 3
+    assert summary["row_ids"] == expected_row_ids
+    assert summary["strict_final_json_valid_rate"] == source_diagnosis["summary"]["strict_final_json_valid_rate"] == 0
+    assert summary["strict_final_contract_exact_match"] == 0
+    assert summary["validated_output_schema_valid_count"] == 0
+    assert summary["raw_json_object_count"] == 3
+    assert summary["raw_missing_task_type_count"] == 3
+    assert summary["retry_prose_markdown_wrapper_count"] == 3
+    assert summary["retry_markdown_fence_visible_count"] == 3
+    assert summary["retry_forbidden_preface_visible_count"] == 2
+    assert summary["retry_trailing_analysis_visible_count"] == 3
+    assert summary["retry_task_type_search_visible_count"] == 3
+    assert summary["retry_parse_status_counts"] == {"json_fragment_object": 3}
+    assert summary["raw_parse_status_counts"] == {"json_object": 3}
+    assert summary["raw_generation_trace_available"] is True
+    assert summary["retry_generation_trace_available"] is False
+    assert summary["raw_generation_finish_state_counts"] == {"eos_observed": 3}
+    assert summary["raw_generation_eos_seen_count"] == 3
+    assert summary["raw_generation_generated_token_count_min"] == 52
+    assert summary["raw_generation_generated_token_count_max"] == 54
+    assert summary["raw_generation_max_new_tokens"] == 256
+    assert summary["raw_generation_max_new_tokens_hit_count"] == 0
+    assert summary["raw_generation_token_counts_below_max_count"] == 3
+    assert all(row["finish_state"] == "eos_observed" for row in generation_trace_rows)
+    assert all(row["generated_token_count"] < row["max_new_tokens"] for row in generation_trace_rows)
+
+    assert [row["row_id"] for row in diagnosis["rows"]] == expected_row_ids
+    assert all(row["raw_generation"]["trace_available"] is True for row in diagnosis["rows"])
+    assert all(row["raw_generation"]["max_new_tokens_hit"] is False for row in diagnosis["rows"])
+    assert all(row["retry_attempt"]["generation_trace_available"] is False for row in diagnosis["rows"])
+    assert all(row["retry_attempt"]["parse_status"] == "json_fragment_object" for row in diagnosis["rows"])
+    assert all(row["retry_attempt"]["markdown_fence_visible"] is True for row in diagnosis["rows"])
+
+    assert diagnosis["evidence_gaps"]["retry_generation_trace_missing"] is True
+    assert diagnosis["evidence_gaps"]["raw_trace_must_not_be_used_for_retry_stop_claim"] is True
+    assert diagnosis["evidence_gaps"]["retry_eos_or_stop_token_behavior_unproven"] is True
+    assert diagnosis["evidence_gaps"]["retry_generated_token_count_unproven"] is True
+    assert diagnosis["evidence_gaps"]["retry_generation_trace_missing_fields"] == [
+        "retry_generated_token_count",
+        "retry_max_new_tokens",
+        "retry_eos_token_seen",
+        "retry_finish_state",
+        "retry_stop_reason",
+    ]
+    assert diagnosis["interpretation"]["raw_generation_max_token_truncation_likely"] is False
+    assert diagnosis["interpretation"]["raw_generation_stop_boundary_observed"] is True
+    assert diagnosis["interpretation"]["retry_stop_boundary_cause_proven"] is False
+    assert diagnosis["interpretation"]["retry_wrapper_is_observed_model_output_not_parser_behavior"] is True
+    assert diagnosis["interpretation"]["instruction_following_explanatory_style_hypothesis"] is True
+    assert diagnosis["interpretation"]["parser_relaxation_recommended"] is False
+    assert diagnosis["interpretation"]["prediction_repair_recommended"] is False
+    assert diagnosis["interpretation"]["next_recommended_phase"] == (
+        "instrument-retry-generation-trace-before-changing-decoding-behavior"
+    )
+
+    assert manifest["evidence_kind"] == diagnosis["evidence_kind"]
+    assert manifest["source_prior_phase"] == source_dir.as_posix()
+    assert manifest["counts"]["raw_generation_trace_rows"] == 3
+    assert manifest["counts"]["retry_generation_trace_rows"] == 0
+    assert manifest["counts"]["raw_generation_eos_seen_count"] == 3
+    assert manifest["counts"]["raw_generation_max_new_tokens_hit_count"] == 0
+    assert manifest["counts"]["retry_prose_markdown_wrapper_count"] == 3
+    assert manifest["diagnostic_artifacts"]["diagnosis"].endswith("decoding_stop_boundary_diagnosis.json")
+    assert manifest["diagnostic_artifacts"]["report"].endswith("decoding_stop_boundary_diagnosis.md")
+    assert manifest["diagnostic_artifacts"]["human_brief"] == human_brief_path.as_posix()
+    assert manifest["evidence_gaps"] == diagnosis["evidence_gaps"]
+    assert manifest["claims"] == diagnosis["claims"]
+
+    assert diagnosis["claims"]["local_diagnosis_only"] is True
+    assert diagnosis["claims"]["a100_execution_performed"] is False
+    assert diagnosis["claims"]["private_prediction_rerun_performed"] is False
+    assert diagnosis["claims"]["training_or_prediction_rerun_performed"] is False
+    assert diagnosis["claims"]["decoding_change_performed"] is False
+    assert diagnosis["claims"]["parser_relaxation_performed"] is False
+    assert diagnosis["claims"]["evaluator_metric_change_performed"] is False
+    assert diagnosis["claims"]["schema_repair_or_coercion_applied"] is False
+    assert diagnosis["claims"]["prediction_repair_or_rescore_performed"] is False
+    assert diagnosis["claims"]["semantic_equivalence_scoring_performed"] is False
+    assert diagnosis["claims"]["slot_normalization_performed"] is False
+    assert diagnosis["claims"]["checkpoint_release"] is False
+    assert diagnosis["claims"]["adapter_release"] is False
+    assert diagnosis["claims"]["model_recovery_claim"] is False
+    assert diagnosis["claims"]["model_quality_improvement_claim"] is False
+    assert diagnosis["claims"]["live_browser_benchmark_improvement_claim"] is False
+
+    assert leak_scan["ok"] is True
+    assert leak_scan["findings"] == []
+    assert phase_validation_leak_scan["ok"] is True
+    assert phase_validation_leak_scan["findings"] == []
+    assert post_archive_leak_scan["ok"] is True
+    assert post_archive_leak_scan["findings"] == []
+    assert final_leak_scan["ok"] is True
+    assert final_leak_scan["findings"] == []
+    assert "raw generation reached EOS before the 256 token limit" in report
+    assert "Retry generation trace 缺失" in human_brief
+    assert "不能把 raw EOS 证据外推成 retry stop-boundary 结论" in human_brief
+    assert "/mnt/data/" not in serialized
+    assert "/Users/" not in serialized
+    assert "volcano" not in serialized
+    assert "private-overrides" not in serialized
+    assert scan_paths([evidence_dir, human_brief_path, *existing_change_dirs]).ok is True
+
+
 def test_confirmation_rerun_row_mismatch_diagnosis_pack_is_public_safe_and_bounded() -> None:
     prior_dir = Path("reports/public-sample/a100-confirmation-required-train-split-rerun")
     evidence_dir = Path("reports/public-sample/confirmation-rerun-row-mismatch-diagnosis")
