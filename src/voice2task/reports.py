@@ -113,14 +113,27 @@ def write_constrained_decoding_diagnosis_report(
 
     summary = diagnostics["summary"]
     examples = diagnostics.get("examples", {})
-    lines = [
-        f"# {title}",
-        "",
-        (
+    claims = diagnostics.get("claims", {})
+    if claims.get("local_decoder_output_shape_hardening_only", False):
+        boundary_sentence = (
             "This diagnosis is local decoder/output-shape hardening evidence only: "
             "invalid predictions remain invalid, and the report does not repair, normalize, "
             "coerce, or replace model outputs."
-        ),
+        )
+    elif claims.get("a100_prediction_rerun_evidence", False):
+        boundary_sentence = (
+            "This diagnosis is A100 prediction-rerun evidence with a strict non-repair boundary: "
+            "model outputs are not repaired, normalized, coerced, replaced, re-scored, or relaxed."
+        )
+    else:
+        boundary_sentence = (
+            "This diagnosis is evidence-only: model outputs are not repaired, normalized, "
+            "coerced, replaced, re-scored, or relaxed."
+        )
+    lines = [
+        f"# {title}",
+        "",
+        boundary_sentence,
         "",
         "## Boundary",
         "",

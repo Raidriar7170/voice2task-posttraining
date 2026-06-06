@@ -361,6 +361,70 @@ def test_diagnose_constrained_decoding_cli_writes_public_safe_json_and_markdown(
     assert "not a checkpoint release" in markdown
 
 
+def test_diagnose_constrained_decoding_cli_can_label_a100_prediction_rerun_evidence(
+    tmp_path: Path,
+) -> None:
+    prediction = {
+        "task_type": "search_web",
+        "route": "search_web",
+        "safety": {"allow": True, "reason": "public_readonly"},
+        "confirmation_required": False,
+        "slots": {"query": "天气"},
+        "normalized_command": "搜索天气",
+        "language": "zh-CN",
+        "contract_version": "v1",
+    }
+    predictions = tmp_path / "predictions.jsonl"
+    raw_decoded_summary = tmp_path / "raw_decoded_summary.jsonl"
+    output = tmp_path / "constrained"
+    decoded = json.dumps(prediction, ensure_ascii=False, sort_keys=True)
+    write_jsonl(predictions, [{"id": "row-1", "prediction": prediction}])
+    write_jsonl(
+        raw_decoded_summary,
+        [
+            {
+                "id": "row-1",
+                "raw_attempt": {
+                    "parse_status": "json_object",
+                    "decoded_prefix": decoded,
+                    "decoded_suffix": decoded,
+                },
+                "retry_attempt": None,
+                "schema_guard": {
+                    "raw_attempt_schema_valid": True,
+                    "retry_attempt_schema_valid": None,
+                    "validated_output_schema_valid": True,
+                },
+            }
+        ],
+    )
+
+    assert (
+        eval_cli.main(
+            [
+                "diagnose-constrained-decoding",
+                "--predictions",
+                predictions.as_posix(),
+                "--raw-decoded-summary",
+                raw_decoded_summary.as_posix(),
+                "--output",
+                output.as_posix(),
+                "--evidence-context",
+                "a100_prediction_rerun",
+            ]
+        )
+        == 0
+    )
+
+    diagnostics = json.loads((output / "constrained_decoding_diagnosis.json").read_text(encoding="utf-8"))
+    markdown = (output / "constrained_decoding_diagnosis.md").read_text(encoding="utf-8")
+    assert diagnostics["claims"]["evidence_context"] == "a100_prediction_rerun"
+    assert diagnostics["claims"]["a100_prediction_rerun_evidence"] is True
+    assert diagnostics["claims"]["local_decoder_output_shape_hardening_only"] is False
+    assert "A100 prediction-rerun evidence" in markdown
+    assert "local decoder/output-shape hardening evidence only" not in markdown
+
+
 def test_alignment_diagnostics_compare_raw_invalid_prediction_fields(tmp_path: Path) -> None:
     row = _row("gold-1", "search_web", "天气")
     prediction = {

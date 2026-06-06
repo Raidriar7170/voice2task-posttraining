@@ -1,0 +1,147 @@
+{
+  "artifact_policy": {
+    "a100_execution_performed": true,
+    "checkpoints_or_adapters_copied_to_git": false,
+    "host_details_copied_to_git": false,
+    "prediction_rerun_performed": true,
+    "private_configs_copied_to_git": false,
+    "raw_logs_copied_to_git": false,
+    "remote_paths_copied_to_git": false,
+    "train_split_only": true,
+    "training_performed": false
+  },
+  "artifacts": {
+    "constrained_decoding_diagnosis": "reports/public-sample/a100-retry-template-boundary-rerun/constrained_decoding_diagnosis.json",
+    "constrained_decoding_diagnosis_markdown": "reports/public-sample/a100-retry-template-boundary-rerun/constrained_decoding_diagnosis.md",
+    "generation_trace": "reports/public-sample/a100-retry-template-boundary-rerun/generation_trace.jsonl",
+    "leak_scan": "reports/public-sample/a100-retry-template-boundary-rerun/leak_scan_result.json",
+    "manifest": "reports/public-sample/a100-retry-template-boundary-rerun/manifest.json",
+    "metrics_json": "reports/public-sample/a100-retry-template-boundary-rerun/metrics.json",
+    "metrics_markdown": "reports/public-sample/a100-retry-template-boundary-rerun/metrics.md",
+    "phase_validation_leak_scan": "reports/public-sample/a100-retry-template-boundary-rerun/phase_validation_leak_scan_result.json",
+    "post_archive_leak_scan": "reports/public-sample/a100-retry-template-boundary-rerun/post_archive_leak_scan_result.json",
+    "final_leak_scan": "reports/public-sample/a100-retry-template-boundary-rerun/final_leak_scan_result.json",
+    "prediction_metadata": "reports/public-sample/a100-retry-template-boundary-rerun/prediction_metadata.json",
+    "predictions": "reports/public-sample/a100-retry-template-boundary-rerun/predictions.jsonl",
+    "prompt_snapshot": "reports/public-sample/a100-retry-template-boundary-rerun/prompt_snapshot.json",
+    "raw_decoded_summary": "reports/public-sample/a100-retry-template-boundary-rerun/raw_decoded_summary.jsonl",
+    "report": "reports/public-sample/a100-retry-template-boundary-rerun/report.md",
+    "retry_template_boundary_diagnosis": "reports/public-sample/a100-retry-template-boundary-rerun/retry_template_boundary_diagnosis.json",
+    "retry_template_boundary_diagnosis_markdown": "reports/public-sample/a100-retry-template-boundary-rerun/retry_template_boundary_diagnosis.md",
+    "schema_diagnostics": "reports/public-sample/a100-retry-template-boundary-rerun/schema_diagnostics.json",
+    "schema_diagnostics_markdown": "reports/public-sample/a100-retry-template-boundary-rerun/schema_diagnostics.md",
+    "schema_guard_summary": "reports/public-sample/a100-retry-template-boundary-rerun/schema_guard_summary.json",
+    "schema_guard_summary_markdown": "reports/public-sample/a100-retry-template-boundary-rerun/schema_guard_summary.md",
+    "train_split_gold": "reports/public-sample/a100-retry-template-boundary-rerun/train_split_gold.jsonl"
+  },
+  "change_name": "run-a100-retry-template-boundary-rerun",
+  "claims": {
+    "a100_execution_performed": true,
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "decoding_behavior_change_performed": false,
+    "evaluator_metric_change_performed": false,
+    "held_out_generalization_claim": false,
+    "live_browser_benchmark_claim": false,
+    "model_quality_improvement_claim": false,
+    "model_recovery_claim": false,
+    "parser_relaxation_performed": false,
+    "prediction_repair_or_rescore_performed": false,
+    "prediction_rerun_performed": true,
+    "production_readiness_claim": false,
+    "public_full_corpus_release_claim": false,
+    "retry_template_boundary_exercised": true,
+    "schema_repair_or_coercion_applied": false,
+    "semantic_equivalence_scoring_performed": false,
+    "slot_normalization_performed": false,
+    "strict_final_contract_metrics": true,
+    "train_split_only": true,
+    "training_performed": false
+  },
+  "diagnostic_artifacts": {
+    "final_leak_scan": "reports/public-sample/a100-retry-template-boundary-rerun/final_leak_scan_result.json",
+    "leak_scan": "reports/public-sample/a100-retry-template-boundary-rerun/leak_scan_result.json",
+    "phase_validation_leak_scan": "reports/public-sample/a100-retry-template-boundary-rerun/phase_validation_leak_scan_result.json",
+    "post_archive_leak_scan": "reports/public-sample/a100-retry-template-boundary-rerun/post_archive_leak_scan_result.json",
+    "retry_template_boundary_diagnosis": "reports/public-sample/a100-retry-template-boundary-rerun/retry_template_boundary_diagnosis.json",
+    "schema_guard_summary": "reports/public-sample/a100-retry-template-boundary-rerun/schema_guard_summary.json"
+  },
+  "evidence_kind": "a100_retry_template_boundary_train_split_rerun",
+  "generalization_claim": false,
+  "generated_at": "2026-06-06T09:42:21.640565+00:00",
+  "observed_result": {
+    "exact_match_recovery_observed": false,
+    "model_quality_improvement_claim": false,
+    "prediction_count": 3,
+    "prediction_source_kind": "private_a100_adapter",
+    "prediction_split": "train",
+    "prior_strict_final_contract_exact_match": 0.0,
+    "prior_strict_final_json_valid_rate": 0.0,
+    "raw_attempt_schema_valid_count": 1,
+    "raw_json_object_count": 3,
+    "retry_attempt_schema_valid_count": 2,
+    "retry_attempted_count": 2,
+    "retry_json_object_count": 2,
+    "retry_prose_markdown_wrapper_count": 0,
+    "retry_template_boundary_visible": true,
+    "schema_recovery_observed": true,
+    "strict_final_contract_exact_match": 0.0,
+    "strict_final_json_valid_rate": 1.0,
+    "strict_retry_parser_rejected_fragment_count": 0,
+    "trace_summary": {
+      "attempt_counts": {
+        "raw_attempt": 3,
+        "retry_attempt": 2
+      },
+      "finish_state_counts": {
+        "raw_attempt": {
+          "eos_observed": 3
+        },
+        "retry_attempt": {
+          "eos_observed": 2
+        }
+      },
+      "max_new_tokens_hit_counts": {
+        "raw_attempt": {
+          "False": 3
+        },
+        "retry_attempt": {
+          "False": 2
+        }
+      },
+      "trace_row_count": 5
+    },
+    "training_rows_used": 3,
+    "validated_output_schema_valid_count": 3,
+    "validated_output_source_counts": {
+      "raw_attempt": 1,
+      "retry_attempt": 2
+    }
+  },
+  "overfit_diagnostic": true,
+  "prediction_count": 3,
+  "prediction_source_kind": "private_a100_adapter",
+  "prediction_split": "train",
+  "prior_context": {
+    "local_retry_template_boundary_hardening_only": true,
+    "prior_retry_prose_markdown_wrapper_count": 3,
+    "prior_strict_final_contract_exact_match": 0.0,
+    "prior_strict_final_json_valid_rate": 0.0,
+    "prior_validated_output_schema_valid_count": 0
+  },
+  "retry_template_boundary": {
+    "assistant_json_payload_only_visible": true,
+    "machine_only_contract_regeneration_visible": true,
+    "no_conversational_answer_mode_visible": true,
+    "retry_prompt_uses_chat_template_boundary": true,
+    "retry_template_mode_visible": true,
+    "strict_whole_object_parser_boundary_visible": true
+  },
+  "source_artifacts": {
+    "local_retry_template_boundary": "reports/public-sample/retry-template-decoding-boundary",
+    "local_retry_template_boundary_manifest": "reports/public-sample/retry-template-decoding-boundary/manifest.json",
+    "prior_a100_retry_json_only_manifest": "reports/public-sample/a100-retry-json-only-boundary-rerun/manifest.json",
+    "prior_a100_retry_json_only_rerun": "reports/public-sample/a100-retry-json-only-boundary-rerun"
+  },
+  "training_rows_used": 3
+}

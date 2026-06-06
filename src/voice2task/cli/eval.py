@@ -93,6 +93,11 @@ def build_parser() -> argparse.ArgumentParser:
     diagnose_constrained.add_argument("--raw-decoded-summary", type=Path, required=True)
     diagnose_constrained.add_argument("--output", type=Path, required=True)
     diagnose_constrained.add_argument("--title", default="Voice2Task constrained decoding diagnosis")
+    diagnose_constrained.add_argument(
+        "--evidence-context",
+        choices=("local_decoder_output_shape_hardening", "a100_prediction_rerun"),
+        default="local_decoder_output_shape_hardening",
+    )
 
     diagnose_alignment = subcommands.add_parser("diagnose-alignment")
     diagnose_alignment.add_argument("--gold", type=Path, required=True)
@@ -146,7 +151,11 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "diagnose-constrained-decoding":
         predictions = load_predictions(args.predictions)
-        diagnostics = diagnose_constrained_contract_decoding(predictions, read_jsonl(args.raw_decoded_summary))
+        diagnostics = diagnose_constrained_contract_decoding(
+            predictions,
+            read_jsonl(args.raw_decoded_summary),
+            evidence_context=args.evidence_context,
+        )
         paths = write_constrained_decoding_diagnosis_report(diagnostics, output_dir=args.output, title=args.title)
         print(json.dumps({"ok": True, "paths": {key: value.as_posix() for key, value in paths.items()}}, indent=2))
         return 0

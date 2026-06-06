@@ -1647,7 +1647,12 @@ def _increment_count(counts: dict[str, int], key: str) -> None:
 def diagnose_constrained_contract_decoding(
     predictions: dict[str, Any],
     raw_decoded_summary_rows: list[dict[str, Any]],
+    evidence_context: str = "local_decoder_output_shape_hardening",
 ) -> dict[str, Any]:
+    valid_contexts = {"local_decoder_output_shape_hardening", "a100_prediction_rerun"}
+    if evidence_context not in valid_contexts:
+        raise ValueError(f"Unsupported constrained decoding evidence_context: {evidence_context}")
+
     parse_status_counts: dict[str, dict[str, int]] = {"raw_attempt": {}, "retry_attempt": {}}
     legacy_task_type_alias_examples: list[dict[str, str]] = []
     path_like_route_examples: list[dict[str, str]] = []
@@ -1763,9 +1768,13 @@ def diagnose_constrained_contract_decoding(
         },
         "rows": rows,
         "claims": {
+            "evidence_context": evidence_context,
             "invalid_predictions_remain_invalid": True,
             "does_not_coerce_or_replace_invalid_predictions": True,
-            "local_decoder_output_shape_hardening_only": True,
+            "local_decoder_output_shape_hardening_only": (
+                evidence_context == "local_decoder_output_shape_hardening"
+            ),
+            "a100_prediction_rerun_evidence": evidence_context == "a100_prediction_rerun",
             "checkpoint_release": False,
             "adapter_release": False,
             "held_out_generalization_claim": False,

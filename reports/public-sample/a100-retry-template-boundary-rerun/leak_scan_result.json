@@ -1,0 +1,11 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-06T09:42:21.681151+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "reports/public-sample/a100-retry-template-boundary-rerun",
+    "docs/human-briefs/2026-06-06-run-a100-retry-template-boundary-rerun.html",
+    "openspec/changes/run-a100-retry-template-boundary-rerun"
+  ]
+}
