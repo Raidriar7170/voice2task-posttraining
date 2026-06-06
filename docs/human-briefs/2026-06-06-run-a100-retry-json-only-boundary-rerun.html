@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>A100 retry JSON-only boundary rerun</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; color: #1d2433; background: #f7f8fa; }
+    main { max-width: 980px; margin: 0 auto; padding: 32px 20px 56px; }
+    h1 { font-size: 28px; margin: 0 0 8px; }
+    h2 { font-size: 18px; margin-top: 28px; }
+    p, li { line-height: 1.65; }
+    .lede { font-size: 18px; color: #344054; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin: 18px 0; }
+    .metric { background: #fff; border: 1px solid #d8dee8; border-radius: 8px; padding: 14px 16px; }
+    .metric strong { display: block; font-size: 24px; margin-bottom: 4px; }
+    code { background: #eef2f7; padding: 1px 5px; border-radius: 4px; }
+    a { color: #0b5cad; }
+    .warn { background: #fff7ed; border-left: 4px solid #f59e0b; padding: 10px 14px; }
+    .ok { background: #ecfdf3; border-left: 4px solid #12b76a; padding: 10px 14px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>A100 retry JSON-only boundary rerun</h1>
+  <p class="lede">结论：约束已进入 A100 prediction metadata / prompt evidence，但模型 retry 仍输出 prose/Markdown wrapper，strict final metrics 仍为 0；没有模型质量改善。</p>
+
+  <section>
+    <h2>当前状态</h2>
+    <p>Archived：本阶段完成 A100 prediction-only train-split rerun、Reviewer 复审、OpenSpec 归档、post-archive/final leak scan；等待 guarded auto integration 提交。</p>
+  </section>
+
+  <section>
+    <h2>关键结果</h2>
+    <div class="grid">
+      <div class="metric"><strong>3</strong><span>train predictions</span></div>
+      <div class="metric"><strong>0.0000</strong><span>strict json_valid_rate</span></div>
+      <div class="metric"><strong>3/3</strong><span>retry wrapper/fragments</span></div>
+      <div class="metric"><strong>0/3</strong><span>final schema-valid</span></div>
+    </div>
+    <p class="warn">不要把 embedded JSON fragment 描述成有效预测；strict final metrics remain the source of truth。</p>
+  </section>
+
+  <section>
+    <h2>本阶段改变了什么</h2>
+    <ul>
+      <li>在 A100 上复跑既有 private adapter 的 prediction-only train split，没有训练、没有发布 checkpoint/adapter。</li>
+      <li>确认 retry JSON-only constraint 已随本地 hardening 进入 metadata 和 prompt snapshot：<code>15/15</code> 个 retry constraint 为 true。</li>
+      <li>生成 strict metrics、schema diagnostics、constrained decoding diagnosis、schema guard summary、retry JSON-only boundary diagnosis、manifest/report。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>关键文件</h2>
+    <ul>
+      <li><a href="../../reports/public-sample/a100-retry-json-only-boundary-rerun/report.md">report.md</a></li>
+      <li><a href="../../reports/public-sample/a100-retry-json-only-boundary-rerun/retry_json_only_boundary_diagnosis.json">retry_json_only_boundary_diagnosis.json</a></li>
+      <li><a href="../../reports/public-sample/a100-retry-json-only-boundary-rerun/schema_guard_summary.json">schema_guard_summary.json</a></li>
+      <li><a href="../../reports/public-sample/a100-retry-json-only-boundary-rerun/prediction_metadata.json">prediction_metadata.json</a></li>
+      <li><a href="../../openspec/changes/run-a100-retry-json-only-boundary-rerun/tasks.md">OpenSpec tasks.md</a></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>验证</h2>
+    <ul>
+      <li><code>voice2task-train sft-predict --run-prediction</code>：A100 prediction-only completed，3 train rows。</li>
+      <li><code>voice2task-eval metrics</code>：<code>json_valid_rate=0.0000</code>，<code>contract_exact_match=0.0000</code>。</li>
+      <li><code>voice2task-eval diagnose-schema</code> / <code>diagnose-constrained-decoding</code>：completed。</li>
+      <li><code>voice2task-report leak-scan</code>：phase evidence/brief/change scan generated。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>不要过度声称</h2>
+    <p class="warn">本阶段不是 held-out generalization、不是 production readiness、不是 live-browser benchmark、不是模型质量改善、不是 model recovery、不是 parser relaxation、不是 evaluator metric change、不是 prediction repair/re-score。</p>
+  </section>
+
+  <section>
+    <h2>推荐下一步</h2>
+    <p>这是一个行为边界点：如果继续，下一阶段不应再只是同类 rerun，而应在用户确认后选择更强的 retry decoding/template boundary、受约束 decoding 库，或很小的 retry-only supervised adjustment。当前 loop 应先完成 Reviewer、归档和提交，再在硬停处请用户选方向。</p>
+  </section>
+
+  <footer>
+    <p>Generated at 2026-06-06T08:53:18.081274+00:00.</p>
+  </footer>
+</main>
+</body>
+</html>

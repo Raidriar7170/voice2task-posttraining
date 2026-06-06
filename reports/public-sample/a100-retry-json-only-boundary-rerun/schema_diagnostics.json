@@ -1,0 +1,57 @@
+{
+  "claims": {
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "full_private_corpus_claim": false,
+    "invalid_predictions_remain_invalid": true,
+    "live_browser_benchmark_claim": false,
+    "production_readiness_claim": false
+  },
+  "diagnostic_kind": "browser_task_contract_schema_mismatch",
+  "rows": [
+    {
+      "issues": [
+        {
+          "expected_constraint": "Browser Task Contract requires this top-level field",
+          "field_path": "task_type",
+          "issue_category": "missing_required_field",
+          "observed_value_summary": "null",
+          "row_id": "seed-search-weather"
+        }
+      ],
+      "row_id": "seed-search-weather"
+    },
+    {
+      "issues": [
+        {
+          "expected_constraint": "Browser Task Contract requires this top-level field",
+          "field_path": "task_type",
+          "issue_category": "missing_required_field",
+          "observed_value_summary": "null",
+          "row_id": "seed-search-weather-aug-1"
+        }
+      ],
+      "row_id": "seed-search-weather-aug-1"
+    },
+    {
+      "issues": [
+        {
+          "expected_constraint": "Browser Task Contract requires this top-level field",
+          "field_path": "task_type",
+          "issue_category": "missing_required_field",
+          "observed_value_summary": "null",
+          "row_id": "seed-search-weather-aug-2"
+        }
+      ],
+      "row_id": "seed-search-weather-aug-2"
+    }
+  ],
+  "summary": {
+    "gold_row_count": 3,
+    "invalid_prediction_count": 3,
+    "issue_counts": {
+      "missing_required_field": 3
+    },
+    "prediction_count": 3
+  }
+}

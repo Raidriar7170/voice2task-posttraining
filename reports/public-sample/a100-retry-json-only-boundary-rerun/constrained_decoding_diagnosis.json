@@ -1,0 +1,113 @@
+{
+  "claims": {
+    "a100_model_recovery_claim": false,
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "does_not_coerce_or_replace_invalid_predictions": true,
+    "full_private_corpus_claim": false,
+    "held_out_generalization_claim": false,
+    "invalid_predictions_remain_invalid": true,
+    "live_browser_benchmark_claim": false,
+    "local_decoder_output_shape_hardening_only": true,
+    "production_readiness_claim": false
+  },
+  "diagnostic_kind": "constrained_contract_decoding_diagnosis",
+  "examples": {
+    "legacy_task_type_alias": [],
+    "path_like_route": [],
+    "prose_markdown_wrapper": [
+      {
+        "parse_status": "json_fragment_object",
+        "row_id": "seed-search-weather",
+        "source": "retry_attempt"
+      },
+      {
+        "parse_status": "json_fragment_object",
+        "row_id": "seed-search-weather-aug-1",
+        "source": "retry_attempt"
+      },
+      {
+        "parse_status": "json_fragment_object",
+        "row_id": "seed-search-weather-aug-2",
+        "source": "retry_attempt"
+      }
+    ]
+  },
+  "rows": [
+    {
+      "raw_parse_status": "json_object",
+      "retry_parse_status": "json_fragment_object",
+      "row_id": "seed-search-weather",
+      "schema_guard": {
+        "raw_attempt_schema_valid": false,
+        "retry_attempt_schema_valid": false,
+        "validated_output_schema_valid": false,
+        "validated_output_source": "none"
+      },
+      "symptoms": [
+        {
+          "observed_value_summary": "json_fragment_object",
+          "source": "retry_attempt",
+          "symptom": "prose_markdown_wrapper"
+        }
+      ]
+    },
+    {
+      "raw_parse_status": "json_object",
+      "retry_parse_status": "json_fragment_object",
+      "row_id": "seed-search-weather-aug-1",
+      "schema_guard": {
+        "raw_attempt_schema_valid": false,
+        "retry_attempt_schema_valid": false,
+        "validated_output_schema_valid": false,
+        "validated_output_source": "none"
+      },
+      "symptoms": [
+        {
+          "observed_value_summary": "json_fragment_object",
+          "source": "retry_attempt",
+          "symptom": "prose_markdown_wrapper"
+        }
+      ]
+    },
+    {
+      "raw_parse_status": "json_object",
+      "retry_parse_status": "json_fragment_object",
+      "row_id": "seed-search-weather-aug-2",
+      "schema_guard": {
+        "raw_attempt_schema_valid": false,
+        "retry_attempt_schema_valid": false,
+        "validated_output_schema_valid": false,
+        "validated_output_source": "none"
+      },
+      "symptoms": [
+        {
+          "observed_value_summary": "json_fragment_object",
+          "source": "retry_attempt",
+          "symptom": "prose_markdown_wrapper"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "decoded_summary_row_count": 3,
+    "invalid_prediction_count": 3,
+    "invalid_predictions_remain_invalid": true,
+    "legacy_task_type_alias_count": 0,
+    "parse_status_counts": {
+      "raw_attempt": {
+        "json_object": 3
+      },
+      "retry_attempt": {
+        "json_fragment_object": 3
+      }
+    },
+    "path_like_route_count": 0,
+    "prediction_count": 3,
+    "prediction_schema_valid_count": 0,
+    "prose_markdown_wrapper_count": 3,
+    "raw_attempt_schema_valid_count": 0,
+    "retry_attempt_schema_valid_count": 0,
+    "validated_output_schema_valid_count": 0
+  }
+}

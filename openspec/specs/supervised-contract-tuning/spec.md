@@ -488,7 +488,6 @@ The system SHALL support a bounded, explicitly authorized A100 prediction-only t
 #### Scenario: Keep private A100 artifacts private
 - **WHEN** the real rerun completes or fails
 - **THEN** raw logs, checkpoints, adapters, caches, private overrides, host details, SSH details, private paths, tokens, and private corpus rows MUST remain outside committed artifacts
-
 #### Scenario: Preserve diagnostic model output
 - **WHEN** the private adapter emits schema-invalid, truncated, non-JSON, contract-like but wrong, or strict-string-mismatched output
 - **THEN** the prediction artifact and sidecars MUST preserve sanitized model evidence without replacing it with fixture-mode, rule-baseline, gold-contract predictions, semantic-equivalence labels, or repaired normalized-command strings
@@ -710,3 +709,18 @@ The system SHALL strengthen the local schema-retry prompt/output-boundary policy
 #### Scenario: Keep local phase private-runtime free
 - **WHEN** this local retry boundary hardening phase is implemented
 - **THEN** it MUST NOT run A100 prediction, train a model, release an adapter/checkpoint, change decoding parameters, change evaluator metrics, or rewrite prior A100 artifacts
+
+### Requirement: Run A100 retry JSON-only boundary rerun
+The system SHALL support a bounded A100 prediction-only train-split rerun after local retry JSON-only boundary hardening while keeping private runtime artifacts outside git.
+
+#### Scenario: Launch retry-boundary rerun
+- **WHEN** a developer launches the rerun with A100 authorization, a repo-external private override, an existing private adapter path, an idle A100 GPU, and an approved private output root represented in public artifacts as `<a100_project_root>`
+- **THEN** the system MUST use `prediction_split=train`, `overfit_diagnostic=true`, `generalization_claim=false`, `schema_retry_enabled=true`, `schema_repair_applied=false`, the stricter retry JSON-only prompt policy, and generate private-adapter predictions plus public-safe prompt snapshot, raw decoded summary, generation trace, prediction metadata, and leak-scan sidecars
+
+#### Scenario: Preserve strict retry semantics
+- **WHEN** the private adapter emits retry output that is Markdown-wrapped, prose-wrapped, fragmentary, schema-invalid, or otherwise invalid
+- **THEN** the prediction artifact and sidecars MUST preserve sanitized model evidence without extracting embedded contracts, repairing predictions, relaxing parser semantics, normalizing fields, re-scoring outputs, or replacing outputs with fixture or gold contracts
+
+#### Scenario: Keep private A100 artifacts private
+- **WHEN** the real rerun completes or fails
+- **THEN** raw logs, checkpoints, adapters, caches, private overrides, host details, SSH details, private paths, tokens, and private corpus rows MUST remain outside committed artifacts
