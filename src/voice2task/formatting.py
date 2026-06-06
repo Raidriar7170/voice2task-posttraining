@@ -27,13 +27,20 @@ CONTRACT_CANONICAL_ONE_SHOT = canonical_contract_json(
 )
 CONTRACT_OUTPUT_BOUNDARY_RULES = (
     "第一个非空字符必须是 `{`；最后一个非空字符必须是 `}`。"
-    "不要 Markdown/code fences/prose；不要解释、不要自然语言前后缀。"
+    "不要 Markdown/code fences/prose；不要解释。"
 )
 ROUTE_ONTOLOGY_RULES = (
-    "route 是 Browser Task Contract execution channel，只能表示执行通道；"
-    "route 不是 domain/topic/intent/URL/path。weather、shopping、email、media 领域词"
+    "route 是 Browser Task Contract execution channel(执行通道)；"
+    "route 不是 domain/topic/intent/URL/path。weather、shopping、email、media "
     "放进 task_type, slots, normalized_command。"
     '天气请求示例: task_type="search", route="search_web", confirmation_required=false。'
+)
+PUBLIC_READONLY_SEARCH_CONTRACT_POLICY = (
+    "public-readonly search contract policy: "
+    'task_type="search"; route="search_web"; safety.allow=true; '
+    'safety.reason="public_readonly"; confirmation_required=false；'
+    "slots.query=简洁查询词；"
+    "task_type 不能复用 route enum 值，search_web 不是 task_type。"
 )
 NORMALIZED_COMMAND_CANONICALIZATION_POLICY = (
     "normalized_command 是 canonical Chinese intent phrase，不是 verbatim transcript 或 ASR text；"
@@ -45,14 +52,13 @@ NORMALIZED_COMMAND_CANONICALIZATION_POLICY = (
 
 SYSTEM_PROMPT = (
     "你是 Voice2Task contract normalizer。只输出一个 Browser Task Contract JSON object；"
-    "顶层字段只许 task_type, route, safety, confirmation_required, slots, "
-    "normalized_command, language, contract_version。"
     f"task_type enum: {_TASK_TYPE_ENUM}。"
     f"route enum: {_ROUTE_ENUM}；route 不是 URL/path；route 必须使用上面的 enum 值。"
     f"{ROUTE_ONTOLOGY_RULES}"
+    f"{PUBLIC_READONLY_SEARCH_CONTRACT_POLICY}"
     f"{NORMALIZED_COMMAND_CANONICALIZATION_POLICY}"
     "slots 必须是 JSON object，不是 array/list；"
-    "safety 含 safety.allow/safety.reason；language=zh-CN；contract_version=v1。"
+    "safety含safety.allow/safety.reason；"
     f"{CONTRACT_REQUIRED_FIELD_SKELETON}"
     f"Canonical valid one-shot example: {CONTRACT_CANONICAL_ONE_SHOT}。这是格式示例，不是当前用户的目标答案。"
     f"{CONTRACT_OUTPUT_BOUNDARY_RULES}"
@@ -112,6 +118,16 @@ def prompt_constraint_summary(prompt: str = SYSTEM_PROMPT) -> dict[str, bool]:
         and "contract_exact_match 仍然 strict" in prompt
         and "不做 semantic-equivalence scoring" in prompt
         and "prediction repair 或 re-score" in prompt,
+        "public_readonly_search_policy_visible": "public-readonly search contract policy" in prompt
+        and 'task_type="search"' in prompt
+        and 'route="search_web"' in prompt
+        and "confirmation_required=false" in prompt,
+        "public_readonly_safety_reason_visible": "safety.allow=true" in prompt
+        and 'safety.reason="public_readonly"' in prompt,
+        "search_query_slot_guidance_visible": "slots.query" in prompt
+        and "简洁查询词" in prompt,
+        "task_type_not_route_enum_visible": "task_type 不能复用 route enum 值" in prompt
+        and "search_web 不是 task_type" in prompt,
     }
 
 

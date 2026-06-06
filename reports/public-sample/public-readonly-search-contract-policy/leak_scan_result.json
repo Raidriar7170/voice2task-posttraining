@@ -1,0 +1,9 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-06T02:25:06.841670+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "reports/public-sample/public-readonly-search-contract-policy"
+  ]
+}

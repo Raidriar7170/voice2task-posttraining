@@ -1,0 +1,66 @@
+{
+  "change_name": "repair-public-readonly-search-contract-policy",
+  "claims": {
+    "a100_execution_performed": false,
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "decoder_repair_performed": false,
+    "evaluator_metric_change_performed": false,
+    "held_out_generalization_claim": false,
+    "live_browser_benchmark_improvement_claim": false,
+    "local_prompt_policy_hardening_only": true,
+    "model_quality_improvement_claim": false,
+    "prediction_repair_or_rescore_performed": false,
+    "production_readiness_claim": false,
+    "public_full_corpus_release_claim": false,
+    "schema_repair_performed": false,
+    "semantic_equivalence_scoring_performed": false,
+    "slot_normalization_performed": false,
+    "training_or_prediction_rerun_performed": false
+  },
+  "diagnostic_artifacts": {
+    "final_leak_scan": "reports/public-sample/public-readonly-search-contract-policy/final_leak_scan_result.json",
+    "human_brief": "docs/human-briefs/2026-06-06-repair-public-readonly-search-contract-policy.html",
+    "leak_scan": "reports/public-sample/public-readonly-search-contract-policy/leak_scan_result.json",
+    "manifest": "reports/public-sample/public-readonly-search-contract-policy/manifest.json",
+    "phase_validation_leak_scan": "reports/public-sample/public-readonly-search-contract-policy/phase_validation_leak_scan_result.json",
+    "post_archive_leak_scan": "reports/public-sample/public-readonly-search-contract-policy/post_archive_leak_scan_result.json",
+    "repair_report": "reports/public-sample/public-readonly-search-contract-policy/repair_summary.md",
+    "repair_summary": "reports/public-sample/public-readonly-search-contract-policy/repair_summary.json"
+  },
+  "evidence_kind": "public_readonly_search_contract_policy_local",
+  "generated_at": "2026-06-06T02:25:06.840495+00:00",
+  "prompt_constraints": {
+    "canonical_json_one_shot_visible": true,
+    "confirmation_required_boolean_visible": true,
+    "normalized_command_canonical_policy_visible": true,
+    "normalized_command_no_metric_relaxation_visible": true,
+    "normalized_command_public_examples_visible": true,
+    "public_readonly_safety_reason_visible": true,
+    "public_readonly_search_policy_visible": true,
+    "required_field_checklist_visible": true,
+    "required_field_skeleton_visible": true,
+    "route_domain_values_not_route_visible": true,
+    "route_enum_visible": true,
+    "route_execution_channel_visible": true,
+    "route_not_url_or_path_visible": true,
+    "search_query_slot_guidance_visible": true,
+    "slots_object_not_array_visible": true,
+    "task_type_enum_visible": true,
+    "task_type_not_route_enum_visible": true,
+    "weather_to_search_confirmation_false_visible": true,
+    "weather_to_search_route_example_visible": true,
+    "whole_object_boundary_visible": true
+  },
+  "source_artifacts": {
+    "row_mismatch_diagnosis": "reports/public-sample/a100-normalized-rerun-row-mismatch-diagnosis/row_mismatch_diagnosis.json",
+    "source_manifest": "reports/public-sample/a100-normalized-rerun-row-mismatch-diagnosis/manifest.json",
+    "source_report": "reports/public-sample/a100-normalized-rerun-row-mismatch-diagnosis/row_mismatch_diagnosis.md"
+  },
+  "source_family_counts": {
+    "schema_invalid_task_type_enum": 1,
+    "schema_missing_confirmation_required": 1,
+    "schema_valid_task_route_safety_slot_mismatch": 1
+  },
+  "source_prior_phase": "reports/public-sample/a100-normalized-rerun-row-mismatch-diagnosis"
+}

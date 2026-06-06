@@ -1,0 +1,11 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-06T02:26:02.109136+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "reports/public-sample/public-readonly-search-contract-policy",
+    "docs/human-briefs/2026-06-06-repair-public-readonly-search-contract-policy.html",
+    "openspec/changes/archive/2026-06-06-repair-public-readonly-search-contract-policy"
+  ]
+}

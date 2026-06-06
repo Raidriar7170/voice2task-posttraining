@@ -1,0 +1,83 @@
+{
+  "change_name": "repair-public-readonly-search-contract-policy",
+  "claims": {
+    "a100_execution_performed": false,
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "decoder_repair_performed": false,
+    "evaluator_metric_change_performed": false,
+    "held_out_generalization_claim": false,
+    "live_browser_benchmark_improvement_claim": false,
+    "local_prompt_policy_hardening_only": true,
+    "model_quality_improvement_claim": false,
+    "prediction_repair_or_rescore_performed": false,
+    "production_readiness_claim": false,
+    "public_full_corpus_release_claim": false,
+    "schema_repair_performed": false,
+    "semantic_equivalence_scoring_performed": false,
+    "slot_normalization_performed": false,
+    "training_or_prediction_rerun_performed": false
+  },
+  "evidence_kind": "public_readonly_search_contract_policy_local",
+  "formatting_policy": {
+    "fallback": "deterministic_role_plain_text",
+    "normalized_command_policy": "canonical_chinese_intent_phrase_not_verbatim_transcript",
+    "policy": "shared_contract_chat_template",
+    "prediction_prompt": "shared_contract_chat_template",
+    "prediction_target_policy": "generation_prompt_without_gold_contract",
+    "sft_training_text": "shared_contract_chat_template",
+    "tokenizer_chat_template": "used_when_available_with_tokenize_false"
+  },
+  "generated_at": "2026-06-06T02:25:06.840082+00:00",
+  "policy_text": "public-readonly search contract policy: task_type=\"search\"; route=\"search_web\"; safety.allow=true; safety.reason=\"public_readonly\"; confirmation_required=false；slots.query=简洁查询词；task_type 不能复用 route enum 值，search_web 不是 task_type。",
+  "prompt_constraints": {
+    "canonical_json_one_shot_visible": true,
+    "confirmation_required_boolean_visible": true,
+    "normalized_command_canonical_policy_visible": true,
+    "normalized_command_no_metric_relaxation_visible": true,
+    "normalized_command_public_examples_visible": true,
+    "public_readonly_safety_reason_visible": true,
+    "public_readonly_search_policy_visible": true,
+    "required_field_checklist_visible": true,
+    "required_field_skeleton_visible": true,
+    "route_domain_values_not_route_visible": true,
+    "route_enum_visible": true,
+    "route_execution_channel_visible": true,
+    "route_not_url_or_path_visible": true,
+    "search_query_slot_guidance_visible": true,
+    "slots_object_not_array_visible": true,
+    "task_type_enum_visible": true,
+    "task_type_not_route_enum_visible": true,
+    "weather_to_search_confirmation_false_visible": true,
+    "weather_to_search_route_example_visible": true,
+    "whole_object_boundary_visible": true
+  },
+  "source_artifact_policy": {
+    "a100_execution_performed": false,
+    "evaluator_metrics_changed": false,
+    "prediction_repair_or_rescore_performed": false,
+    "prediction_rerun_performed": false,
+    "training_or_decoding_changed": false,
+    "uses_prior_public_sample_artifacts_only": true
+  },
+  "source_artifacts": {
+    "row_mismatch_diagnosis": "reports/public-sample/a100-normalized-rerun-row-mismatch-diagnosis/row_mismatch_diagnosis.json",
+    "source_manifest": "reports/public-sample/a100-normalized-rerun-row-mismatch-diagnosis/manifest.json",
+    "source_report": "reports/public-sample/a100-normalized-rerun-row-mismatch-diagnosis/row_mismatch_diagnosis.md"
+  },
+  "source_diagnostic_kind": "a100_normalized_rerun_row_mismatch_diagnosis",
+  "source_family_counts": {
+    "schema_invalid_task_type_enum": 1,
+    "schema_missing_confirmation_required": 1,
+    "schema_valid_task_route_safety_slot_mismatch": 1
+  },
+  "source_field_mismatch_counts": {
+    "confirmation_required": 1,
+    "normalized_command": 1,
+    "route": 1,
+    "safety.reason": 2,
+    "slots": 3,
+    "task_type": 2
+  },
+  "source_prior_phase": "reports/public-sample/a100-normalized-rerun-row-mismatch-diagnosis"
+}

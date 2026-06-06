@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Public-readonly search contract policy</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; background: #f7f8fb; color: #20242a; }
+    main { max-width: 960px; margin: 0 auto; padding: 32px 20px 52px; }
+    h1 { font-size: 28px; margin: 0 0 8px; }
+    h2 { font-size: 18px; margin: 28px 0 10px; }
+    p, li { line-height: 1.65; }
+    .panel, .metric { background: #fff; border: 1px solid #d8dde6; border-radius: 8px; padding: 16px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin: 14px 0 20px; }
+    .metric strong { display: block; font-size: 22px; }
+    code { background: #eceff3; padding: 1px 5px; border-radius: 4px; }
+    a { color: #1957a6; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Public-readonly search contract policy</h1>
+  <section class="panel">
+    <p><strong>一句话结论：</strong>本阶段完成本地 prompt/policy hardening，把 public-readonly weather/search 的 <code>task_type</code>、<code>route</code>、<code>safety.reason</code>、<code>confirmation_required</code> 和 <code>slots.query</code> 绑定成可见策略；不使用 A100，不重跑 prediction，不改 evaluator metrics。</p>
+  </section>
+  <div class="grid">
+    <div class="metric"><span>phase status</span><strong>archived</strong></div>
+    <div class="metric"><span>source families</span><strong>3</strong></div>
+    <div class="metric"><span>A100 run</span><strong>none</strong></div>
+    <div class="metric"><span>metric change</span><strong>none</strong></div>
+  </div>
+
+  <h2>本阶段改变</h2>
+  <ul>
+    <li>新增 prompt policy：public-readonly lookup 使用 <code>task_type=search</code>、<code>route=search_web</code>、<code>safety.reason=public_readonly</code>、<code>confirmation_required=false</code>、<code>slots.query</code>。</li>
+    <li>新增 evidence pack：<a href="../../reports/public-sample/public-readonly-search-contract-policy/repair_summary.md">repair_summary.md</a>。</li>
+    <li>OpenSpec archive：<a href="../../openspec/changes/archive/2026-06-06-repair-public-readonly-search-contract-policy/proposal.md">2026-06-06-repair-public-readonly-search-contract-policy</a>。</li>
+  </ul>
+
+  <h2>来源证据</h2>
+  <ul>
+    <li>上一阶段 row diagnosis：<a href="../../reports/public-sample/a100-normalized-rerun-row-mismatch-diagnosis/row_mismatch_diagnosis.md">a100-normalized-rerun-row-mismatch-diagnosis</a>。</li>
+    <li>三类 residual family：missing <code>confirmation_required</code>、invalid <code>task_type</code> enum、schema-valid task/route/safety/slot mismatch。</li>
+  </ul>
+
+  <h2>验证计划</h2>
+  <ul>
+    <li>focused prompt/evidence tests：passed。</li>
+    <li>full <code>pytest</code>、<code>ruff</code>、<code>mypy</code>、data validate、DPO check、leak scan、<code>git diff --check</code>、<code>openspec validate --all --strict</code>：passed。</li>
+  </ul>
+
+  <h2>不要夸大的结论</h2>
+  <ul>
+    <li>这不是 A100 新运行、训练、prediction rerun、decoder/schema repair、prediction repair 或 metric relaxation。</li>
+    <li>这不是 semantic-equivalence scoring，也不会对 slots 做 normalization 或 re-score。</li>
+    <li>这不是 held-out/generalization、model-quality improvement、production readiness、checkpoint/adapter release 或 live-browser benchmark evidence。</li>
+  </ul>
+</main>
+</body>
+</html>

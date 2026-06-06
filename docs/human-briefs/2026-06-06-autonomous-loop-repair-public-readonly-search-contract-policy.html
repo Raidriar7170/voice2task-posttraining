@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Autonomous Loop Closeout: Public-readonly Search Contract Policy</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; background: #f7f8fb; color: #20242a; }
+    main { max-width: 980px; margin: 0 auto; padding: 32px 20px 52px; }
+    h1 { font-size: 28px; margin: 0 0 8px; }
+    h2 { font-size: 18px; margin: 28px 0 10px; }
+    p, li { line-height: 1.65; }
+    .panel, .metric { background: #fff; border: 1px solid #d8dde6; border-radius: 8px; padding: 16px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin: 14px 0 20px; }
+    .metric strong { display: block; font-size: 22px; }
+    code { background: #eceff3; padding: 1px 5px; border-radius: 4px; }
+    a { color: #1957a6; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Autonomous loop: public-readonly search contract policy</h1>
+  <section class="panel">
+    <p><strong>一句话结论：</strong>本轮 `/opsx auto` 已完成并归档一个本地 prompt/policy hardening 阶段，把 public-readonly weather/search 的 contract 字段策略显式加入共享 SFT/prediction prompt；下一步若要验证 private-adapter 输出变化，需要单独确认 A100 prediction-only rerun。</p>
+  </section>
+  <div class="grid">
+    <div class="metric"><span>loop status</span><strong>stopped</strong></div>
+    <div class="metric"><span>phase archived</span><strong>1</strong></div>
+    <div class="metric"><span>A100 used</span><strong>no</strong></div>
+    <div class="metric"><span>validation</span><strong>passed</strong></div>
+  </div>
+
+  <h2>停止原因</h2>
+  <p>停止条件：推荐下一阶段是 explicitly authorized A100 prediction-only train-split rerun，用于验证本地 prompt policy 是否改变 private-adapter 输出；这会触发私有 A100 基础设施边界，需要用户明确确认后再继续。</p>
+
+  <h2>项目阶段进度</h2>
+  <ul>
+    <li>当前项目目标：first-phase speech-to-contract normalization。来源：<a href="../../CONTEXT.md">CONTEXT.md</a> 与 <a href="../../README.md">README.md</a>。</li>
+    <li>本阶段推进：把上一阶段三类 row mismatch 映射为一个可见 prompt policy：<code>task_type=search</code>、<code>route=search_web</code>、<code>safety.reason=public_readonly</code>、<code>confirmation_required=false</code>、<code>slots.query</code>。</li>
+    <li>剩余能力差距：还没有新的 private-adapter prediction evidence；因此不能声称模型输出恢复、held-out 泛化或 benchmark 改善。</li>
+    <li>下一阶段计划：若用户确认 A100，创建并执行 `run-a100-public-readonly-search-policy-train-split-rerun` 一类的 prediction-only rerun。</li>
+  </ul>
+
+  <h2>完成的阶段</h2>
+  <ul>
+    <li>OpenSpec archive：<a href="../../openspec/changes/archive/2026-06-06-repair-public-readonly-search-contract-policy/proposal.md">2026-06-06-repair-public-readonly-search-contract-policy</a>。</li>
+    <li>阶段 Human Brief：<a href="2026-06-06-repair-public-readonly-search-contract-policy.html">2026-06-06-repair-public-readonly-search-contract-policy.html</a>。</li>
+    <li>Evidence report：<a href="../../reports/public-sample/public-readonly-search-contract-policy/repair_summary.md">reports/public-sample/public-readonly-search-contract-policy/repair_summary.md</a>。</li>
+  </ul>
+
+  <h2>关键文件</h2>
+  <ul>
+    <li><a href="../../src/voice2task/formatting.py">src/voice2task/formatting.py</a>：新增 compact public-readonly search contract policy 和 prompt constraint flags。</li>
+    <li><a href="../../tests/test_formatting_training.py">tests/test_formatting_training.py</a>：锁定 prompt policy、metadata flags、prediction prompt 不含 row-specific gold-only token。</li>
+    <li><a href="../../tests/test_a100_sft_prediction_smoke.py">tests/test_a100_sft_prediction_smoke.py</a>：锁定 evidence pack 和 non-claim/privacy 边界。</li>
+    <li><a href="../../openspec/specs/supervised-contract-tuning/spec.md">openspec/specs/supervised-contract-tuning/spec.md</a> 与 <a href="../../openspec/specs/contract-evaluation/spec.md">openspec/specs/contract-evaluation/spec.md</a>：归档后的主规格更新。</li>
+  </ul>
+
+  <h2>验证结果</h2>
+  <ul>
+    <li><code>PYTHONPATH=src pytest -q</code>：151 passed。</li>
+    <li><code>uv run ruff check .</code>：passed。</li>
+    <li><code>uv run mypy src</code>：passed。</li>
+    <li><code>PYTHONPATH=src python -m voice2task.cli.data validate --sft data/public-samples/sft_public_sample.jsonl --dpo data/public-samples/dpo_public_sample.jsonl --manifest data/public-samples/manifest_public_sample.json --public</code>：ok true。</li>
+    <li><code>PYTHONPATH=src python -m voice2task.cli.data dpo-check --dpo data/public-samples/dpo_public_sample.jsonl</code>：26 pairs summarized。</li>
+    <li><code>PYTHONPATH=src python -m voice2task.cli.report leak-scan reports/public-sample/public-readonly-search-contract-policy docs/human-briefs/2026-06-06-repair-public-readonly-search-contract-policy.html openspec/changes/archive/2026-06-06-repair-public-readonly-search-contract-policy</code>：ok true，0 findings。</li>
+    <li><code>git diff --check</code>：passed。</li>
+    <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：4 passed，0 failed。</li>
+    <li><code>OPENSPEC_TELEMETRY=0 openspec list --json</code>：<code>{"changes":[]}</code>。</li>
+  </ul>
+
+  <h2>Review 和集成</h2>
+  <ul>
+    <li>Reviewer：inline review，Final Verdict: Pass；Must Fix: none；Should Fix: post-archive status/leak-scan refresh，已完成。</li>
+    <li>External Pro review：未运行；本阶段是本地 prompt/evidence hardening，风险由 local tests、leak scan、OpenSpec validation 覆盖。</li>
+    <li>Auto integration：本报告生成时待 stage/commit；精确 commit hash 与 push skip reason 以 Codex final response 为准。当前 branch 为 <code>main</code>，无 upstream。</li>
+  </ul>
+
+  <h2>不要夸大的结论</h2>
+  <ul>
+    <li>这不是 A100 新运行、训练、prediction rerun、decoder/schema repair、prediction repair 或 metric relaxation。</li>
+    <li>这不是 semantic-equivalence scoring，也没有对 slots 做 normalization 或 re-score。</li>
+    <li>这不是 held-out/generalization、model-quality improvement、production readiness、checkpoint/adapter release 或 live-browser benchmark evidence。</li>
+  </ul>
+
+  <h2>推荐下一步</h2>
+  <p>等待用户确认是否使用 A100 进行 prediction-only train-split rerun。若确认，下一阶段应只验证本地 prompt policy 是否改变 private-adapter 输出，并继续保持 public-safe evidence 与 strict metric 边界。</p>
+</main>
+</body>
+</html>

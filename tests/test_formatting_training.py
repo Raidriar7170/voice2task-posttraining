@@ -278,6 +278,44 @@ def test_sft_prompts_expose_normalized_command_canonicalization_policy_without_g
     assert summary["normalized_command_no_metric_relaxation_visible"] is True
 
 
+def test_sft_prompts_expose_public_readonly_search_contract_policy_without_gold_target() -> None:
+    row = SFTDatasetRow(
+        id="sft-weather-1",
+        split="train",
+        input_text="帮我查上海明天的天气",
+        target_contract=BrowserTaskContract(
+            task_type="search",
+            route="search_web",
+            safety={"allow": True, "reason": "public_readonly"},
+            confirmation_required=False,
+            slots={"query": "gold-weather-token"},
+            normalized_command="搜索 gold-weather-token",
+        ),
+        provenance={"source_id": "seed-search-weather", "public_safe": True},
+    )
+
+    training_text = formatting.format_sft_training_text(row, tokenizer=None)
+    prediction_prompt = formatting.format_sft_prediction_prompt(row, tokenizer=None)
+    summary = formatting.prompt_constraint_summary()
+
+    for text in (training_text, prediction_prompt):
+        assert "public-readonly search contract policy" in text
+        assert 'task_type="search"' in text
+        assert 'route="search_web"' in text
+        assert 'safety.reason="public_readonly"' in text
+        assert "safety.allow=true" in text
+        assert "confirmation_required=false" in text
+        assert "slots.query" in text
+        assert "task_type 不能复用 route enum 值" in text
+        assert "search_web 不是 task_type" in text
+    assert "gold-weather-token" in training_text
+    assert "gold-weather-token" not in prediction_prompt
+    assert summary["public_readonly_search_policy_visible"] is True
+    assert summary["public_readonly_safety_reason_visible"] is True
+    assert summary["search_query_slot_guidance_visible"] is True
+    assert summary["task_type_not_route_enum_visible"] is True
+
+
 def test_public_sample_prediction_prompt_policy_examples_do_not_include_gold_targets() -> None:
     rows_path = Path("data/public-samples/sft_public_sample.jsonl")
     rows = [json.loads(line) for line in rows_path.read_text(encoding="utf-8").splitlines() if line.strip()]
@@ -400,6 +438,10 @@ def test_system_prompt_exposes_contract_value_constraints() -> None:
     assert summary["confirmation_required_boolean_visible"] is True
     assert summary["weather_to_search_confirmation_false_visible"] is True
     assert summary["normalized_command_canonical_policy_visible"] is True
+    assert summary["public_readonly_search_policy_visible"] is True
+    assert summary["public_readonly_safety_reason_visible"] is True
+    assert summary["search_query_slot_guidance_visible"] is True
+    assert summary["task_type_not_route_enum_visible"] is True
     assert formatting.FORMATTING_POLICY["normalized_command_policy"] == (
         "canonical_chinese_intent_phrase_not_verbatim_transcript"
     )

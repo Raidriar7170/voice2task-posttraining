@@ -752,6 +752,106 @@ def test_a100_normalized_rerun_row_mismatch_diagnosis_pack_is_public_safe_and_bo
     assert scan_paths([evidence_dir, human_brief_path, *existing_change_dirs]).ok is True
 
 
+def test_public_readonly_search_contract_policy_pack_is_public_safe_and_bounded() -> None:
+    source_dir = Path("reports/public-sample/a100-normalized-rerun-row-mismatch-diagnosis")
+    evidence_dir = Path("reports/public-sample/public-readonly-search-contract-policy")
+    human_brief_path = Path("docs/human-briefs/2026-06-06-repair-public-readonly-search-contract-policy.html")
+    change_dirs = [
+        Path("openspec/changes/repair-public-readonly-search-contract-policy"),
+        Path("openspec/changes/archive/2026-06-06-repair-public-readonly-search-contract-policy"),
+    ]
+    expected_artifacts = {
+        "repair_summary.json",
+        "repair_summary.md",
+        "manifest.json",
+        "leak_scan_result.json",
+        "phase_validation_leak_scan_result.json",
+        "post_archive_leak_scan_result.json",
+        "final_leak_scan_result.json",
+    }
+
+    assert evidence_dir.exists()
+    assert expected_artifacts <= {path.name for path in evidence_dir.iterdir()}
+    assert human_brief_path.exists()
+    existing_change_dirs = [path for path in change_dirs if path.exists()]
+    assert existing_change_dirs
+
+    summary = json.loads((evidence_dir / "repair_summary.json").read_text(encoding="utf-8"))
+    manifest = json.loads((evidence_dir / "manifest.json").read_text(encoding="utf-8"))
+    report = (evidence_dir / "repair_summary.md").read_text(encoding="utf-8")
+    human_brief = human_brief_path.read_text(encoding="utf-8")
+    leak_scan = json.loads((evidence_dir / "leak_scan_result.json").read_text(encoding="utf-8"))
+    phase_validation_leak_scan = json.loads(
+        (evidence_dir / "phase_validation_leak_scan_result.json").read_text(encoding="utf-8")
+    )
+    post_archive_leak_scan = json.loads(
+        (evidence_dir / "post_archive_leak_scan_result.json").read_text(encoding="utf-8")
+    )
+    final_leak_scan = json.loads((evidence_dir / "final_leak_scan_result.json").read_text(encoding="utf-8"))
+    source_diagnosis = json.loads((source_dir / "row_mismatch_diagnosis.json").read_text(encoding="utf-8"))
+    serialized = "\n".join(
+        [
+            json.dumps(summary, ensure_ascii=False, sort_keys=True),
+            json.dumps(manifest, ensure_ascii=False, sort_keys=True),
+            json.dumps(leak_scan, ensure_ascii=False, sort_keys=True),
+            json.dumps(phase_validation_leak_scan, ensure_ascii=False, sort_keys=True),
+            json.dumps(post_archive_leak_scan, ensure_ascii=False, sort_keys=True),
+            json.dumps(final_leak_scan, ensure_ascii=False, sort_keys=True),
+            report,
+            human_brief,
+        ]
+    )
+
+    assert summary["evidence_kind"] == "public_readonly_search_contract_policy_local"
+    assert summary["source_prior_phase"] == source_dir.as_posix()
+    assert summary["source_family_counts"] == source_diagnosis["summary"]["family_counts"]
+    assert summary["prompt_constraints"]["public_readonly_search_policy_visible"] is True
+    assert summary["prompt_constraints"]["public_readonly_safety_reason_visible"] is True
+    assert summary["prompt_constraints"]["search_query_slot_guidance_visible"] is True
+    assert summary["prompt_constraints"]["task_type_not_route_enum_visible"] is True
+    assert summary["claims"]["local_prompt_policy_hardening_only"] is True
+    assert summary["claims"]["a100_execution_performed"] is False
+    assert summary["claims"]["training_or_prediction_rerun_performed"] is False
+    assert summary["claims"]["semantic_equivalence_scoring_performed"] is False
+    assert summary["claims"]["slot_normalization_performed"] is False
+    assert summary["claims"]["prediction_repair_or_rescore_performed"] is False
+    assert summary["claims"]["model_quality_improvement_claim"] is False
+
+    assert manifest["evidence_kind"] == "public_readonly_search_contract_policy_local"
+    assert manifest["source_artifacts"]["row_mismatch_diagnosis"].endswith("row_mismatch_diagnosis.json")
+    assert manifest["source_artifacts"]["source_manifest"].endswith("manifest.json")
+    assert manifest["diagnostic_artifacts"]["repair_summary"].endswith("repair_summary.json")
+    assert manifest["diagnostic_artifacts"]["repair_report"].endswith("repair_summary.md")
+    assert manifest["diagnostic_artifacts"]["phase_validation_leak_scan"].endswith(
+        "phase_validation_leak_scan_result.json"
+    )
+    assert manifest["diagnostic_artifacts"]["post_archive_leak_scan"].endswith(
+        "post_archive_leak_scan_result.json"
+    )
+    assert manifest["diagnostic_artifacts"]["final_leak_scan"].endswith("final_leak_scan_result.json")
+    assert manifest["claims"]["local_prompt_policy_hardening_only"] is True
+    assert manifest["claims"]["a100_execution_performed"] is False
+    assert manifest["claims"]["prediction_repair_or_rescore_performed"] is False
+
+    assert leak_scan["ok"] is True
+    assert leak_scan["findings"] == []
+    assert phase_validation_leak_scan["ok"] is True
+    assert phase_validation_leak_scan["findings"] == []
+    assert post_archive_leak_scan["ok"] is True
+    assert post_archive_leak_scan["findings"] == []
+    assert final_leak_scan["ok"] is True
+    assert final_leak_scan["findings"] == []
+    assert "local prompt/policy hardening only" in report
+    assert "No A100 execution was performed" in report
+    assert "本地 prompt/policy hardening" in human_brief
+    assert "不使用 A100" in human_brief
+    assert "不改 evaluator metrics" in human_brief
+    assert "/mnt/data/" not in serialized
+    assert "/Users/" not in serialized
+    assert "volcano" not in serialized
+    assert scan_paths([evidence_dir, human_brief_path, *existing_change_dirs]).ok is True
+
+
 def test_confirmation_rerun_row_mismatch_diagnosis_pack_is_public_safe_and_bounded() -> None:
     prior_dir = Path("reports/public-sample/a100-confirmation-required-train-split-rerun")
     evidence_dir = Path("reports/public-sample/confirmation-rerun-row-mismatch-diagnosis")
