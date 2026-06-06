@@ -1,0 +1,7 @@
+{
+  "findings": [],
+  "ok": true,
+  "scanned_paths": [
+    "reports/public-sample/a100-output-boundary-retry-policy-train-split-rerun"
+  ]
+}

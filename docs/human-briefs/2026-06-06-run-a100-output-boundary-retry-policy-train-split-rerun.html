@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>A100 output-boundary retry-policy train-split rerun</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1f2933;
+      --muted: #52606d;
+      --line: #d9e2ec;
+      --paper: #ffffff;
+      --soft: #f5f7fa;
+      --accent: #0f766e;
+      --warn: #b45309;
+    }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--ink); background: var(--soft); }
+    main { max-width: 960px; margin: 0 auto; padding: 32px 20px 48px; }
+    header { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 22px 24px; }
+    h1 { margin: 0 0 8px; font-size: 26px; line-height: 1.2; letter-spacing: 0; }
+    h2 { margin: 26px 0 10px; font-size: 18px; letter-spacing: 0; }
+    p { line-height: 1.65; }
+    .status { display: inline-block; margin-top: 10px; padding: 4px 9px; border-radius: 999px; background: #fef3c7; color: var(--warn); font-size: 13px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin-top: 12px; }
+    .metric { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
+    .metric b { display: block; font-size: 22px; margin-bottom: 4px; }
+    ul { padding-left: 20px; line-height: 1.7; }
+    code { background: #eef2f7; padding: 1px 5px; border-radius: 4px; }
+    a { color: var(--accent); }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>A100 output-boundary retry-policy train-split rerun</h1>
+    <p><strong>一句话结论：</strong>A100 复跑没有恢复 strict schema；但定位更精确了：raw output 已变成完整 JSON object，剩余主因是 3/3 缺 <code>task_type</code>，retry 又被说明文字/Markdown 包住而被严格 parser 拒绝。</p>
+    <span class="status">当前状态：archived，验证通过</span>
+  </header>
+
+  <h2>本阶段做了什么</h2>
+  <ul>
+    <li>在 A100 上复跑 train-split prediction-only 诊断，不训练、不发布 adapter/checkpoint。</li>
+    <li>拉回 public-safe predictions、metadata、prompt snapshot、raw decoded summary、generation trace、metrics 与 gold subset。</li>
+    <li>新增 schema guard summary、output-boundary retry diagnosis、manifest、report 和 leak-scan sidecars。</li>
+  </ul>
+
+  <h2>核心结果</h2>
+  <div class="grid">
+    <div class="metric"><b>0.0</b>strict json_valid_rate</div>
+    <div class="metric"><b>0.0</b>strict exact match</div>
+    <div class="metric"><b>3/3</b>raw whole JSON object</div>
+    <div class="metric"><b>3/3</b>raw 缺 task_type</div>
+    <div class="metric"><b>3/3</b>retry 可见 task_type=search</div>
+    <div class="metric"><b>3/3</b>retry 仍 prose/Markdown wrapped</div>
+  </div>
+
+  <h2>关键文件</h2>
+  <ul>
+    <li><a href="../../reports/public-sample/a100-output-boundary-retry-policy-train-split-rerun/report.md">report.md</a></li>
+    <li><a href="../../reports/public-sample/a100-output-boundary-retry-policy-train-split-rerun/output_boundary_retry_policy_diagnosis.json">output_boundary_retry_policy_diagnosis.json</a></li>
+    <li><a href="../../reports/public-sample/a100-output-boundary-retry-policy-train-split-rerun/schema_guard_summary.json">schema_guard_summary.json</a></li>
+    <li><a href="../../openspec/changes/archive/2026-06-06-run-a100-output-boundary-retry-policy-train-split-rerun/tasks.md">OpenSpec archived tasks.md</a></li>
+  </ul>
+
+  <h2>验证结果</h2>
+  <ul>
+    <li>Focused pytest for this evidence pack：passed。</li>
+    <li>Full pytest：155 passed。</li>
+    <li>ruff、mypy、public data validation、DPO pair check、git diff check、OpenSpec strict validation：passed。</li>
+    <li>归档后 post-archive/final leak scans：passed。</li>
+  </ul>
+
+  <h2>不能夸大的点</h2>
+  <ul>
+    <li>不证明模型质量提升、泛化能力、生产可用或 live browser benchmark 改善。</li>
+    <li>不做 semantic-equivalence scoring、slot normalization、prediction repair/rescore 或 evaluator metric relaxation。</li>
+    <li>当前证据只说明 train-internal row-level schema failure 的剩余形态。</li>
+  </ul>
+
+  <h2>推荐下一步</h2>
+  <p>下一阶段应继续做一个很小的本地修复：把 retry failure 从“模型生成了正确片段但带 wrapper”收束为更强的 retry-only JSON boundary 约束，或直接诊断 decoder stop/boundary 参数是否让 retry prompt 容易补说明文字。</p>
+</main>
+</body>
+</html>
