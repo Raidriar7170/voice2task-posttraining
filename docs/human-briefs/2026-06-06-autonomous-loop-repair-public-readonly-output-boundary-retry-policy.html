@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Autonomous loop - repair-public-readonly-output-boundary-retry-policy</title>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f7f6; color: #202927; }
+    main { max-width: 1080px; margin: 0 auto; padding: 30px 20px 52px; }
+    header { padding-bottom: 18px; margin-bottom: 18px; border-bottom: 1px solid #cfd8d5; }
+    h1 { font-size: 30px; line-height: 1.16; margin: 0 0 10px; }
+    .lede { margin: 0; color: #4a5855; font-size: 16px; line-height: 1.5; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; }
+    section { background: #fff; border: 1px solid #d9e0dd; border-radius: 8px; padding: 16px; }
+    h2 { margin: 0 0 8px; color: #31534c; font-size: 15px; }
+    p, li, td { font-size: 14px; line-height: 1.55; }
+    code { background: #eef2f0; border-radius: 4px; padding: 1px 4px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    td { border-top: 1px solid #e4e9e7; padding: 8px 6px; vertical-align: top; }
+    ul { padding-left: 18px; }
+    .wide { margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Autonomous loop closeout: output-boundary retry policy</h1>
+      <p class="lede">本轮完成一个本地 OpenSpec repair 并归档；没有运行 A100，没有训练，没有 prediction rerun，没有改 evaluator metrics，也不证明模型恢复。</p>
+    </header>
+    <div class="grid"><section><h2>一句话结论</h2><p>本轮完成并归档了一个本地 output-boundary/retry-policy repair：它让 public-readonly search 的单 root JSON object、retry JSON-only、task_type=search/not search_web 约束变成可测试、可审计的 prompt 行为。</p></section><section><h2>Loop 状态</h2><p>completed for this bounded local phase; stopped before starting the next A100 rerun phase.</p></section><section><h2>停止原因</h2><p>当前 OpenSpec 小阶段已完成并归档；推荐的下一阶段是 A100 prediction-only rerun，属于新的 bounded phase，需要先做 GPU/remote safety preflight 后再启动。</p></section><section><h2>项目阶段进度</h2><p>当前项目阶段目标未在单一权威文件中明确命名；README 描述的是 first-phase Voice2Task contract normalization 的 public-sample evidence/smoke surface。本阶段推进的是失败模式修复准备，不是模型恢复证明。</p></section><section><h2>下一阶段计划</h2><p>建议新开 `run-a100-output-boundary-retry-policy-train-split-rerun`：只做 train-split prediction-only rerun，验证本地 prompt/retry hardening 是否改善真实 private adapter 输出。</p></section><section><h2>Auto Integration</h2><p>本报告生成时尚未 stage/commit；guarded auto integration 将在 post-archive validation 通过后执行，最终 commit hash 以 Codex 最后回复为准。</p></section></div>
+    <section class="wide"><h2>完成阶段</h2><ul><li><code>repair-public-readonly-output-boundary-retry-policy</code> proposed -> applied -> archived。</li><li>Reviewer verdict: Must Fix none; Should Fix prompt readability, fixed and revalidated。</li></ul></section>
+    <section class="wide"><h2>关键文件</h2><ul><li><code>src/voice2task/formatting.py</code></li><li><code>src/voice2task/training.py</code></li><li><code>tests/test_formatting_training.py</code></li><li><code>tests/test_a100_sft_prediction_smoke.py</code></li><li><code>reports/public-sample/public-readonly-output-boundary-retry-policy</code></li><li><code>docs/human-briefs/2026-06-06-repair-public-readonly-output-boundary-retry-policy.html</code></li><li><code>openspec/changes/archive/2026-06-06-repair-public-readonly-output-boundary-retry-policy</code></li><li><code>openspec/specs/contract-evaluation/spec.md</code></li><li><code>openspec/specs/supervised-contract-tuning/spec.md</code></li></ul></section>
+    <section class="wide"><h2>验证结果</h2><table><tr><td><code>RED prompt/retry/evidence tests</code></td><td>new tests failed before implementation/artifact generation, then passed</td></tr><tr><td><code>PYTHONPATH=src pytest -q</code></td><td>154 passed</td></tr><tr><td><code>uv run ruff check .</code></td><td>All checks passed</td></tr><tr><td><code>uv run mypy src</code></td><td>Success: no issues found in 16 source files</td></tr><tr><td><code>PYTHONPATH=src python -m voice2task.cli.data validate ... --public</code></td><td>ok=true; sft_rows=12; dpo_pairs=26</td></tr><tr><td><code>PYTHONPATH=src python -m voice2task.cli.data dpo-check --dpo ...</code></td><td>total_pairs=26</td></tr><tr><td><code>voice2task.leak_scan.scan_paths(...)</code></td><td>ok=true; findings=[]</td></tr><tr><td><code>git diff --check</code></td><td>exit 0</td></tr><tr><td><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code></td><td>5 passed, 0 failed</td></tr></table></section>
+    <section class="wide"><h2>证据与边界</h2><ul><li><code>single_root_json_object_visible=True</code></li><li><code>no_premature_root_close_visible=True</code></li><li><code>public_readonly_task_type_search_not_search_web_visible=True</code></li><li><code>retry_minified_json_only_visible=True</code></li><li>prior A100 strict JSON valid remains <code>0.0</code>; contract exact match remains <code>0.0</code>。</li><li>claims not to overstate: no held-out generalization, no production readiness, no checkpoint/adapter release, no model-quality improvement, no live-browser benchmark improvement。</li></ul></section>
+  </main>
+</body>
+</html>

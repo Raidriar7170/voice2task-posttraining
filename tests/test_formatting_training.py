@@ -308,12 +308,35 @@ def test_sft_prompts_expose_public_readonly_search_contract_policy_without_gold_
         assert "slots.query" in text
         assert "task_type 不能复用 route enum 值" in text
         assert "search_web 不是 task_type" in text
+        assert "只能输出一个 root JSON object" in text
+        assert "全部 8 个顶层字段必须都在同一个 root object 内" in text
+        assert "不要在 normalized_command 之前提前关闭 root object" in text
+        assert "task_type 必须是 search，不能是 search_web" in text
     assert "gold-weather-token" in training_text
     assert "gold-weather-token" not in prediction_prompt
     assert summary["public_readonly_search_policy_visible"] is True
     assert summary["public_readonly_safety_reason_visible"] is True
     assert summary["search_query_slot_guidance_visible"] is True
     assert summary["task_type_not_route_enum_visible"] is True
+    assert summary["single_root_json_object_visible"] is True
+    assert summary["no_premature_root_close_visible"] is True
+    assert summary["public_readonly_task_type_search_not_search_web_visible"] is True
+
+
+def test_public_sample_sft_training_text_stays_within_runtime_sequence_budget() -> None:
+    rows_path = Path("data/public-samples/sft_public_sample.jsonl")
+    rows = [json.loads(line) for line in rows_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+    for payload in rows:
+        row = SFTDatasetRow(
+            id=payload["id"],
+            split=payload["split"],
+            input_text=payload["input_text"],
+            target_contract=payload["target_contract"],
+            provenance=payload["provenance"],
+        )
+
+        assert len(formatting.format_sft_training_text(row, tokenizer=None)) <= 2048
 
 
 def test_public_sample_prediction_prompt_policy_examples_do_not_include_gold_targets() -> None:

@@ -1,0 +1,14 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-06T03:47:07.618763+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "reports/public-sample/public-readonly-output-boundary-retry-policy",
+    "docs/human-briefs/2026-06-06-repair-public-readonly-output-boundary-retry-policy.html",
+    "docs/human-briefs/2026-06-06-autonomous-loop-repair-public-readonly-output-boundary-retry-policy.html",
+    "openspec/changes/archive/2026-06-06-repair-public-readonly-output-boundary-retry-policy",
+    "openspec/specs/contract-evaluation/spec.md",
+    "openspec/specs/supervised-contract-tuning/spec.md"
+  ]
+}

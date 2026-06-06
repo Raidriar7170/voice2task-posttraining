@@ -9,9 +9,8 @@ _TASK_TYPE_ENUM = ", ".join(sorted(TASK_TYPES))
 _ROUTE_ENUM = ", ".join(sorted(ROUTES))
 CONTRACT_REQUIRED_FIELD_SKELETON = (
     "Browser Task Contract required skeleton: "
-    '{"task_type":"<enum>","route":"<enum>","safety":{"allow":<bool>,"reason":"<text>"},'
-    '"confirmation_required":<bool>,"slots":{},"normalized_command":"<zh>",'
-    '"language":"zh-CN","contract_version":"v1"}。'
+    '"task_type","route","safety":{"allow","reason"},"confirmation_required",'
+    '"slots","normalized_command","language","contract_version"。'
     "Required-field checklist；每次输出都必须包含全部 8 个顶层字段；"
     "confirmation_required 必须是 boolean；低风险公开只读搜索通常为 false。"
 )
@@ -26,6 +25,8 @@ CONTRACT_CANONICAL_ONE_SHOT = canonical_contract_json(
     )
 )
 CONTRACT_OUTPUT_BOUNDARY_RULES = (
+    "只能输出一个 root JSON object；全部 8 个顶层字段必须都在同一个 root object 内；"
+    "不要在 normalized_command 之前提前关闭 root object。"
     "第一个非空字符必须是 `{`；最后一个非空字符必须是 `}`。"
     "不要 Markdown/code fences/prose；不要解释。"
 )
@@ -37,7 +38,9 @@ ROUTE_ONTOLOGY_RULES = (
 )
 PUBLIC_READONLY_SEARCH_CONTRACT_POLICY = (
     "public-readonly search contract policy: "
-    'task_type="search"; route="search_web"; safety.allow=true; '
+    'task_type="search"; route="search_web"; '
+    "task_type 必须是 search，不能是 search_web；"
+    "safety.allow=true; "
     'safety.reason="public_readonly"; confirmation_required=false；'
     "slots.query=简洁查询词；"
     "task_type 不能复用 route enum 值，search_web 不是 task_type。"
@@ -51,18 +54,17 @@ NORMALIZED_COMMAND_CANONICALIZATION_POLICY = (
 )
 
 SYSTEM_PROMPT = (
-    "你是 Voice2Task contract normalizer。只输出一个 Browser Task Contract JSON object；"
+    "Voice2Task contract normalizer。"
     f"task_type enum: {_TASK_TYPE_ENUM}。"
     f"route enum: {_ROUTE_ENUM}；route 不是 URL/path；route 必须使用上面的 enum 值。"
     f"{ROUTE_ONTOLOGY_RULES}"
     f"{PUBLIC_READONLY_SEARCH_CONTRACT_POLICY}"
     f"{NORMALIZED_COMMAND_CANONICALIZATION_POLICY}"
     "slots 必须是 JSON object，不是 array/list；"
-    "safety含safety.allow/safety.reason；"
     f"{CONTRACT_REQUIRED_FIELD_SKELETON}"
-    f"Canonical valid one-shot example: {CONTRACT_CANONICAL_ONE_SHOT}。这是格式示例，不是当前用户的目标答案。"
+    f"Canonical valid one-shot example: {CONTRACT_CANONICAL_ONE_SHOT}。"
     f"{CONTRACT_OUTPUT_BOUNDARY_RULES}"
-    "不要生成 GUI 动作或浏览器点击/输入步骤。"
+    "不要生成 GUI 动作。"
 )
 
 FORMATTING_POLICY: dict[str, Any] = {
@@ -95,6 +97,9 @@ def prompt_constraint_summary(prompt: str = SYSTEM_PROMPT) -> dict[str, bool]:
         "whole_object_boundary_visible": "第一个非空字符必须是 `{`" in prompt
         and "最后一个非空字符必须是 `}`" in prompt
         and "不要 Markdown/code fences/prose" in prompt,
+        "single_root_json_object_visible": "只能输出一个 root JSON object" in prompt
+        and "全部 8 个顶层字段必须都在同一个 root object 内" in prompt,
+        "no_premature_root_close_visible": "不要在 normalized_command 之前提前关闭 root object" in prompt,
         "route_execution_channel_visible": "route 是 Browser Task Contract execution channel" in prompt
         and "执行通道" in prompt,
         "route_domain_values_not_route_visible": "route 不是 domain/topic/intent/URL/path" in prompt
@@ -128,6 +133,8 @@ def prompt_constraint_summary(prompt: str = SYSTEM_PROMPT) -> dict[str, bool]:
         and "简洁查询词" in prompt,
         "task_type_not_route_enum_visible": "task_type 不能复用 route enum 值" in prompt
         and "search_web 不是 task_type" in prompt,
+        "public_readonly_task_type_search_not_search_web_visible": "task_type 必须是 search，不能是 search_web"
+        in prompt,
     }
 
 

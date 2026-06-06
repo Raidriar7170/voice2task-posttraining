@@ -1042,6 +1042,130 @@ def test_a100_public_readonly_search_policy_train_split_rerun_evidence_is_public
     assert scan_paths([evidence_dir, human_brief_path, *existing_change_dirs]).ok is True
 
 
+def test_public_readonly_output_boundary_retry_policy_pack_is_public_safe_and_bounded() -> None:
+    source_dir = Path("reports/public-sample/a100-public-readonly-search-policy-train-split-rerun")
+    evidence_dir = Path("reports/public-sample/public-readonly-output-boundary-retry-policy")
+    human_brief_path = Path(
+        "docs/human-briefs/2026-06-06-repair-public-readonly-output-boundary-retry-policy.html"
+    )
+    change_dirs = [
+        Path("openspec/changes/repair-public-readonly-output-boundary-retry-policy"),
+        Path("openspec/changes/archive/2026-06-06-repair-public-readonly-output-boundary-retry-policy"),
+    ]
+    expected_artifacts = {
+        "repair_summary.json",
+        "repair_summary.md",
+        "manifest.json",
+        "leak_scan_result.json",
+        "phase_validation_leak_scan_result.json",
+        "post_archive_leak_scan_result.json",
+        "final_leak_scan_result.json",
+    }
+
+    assert evidence_dir.exists()
+    assert expected_artifacts <= {path.name for path in evidence_dir.iterdir()}
+    assert human_brief_path.exists()
+    existing_change_dirs = [path for path in change_dirs if path.exists()]
+    assert existing_change_dirs
+
+    summary = json.loads((evidence_dir / "repair_summary.json").read_text(encoding="utf-8"))
+    manifest = json.loads((evidence_dir / "manifest.json").read_text(encoding="utf-8"))
+    report = (evidence_dir / "repair_summary.md").read_text(encoding="utf-8")
+    human_brief = human_brief_path.read_text(encoding="utf-8")
+    leak_scan = json.loads((evidence_dir / "leak_scan_result.json").read_text(encoding="utf-8"))
+    phase_validation_leak_scan = json.loads(
+        (evidence_dir / "phase_validation_leak_scan_result.json").read_text(encoding="utf-8")
+    )
+    post_archive_leak_scan = json.loads(
+        (evidence_dir / "post_archive_leak_scan_result.json").read_text(encoding="utf-8")
+    )
+    final_leak_scan = json.loads((evidence_dir / "final_leak_scan_result.json").read_text(encoding="utf-8"))
+    source_diagnosis = json.loads(
+        (source_dir / "public_readonly_search_policy_diagnosis.json").read_text(encoding="utf-8")
+    )
+    source_schema_guard = json.loads((source_dir / "schema_guard_summary.json").read_text(encoding="utf-8"))
+    serialized = "\n".join(
+        [
+            json.dumps(summary, ensure_ascii=False, sort_keys=True),
+            json.dumps(manifest, ensure_ascii=False, sort_keys=True),
+            json.dumps(leak_scan, ensure_ascii=False, sort_keys=True),
+            json.dumps(phase_validation_leak_scan, ensure_ascii=False, sort_keys=True),
+            json.dumps(post_archive_leak_scan, ensure_ascii=False, sort_keys=True),
+            json.dumps(final_leak_scan, ensure_ascii=False, sort_keys=True),
+            report,
+            human_brief,
+        ]
+    )
+
+    assert summary["evidence_kind"] == "public_readonly_output_boundary_retry_policy_local"
+    assert summary["source_prior_phase"] == source_dir.as_posix()
+    assert summary["source_observed_result"]["strict_final_json_valid_rate"] == (
+        source_diagnosis["summary"]["strict_final_json_valid_rate"]
+    ) == 0.0
+    assert summary["source_observed_result"]["strict_final_contract_exact_match"] == 0.0
+    assert summary["source_observed_result"]["raw_task_type_route_alias_count"] == 3
+    assert summary["source_schema_guard_summary"]["strict_retry_parser_rejected_fragment_count"] == (
+        source_schema_guard["summary"]["strict_retry_parser_rejected_fragment_count"]
+    ) == 3
+    assert summary["source_schema_guard_summary"]["public_readonly_raw_field_emission_count"] == 3
+    assert summary["prompt_constraints"]["single_root_json_object_visible"] is True
+    assert summary["prompt_constraints"]["no_premature_root_close_visible"] is True
+    assert summary["prompt_constraints"]["public_readonly_task_type_search_not_search_web_visible"] is True
+    assert summary["prompt_constraints"]["public_readonly_search_policy_visible"] is True
+    assert summary["prompt_constraints"]["task_type_not_route_enum_visible"] is True
+    assert summary["retry_prompt_constraints"]["minified_json_only_visible"] is True
+    assert summary["retry_prompt_constraints"]["single_root_json_object_visible"] is True
+    assert summary["retry_prompt_constraints"]["no_premature_root_close_visible"] is True
+    assert summary["retry_prompt_constraints"]["task_type_search_not_search_web_visible"] is True
+    assert summary["claims"]["local_prompt_retry_policy_hardening_only"] is True
+    assert summary["claims"]["a100_execution_performed"] is False
+    assert summary["claims"]["training_or_prediction_rerun_performed"] is False
+    assert summary["claims"]["evaluator_metric_change_performed"] is False
+    assert summary["claims"]["semantic_equivalence_scoring_performed"] is False
+    assert summary["claims"]["slot_normalization_performed"] is False
+    assert summary["claims"]["prediction_repair_or_rescore_performed"] is False
+    assert summary["claims"]["model_recovery_claim"] is False
+    assert summary["claims"]["model_quality_improvement_claim"] is False
+
+    assert manifest["evidence_kind"] == "public_readonly_output_boundary_retry_policy_local"
+    assert manifest["source_artifacts"]["public_readonly_search_policy_diagnosis"].endswith(
+        "public_readonly_search_policy_diagnosis.json"
+    )
+    assert manifest["source_artifacts"]["schema_guard_summary"].endswith("schema_guard_summary.json")
+    assert manifest["diagnostic_artifacts"]["repair_summary"].endswith("repair_summary.json")
+    assert manifest["diagnostic_artifacts"]["repair_report"].endswith("repair_summary.md")
+    assert manifest["diagnostic_artifacts"]["phase_validation_leak_scan"].endswith(
+        "phase_validation_leak_scan_result.json"
+    )
+    assert manifest["diagnostic_artifacts"]["post_archive_leak_scan"].endswith(
+        "post_archive_leak_scan_result.json"
+    )
+    assert manifest["diagnostic_artifacts"]["final_leak_scan"].endswith("final_leak_scan_result.json")
+    assert manifest["claims"]["local_prompt_retry_policy_hardening_only"] is True
+    assert manifest["claims"]["a100_execution_performed"] is False
+    assert manifest["claims"]["prediction_repair_or_rescore_performed"] is False
+
+    assert leak_scan["ok"] is True
+    assert leak_scan["findings"] == []
+    assert phase_validation_leak_scan["ok"] is True
+    assert phase_validation_leak_scan["findings"] == []
+    assert post_archive_leak_scan["ok"] is True
+    assert post_archive_leak_scan["findings"] == []
+    assert final_leak_scan["ok"] is True
+    assert final_leak_scan["findings"] == []
+    assert "local prompt/retry hardening only" in report
+    assert "No A100 execution was performed" in report
+    assert "not model recovery evidence" in report
+    assert "本地 prompt/retry hardening" in human_brief
+    assert "不使用 A100" in human_brief
+    assert "不改 evaluator metrics" in human_brief
+    assert "不证明模型恢复" in human_brief
+    assert "/mnt/data/" not in serialized
+    assert "/Users/" not in serialized
+    assert "volcano" not in serialized
+    assert scan_paths([evidence_dir, human_brief_path, *existing_change_dirs]).ok is True
+
+
 def test_confirmation_rerun_row_mismatch_diagnosis_pack_is_public_safe_and_bounded() -> None:
     prior_dir = Path("reports/public-sample/a100-confirmation-required-train-split-rerun")
     evidence_dir = Path("reports/public-sample/confirmation-rerun-row-mismatch-diagnosis")
@@ -1736,6 +1860,10 @@ def test_schema_retry_prompt_declares_canonical_json_only_contract_shape() -> No
     assert "不要 Markdown/code fences/prose" in prompt
     assert "route 是 enum，不是 URL/path" in prompt
     assert "task_type 不能使用 search_web、open_url、query_weather_request" in prompt
+    assert "只输出一个 minified JSON object" in prompt
+    assert "全部 8 个顶层字段必须都在同一个 root object 内" in prompt
+    assert "不要在 normalized_command 之前提前关闭 root object" in prompt
+    assert "task_type 必须是 search，不能是 search_web" in prompt
 
 
 def test_real_sft_prediction_rejects_markdown_wrapped_retry_even_when_fragment_is_valid(
