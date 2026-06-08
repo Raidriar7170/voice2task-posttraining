@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>First-pass Markdown fence suppression</title>
+  <style>
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:0;background:#f6f7f9;color:#20242a;line-height:1.55}
+    main{max-width:920px;margin:0 auto;padding:32px 20px 48px}
+    h1{font-size:28px;margin:0 0 10px}
+    h2{font-size:18px;margin:26px 0 8px}
+    .lead{font-size:17px;background:#fff;border-left:4px solid #2d6cdf;padding:14px 16px;border-radius:6px}
+    ul{padding-left:22px}
+    code{background:#eef1f5;padding:2px 5px;border-radius:4px}
+    a{color:#1f5fbf}
+  </style>
+</head>
+<body>
+<main>
+  <h1>First-pass Markdown fence suppression</h1>
+  <p class="lead">结论：本阶段完成了本地 generation-time fence suppression wiring，但不能声明模型质量改善；真实 adapter 行为是否改变需要下一次 A100 prediction-only rerun 观察。</p>
+
+  <h2>当前状态</h2>
+  <p>archived。本阶段是小的本地行为阶段，不运行 A100、不训练、不改 strict parser、不重评分旧证据。</p>
+
+  <h2>本阶段改变</h2>
+  <ul>
+    <li>在 prediction decoding policy 中新增 <code>markdown_fence_suppression_enabled=true</code> 和 <code>bad_words_ids</code> 策略说明。</li>
+    <li>真实 trained-adapter generation 会从当前 tokenizer 派生 Markdown fence token sequences，并在可用时传入 <code>model.generate(..., bad_words_ids=...)</code>。</li>
+    <li>同一份 decoding policy 进入 prediction metadata 和 prompt snapshot，方便后续 A100 evidence 追踪。</li>
+    <li>strict parser 仍拒绝 Markdown-wrapped JSON fragment；没有 fence stripping、prediction repair、parser relaxation 或 evaluator metric change。</li>
+  </ul>
+
+  <h2>关键文件</h2>
+  <ul>
+    <li><a href="../../src/voice2task/training.py">src/voice2task/training.py</a></li>
+    <li><a href="../../tests/test_a100_sft_prediction_smoke.py">tests/test_a100_sft_prediction_smoke.py</a></li>
+    <li><a href="../../reports/public-sample/first-pass-markdown-fence-suppression/fence_suppression_summary.md">fence_suppression_summary.md</a></li>
+    <li><a href="../../openspec/changes/archive/2026-06-08-repair-first-pass-markdown-fence-suppression/proposal.md">OpenSpec proposal</a></li>
+  </ul>
+
+  <h2>验证快照</h2>
+  <ul>
+    <li>RED：focused tests 先失败，原因是缺少 decoding policy metadata 和 <code>bad_words_ids</code> wiring。</li>
+    <li>GREEN：focused tests 已转为 <code>5 passed</code>。</li>
+    <li>完整验证将在 archive 前重新运行：pytest、ruff、mypy、data validate、DPO check、leak scan、OpenSpec strict validate、diff check。</li>
+  </ul>
+
+  <h2>证据链接</h2>
+  <ul>
+    <li><a href="../../reports/public-sample/first-pass-markdown-fence-suppression/manifest.json">manifest.json</a></li>
+    <li><a href="../../reports/public-sample/first-pass-markdown-fence-suppression/fence_suppression_summary.json">fence_suppression_summary.json</a></li>
+    <li><a href="../../reports/public-sample/a100-first-pass-output-boundary-rerun/manifest.json">prior A100 first-pass boundary rerun</a></li>
+    <li><a href="../../reports/public-sample/a100-first-pass-wrapper-persistence-diagnosis/manifest.json">prior wrapper-persistence diagnosis</a></li>
+  </ul>
+
+  <h2>不能夸大的点</h2>
+  <ul>
+    <li>不能声明 A100 已复跑、训练已完成、checkpoint/adapter 可发布，或模型质量改善。</li>
+    <li>不能把 <code>bad_words_ids</code> wiring 说成 strict schema-valid 输出恢复。</li>
+    <li>不能把 prior A100 的 <code>3/3</code> Markdown wrapper 证据改写成成功。</li>
+    <li>不能声明 held-out generalization、production readiness、public full-corpus release 或 live-browser benchmark improvement。</li>
+  </ul>
+
+  <h2>推荐下一步</h2>
+  <p>完成本阶段 validation/archive/commit 后，推荐开一个很小的 A100 prediction-only train-split rerun，观察 Markdown fence 是否下降；仍保持 strict parser/evaluator，不做 prediction repair 或 re-score。</p>
+</main>
+</body>
+</html>

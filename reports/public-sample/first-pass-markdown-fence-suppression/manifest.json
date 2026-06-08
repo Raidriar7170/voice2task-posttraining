@@ -1,0 +1,52 @@
+{
+  "change_name": "repair-first-pass-markdown-fence-suppression",
+  "claims": {
+    "a100_execution_performed": false,
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "evaluator_metric_change_performed": false,
+    "held_out_generalization_claim": false,
+    "live_browser_benchmark_claim": false,
+    "local_behavior_change_only": true,
+    "model_quality_improvement_claim": false,
+    "model_recovery_claim": false,
+    "parser_relaxation_performed": false,
+    "prediction_repair_or_rescore_performed": false,
+    "private_prediction_rerun_performed": false,
+    "production_readiness_claim": false,
+    "public_full_corpus_release_claim": false,
+    "schema_repair_or_coercion_applied": false,
+    "semantic_equivalence_scoring_performed": false,
+    "slot_normalization_performed": false,
+    "training_performed": false
+  },
+  "diagnostic_artifacts": {
+    "human_brief": "docs/human-briefs/2026-06-08-repair-first-pass-markdown-fence-suppression.html",
+    "leak_scan": "reports/public-sample/first-pass-markdown-fence-suppression/leak_scan_result.json",
+    "manifest": "reports/public-sample/first-pass-markdown-fence-suppression/manifest.json",
+    "post_archive_leak_scan": "reports/public-sample/first-pass-markdown-fence-suppression/post_archive_leak_scan_result.json",
+    "final_leak_scan": "reports/public-sample/first-pass-markdown-fence-suppression/final_leak_scan_result.json",
+    "summary_json": "reports/public-sample/first-pass-markdown-fence-suppression/fence_suppression_summary.json",
+    "summary_markdown": "reports/public-sample/first-pass-markdown-fence-suppression/fence_suppression_summary.md"
+  },
+  "evidence_kind": "first_pass_markdown_fence_suppression_local",
+  "generated_at": "2026-06-08T06:36:09Z",
+  "implementation_evidence": {
+    "bad_words_ids_wired_for_real_generation": true,
+    "prediction_metadata_exposes_suppression_policy": true,
+    "prompt_snapshot_exposes_suppression_policy": true,
+    "strict_parser_behavior_changed": false,
+    "tokenizer_ids_hardcoded": false
+  },
+  "prior_a100_context": {
+    "markdown_wrapped_predictions": "3/3",
+    "strict_exact_match": "0.0",
+    "strict_schema_valid_output": "0/3",
+    "train_split_only": true
+  },
+  "source_artifacts": {
+    "archived_change": "openspec/changes/archive/2026-06-08-repair-first-pass-markdown-fence-suppression",
+    "prior_a100_output_boundary_manifest": "reports/public-sample/a100-first-pass-output-boundary-rerun/manifest.json",
+    "prior_wrapper_persistence_manifest": "reports/public-sample/a100-first-pass-wrapper-persistence-diagnosis/manifest.json"
+  }
+}

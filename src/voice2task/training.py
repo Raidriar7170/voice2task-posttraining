@@ -103,6 +103,7 @@ def _gpu_selection_policy(config: dict[str, Any]) -> dict[str, str]:
 PRIVATE_PATH_PREFIXES = ("/mnt/data/", "/Users/", "/root/", "/tmp/", "/private/")
 PRIVATE_DECODED_PATH_RE = re.compile(r"(/mnt/data/[^\s\"')]+)")
 PRIVATE_METADATA_PATH_RE = re.compile(r"(/(?:mnt/data|Users|root|tmp|private)/[^\s\"')]+)")
+MARKDOWN_FENCE_SUPPRESSION_TOKEN_SOURCES = ("```", "```json", "```JSON")
 
 
 def _public_display_path(value: Path | str, placeholder: str) -> str:
@@ -627,7 +628,11 @@ def _decoding_policy(config: dict[str, Any]) -> dict[str, Any]:
         "strategy": "greedy",
         "do_sample": False,
         "max_new_tokens": int(config.get("max_new_tokens", 256)),
+        "markdown_fence_suppression_enabled": True,
+        "markdown_fence_suppression_strategy": "bad_words_ids",
+        "markdown_fence_suppression_token_sources": list(MARKDOWN_FENCE_SUPPRESSION_TOKEN_SOURCES),
         "raw_decoded_sidecar_written": False,
+        "generation_trace_sidecar_written": False,
         "schema_repair_applied": False,
         "schema_guard_enabled": True,
         "schema_retry_enabled": schema_retry_enabled,
@@ -764,7 +769,13 @@ def _prompt_snapshot_row(row: SFTDatasetRow, prompt: str) -> dict[str, Any]:
     }
 
 
-def _write_prompt_snapshot(rows: list[dict[str, Any]], path: Path, *, prediction_split: str) -> None:
+def _write_prompt_snapshot(
+    rows: list[dict[str, Any]],
+    path: Path,
+    *,
+    prediction_split: str,
+    decoding_policy: dict[str, Any],
+) -> None:
     write_json(
         path,
         {
@@ -775,6 +786,7 @@ def _write_prompt_snapshot(rows: list[dict[str, Any]], path: Path, *, prediction
             "prediction_output_boundary": prediction_output_boundary_summary(),
             "retry_prompt_constraints": schema_retry_prompt_constraint_summary(),
             "retry_template_boundary": schema_retry_template_boundary_summary(),
+            "decoding_policy": dict(decoding_policy),
             "rows": rows,
             "claims": {
                 "prompt_snapshot_only": True,
@@ -845,6 +857,13 @@ def _write_jsonl_records(path: Path, rows: list[dict[str, Any]]) -> None:
             handle.write(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n")
 
 
+def _sidecar_written_decoding_policy(config: dict[str, Any]) -> dict[str, Any]:
+    policy = _decoding_policy(config)
+    policy["raw_decoded_sidecar_written"] = True
+    policy["generation_trace_sidecar_written"] = True
+    return policy
+
+
 def _token_list(value: Any) -> list[Any]:
     if hasattr(value, "tolist"):
         value = value.tolist()
@@ -906,6 +925,7 @@ def _write_fixture_sidecars(
     sidecar_paths: dict[str, Path],
     prediction_split: str,
     max_new_tokens: int,
+    decoding_policy: dict[str, Any],
 ) -> None:
     prompt_rows: list[dict[str, Any]] = []
     raw_rows: list[dict[str, Any]] = []
@@ -926,7 +946,12 @@ def _write_fixture_sidecars(
                 finish_state="fixture_no_generation",
             )
         )
-    _write_prompt_snapshot(prompt_rows, sidecar_paths["prompt_snapshot"], prediction_split=prediction_split)
+    _write_prompt_snapshot(
+        prompt_rows,
+        sidecar_paths["prompt_snapshot"],
+        prediction_split=prediction_split,
+        decoding_policy=decoding_policy,
+    )
     _write_jsonl_records(sidecar_paths["raw_decoded_summary"], raw_rows)
     _write_jsonl_records(sidecar_paths["generation_trace"], trace_rows)
 
@@ -1122,6 +1147,38 @@ def schema_retry_prompt_constraint_summary(prompt: str | None = None) -> dict[st
     }
 
 
+def _encode_suppression_sequence(tokenizer: Any, text: str) -> list[int]:
+    encode = getattr(tokenizer, "encode", None)
+    if callable(encode):
+        try:
+            encoded = encode(text, add_special_tokens=False)
+        except TypeError:
+            encoded = encode(text)
+        if isinstance(encoded, list):
+            return [int(token_id) for token_id in encoded if isinstance(token_id, int)]
+    if callable(tokenizer):
+        try:
+            encoded_mapping = tokenizer(text, add_special_tokens=False)
+        except TypeError:
+            return []
+        input_ids = encoded_mapping.get("input_ids") if isinstance(encoded_mapping, dict) else None
+        if isinstance(input_ids, list):
+            return [int(token_id) for token_id in input_ids if isinstance(token_id, int)]
+    return []
+
+
+def _markdown_fence_bad_words_ids(tokenizer: Any) -> list[list[int]]:
+    sequences: list[list[int]] = []
+    seen: set[tuple[int, ...]] = set()
+    for source in MARKDOWN_FENCE_SUPPRESSION_TOKEN_SOURCES:
+        token_ids = _encode_suppression_sequence(tokenizer, source)
+        sequence_key = tuple(token_ids)
+        if token_ids and sequence_key not in seen:
+            sequences.append(token_ids)
+            seen.add(sequence_key)
+    return sequences
+
+
 def _decode_prediction_attempt(
     *,
     model: Any,
@@ -1131,13 +1188,17 @@ def _decode_prediction_attempt(
     torch_module: Any,
 ) -> tuple[str, Any, Any]:
     inputs: Any = tokenizer(prompt, return_tensors="pt").to(model.device)
+    bad_words_ids = _markdown_fence_bad_words_ids(tokenizer)
+    generation_kwargs: dict[str, Any] = {
+        **inputs,
+        "max_new_tokens": max_new_tokens,
+        "do_sample": False,
+        "pad_token_id": tokenizer.eos_token_id,
+    }
+    if bad_words_ids:
+        generation_kwargs["bad_words_ids"] = bad_words_ids
     with torch_module.no_grad():
-        generated: Any = model.generate(
-            **inputs,
-            max_new_tokens=max_new_tokens,
-            do_sample=False,
-            pad_token_id=tokenizer.eos_token_id,
-        )
+        generated: Any = model.generate(**generation_kwargs)
     new_tokens = generated[0][inputs["input_ids"].shape[-1] :]
     decoded_value = tokenizer.decode(new_tokens, skip_special_tokens=True)
     decoded = decoded_value if isinstance(decoded_value, str) else str(decoded_value)
@@ -1309,6 +1370,7 @@ def _run_real_sft_prediction(
             prompt_rows,
             sidecar_paths["prompt_snapshot"],
             prediction_split=str(config.get("prediction_split", "all")),
+            decoding_policy=_sidecar_written_decoding_policy(config),
         )
         _write_jsonl_records(sidecar_paths["raw_decoded_summary"], raw_rows)
         _write_jsonl_records(sidecar_paths["generation_trace"], trace_rows)
@@ -1347,14 +1409,15 @@ def run_sft_prediction_export(
     if fixture_mode:
         rows = _load_sft_prediction_rows(manifest_path, split=str(config.get("prediction_split", "all")))
         metadata["prediction_count"] = _write_fixture_predictions(rows, output_path)
+        _mark_sidecars_written(metadata)
         _write_fixture_sidecars(
             rows=rows,
             output_path=output_path,
             sidecar_paths=sidecar_paths,
             prediction_split=str(config.get("prediction_split", "all")),
             max_new_tokens=int(config.get("max_new_tokens", 256)),
+            decoding_policy=metadata["decoding_policy"],
         )
-        _mark_sidecars_written(metadata)
         metadata["prediction_status"] = "fixture_predictions_written"
         metadata["prediction_source_kind"] = "public_sample_contract_fixture"
         metadata["notes"] = (

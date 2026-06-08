@@ -1,0 +1,95 @@
+{
+  "change_name": "repair-first-pass-markdown-fence-suppression",
+  "claims": {
+    "a100_execution_performed": false,
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "evaluator_metric_change_performed": false,
+    "held_out_generalization_claim": false,
+    "live_browser_benchmark_claim": false,
+    "local_behavior_change_only": true,
+    "model_quality_improvement_claim": false,
+    "model_recovery_claim": false,
+    "parser_relaxation_performed": false,
+    "prediction_repair_or_rescore_performed": false,
+    "private_prediction_rerun_performed": false,
+    "production_readiness_claim": false,
+    "public_full_corpus_release_claim": false,
+    "schema_repair_or_coercion_applied": false,
+    "semantic_equivalence_scoring_performed": false,
+    "slot_normalization_performed": false,
+    "training_performed": false
+  },
+  "decoding_policy": {
+    "do_sample": false,
+    "markdown_fence_suppression_enabled": true,
+    "markdown_fence_suppression_strategy": "bad_words_ids",
+    "markdown_fence_suppression_token_sources": [
+      "```",
+      "```json",
+      "```JSON"
+    ],
+    "schema_guard_enabled": true,
+    "schema_repair_applied": false,
+    "strategy": "greedy"
+  },
+  "diagnostic_artifacts": {
+    "human_brief": "docs/human-briefs/2026-06-08-repair-first-pass-markdown-fence-suppression.html",
+    "leak_scan": "reports/public-sample/first-pass-markdown-fence-suppression/leak_scan_result.json",
+    "manifest": "reports/public-sample/first-pass-markdown-fence-suppression/manifest.json",
+    "post_archive_leak_scan": "reports/public-sample/first-pass-markdown-fence-suppression/post_archive_leak_scan_result.json",
+    "final_leak_scan": "reports/public-sample/first-pass-markdown-fence-suppression/final_leak_scan_result.json",
+    "summary_json": "reports/public-sample/first-pass-markdown-fence-suppression/fence_suppression_summary.json",
+    "summary_markdown": "reports/public-sample/first-pass-markdown-fence-suppression/fence_suppression_summary.md"
+  },
+  "evidence_kind": "first_pass_markdown_fence_suppression_local",
+  "generated_at": "2026-06-08T06:36:09Z",
+  "generation_wiring": {
+    "bad_words_ids_passed_when_tokenizer_sequences_available": true,
+    "fallback_when_tokenizer_sequences_unavailable": "generation_continues_without_bad_words_ids",
+    "first_pass_generation_covered": true,
+    "retry_generation_covered": true,
+    "tokenizer_derived_sequences": true,
+    "tokenizer_ids_hardcoded": false
+  },
+  "metadata_propagation": {
+    "decoding_policy_kept_separate_from_parser_status": true,
+    "prediction_metadata_exposes_suppression_policy": true,
+    "prompt_snapshot_exposes_suppression_policy": true,
+    "retry_metadata_kept_separate": true
+  },
+  "prior_a100_context": {
+    "markdown_wrapped_predictions": "3/3",
+    "source_diagnosis": "reports/public-sample/a100-first-pass-wrapper-persistence-diagnosis/wrapper_persistence_diagnosis.json",
+    "source_rerun": "reports/public-sample/a100-first-pass-output-boundary-rerun",
+    "strict_exact_match": "0.0",
+    "strict_schema_valid_output": "0/3",
+    "train_split_only": true
+  },
+  "source_artifacts": {
+    "archived_change": "openspec/changes/archive/2026-06-08-repair-first-pass-markdown-fence-suppression",
+    "archived_prior_output_boundary_change": "openspec/changes/archive/2026-06-08-run-a100-first-pass-output-boundary-rerun",
+    "prior_a100_output_boundary_manifest": "reports/public-sample/a100-first-pass-output-boundary-rerun/manifest.json",
+    "prior_wrapper_persistence_manifest": "reports/public-sample/a100-first-pass-wrapper-persistence-diagnosis/manifest.json"
+  },
+  "strict_parser_behavior": {
+    "embedded_json_extraction_performed": false,
+    "parser_relaxation_performed": false,
+    "prediction_repair_performed": false,
+    "wrapped_json_fragment_rejected": true
+  },
+  "tdd_evidence": {
+    "green_command": "PYTHONPATH=src pytest -q tests/test_a100_sft_prediction_smoke.py::test_sft_prediction_metadata_uses_configured_max_new_tokens tests/test_a100_sft_prediction_smoke.py::test_real_sft_prediction_generate_suppresses_markdown_fence_tokens tests/test_a100_sft_prediction_smoke.py::test_real_sft_prediction_generate_suppresses_markdown_fence_tokens_on_retry tests/test_a100_sft_prediction_smoke.py::test_sft_prediction_fixture_mode_writes_sidecars_and_metadata_links tests/test_a100_sft_prediction_smoke.py::test_real_sft_prediction_rejects_markdown_wrapped_raw_attempt_even_when_fragment_is_valid tests/test_a100_sft_prediction_smoke.py::test_real_sft_prediction_rejects_markdown_wrapped_retry_even_when_fragment_is_valid",
+    "green_result": "6 passed after implementation and reviewer coverage fix",
+    "red_command": "PYTHONPATH=src pytest -q tests/test_a100_sft_prediction_smoke.py::test_sft_prediction_metadata_uses_configured_max_new_tokens tests/test_a100_sft_prediction_smoke.py::test_real_sft_prediction_generate_suppresses_markdown_fence_tokens",
+    "red_result": "2 failed before implementation: missing decoding policy metadata and missing tokenizer-derived bad_words_ids wiring"
+  },
+  "validation_scope": {
+    "local_only": true,
+    "no_a100_execution": true,
+    "no_evaluator_metric_change": true,
+    "no_parser_relaxation": true,
+    "no_prediction_repair_or_rescore": true,
+    "no_training": true
+  }
+}

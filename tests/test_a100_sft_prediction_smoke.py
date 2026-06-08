@@ -117,7 +117,11 @@ def test_sft_prediction_export_requires_explicit_opt_in_and_adapter_config(tmp_p
         "strategy": "greedy",
         "do_sample": False,
         "max_new_tokens": 256,
+        "markdown_fence_suppression_enabled": True,
+        "markdown_fence_suppression_strategy": "bad_words_ids",
+        "markdown_fence_suppression_token_sources": ["```", "```json", "```JSON"],
         "raw_decoded_sidecar_written": False,
+        "generation_trace_sidecar_written": False,
         "schema_repair_applied": False,
         "schema_guard_enabled": True,
         "schema_retry_enabled": True,
@@ -4520,6 +4524,13 @@ def test_sft_prediction_metadata_uses_configured_max_new_tokens(tmp_path: Path) 
     assert metadata["decoding_policy"]["max_new_tokens"] == 96
     assert metadata["decoding_policy"]["raw_decoded_sidecar_written"] is False
     assert metadata["decoding_policy"]["schema_repair_applied"] is False
+    assert metadata["decoding_policy"]["markdown_fence_suppression_enabled"] is True
+    assert metadata["decoding_policy"]["markdown_fence_suppression_strategy"] == "bad_words_ids"
+    assert metadata["decoding_policy"]["markdown_fence_suppression_token_sources"] == [
+        "```",
+        "```json",
+        "```JSON",
+    ]
 
 
 def test_prediction_metadata_sanitizes_private_sidecar_paths(tmp_path: Path) -> None:
@@ -4627,6 +4638,7 @@ def test_sft_prediction_fixture_mode_writes_sidecars_and_metadata_links(tmp_path
     trace_rows = [json.loads(line) for line in generation_trace.read_text(encoding="utf-8").splitlines()]
     assert prompt_payload["retry_prompt_constraints"] == metadata["retry_prompt_constraints"]
     assert prompt_payload["prediction_output_boundary"] == metadata["prediction_output_boundary"]
+    assert prompt_payload["decoding_policy"] == metadata["decoding_policy"]
     assert [row["id"] for row in prompt_payload["rows"]] == ["sft-train-1"]
     assert [row["id"] for row in raw_rows] == ["sft-train-1"]
     assert [row["id"] for row in trace_rows] == ["sft-train-1"]
@@ -4856,6 +4868,16 @@ class _FakeValidTokenizer(_FakeTokenizer):
         return json.dumps(_contract("机票"), ensure_ascii=False)
 
 
+class _FakeFenceSuppressionTokenizer(_FakeRetryTokenizer):
+    def __init__(self) -> None:
+        super().__init__()
+        self.encoded_texts: list[str] = []
+
+    def encode(self, text: str, *, add_special_tokens: bool = False) -> list[int]:
+        self.encoded_texts.append(text)
+        return [ord(char) for char in text]
+
+
 class _FakeModel:
     device = "cpu"
 
@@ -4864,6 +4886,15 @@ class _FakeModel:
 
     def generate(self, **kwargs: Any) -> list[list[int]]:
         return [[101, 102]]
+
+
+class _RecordingGenerateModel(_FakeModel):
+    def __init__(self) -> None:
+        self.generate_calls: list[dict[str, Any]] = []
+
+    def generate(self, **kwargs: Any) -> list[list[int]]:
+        self.generate_calls.append(kwargs)
+        return super().generate(**kwargs)
 
 
 class _FakeNoGrad:
@@ -4920,6 +4951,105 @@ def test_generation_trace_row_records_stop_boundary_evidence_without_actual_stop
     assert max_hit_row["stop_reason_evidence"] == "max_new_tokens_reached_without_tokenizer_eos"
     assert max_hit_row["actual_stop_reason_recorded"] is False
     assert max_hit_row["actual_stop_reason"] is None
+
+
+def test_real_sft_prediction_generate_suppresses_markdown_fence_tokens(
+    monkeypatch: Any,
+    tmp_path: Path,
+) -> None:
+    output = tmp_path / "trained_predictions.jsonl"
+    tokenizer = _FakeFenceSuppressionTokenizer()
+    model = _RecordingGenerateModel()
+    row = SFTDatasetRow(
+        id="sft-test-1",
+        split="test",
+        input_text="帮我搜索机票",
+        target_contract=_contract("机票"),
+        provenance={"source_id": "sft-test-1", "public_safe": True},
+    )
+    torch_module = types.ModuleType("torch")
+    torch_module.float16 = "float16"
+    torch_module.float32 = "float32"
+    torch_module.cuda = types.SimpleNamespace(is_available=lambda: False)
+    torch_module.no_grad = lambda: _FakeNoGrad()
+    peft_module = types.ModuleType("peft")
+    peft_module.PeftModel = types.SimpleNamespace(from_pretrained=lambda loaded_model, adapter_path: loaded_model)
+    transformers_module = types.ModuleType("transformers")
+    transformers_module.AutoTokenizer = types.SimpleNamespace(from_pretrained=lambda *args, **kwargs: tokenizer)
+    transformers_module.AutoModelForCausalLM = types.SimpleNamespace(from_pretrained=lambda *args, **kwargs: model)
+    monkeypatch.setitem(sys.modules, "torch", torch_module)
+    monkeypatch.setitem(sys.modules, "peft", peft_module)
+    monkeypatch.setitem(sys.modules, "transformers", transformers_module)
+
+    count = training._run_real_sft_prediction(
+        {
+            "base_model": "Qwen/Qwen2.5-0.5B-Instruct",
+            "adapter_path": (tmp_path / "adapter").as_posix(),
+            "schema_retry_enabled": False,
+        },
+        [row],
+        output,
+    )
+
+    assert count == 1
+    assert tokenizer.encoded_texts == ["```", "```json", "```JSON"]
+    assert len(model.generate_calls) == 1
+    bad_words_ids = model.generate_calls[0]["bad_words_ids"]
+    assert [96, 96, 96] in bad_words_ids
+    assert [96, 96, 96, 106, 115, 111, 110] in bad_words_ids
+    assert all(sequence for sequence in bad_words_ids)
+    assert model.generate_calls[0]["do_sample"] is False
+
+
+def test_real_sft_prediction_generate_suppresses_markdown_fence_tokens_on_retry(
+    monkeypatch: Any,
+    tmp_path: Path,
+) -> None:
+    output = tmp_path / "trained_predictions.jsonl"
+    tokenizer = _FakeFenceSuppressionTokenizer()
+    model = _RecordingGenerateModel()
+    row = SFTDatasetRow(
+        id="sft-test-1",
+        split="test",
+        input_text="帮我搜索机票",
+        target_contract=_contract("机票"),
+        provenance={"source_id": "sft-test-1", "public_safe": True},
+    )
+    torch_module = types.ModuleType("torch")
+    torch_module.float16 = "float16"
+    torch_module.float32 = "float32"
+    torch_module.cuda = types.SimpleNamespace(is_available=lambda: False)
+    torch_module.no_grad = lambda: _FakeNoGrad()
+    peft_module = types.ModuleType("peft")
+    peft_module.PeftModel = types.SimpleNamespace(from_pretrained=lambda loaded_model, adapter_path: loaded_model)
+    transformers_module = types.ModuleType("transformers")
+    transformers_module.AutoTokenizer = types.SimpleNamespace(from_pretrained=lambda *args, **kwargs: tokenizer)
+    transformers_module.AutoModelForCausalLM = types.SimpleNamespace(from_pretrained=lambda *args, **kwargs: model)
+    monkeypatch.setitem(sys.modules, "torch", torch_module)
+    monkeypatch.setitem(sys.modules, "peft", peft_module)
+    monkeypatch.setitem(sys.modules, "transformers", transformers_module)
+
+    count = training._run_real_sft_prediction(
+        {
+            "base_model": "Qwen/Qwen2.5-0.5B-Instruct",
+            "adapter_path": (tmp_path / "adapter").as_posix(),
+            "schema_retry_enabled": True,
+        },
+        [row],
+        output,
+    )
+
+    record = json.loads(output.read_text(encoding="utf-8"))
+
+    assert count == 1
+    assert record["schema_guard"]["retry_attempted"] is True
+    assert len(model.generate_calls) == 2
+    for call in model.generate_calls:
+        assert [96, 96, 96] in call["bad_words_ids"]
+        assert [96, 96, 96, 106, 115, 111, 110] in call["bad_words_ids"]
+        assert all(sequence for sequence in call["bad_words_ids"])
+        assert call["do_sample"] is False
+    assert tokenizer.encoded_texts == ["```", "```json", "```JSON", "```", "```json", "```JSON"]
 
 
 def test_real_sft_prediction_preserves_non_json_decoded_output(
@@ -6661,6 +6791,65 @@ def test_output_boundary_template_decoding_instrumentation_pack_is_public_safe_a
             json.dumps(manifest, ensure_ascii=False, sort_keys=True),
             json.dumps(leak_scan, ensure_ascii=False, sort_keys=True),
             markdown,
+            human_brief,
+        ]
+    )
+    assert "/mnt/data/" not in combined_public_text
+    assert "/Users/" not in combined_public_text
+    assert scan_paths([evidence_dir, human_brief_path, change_dir]).ok is True
+
+
+def test_first_pass_markdown_fence_suppression_pack_is_public_safe_and_bounded() -> None:
+    evidence_dir = Path("reports/public-sample/first-pass-markdown-fence-suppression")
+    human_brief_path = Path("docs/human-briefs/2026-06-08-repair-first-pass-markdown-fence-suppression.html")
+    change_dir = Path("openspec/changes/archive/2026-06-08-repair-first-pass-markdown-fence-suppression")
+    required_files = {
+        "fence_suppression_summary.json",
+        "fence_suppression_summary.md",
+        "manifest.json",
+        "leak_scan_result.json",
+    }
+
+    assert evidence_dir.exists()
+    assert required_files <= {path.name for path in evidence_dir.iterdir()}
+    assert human_brief_path.exists()
+
+    summary = json.loads((evidence_dir / "fence_suppression_summary.json").read_text(encoding="utf-8"))
+    manifest = json.loads((evidence_dir / "manifest.json").read_text(encoding="utf-8"))
+    leak_scan = json.loads((evidence_dir / "leak_scan_result.json").read_text(encoding="utf-8"))
+    report = (evidence_dir / "fence_suppression_summary.md").read_text(encoding="utf-8")
+    human_brief = human_brief_path.read_text(encoding="utf-8")
+
+    assert summary["evidence_kind"] == "first_pass_markdown_fence_suppression_local"
+    assert summary["change_name"] == "repair-first-pass-markdown-fence-suppression"
+    assert summary["decoding_policy"]["markdown_fence_suppression_enabled"] is True
+    assert summary["decoding_policy"]["markdown_fence_suppression_strategy"] == "bad_words_ids"
+    assert summary["generation_wiring"]["bad_words_ids_passed_when_tokenizer_sequences_available"] is True
+    assert summary["generation_wiring"]["tokenizer_ids_hardcoded"] is False
+    assert summary["strict_parser_behavior"]["wrapped_json_fragment_rejected"] is True
+    assert summary["metadata_propagation"]["prediction_metadata_exposes_suppression_policy"] is True
+    assert summary["metadata_propagation"]["prompt_snapshot_exposes_suppression_policy"] is True
+    assert summary["prior_a100_context"]["strict_schema_valid_output"] == "0/3"
+    assert summary["prior_a100_context"]["markdown_wrapped_predictions"] == "3/3"
+    assert summary["claims"]["local_behavior_change_only"] is True
+    assert summary["claims"]["a100_execution_performed"] is False
+    assert summary["claims"]["training_performed"] is False
+    assert summary["claims"]["parser_relaxation_performed"] is False
+    assert summary["claims"]["prediction_repair_or_rescore_performed"] is False
+    assert summary["claims"]["model_quality_improvement_claim"] is False
+    assert manifest["diagnostic_artifacts"]["summary_json"].endswith("fence_suppression_summary.json")
+    assert leak_scan["ok"] is True
+    assert leak_scan["findings"] == []
+    assert "local generation-time behavior change only" in report
+    assert "does not prove trained-adapter output behavior changed" in report
+    assert "不能声明模型质量改善" in human_brief
+
+    combined_public_text = "\n".join(
+        [
+            json.dumps(summary, ensure_ascii=False, sort_keys=True),
+            json.dumps(manifest, ensure_ascii=False, sort_keys=True),
+            json.dumps(leak_scan, ensure_ascii=False, sort_keys=True),
+            report,
             human_brief,
         ]
     )
