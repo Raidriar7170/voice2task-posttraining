@@ -107,6 +107,12 @@ def test_sft_prediction_export_requires_explicit_opt_in_and_adapter_config(tmp_p
     assert dry_run["prompt_constraints"]["route_execution_channel_visible"] is True
     assert dry_run["prompt_constraints"]["route_domain_values_not_route_visible"] is True
     assert dry_run["prompt_constraints"]["weather_to_search_route_example_visible"] is True
+    assert dry_run["prediction_output_boundary"]["exact_json_only_output_visible"] is True
+    assert dry_run["prediction_output_boundary"]["no_text_outside_root_json_object_visible"] is True
+    assert dry_run["prediction_output_boundary"]["strict_whole_object_parser_boundary_visible"] is True
+    assert dry_run["prediction_output_boundary"]["no_prefix_suffix_text_visible"] is True
+    assert dry_run["prediction_output_boundary"]["no_trailing_analysis_visible"] is True
+    assert dry_run["prediction_output_boundary"]["no_second_json_object_visible"] is True
     assert dry_run["decoding_policy"] == {
         "strategy": "greedy",
         "do_sample": False,
@@ -4326,11 +4332,18 @@ def test_sft_prediction_fixture_mode_writes_sidecars_and_metadata_links(tmp_path
     assert metadata["retry_prompt_constraints"]["no_natural_language_wrapper_or_preamble_visible"] is True
     assert metadata["retry_prompt_constraints"]["machine_readable_only_retry_response_visible"] is True
     assert metadata["retry_prompt_constraints"]["strict_parser_rejection_warning_visible"] is True
+    assert metadata["prediction_output_boundary"]["exact_json_only_output_visible"] is True
+    assert metadata["prediction_output_boundary"]["no_text_outside_root_json_object_visible"] is True
+    assert metadata["prediction_output_boundary"]["strict_whole_object_parser_boundary_visible"] is True
+    assert metadata["prediction_output_boundary"]["no_prefix_suffix_text_visible"] is True
+    assert metadata["prediction_output_boundary"]["no_trailing_analysis_visible"] is True
+    assert metadata["prediction_output_boundary"]["no_second_json_object_visible"] is True
 
     prompt_payload = json.loads(prompt_snapshot.read_text(encoding="utf-8"))
     raw_rows = [json.loads(line) for line in raw_summary.read_text(encoding="utf-8").splitlines()]
     trace_rows = [json.loads(line) for line in generation_trace.read_text(encoding="utf-8").splitlines()]
     assert prompt_payload["retry_prompt_constraints"] == metadata["retry_prompt_constraints"]
+    assert prompt_payload["prediction_output_boundary"] == metadata["prediction_output_boundary"]
     assert [row["id"] for row in prompt_payload["rows"]] == ["sft-train-1"]
     assert [row["id"] for row in raw_rows] == ["sft-train-1"]
     assert [row["id"] for row in trace_rows] == ["sft-train-1"]
@@ -6309,6 +6322,68 @@ def test_normalized_command_string_mismatch_evidence_pack_is_public_safe_and_bou
     assert "/Users/" not in combined_public_text
     assert "volcano" not in combined_public_text
     assert scan_paths([evidence_dir, human_brief_path, *existing_change_dirs]).ok is True
+
+
+def test_output_boundary_template_decoding_instrumentation_pack_is_public_safe_and_bounded() -> None:
+    evidence_dir = Path("reports/public-sample/repair-output-boundary-template-decoding-instrumentation")
+    human_brief_path = Path(
+        "docs/human-briefs/2026-06-08-repair-output-boundary-template-decoding-instrumentation.html"
+    )
+    change_dir = Path(
+        "openspec/changes/archive/2026-06-08-repair-output-boundary-template-decoding-instrumentation"
+    )
+    required_files = {
+        "first_pass_output_boundary_summary.json",
+        "first_pass_output_boundary_summary.md",
+        "manifest.json",
+        "leak_scan_result.json",
+    }
+
+    assert evidence_dir.exists()
+    assert required_files <= {path.name for path in evidence_dir.iterdir()}
+    assert human_brief_path.exists()
+
+    summary = json.loads((evidence_dir / "first_pass_output_boundary_summary.json").read_text(encoding="utf-8"))
+    manifest = json.loads((evidence_dir / "manifest.json").read_text(encoding="utf-8"))
+    leak_scan = json.loads((evidence_dir / "leak_scan_result.json").read_text(encoding="utf-8"))
+    markdown = (evidence_dir / "first_pass_output_boundary_summary.md").read_text(encoding="utf-8")
+    human_brief = human_brief_path.read_text(encoding="utf-8")
+
+    assert summary["evidence_kind"] == "first_pass_output_boundary_template_decoding_instrumentation_local"
+    assert summary["change_name"] == "repair-output-boundary-template-decoding-instrumentation"
+    assert summary["prediction_output_boundary"]["exact_json_only_output_visible"] is True
+    assert summary["prediction_output_boundary"]["no_text_outside_root_json_object_visible"] is True
+    assert summary["prediction_output_boundary"]["strict_whole_object_parser_boundary_visible"] is True
+    assert summary["strict_parser_behavior"]["wrapped_json_fragment_rejected"] is True
+    assert summary["metadata_propagation"]["prediction_metadata_exposes_boundary"] is True
+    assert summary["metadata_propagation"]["prompt_snapshot_exposes_boundary"] is True
+    assert summary["prior_a100_context"]["strict_schema_valid_output"] == "0/3"
+    assert summary["prior_a100_context"]["markdown_wrapped_predictions"] == "3/3"
+    assert summary["claims"]["local_behavior_change_only"] is True
+    assert summary["claims"]["a100_execution_performed"] is False
+    assert summary["claims"]["training_performed"] is False
+    assert summary["claims"]["parser_relaxation_performed"] is False
+    assert summary["claims"]["prediction_repair_or_rescore_performed"] is False
+    assert summary["claims"]["model_quality_improvement_claim"] is False
+    assert manifest["diagnostic_artifacts"]["summary_json"].endswith("first_pass_output_boundary_summary.json")
+    assert leak_scan["ok"] is True
+    assert leak_scan["findings"] == []
+    assert "local behavior change only" in markdown
+    assert "does not prove trained-adapter output behavior changed" in markdown
+    assert "不能声明模型质量改善" in human_brief
+
+    combined_public_text = "\n".join(
+        [
+            json.dumps(summary, ensure_ascii=False, sort_keys=True),
+            json.dumps(manifest, ensure_ascii=False, sort_keys=True),
+            json.dumps(leak_scan, ensure_ascii=False, sort_keys=True),
+            markdown,
+            human_brief,
+        ]
+    )
+    assert "/mnt/data/" not in combined_public_text
+    assert "/Users/" not in combined_public_text
+    assert scan_paths([evidence_dir, human_brief_path, change_dir]).ok is True
 
 
 def test_leak_scan_rejects_model_adapter_and_cache_artifacts(tmp_path: Path) -> None:

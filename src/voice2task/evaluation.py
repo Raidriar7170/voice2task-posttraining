@@ -10,6 +10,7 @@ from typing import Any
 
 from voice2task.formatting import (
     FORMATTING_POLICY,
+    PREDICTION_OUTPUT_BOUNDARY_RULES,
     format_sft_prediction_prompt,
     format_sft_training_text,
     prompt_constraint_summary,
@@ -1094,6 +1095,10 @@ def _system_user_prefix(text: str) -> str:
     return text
 
 
+def _core_system_user_prefix(text: str) -> str:
+    return _system_user_prefix(text).replace(PREDICTION_OUTPUT_BOUNDARY_RULES, "")
+
+
 def _target_span(training_text: str, assistant_target: str) -> dict[str, Any]:
     start = training_text.find(assistant_target)
     if start < 0:
@@ -1343,6 +1348,8 @@ def _diagnose_sft_target_template_alignment(
         assistant_target = canonical_contract_json(as_contract(row.target_contract))
         span = _target_span(training_text, assistant_target)
         same_prefix = _system_user_prefix(training_text) == _system_user_prefix(prediction_prompt)
+        same_core_prefix = _core_system_user_prefix(training_text) == _core_system_user_prefix(prediction_prompt)
+        prediction_boundary_visible = PREDICTION_OUTPUT_BOUNDARY_RULES in prediction_prompt
         target_in_training = assistant_target in training_text
         target_in_prompt = assistant_target in prediction_prompt
         row_evidence.append(
@@ -1356,6 +1363,8 @@ def _diagnose_sft_target_template_alignment(
                 "prediction_prompt_char_count": len(prediction_prompt),
                 "assistant_contract_target_char_count": len(assistant_target),
                 "same_system_user_prefix": same_prefix,
+                "same_core_system_user_prefix": same_core_prefix,
+                "prediction_only_boundary_suffix_visible": prediction_boundary_visible,
                 "assistant_contract_target_in_training_text": target_in_training,
                 "assistant_contract_target_in_prediction_prompt": target_in_prompt,
                 "assistant_target_only_in_training_text": target_in_training and not target_in_prompt,
@@ -1376,6 +1385,10 @@ def _diagnose_sft_target_template_alignment(
             "prediction_split": prediction_split,
             "all_rows_share_system_user_prefix": bool(row_evidence)
             and all(row["same_system_user_prefix"] for row in row_evidence),
+            "all_rows_share_core_system_user_prefix": bool(row_evidence)
+            and all(row["same_core_system_user_prefix"] for row in row_evidence),
+            "all_prediction_prompts_include_prediction_output_boundary": bool(row_evidence)
+            and all(row["prediction_only_boundary_suffix_visible"] for row in row_evidence),
             "all_training_text_contains_assistant_target": all(
                 row["assistant_contract_target_in_training_text"] for row in row_evidence
             )

@@ -4,7 +4,7 @@ from pathlib import Path
 from voice2task import formatting
 from voice2task.formatting import SYSTEM_PROMPT, format_dpo_pair, format_sft_messages
 from voice2task.schemas import ROUTES, TASK_TYPES, BrowserTaskContract, DPOPair, SFTDatasetRow
-from voice2task.training import run_dpo, run_sft
+from voice2task.training import _extract_strict_json_object, _schema_guard_status, run_dpo, run_sft
 
 
 def _contract() -> BrowserTaskContract:
@@ -205,6 +205,57 @@ def test_sft_prediction_prompt_includes_canonical_one_shot_and_whole_object_boun
     assert "gold-only-token" not in prompt
     assert summary["canonical_json_one_shot_visible"] is True
     assert summary["whole_object_boundary_visible"] is True
+
+
+def test_sft_prediction_prompt_exposes_machine_json_only_output_boundary_without_gold_contract() -> None:
+    row = SFTDatasetRow(
+        id="sft-weather-1",
+        split="train",
+        input_text="帮我查上海明天的天气",
+        target_contract=BrowserTaskContract(
+            task_type="search",
+            route="search_web",
+            safety={"allow": True, "reason": "public_readonly"},
+            confirmation_required=False,
+            slots={"query": "gold-weather-token"},
+            normalized_command="搜索 gold-weather-token",
+        ),
+        provenance={"source_id": "seed-search-weather", "public_safe": True},
+    )
+
+    prompt = formatting.format_sft_prediction_prompt(row, tokenizer=None)
+    summary = formatting.prediction_output_boundary_summary()
+
+    assert "Prediction response must be exactly one JSON object and nothing else" in prompt
+    assert "No text outside the root JSON object" in prompt
+    assert "Strict whole-object parser boundary: wrapped fragments remain invalid" in prompt
+    assert "不要输出任何前缀或后缀文本" in prompt
+    assert "不要在 JSON 后添加解释、分析或用户输入复述" in prompt
+    assert "不要输出第二个 JSON object" in prompt
+    assert "gold-weather-token" not in prompt
+    assert summary["exact_json_only_output_visible"] is True
+    assert summary["no_text_outside_root_json_object_visible"] is True
+    assert summary["strict_whole_object_parser_boundary_visible"] is True
+    assert summary["no_prefix_suffix_text_visible"] is True
+    assert summary["no_trailing_analysis_visible"] is True
+    assert summary["no_second_json_object_visible"] is True
+
+
+def test_strict_first_pass_parser_rejects_markdown_wrapped_contract_fragment() -> None:
+    wrapped = (
+        "```json\n"
+        '{"task_type":"search","route":"search_web","safety":{"allow":true,"reason":"public_readonly"},'
+        '"confirmation_required":false,"slots":{"query":"上海明天天气"},'
+        '"normalized_command":"搜索上海明天天气","language":"zh-CN","contract_version":"v1"}'
+        "\n```"
+    )
+
+    prediction = _extract_strict_json_object(wrapped)
+    status = _schema_guard_status(prediction)
+
+    assert isinstance(prediction, str)
+    assert status["schema_valid"] is False
+    assert status["validation_error"] == "prediction must be a JSON object matching Browser Task Contract"
 
 
 def test_sft_training_text_exposes_route_execution_channel_ontology() -> None:
@@ -431,7 +482,7 @@ def test_chat_template_render_error_falls_back_to_deterministic_text() -> None:
 
     assert text == "\n".join(
         [
-            f"system: {SYSTEM_PROMPT}",
+            f"system: {formatting.PREDICTION_SYSTEM_PROMPT}",
             "user: 帮我搜高铁票",
             "assistant:",
         ]

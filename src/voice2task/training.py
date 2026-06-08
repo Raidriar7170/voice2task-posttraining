@@ -18,6 +18,7 @@ from voice2task.formatting import (
     format_schema_retry_prompt_text,
     format_sft_prediction_prompt,
     format_sft_training_text,
+    prediction_output_boundary_summary,
     prompt_constraint_summary,
     schema_retry_template_boundary_summary,
 )
@@ -698,6 +699,7 @@ def _prediction_metadata_common(
         "adapter_release_status": "not_released",
         "formatting_policy": dict(FORMATTING_POLICY),
         "prompt_constraints": prompt_constraint_summary(),
+        "prediction_output_boundary": prediction_output_boundary_summary(),
         "retry_prompt_constraints": schema_retry_prompt_constraint_summary(),
         "retry_template_boundary": schema_retry_template_boundary_summary(),
         "decoding_policy": _decoding_policy(config),
@@ -770,6 +772,7 @@ def _write_prompt_snapshot(rows: list[dict[str, Any]], path: Path, *, prediction
             "prediction_split": prediction_split,
             "formatting_policy": dict(FORMATTING_POLICY),
             "prompt_constraints": prompt_constraint_summary(),
+            "prediction_output_boundary": prediction_output_boundary_summary(),
             "retry_prompt_constraints": schema_retry_prompt_constraint_summary(),
             "retry_template_boundary": schema_retry_template_boundary_summary(),
             "rows": rows,

@@ -1204,7 +1204,9 @@ def test_source_diagnostics_include_sft_target_template_alignment_evidence(tmp_p
     alignment = diagnostics["sft_target_template_alignment"]
     assert alignment["summary"]["diagnostic_status"] == "public_safe_structural_evidence"
     assert alignment["summary"]["row_count"] == 1
-    assert alignment["summary"]["all_rows_share_system_user_prefix"] is True
+    assert alignment["summary"]["all_rows_share_system_user_prefix"] is False
+    assert alignment["summary"]["all_rows_share_core_system_user_prefix"] is True
+    assert alignment["summary"]["all_prediction_prompts_include_prediction_output_boundary"] is True
     assert alignment["summary"]["all_training_text_contains_assistant_target"] is True
     assert alignment["summary"]["all_prediction_prompts_exclude_assistant_target"] is True
     assert alignment["summary"]["evidence_gaps"] == []
@@ -1237,7 +1239,9 @@ def test_source_diagnostics_include_sft_target_template_alignment_evidence(tmp_p
 
     row = alignment["rows"][0]
     assert row["row_id"] == "train-search"
-    assert row["same_system_user_prefix"] is True
+    assert row["same_system_user_prefix"] is False
+    assert row["same_core_system_user_prefix"] is True
+    assert row["prediction_only_boundary_suffix_visible"] is True
     assert row["assistant_contract_target_in_training_text"] is True
     assert row["assistant_contract_target_in_prediction_prompt"] is False
     assert row["assistant_target_span"]["status"] == "found"
@@ -1246,7 +1250,9 @@ def test_source_diagnostics_include_sft_target_template_alignment_evidence(tmp_p
     assert row["training_text_sha256"]
     assert row["prediction_prompt_sha256"]
     assert row["assistant_contract_target_sha256"]
-    assert row["training_text_char_count"] > row["prediction_prompt_char_count"]
+    assert row["training_text_char_count"] > 0
+    assert row["prediction_prompt_char_count"] > 0
+    assert row["training_text_char_count"] != row["prediction_prompt_char_count"]
     assert "training_text" not in row
     assert "prediction_prompt" not in row
     assert "assistant_contract_target" not in row
@@ -1257,6 +1263,8 @@ def test_source_diagnostics_include_sft_target_template_alignment_evidence(tmp_p
     assert alignment_json["summary"]["row_count"] == 1
     assert "training_text" not in alignment_json["rows"][0]
     assert "SFT Target-Template Alignment" in alignment_markdown
+    assert "Same core system/user prefix" in alignment_markdown
+    assert "Prediction output boundary visible" in alignment_markdown
     assert "labels_unavailable" in alignment_markdown
     assert "tokenizer_chat_template_not_loaded" in alignment_markdown
     assert "does not run private prediction" in alignment_markdown

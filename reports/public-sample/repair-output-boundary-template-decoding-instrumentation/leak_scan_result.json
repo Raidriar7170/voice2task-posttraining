@@ -1,0 +1,13 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-08T03:51:00.665001+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "reports/public-sample/repair-output-boundary-template-decoding-instrumentation",
+    "docs/human-briefs/2026-06-08-repair-output-boundary-template-decoding-instrumentation.html",
+    "openspec/changes/archive/2026-06-08-repair-output-boundary-template-decoding-instrumentation",
+    "openspec/specs/contract-evaluation/spec.md",
+    "openspec/specs/supervised-contract-tuning/spec.md"
+  ]
+}

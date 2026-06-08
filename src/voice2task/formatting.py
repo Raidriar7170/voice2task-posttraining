@@ -30,6 +30,14 @@ CONTRACT_OUTPUT_BOUNDARY_RULES = (
     "第一个非空字符必须是 `{`；最后一个非空字符必须是 `}`。"
     "不要 Markdown/code fences/prose；不要解释。"
 )
+PREDICTION_OUTPUT_BOUNDARY_RULES = (
+    "Prediction response must be exactly one JSON object and nothing else."
+    "No text outside the root JSON object."
+    "Strict whole-object parser boundary: wrapped fragments remain invalid."
+    "不要输出任何前缀或后缀文本；"
+    "不要在 JSON 后添加解释、分析或用户输入复述；"
+    "不要输出第二个 JSON object。"
+)
 ROUTE_ONTOLOGY_RULES = (
     "route 是 Browser Task Contract execution channel(执行通道)；"
     "route 不是 domain/topic/intent/URL/path。weather、shopping、email、media "
@@ -69,6 +77,7 @@ SYSTEM_PROMPT = (
     f"{CONTRACT_OUTPUT_BOUNDARY_RULES}"
     "禁 GUI 动作。"
 )
+PREDICTION_SYSTEM_PROMPT = f"{SYSTEM_PROMPT}{PREDICTION_OUTPUT_BOUNDARY_RULES}"
 
 FORMATTING_POLICY: dict[str, Any] = {
     "policy": "shared_contract_chat_template",
@@ -152,6 +161,22 @@ def prompt_constraint_summary(prompt: str = SYSTEM_PROMPT) -> dict[str, bool]:
     }
 
 
+def prediction_output_boundary_summary(prompt: str = PREDICTION_SYSTEM_PROMPT) -> dict[str, bool]:
+    return {
+        "exact_json_only_output_visible": "Prediction response must be exactly one JSON object and nothing else"
+        in prompt,
+        "no_text_outside_root_json_object_visible": "No text outside the root JSON object" in prompt,
+        "strict_whole_object_parser_boundary_visible": "Strict whole-object parser boundary" in prompt
+        and "wrapped fragments remain invalid" in prompt,
+        "first_last_brace_visible": "第一个非空字符必须是 `{`" in prompt
+        and "最后一个非空字符必须是 `}`" in prompt,
+        "no_markdown_prose_visible": "不要 Markdown/code fences/prose" in prompt,
+        "no_prefix_suffix_text_visible": "不要输出任何前缀或后缀文本" in prompt,
+        "no_trailing_analysis_visible": "不要在 JSON 后添加解释、分析或用户输入复述" in prompt,
+        "no_second_json_object_visible": "不要输出第二个 JSON object" in prompt,
+    }
+
+
 def _contract_json(contract: BrowserTaskContract | dict[str, Any]) -> str:
     if isinstance(contract, BrowserTaskContract):
         return canonical_contract_json(contract)
@@ -168,7 +193,7 @@ def format_sft_messages(row: SFTDatasetRow) -> list[dict[str, str]]:
 
 def format_sft_prompt_messages(row: SFTDatasetRow) -> list[dict[str, str]]:
     return [
-        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "system", "content": PREDICTION_SYSTEM_PROMPT},
         {"role": "user", "content": row.input_text},
     ]
 

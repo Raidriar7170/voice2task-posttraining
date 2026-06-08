@@ -720,6 +720,9 @@ def write_sft_target_template_alignment_report(
         f"- Rows compared: `{summary['row_count']}`",
         f"- Prediction split: `{summary['prediction_split']}`",
         f"- Same system/user prefix for all rows: `{summary['all_rows_share_system_user_prefix']}`",
+        f"- Same core system/user prefix for all rows: `{summary.get('all_rows_share_core_system_user_prefix')}`",
+        "- Prediction output boundary visible in all prediction prompts: "
+        f"`{summary.get('all_prediction_prompts_include_prediction_output_boundary')}`",
         f"- Assistant target in all training text: `{summary['all_training_text_contains_assistant_target']}`",
         f"- Assistant target excluded from all prediction prompts: "
         f"`{summary['all_prediction_prompts_exclude_assistant_target']}`",
@@ -769,6 +772,9 @@ def write_sft_target_template_alignment_report(
                 f"### `{row['row_id']}`",
                 "",
                 f"- Same system/user prefix: `{row['same_system_user_prefix']}`",
+                f"- Same core system/user prefix: `{row.get('same_core_system_user_prefix')}`",
+                "- Prediction-only output boundary suffix visible: "
+                f"`{row.get('prediction_only_boundary_suffix_visible')}`",
                 f"- Assistant target in training text: `{row['assistant_contract_target_in_training_text']}`",
                 f"- Assistant target in prediction prompt: `{row['assistant_contract_target_in_prediction_prompt']}`",
                 f"- Prediction prompt ends with generation boundary: "
