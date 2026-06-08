@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Autonomous Loop Closeout - Fence Suppression Slot Residual</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 32px; line-height: 1.55; color: #1f2933; }
+    h1 { font-size: 28px; margin-bottom: 8px; }
+    h2 { font-size: 18px; margin-top: 24px; }
+    code { background: #f3f4f6; padding: 1px 5px; border-radius: 4px; }
+    .status { display: inline-block; padding: 4px 8px; border-radius: 6px; background: #fff7ed; color: #c2410c; font-weight: 600; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin: 16px 0; }
+    .metric { border: 1px solid #d7dde5; border-radius: 8px; padding: 12px; }
+    .value { font-size: 20px; font-weight: 700; }
+    a { color: #0f766e; }
+  </style>
+</head>
+<body>
+  <h1>Autonomous Loop Closeout</h1>
+  <p><span class="status">stopped: needs user confirmation</span></p>
+  <p><strong>一句话结论：</strong>本轮自动阶段把 A100 fence suppression 证据推进到 strict schema-valid 3/3，并把剩余 exact-match failure 收敛为 1 条 slot object residual；下一步若继续，会改变 slot policy/training/evaluator 边界，必须人工确认。</p>
+
+  <div class="grid">
+    <div class="metric"><div>Archived phases</div><div class="value">2</div></div>
+    <div class="metric"><div>Latest exact match</div><div class="value">2/3</div></div>
+    <div class="metric"><div>Latest schema-valid</div><div class="value">3/3</div></div>
+    <div class="metric"><div>Residual rows</div><div class="value">1</div></div>
+  </div>
+
+  <h2>停止原因</h2>
+  <p>硬停止条件 #2：推荐下一步不再是 evidence-only 诊断，而是选择是否改变 compact <code>query</code> slot policy、训练/prompt 约束、或 evaluator/semantic-equivalence 边界。该选择会改变 scope、success criteria 或 public claims，不能由 <code>/opsx auto</code> 自动推进。</p>
+
+  <h2>已完成阶段</h2>
+  <ul>
+    <li><code>run-a100-first-pass-fence-suppression-rerun</code>：真实 A100 prediction-only train-split rerun，归档并提交 <code>941e4be</code>。</li>
+    <li><code>diagnose-fence-suppression-slot-residual</code>：本地 evidence-only residual slot diagnosis，归档并提交 <code>11c9e7f</code>。</li>
+  </ul>
+
+  <h2>关键证据</h2>
+  <ul>
+    <li><a href="../../reports/public-sample/a100-first-pass-fence-suppression-rerun/fence_suppression_rerun_diagnosis.json">A100 fence-suppression diagnosis</a></li>
+    <li><a href="../../reports/public-sample/fence-suppression-slot-residual-diagnosis/slot_residual_diagnosis.json">slot residual diagnosis</a></li>
+    <li><a href="2026-06-08-run-a100-first-pass-fence-suppression-rerun.html">A100 phase Human Brief</a></li>
+    <li><a href="2026-06-08-diagnose-fence-suppression-slot-residual.html">residual diagnosis Human Brief</a></li>
+    <li><a href="../../openspec/changes/archive/2026-06-08-diagnose-fence-suppression-slot-residual/tasks.md">latest archived OpenSpec tasks</a></li>
+  </ul>
+
+  <h2>验证结果</h2>
+  <ul>
+    <li><code>PYTHONPATH=src pytest -q</code>：<code>186 passed</code>。</li>
+    <li><code>uv run ruff check .</code>：passed。</li>
+    <li><code>uv run mypy src</code>：passed。</li>
+    <li><code>voice2task-data validate --public</code>：<code>ok=true</code>，12 SFT rows，26 DPO pairs。</li>
+    <li><code>voice2task-data dpo-check</code>：26 pairs checked。</li>
+    <li><code>openspec validate --all --strict</code>：4/4 passed after archive。</li>
+    <li><code>git diff --check</code> / <code>git diff --cached --check</code>：passed。</li>
+    <li>Leak scans：current evidence, Human Brief, and archive scan clean。</li>
+  </ul>
+
+  <h2>Auto Integration</h2>
+  <ul>
+    <li>Commits: <code>941e4be</code>, <code>11c9e7f</code>。</li>
+    <li>Target branch: <code>main</code>。</li>
+    <li>Merge/submit: direct local commit on <code>main</code>。</li>
+    <li>Push: skipped because no upstream branch is configured for <code>main</code>。</li>
+  </ul>
+
+  <h2>项目阶段进度</h2>
+  <ul>
+    <li>当前项目阶段目标：not explicitly defined。</li>
+    <li>本轮推进：把 wrapper/schema failure 与 slot exact-match residual 分离，并用 public-safe evidence 固化。</li>
+    <li>剩余缺口：是否把 <code>city/date/topic</code> 训练/约束回 compact <code>query</code>，或另开 semantic-equivalence analysis，需要人工决策。</li>
+  </ul>
+
+  <h2>不能夸大的点</h2>
+  <ul>
+    <li>不能声明 held-out generalization、production readiness、live-browser benchmark improvement、模型恢复或广义模型质量提升。</li>
+    <li>最新诊断没有运行 A100、训练、复跑 prediction、修 parser/evaluator、做 slot normalization、prediction repair、re-score 或 semantic-equivalence scoring。</li>
+    <li><code>city/date/topic</code> 与 <code>query</code> 语义相关，但 strict evaluator 下仍是 failure。</li>
+  </ul>
+
+  <h2>推荐人工决策</h2>
+  <p>建议下一步由你确认是否开启一个行为变化 OpenSpec 阶段：目标可以是 compact <code>query</code> slot preservation 的 prompt/training policy；如果不想改训练或 evaluator，也可以停止在当前证据包，把模型质量陈述保持为 bounded train-row observation。</p>
+</body>
+</html>
