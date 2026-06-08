@@ -1,0 +1,11 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-08T03:01:30.079032+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "reports/public-sample/a100-search-query-slot-wrapper-boundary-diagnosis",
+    "docs/human-briefs/2026-06-08-diagnose-a100-search-query-slot-wrapper-boundary.html",
+    "openspec/changes/archive/2026-06-08-diagnose-a100-search-query-slot-wrapper-boundary"
+  ]
+}

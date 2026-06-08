@@ -1,0 +1,79 @@
+{
+  "claims": {
+    "a100_execution_performed": false,
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "decoding_change_performed": false,
+    "evaluator_metric_change_performed": false,
+    "held_out_generalization_claim": false,
+    "live_browser_benchmark_improvement_claim": false,
+    "local_diagnosis_only": true,
+    "model_quality_improvement_claim": false,
+    "model_recovery_claim": false,
+    "parser_relaxation_performed": false,
+    "prediction_repair_or_rescore_performed": false,
+    "private_prediction_rerun_performed": false,
+    "production_readiness_claim": false,
+    "schema_repair_or_coercion_applied": false,
+    "semantic_equivalence_scoring_performed": false,
+    "slot_normalization_performed": false,
+    "training_or_prediction_rerun_performed": false,
+    "training_performed": false
+  },
+  "counts": {
+    "embedded_compact_query_fragments": 3,
+    "markdown_wrapped_predictions": 3,
+    "prediction_count": 3,
+    "raw_generation_trace_rows": 3,
+    "retry_generation_trace_rows": 3,
+    "validated_output_schema_valid": 0
+  },
+  "diagnostic_artifacts": {
+    "diagnosis": "reports/public-sample/a100-search-query-slot-wrapper-boundary-diagnosis/wrapper_boundary_diagnosis.json",
+    "final_leak_scan": "reports/public-sample/a100-search-query-slot-wrapper-boundary-diagnosis/final_leak_scan_result.json",
+    "human_brief": "docs/human-briefs/2026-06-08-diagnose-a100-search-query-slot-wrapper-boundary.html",
+    "leak_scan": "reports/public-sample/a100-search-query-slot-wrapper-boundary-diagnosis/leak_scan_result.json",
+    "manifest": "reports/public-sample/a100-search-query-slot-wrapper-boundary-diagnosis/manifest.json",
+    "phase_validation_leak_scan": "reports/public-sample/a100-search-query-slot-wrapper-boundary-diagnosis/phase_validation_leak_scan_result.json",
+    "post_archive_leak_scan": "reports/public-sample/a100-search-query-slot-wrapper-boundary-diagnosis/post_archive_leak_scan_result.json",
+    "report": "reports/public-sample/a100-search-query-slot-wrapper-boundary-diagnosis/wrapper_boundary_diagnosis.md"
+  },
+  "evidence_kind": "a100_search_query_slot_wrapper_boundary_diagnosis_local",
+  "generated_at": "2026-06-08T02:57:29.834647+00:00",
+  "metrics_preserved": {
+    "confirmation_accuracy": 0.0,
+    "contract_exact_match": 0.0,
+    "json_valid_rate": 0.0,
+    "route_accuracy": 0.0,
+    "safety_gold_stop_support": 0.0,
+    "safety_precision": 1.0,
+    "safety_predicted_stop_support": 0.0,
+    "safety_recall": 1.0,
+    "slot_f1": 0.0,
+    "task_type_accuracy": 0.0
+  },
+  "observed_boundary": {
+    "eos_observed_on_raw_and_retry": true,
+    "max_new_tokens_hit": 0,
+    "strict_parser_accepts_markdown_wrappers": false,
+    "wrapper_origin_proven": false
+  },
+  "source_artifact_policy": {
+    "no_private_raw_logs_or_adapters_read": true,
+    "source_generation_trace_preserved": true,
+    "source_metrics_preserved": true,
+    "source_predictions_preserved": true,
+    "source_raw_decoded_summary_preserved": true,
+    "uses_prior_public_sample_artifacts_only": true
+  },
+  "source_artifacts": {
+    "generation_trace": "reports/public-sample/a100-search-query-slot-policy-rerun/generation_trace.jsonl",
+    "metrics": "reports/public-sample/a100-search-query-slot-policy-rerun/metrics.json",
+    "prediction_metadata": "reports/public-sample/a100-search-query-slot-policy-rerun/prediction_metadata.json",
+    "raw_decoded_summary": "reports/public-sample/a100-search-query-slot-policy-rerun/raw_decoded_summary.jsonl",
+    "schema_guard_summary": "reports/public-sample/a100-search-query-slot-policy-rerun/schema_guard_summary.json",
+    "source_diagnosis": "reports/public-sample/a100-search-query-slot-policy-rerun/slot_policy_rerun_diagnosis.json",
+    "source_manifest": "reports/public-sample/a100-search-query-slot-policy-rerun/manifest.json"
+  },
+  "source_prior_phase": "reports/public-sample/a100-search-query-slot-policy-rerun"
+}

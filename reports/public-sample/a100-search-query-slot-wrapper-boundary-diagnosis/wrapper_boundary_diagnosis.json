@@ -1,0 +1,314 @@
+{
+  "claims": {
+    "a100_execution_performed": false,
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "decoding_change_performed": false,
+    "evaluator_metric_change_performed": false,
+    "held_out_generalization_claim": false,
+    "live_browser_benchmark_improvement_claim": false,
+    "local_diagnosis_only": true,
+    "model_quality_improvement_claim": false,
+    "model_recovery_claim": false,
+    "parser_relaxation_performed": false,
+    "prediction_repair_or_rescore_performed": false,
+    "private_prediction_rerun_performed": false,
+    "production_readiness_claim": false,
+    "schema_repair_or_coercion_applied": false,
+    "semantic_equivalence_scoring_performed": false,
+    "slot_normalization_performed": false,
+    "training_or_prediction_rerun_performed": false,
+    "training_performed": false
+  },
+  "diagnostic_artifacts": {
+    "diagnosis": "reports/public-sample/a100-search-query-slot-wrapper-boundary-diagnosis/wrapper_boundary_diagnosis.json",
+    "final_leak_scan": "reports/public-sample/a100-search-query-slot-wrapper-boundary-diagnosis/final_leak_scan_result.json",
+    "human_brief": "docs/human-briefs/2026-06-08-diagnose-a100-search-query-slot-wrapper-boundary.html",
+    "leak_scan": "reports/public-sample/a100-search-query-slot-wrapper-boundary-diagnosis/leak_scan_result.json",
+    "manifest": "reports/public-sample/a100-search-query-slot-wrapper-boundary-diagnosis/manifest.json",
+    "phase_validation_leak_scan": "reports/public-sample/a100-search-query-slot-wrapper-boundary-diagnosis/phase_validation_leak_scan_result.json",
+    "post_archive_leak_scan": "reports/public-sample/a100-search-query-slot-wrapper-boundary-diagnosis/post_archive_leak_scan_result.json",
+    "report": "reports/public-sample/a100-search-query-slot-wrapper-boundary-diagnosis/wrapper_boundary_diagnosis.md"
+  },
+  "diagnostic_kind": "a100_search_query_slot_wrapper_boundary_diagnosis",
+  "evidence_gaps": {
+    "actual_stop_reason_not_recorded": true,
+    "compact_fragment_does_not_prove_schema_recovery": true,
+    "prompt_template_decoder_or_training_cause_unproven": true,
+    "strict_parser_rejection_is_preserved": true,
+    "wrapper_origin_unproven": true
+  },
+  "evidence_kind": "a100_search_query_slot_wrapper_boundary_diagnosis_local",
+  "generated_at": "2026-06-08T02:57:29.834647+00:00",
+  "interpretation": {
+    "compact_query_content_is_not_strict_schema_recovery": true,
+    "eos_observed_does_not_mean_wrapper_boundary_fixed": true,
+    "markdown_wrapper_is_observed_output_boundary_failure": true,
+    "next_recommended_phase": "user-confirmed-output-boundary-behavior-change",
+    "parser_relaxation_recommended": false,
+    "prediction_repair_recommended": false
+  },
+  "observed_decoding_policy": {
+    "do_sample": false,
+    "generation_trace_sidecar_written": true,
+    "max_new_tokens": 256,
+    "raw_decoded_sidecar_written": true,
+    "schema_guard_enabled": true,
+    "schema_repair_applied": false,
+    "schema_retry_enabled": true,
+    "schema_retry_max_attempts": 1,
+    "strategy": "greedy"
+  },
+  "observed_prompt_constraints": {
+    "canonical_json_one_shot_visible": true,
+    "compact_search_query_slot_policy_visible": true,
+    "confirmation_required_boolean_visible": true,
+    "no_premature_root_close_visible": true,
+    "normalized_command_canonical_policy_visible": true,
+    "normalized_command_no_metric_relaxation_visible": true,
+    "normalized_command_public_examples_visible": true,
+    "public_readonly_safety_reason_visible": true,
+    "public_readonly_search_policy_visible": true,
+    "public_readonly_task_type_search_not_search_web_visible": true,
+    "required_field_checklist_visible": true,
+    "required_field_skeleton_visible": true,
+    "route_domain_values_not_route_visible": true,
+    "route_enum_visible": true,
+    "route_execution_channel_visible": true,
+    "route_not_url_or_path_visible": true,
+    "search_query_no_city_date_split_visible": true,
+    "search_query_slot_guidance_visible": true,
+    "single_root_json_object_visible": true,
+    "slots_object_not_array_visible": true,
+    "task_type_enum_visible": true,
+    "task_type_not_route_enum_visible": true,
+    "weather_to_search_confirmation_false_visible": true,
+    "weather_to_search_route_example_visible": true,
+    "whole_object_boundary_visible": true
+  },
+  "preserved_metrics": {
+    "confirmation_accuracy": 0.0,
+    "contract_exact_match": 0.0,
+    "json_valid_rate": 0.0,
+    "route_accuracy": 0.0,
+    "safety_gold_stop_support": 0.0,
+    "safety_precision": 1.0,
+    "safety_predicted_stop_support": 0.0,
+    "safety_recall": 1.0,
+    "slot_f1": 0.0,
+    "task_type_accuracy": 0.0
+  },
+  "preserved_schema_guard_summary": {
+    "embedded_city_date_slot_fragment_count": 0,
+    "embedded_compact_query_fragment_count": 3,
+    "exact_match_count": 0,
+    "exact_match_recovery_vs_prior_observed": false,
+    "gold_city_date_slot_count": 0,
+    "gold_compact_query_count": 3,
+    "gold_spaced_query_count": 0,
+    "markdown_wrapped_prediction_count": 3,
+    "prediction_count": 3,
+    "prediction_source_kind": "private_a100_adapter",
+    "prediction_split": "train",
+    "raw_attempt_schema_valid_count": 0,
+    "retry_attempt_schema_valid_count": 0,
+    "retry_attempted_count": 3,
+    "schema_recovery_vs_prior_observed": false,
+    "strict_final_contract_exact_match": 0.0,
+    "strict_final_json_valid_rate": 0.0,
+    "strict_final_slot_f1": 0.0,
+    "strict_retry_parser_rejected_fragment_count": 3,
+    "training_rows_used": 3,
+    "validated_output_schema_valid_count": 0
+  },
+  "rows": [
+    {
+      "observed_wrapper": {
+        "city_date_slot_fragment_visible": false,
+        "compact_query_fragment_visible": true,
+        "markdown_fence_visible": true,
+        "wrapper_origin_proven": false
+      },
+      "raw_attempt": {
+        "decoded_char_count": 295,
+        "parse_status": "json_fragment_object",
+        "schema_valid": false
+      },
+      "raw_generation": {
+        "actual_stop_reason_recorded": false,
+        "eos_token_seen": true,
+        "finish_state": "eos_observed",
+        "finish_state_basis": "tokenizer_eos_membership",
+        "generated_token_count": 97,
+        "max_new_tokens": 256,
+        "max_new_tokens_hit": false,
+        "stop_reason_evidence": "tokenizer_eos_observed",
+        "trace_available": true
+      },
+      "retry_attempt": {
+        "decoded_char_count": 270,
+        "parse_status": "json_fragment_object",
+        "schema_valid": false
+      },
+      "retry_generation": {
+        "actual_stop_reason_recorded": false,
+        "eos_token_seen": true,
+        "finish_state": "eos_observed",
+        "finish_state_basis": "tokenizer_eos_membership",
+        "generated_token_count": 86,
+        "max_new_tokens": 256,
+        "max_new_tokens_hit": false,
+        "stop_reason_evidence": "tokenizer_eos_observed",
+        "trace_available": true
+      },
+      "row_id": "seed-search-weather",
+      "validated_output": {
+        "schema_valid": false,
+        "source": "none"
+      }
+    },
+    {
+      "observed_wrapper": {
+        "city_date_slot_fragment_visible": false,
+        "compact_query_fragment_visible": true,
+        "markdown_fence_visible": true,
+        "wrapper_origin_proven": false
+      },
+      "raw_attempt": {
+        "decoded_char_count": 295,
+        "parse_status": "json_fragment_object",
+        "schema_valid": false
+      },
+      "raw_generation": {
+        "actual_stop_reason_recorded": false,
+        "eos_token_seen": true,
+        "finish_state": "eos_observed",
+        "finish_state_basis": "tokenizer_eos_membership",
+        "generated_token_count": 97,
+        "max_new_tokens": 256,
+        "max_new_tokens_hit": false,
+        "stop_reason_evidence": "tokenizer_eos_observed",
+        "trace_available": true
+      },
+      "retry_attempt": {
+        "decoded_char_count": 270,
+        "parse_status": "json_fragment_object",
+        "schema_valid": false
+      },
+      "retry_generation": {
+        "actual_stop_reason_recorded": false,
+        "eos_token_seen": true,
+        "finish_state": "eos_observed",
+        "finish_state_basis": "tokenizer_eos_membership",
+        "generated_token_count": 86,
+        "max_new_tokens": 256,
+        "max_new_tokens_hit": false,
+        "stop_reason_evidence": "tokenizer_eos_observed",
+        "trace_available": true
+      },
+      "row_id": "seed-search-weather-aug-1",
+      "validated_output": {
+        "schema_valid": false,
+        "source": "none"
+      }
+    },
+    {
+      "observed_wrapper": {
+        "city_date_slot_fragment_visible": false,
+        "compact_query_fragment_visible": true,
+        "markdown_fence_visible": true,
+        "wrapper_origin_proven": false
+      },
+      "raw_attempt": {
+        "decoded_char_count": 295,
+        "parse_status": "json_fragment_object",
+        "schema_valid": false
+      },
+      "raw_generation": {
+        "actual_stop_reason_recorded": false,
+        "eos_token_seen": true,
+        "finish_state": "eos_observed",
+        "finish_state_basis": "tokenizer_eos_membership",
+        "generated_token_count": 97,
+        "max_new_tokens": 256,
+        "max_new_tokens_hit": false,
+        "stop_reason_evidence": "tokenizer_eos_observed",
+        "trace_available": true
+      },
+      "retry_attempt": {
+        "decoded_char_count": 270,
+        "parse_status": "json_fragment_object",
+        "schema_valid": false
+      },
+      "retry_generation": {
+        "actual_stop_reason_recorded": false,
+        "eos_token_seen": true,
+        "finish_state": "eos_observed",
+        "finish_state_basis": "tokenizer_eos_membership",
+        "generated_token_count": 86,
+        "max_new_tokens": 256,
+        "max_new_tokens_hit": false,
+        "stop_reason_evidence": "tokenizer_eos_observed",
+        "trace_available": true
+      },
+      "row_id": "seed-search-weather-aug-2",
+      "validated_output": {
+        "schema_valid": false,
+        "source": "none"
+      }
+    }
+  ],
+  "source_artifact_policy": {
+    "no_private_raw_logs_or_adapters_read": true,
+    "source_generation_trace_preserved": true,
+    "source_metrics_preserved": true,
+    "source_predictions_preserved": true,
+    "source_raw_decoded_summary_preserved": true,
+    "uses_prior_public_sample_artifacts_only": true
+  },
+  "source_artifacts": {
+    "generation_trace": "reports/public-sample/a100-search-query-slot-policy-rerun/generation_trace.jsonl",
+    "metrics": "reports/public-sample/a100-search-query-slot-policy-rerun/metrics.json",
+    "prediction_metadata": "reports/public-sample/a100-search-query-slot-policy-rerun/prediction_metadata.json",
+    "raw_decoded_summary": "reports/public-sample/a100-search-query-slot-policy-rerun/raw_decoded_summary.jsonl",
+    "schema_guard_summary": "reports/public-sample/a100-search-query-slot-policy-rerun/schema_guard_summary.json",
+    "source_diagnosis": "reports/public-sample/a100-search-query-slot-policy-rerun/slot_policy_rerun_diagnosis.json",
+    "source_manifest": "reports/public-sample/a100-search-query-slot-policy-rerun/manifest.json"
+  },
+  "source_prior_phase": "reports/public-sample/a100-search-query-slot-policy-rerun",
+  "summary": {
+    "embedded_city_date_slot_fragment_count": 0,
+    "embedded_compact_query_fragment_count": 3,
+    "generation_trace_attempt_counts": {
+      "raw_attempt": 3,
+      "retry_attempt": 3
+    },
+    "markdown_wrapped_prediction_count": 3,
+    "prediction_count": 3,
+    "raw_attempt_schema_valid_count": 0,
+    "raw_generation_eos_seen_count": 3,
+    "raw_generation_max_new_tokens_hit_count": 0,
+    "raw_generation_trace_available": true,
+    "raw_parse_status_counts": {
+      "json_fragment_object": 3
+    },
+    "retry_attempt_schema_valid_count": 0,
+    "retry_generation_eos_seen_count": 3,
+    "retry_generation_max_new_tokens_hit_count": 0,
+    "retry_generation_trace_available": true,
+    "retry_parse_status_counts": {
+      "json_fragment_object": 3
+    },
+    "row_ids": [
+      "seed-search-weather",
+      "seed-search-weather-aug-1",
+      "seed-search-weather-aug-2"
+    ],
+    "strict_final_contract_exact_match": 0.0,
+    "strict_final_json_valid_rate": 0.0,
+    "strict_final_slot_f1": 0.0,
+    "strict_parser_accepts_markdown_wrappers": false,
+    "validated_output_schema_valid_count": 0,
+    "wrapper_origin_proven": false
+  }
+}
