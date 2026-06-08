@@ -71,3 +71,16 @@ The A100 search query slot-policy rerun SHALL use the current public sample trai
 - **WHEN** `train_split_gold.jsonl` is generated for the rerun evidence pack
 - **THEN** the three public search/weather train rows MUST use `slots={"query":"北京明天天气"}` and `normalized_command="搜索北京明天天气"`
 - **AND** they MUST NOT contain `slots.city`, `slots.date`, `slots.topic`, or the artificial token-spaced query string `北京 明天 天气`
+
+### Requirement: Generate decomposed search-slot hard negatives
+The public sample DPO builder SHALL reject decomposed public-readonly search/weather slot shapes while preserving compact `slots.query` chosen targets.
+
+#### Scenario: Build decomposed slot hard negative
+- **WHEN** DPO pairs are generated for a public-readonly search/weather seed row whose chosen contract uses compact `slots.query`
+- **THEN** the builder MUST include a rejected contract whose `slots` object uses decomposed `city`, `date`, and `topic` keys instead of `query`
+- **AND** the rejected contract MUST use a distinct rejection reason that is counted in the manifest and DPO summary
+- **AND** the chosen contract MUST retain compact `slots.query` and `normalized_command`
+
+#### Scenario: Limit decomposed slot negative scope
+- **WHEN** DPO pairs are generated for non-search contracts or search contracts without compact public-readonly `slots.query`
+- **THEN** the builder MUST NOT invent `city/date/topic` rejected slots for those rows

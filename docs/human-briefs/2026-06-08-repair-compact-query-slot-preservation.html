@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Repair compact query slot preservation</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 32px; line-height: 1.6; color: #1f2933; }
+    main { max-width: 920px; margin: 0 auto; }
+    h1 { font-size: 28px; margin-bottom: 8px; }
+    h2 { font-size: 18px; margin-top: 24px; }
+    code { background: #f3f4f6; padding: 1px 5px; border-radius: 4px; }
+    a { color: #075985; }
+    .status { display: inline-block; padding: 4px 8px; border: 1px solid #9aa6b2; border-radius: 6px; font-size: 13px; }
+  </style>
+</head>
+<body>
+<main>
+  <p class="status">archived</p>
+  <h1>repair-compact-query-slot-preservation</h1>
+  <p><strong>一句话结论：</strong>本地 prompt/data reinforcement 已把 public-readonly weather/search 的错误 <code>city/date/topic</code> slot 形态加入 DPO rejected pair，同时保留 chosen compact <code>slots.query</code>。这不启动 A100，也不证明模型恢复。</p>
+
+  <h2>本阶段变化</h2>
+  <ul>
+    <li>Public DPO 增加 <code>decomposed_search_slots</code> hard negative。</li>
+    <li>Prompt policy 明确 compact <code>slots.query</code> 是目标格式，<code>city/date/topic</code> 是 rejected search slot shape。</li>
+    <li>新增 public-safe evidence pack，连接上一个 residual diagnosis，但不重解释历史预测。</li>
+  </ul>
+
+  <h2>关键文件</h2>
+  <ul>
+    <li><a href="../../reports/public-sample/compact-query-slot-preservation/compact_query_slot_preservation.md">compact_query_slot_preservation.md</a></li>
+    <li><a href="../../reports/public-sample/compact-query-slot-preservation/compact_query_slot_preservation.json">compact_query_slot_preservation.json</a></li>
+    <li><a href="../../data/public-samples/dpo_public_sample.jsonl">dpo_public_sample.jsonl</a></li>
+    <li><a href="../../openspec/changes/archive/2026-06-08-repair-compact-query-slot-preservation/tasks.md">OpenSpec archived tasks.md</a></li>
+  </ul>
+
+  <h2>验证</h2>
+  <ul>
+    <li><code>PYTHONPATH=src pytest -q tests/test_formatting_training.py tests/test_dataset_builder.py tests/test_dpo_validation.py tests/test_a100_sft_prediction_smoke.py::test_compact_query_slot_preservation_pack_is_public_safe_and_bounded</code>：<code>31 passed</code>。</li>
+    <li><code>PYTHONPATH=src pytest -q</code>：<code>192 passed</code>。</li>
+    <li><code>PYTHONPATH=src python -m voice2task.cli.data validate --sft data/public-samples/sft_public_sample.jsonl --dpo data/public-samples/dpo_public_sample.jsonl --manifest data/public-samples/manifest_public_sample.json --public</code>：<code>ok=true</code>，<code>sft_rows=12</code>，<code>dpo_pairs=27</code>。</li>
+    <li><code>PYTHONPATH=src python -m voice2task.cli.data dpo-check --dpo data/public-samples/dpo_public_sample.jsonl</code>：<code>27</code> total pairs，<code>decomposed_search_slots=1</code>。</li>
+    <li><code>uv run ruff check .</code>、<code>uv run mypy src</code>、<code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>、leak scans 和 <code>git diff --check</code> 已通过。</li>
+  </ul>
+
+  <h2>边界</h2>
+  <ul>
+    <li>不启动 A100；不训练、不预测、不 rerun。</li>
+    <li>不改 evaluator metric、parser、slot normalization、semantic-equivalence scoring、prediction repair 或 re-score。</li>
+    <li>历史 A100 prediction 仍是历史证据；本阶段不把它修复、归一化、重算或解释成 exact-match recovery。</li>
+    <li>不证明模型恢复、模型质量改善、held-out generalization、production readiness、checkpoint/adapter release 或 live-browser benchmark improvement。</li>
+  </ul>
+
+  <h2>推荐下一步</h2>
+  <p>归档前先完成本地验证和 Reviewer pass；若要证明训练后行为改变，需要另开 A100 prediction-only rerun 阶段。</p>
+</main>
+</body>
+</html>

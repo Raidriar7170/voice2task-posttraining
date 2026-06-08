@@ -4114,6 +4114,149 @@ def test_fence_suppression_slot_residual_diagnosis_pack_is_public_safe_and_bound
     assert scan_paths([evidence_dir, human_brief_path, *existing_change_dirs]).ok is True
 
 
+def test_compact_query_slot_preservation_pack_is_public_safe_and_bounded() -> None:
+    source_dir = Path("reports/public-sample/fence-suppression-slot-residual-diagnosis")
+    evidence_dir = Path("reports/public-sample/compact-query-slot-preservation")
+    human_brief_path = Path("docs/human-briefs/2026-06-08-repair-compact-query-slot-preservation.html")
+    archive_dir = Path("openspec/changes/archive/2026-06-08-repair-compact-query-slot-preservation")
+    change_dirs = [
+        Path("openspec/changes/repair-compact-query-slot-preservation"),
+        archive_dir,
+    ]
+    required_files = {
+        "compact_query_slot_preservation.json",
+        "compact_query_slot_preservation.md",
+        "manifest.json",
+        "leak_scan_result.json",
+        "phase_validation_leak_scan_result.json",
+    }
+
+    assert evidence_dir.exists()
+    assert required_files <= {path.name for path in evidence_dir.iterdir()}
+    if archive_dir.exists():
+        assert {"post_archive_leak_scan_result.json", "final_leak_scan_result.json"} <= {
+            path.name for path in evidence_dir.iterdir()
+        }
+    assert human_brief_path.exists()
+    existing_change_dirs = [path for path in change_dirs if path.exists()]
+    assert existing_change_dirs
+
+    summary = json.loads((evidence_dir / "compact_query_slot_preservation.json").read_text(encoding="utf-8"))
+    manifest = json.loads((evidence_dir / "manifest.json").read_text(encoding="utf-8"))
+    report = (evidence_dir / "compact_query_slot_preservation.md").read_text(encoding="utf-8")
+    human_brief = human_brief_path.read_text(encoding="utf-8")
+    leak_scan = json.loads((evidence_dir / "leak_scan_result.json").read_text(encoding="utf-8"))
+    phase_validation_leak_scan = json.loads(
+        (evidence_dir / "phase_validation_leak_scan_result.json").read_text(encoding="utf-8")
+    )
+    post_archive_leak_scan = (
+        json.loads((evidence_dir / "post_archive_leak_scan_result.json").read_text(encoding="utf-8"))
+        if (evidence_dir / "post_archive_leak_scan_result.json").exists()
+        else None
+    )
+    final_leak_scan = (
+        json.loads((evidence_dir / "final_leak_scan_result.json").read_text(encoding="utf-8"))
+        if (evidence_dir / "final_leak_scan_result.json").exists()
+        else None
+    )
+    public_manifest = json.loads(Path("data/public-samples/manifest_public_sample.json").read_text(encoding="utf-8"))
+    source_diagnosis = json.loads((source_dir / "slot_residual_diagnosis.json").read_text(encoding="utf-8"))
+
+    assert summary["evidence_kind"] == "compact_query_slot_preservation_repair_local"
+    assert summary["change_name"] == "repair-compact-query-slot-preservation"
+    assert summary["source_prior_phase"] == source_dir.as_posix()
+    assert summary["source_residual"]["row_id"] == "seed-search-weather-aug-1"
+    assert summary["source_residual"]["gold_slots"] == {"query": "北京明天天气"}
+    assert summary["source_residual"]["prediction_slots"] == {"city": "北京", "date": "明天", "topic": ""}
+    assert summary["source_residual_policy"]["historical_predictions_preserved"] is True
+    assert summary["source_residual_policy"]["historical_metrics_preserved"] is True
+    assert summary["source_residual_policy"]["not_reinterpreted_as_exact_match_recovery"] is True
+    assert summary["source_residual_policy"]["source_diagnosis_summary"] == source_diagnosis["summary"]
+
+    public_sample = summary["public_sample"]
+    assert public_sample["counts"]["sft_rows"] == 12
+    assert public_sample["counts"]["dpo_pairs"] == 27
+    assert public_sample["dpo_rejection_counts"]["decomposed_search_slots"] == 1
+    assert public_sample["manifest_id"] == public_manifest["manifest_id"]
+    assert public_sample["decomposed_pair"]["id"] == "seed-search-weather-decomposed_search_slots"
+    assert public_sample["decomposed_pair"]["chosen_slots"] == {"query": "北京明天天气"}
+    assert public_sample["decomposed_pair"]["rejected_slots"] == {"city": "北京", "date": "明天", "topic": ""}
+    assert public_sample["decomposed_pair"]["rejection_reason"] == "decomposed_search_slots"
+
+    prompt_constraints = summary["prompt_constraints"]
+    assert prompt_constraints["compact_search_query_slot_policy_visible"] is True
+    assert prompt_constraints["search_query_no_city_date_split_visible"] is True
+    assert prompt_constraints["decomposed_search_slots_rejected_visible"] is True
+    assert prompt_constraints["policy_is_target_formatting_not_evaluator_normalization"] is True
+    assert prompt_constraints["prediction_prompt_excludes_row_specific_gold_target"] is True
+
+    claims = summary["claims"]
+    assert claims["local_data_prompt_policy_reinforcement_only"] is True
+    assert claims["a100_execution_performed"] is False
+    assert claims["training_or_prediction_rerun_performed"] is False
+    assert claims["evaluator_metric_change_performed"] is False
+    assert claims["parser_change_performed"] is False
+    assert claims["semantic_equivalence_scoring_performed"] is False
+    assert claims["slot_normalization_performed"] is False
+    assert claims["prediction_repair_or_rescore_performed"] is False
+    assert claims["model_recovery_claim"] is False
+    assert claims["model_quality_improvement_claim"] is False
+
+    assert manifest["evidence_kind"] == summary["evidence_kind"]
+    assert manifest["source_prior_phase"] == source_dir.as_posix()
+    assert manifest["counts"]["dpo_pairs"] == 27
+    assert manifest["counts"]["decomposed_search_slots_pairs"] == 1
+    assert manifest["diagnostic_artifacts"]["summary_json"].endswith("compact_query_slot_preservation.json")
+    assert manifest["diagnostic_artifacts"]["report"].endswith("compact_query_slot_preservation.md")
+    assert manifest["diagnostic_artifacts"]["phase_validation_leak_scan"].endswith(
+        "phase_validation_leak_scan_result.json"
+    )
+    for artifact_path in manifest["diagnostic_artifacts"].values():
+        assert Path(artifact_path).exists()
+    assert manifest["claims"] == claims
+
+    assert leak_scan["ok"] is True
+    assert leak_scan["findings"] == []
+    assert phase_validation_leak_scan["ok"] is True
+    assert phase_validation_leak_scan["findings"] == []
+    if archive_dir.exists():
+        assert post_archive_leak_scan is not None
+        assert post_archive_leak_scan["ok"] is True
+        assert post_archive_leak_scan["findings"] == []
+        assert final_leak_scan is not None
+        assert final_leak_scan["ok"] is True
+        assert final_leak_scan["findings"] == []
+
+    assert "PYTHONPATH=src pytest -q tests/test_formatting_training.py" in report
+    assert "PYTHONPATH=src pytest -q" in human_brief
+    assert "local prompt/data reinforcement" in report
+    assert "decomposed_search_slots" in report
+    assert "No A100 execution was performed" in report
+    assert "not model recovery evidence" in report
+    assert "本地 prompt/data reinforcement" in human_brief
+    assert "不启动 A100" in human_brief
+    assert "不证明模型恢复" in human_brief
+
+    combined_public_text = "\n".join(
+        [
+            json.dumps(summary, ensure_ascii=False, sort_keys=True),
+            json.dumps(manifest, ensure_ascii=False, sort_keys=True),
+            json.dumps(leak_scan, ensure_ascii=False, sort_keys=True),
+            json.dumps(phase_validation_leak_scan, ensure_ascii=False, sort_keys=True),
+            json.dumps(post_archive_leak_scan, ensure_ascii=False, sort_keys=True)
+            if post_archive_leak_scan is not None
+            else "",
+            json.dumps(final_leak_scan, ensure_ascii=False, sort_keys=True) if final_leak_scan is not None else "",
+            report,
+            human_brief,
+        ]
+    )
+    assert "/mnt/data/" not in combined_public_text
+    assert "/Users/" not in combined_public_text
+    assert "volcano" not in combined_public_text
+    assert scan_paths([evidence_dir, human_brief_path, *existing_change_dirs]).ok is True
+
+
 def test_a100_search_query_slot_wrapper_boundary_diagnosis_pack_is_public_safe_and_bounded() -> None:
     source_dir = Path("reports/public-sample/a100-search-query-slot-policy-rerun")
     evidence_dir = Path("reports/public-sample/a100-search-query-slot-wrapper-boundary-diagnosis")

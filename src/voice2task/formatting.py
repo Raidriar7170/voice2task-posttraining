@@ -9,10 +9,10 @@ _TASK_TYPE_ENUM = ",".join(sorted(TASK_TYPES))
 _ROUTE_ENUM = ",".join(sorted(ROUTES))
 CONTRACT_REQUIRED_FIELD_SKELETON = (
     "Browser Task Contract required skeleton:"
-    '"task_type","route","safety","allow","reason","confirmation_required",'
-    '"slots","normalized_command","language","contract_version"。'
+    '"task_type","route","safety","confirmation_required",'
+    '"slots","normalized_command","language","contract_version"；'
     "Required-field checklist；每次输出都必须包含全部 8 个顶层字段；"
-    "confirmation_required 必须是 boolean；低风险公开只读搜索通常为 false。"
+    "confirmation_required 必须是 boolean；低风险公开只读搜索通常为 false；"
 )
 CONTRACT_CANONICAL_ONE_SHOT = canonical_contract_json(
     BrowserTaskContract(
@@ -50,9 +50,9 @@ PUBLIC_READONLY_SEARCH_CONTRACT_POLICY = (
     "safety.allow=true;"
     'safety.reason="public_readonly";confirmation_required=false；'
     "task_type 必须是 search，不能是 search_web；"
-    "slots.query 使用紧凑查询短语：北京明天天气；"
-    "不要拆成 city/date/topic；"
+    "slots.query 使用紧凑查询短语如上海后天天气；"
     "中文勿人工空格；"
+    "不要拆成 city/date/topic；该形态 rejected；"
     "不是 slot normalization；"
     "task_type 不能复用 route enum 值，search_web 不是 task_type。"
 )
@@ -150,10 +150,13 @@ def prompt_constraint_summary(prompt: str = SYSTEM_PROMPT) -> dict[str, bool]:
         "search_query_slot_guidance_visible": "slots.query" in prompt
         and "简洁查询词" in prompt,
         "compact_search_query_slot_policy_visible": "slots.query 使用紧凑查询短语" in prompt
-        and "北京明天天气" in prompt
+        and "上海后天天气" in prompt
+        and "中文勿人工空格" in prompt
         and "不是 slot normalization" in prompt,
         "search_query_no_city_date_split_visible": "不要拆成 city/date/topic" in prompt
         and all(slot_key in prompt for slot_key in ("city", "date", "topic")),
+        "decomposed_search_slots_rejected_visible": "不要拆成 city/date/topic" in prompt
+        and "该形态 rejected" in prompt,
         "task_type_not_route_enum_visible": "task_type 不能复用 route enum 值" in prompt
         and "search_web 不是 task_type" in prompt,
         "public_readonly_task_type_search_not_search_web_visible": "task_type 必须是 search，不能是 search_web"

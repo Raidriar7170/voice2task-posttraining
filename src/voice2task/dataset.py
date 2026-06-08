@@ -21,6 +21,7 @@ HARD_NEGATIVE_CATEGORIES = [
     "missing_confirmation",
     "missing_slot",
     "wrong_slot",
+    "decomposed_search_slots",
     "underspecified_request",
     "malformed_schema",
 ]
@@ -121,6 +122,41 @@ def _replace_contract(contract: BrowserTaskContract, **updates: Any) -> BrowserT
     return BrowserTaskContract.from_dict(data)
 
 
+def _decomposed_weather_slots(query: str) -> dict[str, str] | None:
+    compact = _compact_query_phrase(query)
+    if not compact.endswith("天气"):
+        return None
+    stem = compact.removesuffix("天气")
+    for date in ("今天", "明天", "后天"):
+        if stem.endswith(date):
+            city = stem[: -len(date)]
+            if city:
+                return {"city": city, "date": date, "topic": ""}
+    return None
+
+
+def _decomposed_search_slots_negative(contract: BrowserTaskContract) -> BrowserTaskContract | None:
+    if not (
+        contract.task_type == "search"
+        and contract.route == "search_web"
+        and bool(contract.safety.get("allow")) is True
+        and contract.safety.get("reason") == "public_readonly"
+        and contract.confirmation_required is False
+    ):
+        return None
+    query = contract.slots.get("query")
+    if not isinstance(query, str):
+        return None
+    decomposed_slots = _decomposed_weather_slots(query)
+    if decomposed_slots is None:
+        return None
+    return _replace_contract(
+        contract,
+        slots=decomposed_slots,
+        safety={**contract.safety, "reason": "decomposed_search_slots"},
+    )
+
+
 def _negative_contract(contract: BrowserTaskContract, category: str) -> BrowserTaskContract | dict[str, Any]:
     if category == "wrong_route":
         route = "open_url" if contract.route != "open_url" else "search_web"
@@ -147,6 +183,11 @@ def _negative_contract(contract: BrowserTaskContract, category: str) -> BrowserT
         else:
             slots["missing"] = "wrong"
         return _replace_contract(contract, slots=slots, safety={**contract.safety, "reason": "wrong_slot"})
+    if category == "decomposed_search_slots":
+        decomposed = _decomposed_search_slots_negative(contract)
+        if decomposed is None:
+            raise ValueError("decomposed_search_slots applies only to compact public-readonly weather search")
+        return decomposed
     if category == "underspecified_request":
         return _replace_contract(
             contract,
@@ -172,6 +213,9 @@ def generate_hard_negative_pairs(rows: list[SFTDatasetRow]) -> list[DPOPair]:
         for category in HARD_NEGATIVE_CATEGORIES:
             if category == "missing_confirmation" and not chosen.confirmation_required:
                 continue
+            if category == "decomposed_search_slots":
+                if row.provenance.get("public_safe") is not True or _decomposed_search_slots_negative(chosen) is None:
+                    continue
             pairs.append(
                 DPOPair(
                     id=f"{row.id}-{category}",

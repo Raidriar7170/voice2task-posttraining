@@ -14,6 +14,7 @@ REJECTION_SLICE = {
     "missing_confirmation": "confirmation",
     "missing_slot": "slot",
     "wrong_slot": "slot",
+    "decomposed_search_slots": "slot",
     "underspecified_request": "underspecified",
     "malformed_schema": "schema",
 }
@@ -39,6 +40,25 @@ def validate_dpo_pair(pair: DPOPair) -> None:
         raise ValidationError(f"missing_slot: {pair.id} rejected contract must remove a slot")
     if pair.rejection_reason == "wrong_slot" and chosen.get("slots") == rejected.get("slots"):
         raise ValidationError(f"wrong_slot: {pair.id} rejected contract must alter slots")
+    if pair.rejection_reason == "decomposed_search_slots":
+        chosen_slots = chosen.get("slots", {})
+        rejected_slots = rejected.get("slots", {})
+        if not (
+            chosen.get("task_type") == "search"
+            and chosen.get("route") == "search_web"
+            and chosen.get("safety", {}).get("allow") is True
+            and chosen.get("safety", {}).get("reason") == "public_readonly"
+            and rejected.get("task_type") == "search"
+            and rejected.get("route") == "search_web"
+            and rejected.get("safety", {}).get("allow") is True
+        ):
+            raise ValidationError(
+                f"decomposed_search_slots: {pair.id} must be a public-readonly search/search_web contract"
+            )
+        if set(chosen_slots) != {"query"} or set(rejected_slots) != {"city", "date", "topic"}:
+            raise ValidationError(
+                f"decomposed_search_slots: {pair.id} rejected contract must replace query with city/date/topic slots"
+            )
     if pair.rejection_reason == "underspecified_request" and rejected.get("route") != "clarify":
         raise ValidationError(f"underspecified_request: {pair.id} rejected contract must route to clarify")
     if pair.rejection_reason == "malformed_schema" and "route" in rejected:

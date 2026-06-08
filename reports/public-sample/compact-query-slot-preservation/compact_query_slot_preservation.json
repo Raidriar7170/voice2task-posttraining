@@ -1,0 +1,155 @@
+{
+  "change_name": "repair-compact-query-slot-preservation",
+  "claims": {
+    "a100_execution_performed": false,
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "evaluator_metric_change_performed": false,
+    "held_out_generalization_claim": false,
+    "live_browser_benchmark_claim": false,
+    "local_data_prompt_policy_reinforcement_only": true,
+    "model_quality_improvement_claim": false,
+    "model_recovery_claim": false,
+    "parser_change_performed": false,
+    "prediction_repair_or_rescore_performed": false,
+    "production_readiness_claim": false,
+    "semantic_equivalence_scoring_performed": false,
+    "slot_normalization_performed": false,
+    "training_or_prediction_rerun_performed": false
+  },
+  "evidence_kind": "compact_query_slot_preservation_repair_local",
+  "generated_at": "2026-06-08T10:43:20+00:00",
+  "prompt_constraints": {
+    "compact_search_query_slot_policy_visible": true,
+    "decomposed_search_slots_rejected_visible": true,
+    "policy_is_target_formatting_not_evaluator_normalization": true,
+    "prediction_prompt_excludes_row_specific_gold_target": true,
+    "search_query_no_city_date_split_visible": true,
+    "source": "src/voice2task/formatting.py::prompt_constraint_summary"
+  },
+  "public_sample": {
+    "counts": {
+      "dpo_pairs": 27,
+      "seed_rows": 4,
+      "sft_rows": 12
+    },
+    "decomposed_pair": {
+      "chosen_slots": {
+        "query": "北京明天天气"
+      },
+      "id": "seed-search-weather-decomposed_search_slots",
+      "provenance": {
+        "public_safe": true,
+        "source_id": "seed-search-weather",
+        "source_mode": "hard_negative"
+      },
+      "rejected_slots": {
+        "city": "北京",
+        "date": "明天",
+        "topic": ""
+      },
+      "rejection_reason": "decomposed_search_slots"
+    },
+    "dpo_rejection_counts": {
+      "decomposed_search_slots": 1,
+      "malformed_schema": 4,
+      "missing_confirmation": 2,
+      "missing_slot": 4,
+      "underspecified_request": 4,
+      "unsafe_allowance": 4,
+      "wrong_route": 4,
+      "wrong_slot": 4
+    },
+    "files": {
+      "dpo": "data/public-samples/dpo_public_sample.jsonl",
+      "manifest": "data/public-samples/manifest_public_sample.json",
+      "sft": "data/public-samples/sft_public_sample.jsonl"
+    },
+    "manifest_id": "public-sample-20260608T103511Z"
+  },
+  "source_artifact_policy": {
+    "no_private_raw_logs_or_adapters_read": true,
+    "public_sample_artifacts_preserved": true,
+    "source_diagnosis_preserved": true,
+    "source_metrics_preserved": true,
+    "source_predictions_preserved": true,
+    "uses_public_sample_artifacts_only": true
+  },
+  "source_artifacts": {
+    "public_sample_dpo": "data/public-samples/dpo_public_sample.jsonl",
+    "public_sample_manifest": "data/public-samples/manifest_public_sample.json",
+    "public_sample_sft": "data/public-samples/sft_public_sample.jsonl",
+    "source_diagnosis": "reports/public-sample/fence-suppression-slot-residual-diagnosis/slot_residual_diagnosis.json",
+    "source_report": "reports/public-sample/fence-suppression-slot-residual-diagnosis/slot_residual_diagnosis.md"
+  },
+  "source_prior_phase": "reports/public-sample/fence-suppression-slot-residual-diagnosis",
+  "source_residual": {
+    "gold_slots": {
+      "query": "北京明天天气"
+    },
+    "prediction_slots": {
+      "city": "北京",
+      "date": "明天",
+      "topic": ""
+    },
+    "row_id": "seed-search-weather-aug-1",
+    "strict_contract_exact_match": false
+  },
+  "source_residual_policy": {
+    "historical_metrics_preserved": true,
+    "historical_predictions_preserved": true,
+    "not_reinterpreted_as_exact_match_recovery": true,
+    "source_diagnosis_summary": {
+      "field_mismatch_counts": {
+        "slots": 1
+      },
+      "residual_row_count": 1,
+      "residual_row_ids": [
+        "seed-search-weather-aug-1"
+      ],
+      "schema_invalid_prediction_count": 0,
+      "strict_metric_boundary": {
+        "contract_exact_match": 0.6666666666666666,
+        "json_valid_rate": 1.0,
+        "slot_f1": 0.6666666666666666
+      },
+      "validated_output_schema_valid_count": 3
+    }
+  },
+  "validation": {
+    "commands": [
+      {
+        "command": "PYTHONPATH=src pytest -q tests/test_formatting_training.py tests/test_dataset_builder.py tests/test_dpo_validation.py tests/test_a100_sft_prediction_smoke.py::test_compact_query_slot_preservation_pack_is_public_safe_and_bounded",
+        "result": "31 passed"
+      },
+      {
+        "command": "PYTHONPATH=src pytest -q",
+        "result": "192 passed"
+      },
+      {
+        "command": "PYTHONPATH=src python -m voice2task.cli.data validate --sft data/public-samples/sft_public_sample.jsonl --dpo data/public-samples/dpo_public_sample.jsonl --manifest data/public-samples/manifest_public_sample.json --public",
+        "result": "ok=true; sft_rows=12; dpo_pairs=27"
+      },
+      {
+        "command": "PYTHONPATH=src python -m voice2task.cli.data dpo-check --dpo data/public-samples/dpo_public_sample.jsonl",
+        "result": "total_pairs=27; decomposed_search_slots=1"
+      },
+      {
+        "command": "uv run ruff check .",
+        "result": "passed"
+      },
+      {
+        "command": "uv run mypy src",
+        "result": "passed"
+      },
+      {
+        "command": "OPENSPEC_TELEMETRY=0 openspec validate --all --strict",
+        "result": "4 passed, 0 failed"
+      },
+      {
+        "command": "git diff --check",
+        "result": "passed"
+      }
+    ]
+  }
+}

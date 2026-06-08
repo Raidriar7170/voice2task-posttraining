@@ -1,0 +1,13 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-08T10:47:50.731535+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "reports/public-sample/compact-query-slot-preservation",
+    "docs/human-briefs/2026-06-08-repair-compact-query-slot-preservation.html",
+    "openspec/changes/archive/2026-06-08-repair-compact-query-slot-preservation",
+    "data/public-samples/dpo_public_sample.jsonl",
+    "data/public-samples/manifest_public_sample.json"
+  ]
+}

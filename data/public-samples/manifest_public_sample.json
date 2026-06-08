@@ -1,10 +1,11 @@
 {
   "counts": {
-    "dpo_pairs": 26,
+    "dpo_pairs": 27,
     "seed_rows": 4,
     "sft_rows": 12
   },
   "dpo_rejection_counts": {
+    "decomposed_search_slots": 1,
     "malformed_schema": 4,
     "missing_confirmation": 2,
     "missing_slot": 4,
@@ -19,8 +20,8 @@
     "seed": "data/public-samples/seed_traces.jsonl",
     "sft": "data/public-samples/sft_public_sample.jsonl"
   },
-  "generated_at": "2026-06-06T10:42:18.368634+00:00",
-  "manifest_id": "public-sample-20260606T104218Z",
+  "generated_at": "2026-06-08T10:35:11.147779+00:00",
+  "manifest_id": "public-sample-20260608T103511Z",
   "mode": "public_sample",
   "public_safe": true,
   "source_summary": {

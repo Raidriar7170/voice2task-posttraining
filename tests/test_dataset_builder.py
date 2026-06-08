@@ -58,6 +58,7 @@ def test_build_public_sample_dataset_writes_manifest_sft_and_dpo(tmp_path: Path)
         "unsafe_allowance",
         "missing_confirmation",
         "wrong_slot",
+        "decomposed_search_slots",
         "underspecified_request",
         "malformed_schema",
     }
@@ -72,6 +73,12 @@ def test_build_public_sample_dataset_writes_manifest_sft_and_dpo(tmp_path: Path)
     ]
     normalized_by_id = {row["id"]: row["target_contract"]["normalized_command"] for row in sft_rows}
     slots_by_id = {row["id"]: row["target_contract"]["slots"] for row in sft_rows}
+    dpo_rows = [
+        json.loads(line)
+        for line in (output_dir / "dpo_public_sample.jsonl").read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    dpo_by_id = {row["id"]: row for row in dpo_rows}
     assert normalized_by_id["seed-search"] == "搜索北京明天天气"
     assert normalized_by_id["seed-search-aug-1"] == "搜索北京明天天气"
     assert normalized_by_id["seed-search-aug-2"] == "搜索北京明天天气"
@@ -80,6 +87,11 @@ def test_build_public_sample_dataset_writes_manifest_sft_and_dpo(tmp_path: Path)
     assert slots_by_id["seed-search-aug-2"] == {"query": "北京明天天气"}
     assert normalized_by_id["seed-form"] == "填写邮箱并确认"
     assert normalized_by_id["seed-form-aug-1"] == "填写邮箱并确认"
+    decomposed_pair = dpo_by_id["seed-search-decomposed_search_slots"]
+    assert decomposed_pair["chosen_contract"]["slots"] == {"query": "北京明天天气"}
+    assert decomposed_pair["rejected_contract"]["slots"] == {"city": "北京", "date": "明天", "topic": ""}
+    assert decomposed_pair["rejection_reason"] == "decomposed_search_slots"
+    assert "seed-form-decomposed_search_slots" not in dpo_by_id
 
     result = validate_dataset_artifacts(
         sft_path=output_dir / "sft_public_sample.jsonl",
@@ -105,3 +117,9 @@ def test_build_local_private_corpus_writes_split_files_and_summary(tmp_path: Pat
     assert (output_dir / "test.jsonl").exists()
     assert (output_dir / "dpo_pairs.jsonl").exists()
     assert (output_dir / "manifest_local_private.json").exists()
+    private_dpo_rows = [
+        json.loads(line)
+        for line in (output_dir / "dpo_pairs.jsonl").read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    assert all(row["rejection_reason"] != "decomposed_search_slots" for row in private_dpo_rows)

@@ -20,6 +20,7 @@ REJECTION_CATEGORIES = {
     "missing_confirmation",
     "missing_slot",
     "wrong_slot",
+    "decomposed_search_slots",
     "underspecified_request",
     "malformed_schema",
 }
