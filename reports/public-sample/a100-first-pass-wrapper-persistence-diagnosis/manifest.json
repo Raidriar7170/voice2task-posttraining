@@ -1,0 +1,56 @@
+{
+  "change_name": "diagnose-first-pass-wrapper-persistence",
+  "claims": {
+    "a100_execution_performed": false,
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "evaluator_metric_change_performed": false,
+    "held_out_generalization_claim": false,
+    "live_browser_benchmark_claim": false,
+    "local_diagnosis_only": true,
+    "model_quality_improvement_claim": false,
+    "model_recovery_claim": false,
+    "parser_relaxation_performed": false,
+    "prediction_repair_or_rescore_performed": false,
+    "production_readiness_claim": false,
+    "public_full_corpus_release_claim": false,
+    "semantic_equivalence_scoring_performed": false,
+    "slot_normalization_performed": false,
+    "training_or_prediction_rerun_performed": false,
+    "training_performed": false
+  },
+  "counts": {
+    "markdown_wrapped_predictions": 3,
+    "prediction_count": 3,
+    "validated_output_schema_valid": 0
+  },
+  "diagnostic_artifacts": {
+    "diagnosis": "reports/public-sample/a100-first-pass-wrapper-persistence-diagnosis/wrapper_persistence_diagnosis.json",
+    "final_leak_scan": "reports/public-sample/a100-first-pass-wrapper-persistence-diagnosis/final_leak_scan_result.json",
+    "human_brief": "docs/human-briefs/2026-06-08-diagnose-first-pass-wrapper-persistence.html",
+    "leak_scan": "reports/public-sample/a100-first-pass-wrapper-persistence-diagnosis/leak_scan_result.json",
+    "manifest": "reports/public-sample/a100-first-pass-wrapper-persistence-diagnosis/manifest.json",
+    "phase_validation_leak_scan": "reports/public-sample/a100-first-pass-wrapper-persistence-diagnosis/phase_validation_leak_scan_result.json",
+    "post_archive_leak_scan": "reports/public-sample/a100-first-pass-wrapper-persistence-diagnosis/post_archive_leak_scan_result.json",
+    "report": "reports/public-sample/a100-first-pass-wrapper-persistence-diagnosis/wrapper_persistence_diagnosis.md"
+  },
+  "evidence_kind": "a100_first_pass_wrapper_persistence_diagnosis_local",
+  "generated_at": "2026-06-08T04:54:24.711727+00:00",
+  "source_artifact_policy": {
+    "no_private_raw_logs_or_adapters_read": true,
+    "source_generation_trace_preserved": true,
+    "source_metrics_preserved": true,
+    "source_predictions_preserved": true,
+    "uses_source_public_sample_artifacts_only": true
+  },
+  "source_artifacts": {
+    "source_diagnosis": "reports/public-sample/a100-first-pass-output-boundary-rerun/output_boundary_rerun_diagnosis.json",
+    "source_generation_trace": "reports/public-sample/a100-first-pass-output-boundary-rerun/generation_trace.jsonl",
+    "source_prediction_metadata": "reports/public-sample/a100-first-pass-output-boundary-rerun/prediction_metadata.json",
+    "source_prompt_snapshot": "reports/public-sample/a100-first-pass-output-boundary-rerun/prompt_snapshot.json",
+    "source_raw_decoded_summary": "reports/public-sample/a100-first-pass-output-boundary-rerun/raw_decoded_summary.jsonl",
+    "source_rerun": "reports/public-sample/a100-first-pass-output-boundary-rerun",
+    "source_schema_guard_summary": "reports/public-sample/a100-first-pass-output-boundary-rerun/schema_guard_summary.json"
+  },
+  "source_prior_phase": "reports/public-sample/a100-first-pass-output-boundary-rerun"
+}

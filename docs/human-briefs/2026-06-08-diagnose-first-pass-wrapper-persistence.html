@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Diagnose first-pass wrapper persistence</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 32px; line-height: 1.55; color: #1f2933; }
+    h1 { font-size: 28px; margin-bottom: 8px; }
+    h2 { font-size: 18px; margin-top: 24px; }
+    code { background: #f3f4f6; padding: 1px 5px; border-radius: 4px; }
+    .status { display: inline-block; padding: 4px 8px; border-radius: 6px; background: #eef2ff; color: #3730a3; font-weight: 600; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin: 16px 0; }
+    .metric { border: 1px solid #d7dde5; border-radius: 8px; padding: 12px; }
+    .value { font-size: 22px; font-weight: 700; }
+    a { color: #0f766e; }
+  </style>
+</head>
+<body>
+  <h1>Diagnose first-pass wrapper persistence</h1>
+  <p><span class="status">archived</span></p>
+  <p><strong>一句话结论：</strong>first-pass output boundary 已可见，但 3/3 预测仍带 Markdown fence；EOS observed 只能说明生成停止，不代表 strict schema-valid。不能声明模型质量改善。</p>
+
+  <div class="grid">
+    <div class="metric"><div>boundary visible</div><div class="value">yes</div></div>
+    <div class="metric"><div>Markdown wrapped</div><div class="value">3/3</div></div>
+    <div class="metric"><div>schema-valid</div><div class="value">0/3</div></div>
+    <div class="metric"><div>EOS raw/retry</div><div class="value">6/6</div></div>
+  </div>
+
+  <h2>本阶段改变</h2>
+  <ul>
+    <li>只读取已提交的 public-safe A100 复跑 sidecars，不启动新的 A100。</li>
+    <li>生成 wrapper persistence diagnosis、manifest、report 和 leak scans。</li>
+    <li>区分 prompt boundary 可见、EOS stop evidence、Markdown wrapper persistence 与 strict schema-valid 失败。</li>
+  </ul>
+
+  <h2>关键文件</h2>
+  <ul>
+    <li><a href="../../reports/public-sample/a100-first-pass-wrapper-persistence-diagnosis/wrapper_persistence_diagnosis.md">wrapper_persistence_diagnosis.md</a></li>
+    <li><a href="../../reports/public-sample/a100-first-pass-wrapper-persistence-diagnosis/wrapper_persistence_diagnosis.json">wrapper_persistence_diagnosis.json</a></li>
+    <li><a href="../../reports/public-sample/a100-first-pass-wrapper-persistence-diagnosis/manifest.json">manifest.json</a></li>
+  </ul>
+
+  <h2>不能夸大的点</h2>
+  <ul>
+    <li>这是 local evidence-only diagnosis，不是新 A100 rerun、训练或模型修复。</li>
+    <li>没有 parser relaxation、prediction repair/re-score、slot normalization 或 semantic-equivalence scoring。</li>
+    <li>不能声明模型质量改善、模型恢复、held-out generalization、production readiness 或 live-browser benchmark improvement。</li>
+  </ul>
+
+  <h2>推荐下一步</h2>
+  <p>如果继续推进，推荐另开一个很小的行为阶段，专门验证是否需要在 decoding/template 层抑制 Markdown fence；不要在本诊断阶段直接改 parser 或重写预测。</p>
+</body>
+</html>
