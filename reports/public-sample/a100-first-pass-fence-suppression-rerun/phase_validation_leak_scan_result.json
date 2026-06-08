@@ -1,0 +1,11 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-08T07:41:24.141528+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "reports/public-sample/a100-first-pass-fence-suppression-rerun",
+    "docs/human-briefs/2026-06-08-run-a100-first-pass-fence-suppression-rerun.html",
+    "openspec/changes/run-a100-first-pass-fence-suppression-rerun"
+  ]
+}

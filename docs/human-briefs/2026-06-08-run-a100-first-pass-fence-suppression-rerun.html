@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>A100 first-pass fence-suppression rerun</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 32px; line-height: 1.55; color: #1f2933; }
+    h1 { font-size: 28px; margin-bottom: 8px; }
+    h2 { font-size: 18px; margin-top: 24px; }
+    code { background: #f3f4f6; padding: 1px 5px; border-radius: 4px; }
+    .status { display: inline-block; padding: 4px 8px; border-radius: 6px; background: #ecfdf5; color: #047857; font-weight: 600; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin: 16px 0; }
+    .metric { border: 1px solid #d7dde5; border-radius: 8px; padding: 12px; }
+    .value { font-size: 22px; font-weight: 700; }
+    a { color: #0f766e; }
+  </style>
+</head>
+<body>
+  <h1>A100 first-pass fence-suppression rerun</h1>
+  <p><span class="status">archived</span></p>
+  <p><strong>一句话结论：</strong>真实 A100 prediction-only 复跑显示 Markdown fence suppression 生效后，3 条 train rows 不再输出 Markdown-wrapped JSON，strict schema-valid 从上一轮 0/3 变为 3/3；但这仍不是泛化或模型质量提升声明。</p>
+
+  <div class="grid">
+    <div class="metric"><div>prediction_count</div><div class="value">3</div></div>
+    <div class="metric"><div>schema-valid</div><div class="value">3/3</div></div>
+    <div class="metric"><div>Markdown wrapped</div><div class="value">0/3</div></div>
+    <div class="metric"><div>exact match</div><div class="value">2/3</div></div>
+  </div>
+
+  <h2>本阶段变化</h2>
+  <ul>
+    <li>使用同一类 private adapter 在 A100 上执行 train-split prediction-only rerun。</li>
+    <li>只带回 sanitized public-sample artifacts：predictions、metadata、prompt snapshot、raw decoded summary、generation trace。</li>
+    <li>生成严格 metrics、schema guard summary、fence-suppression comparison diagnosis、manifest、report 和 leak scan。</li>
+  </ul>
+
+  <h2>关键文件</h2>
+  <ul>
+    <li><a href="../../reports/public-sample/a100-first-pass-fence-suppression-rerun/report.md">report.md</a></li>
+    <li><a href="../../reports/public-sample/a100-first-pass-fence-suppression-rerun/fence_suppression_rerun_diagnosis.json">fence_suppression_rerun_diagnosis.json</a></li>
+    <li><a href="../../reports/public-sample/a100-first-pass-fence-suppression-rerun/manifest.json">manifest.json</a></li>
+    <li><a href="../../openspec/changes/archive/2026-06-08-run-a100-first-pass-fence-suppression-rerun/tasks.md">OpenSpec archive tasks</a></li>
+  </ul>
+
+  <h2>验证结果</h2>
+  <ul>
+    <li>A100 execution: completed on an idle GPU with <code>CUDA_VISIBLE_DEVICES</code> set; no training。</li>
+    <li>Strict metrics: <code>json_valid_rate=1.0</code>, <code>contract_exact_match=0.6667</code>, <code>slot_f1=0.6667</code>。</li>
+    <li>Remaining mismatch: 1/3 rows still has strict slot mismatch; no normalization or repair was applied。</li>
+  </ul>
+
+  <h2>不能夸大的点</h2>
+  <ul>
+    <li>不能声明 held-out generalization、production readiness、live-browser benchmark improvement、模型恢复或广义模型质量改善。</li>
+    <li>没有训练、parser relaxation、evaluator metric change、prediction repair/re-score、slot normalization、checkpoint release 或 adapter release。</li>
+    <li>这只是 3 条 public-sample train rows 的 bounded observation。</li>
+  </ul>
+
+  <h2>推荐下一步</h2>
+  <p>本阶段已归档；下一小阶段应诊断剩余 1 条 slot exact-match mismatch，而不是扩大成泛化评测或发布声明。</p>
+</body>
+</html>

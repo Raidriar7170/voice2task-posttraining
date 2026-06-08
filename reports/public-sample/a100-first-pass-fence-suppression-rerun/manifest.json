@@ -1,0 +1,175 @@
+{
+  "artifact_policy": {
+    "a100_execution_performed": true,
+    "checkpoints_or_adapters_copied_to_git": false,
+    "host_details_copied_to_git": false,
+    "prediction_rerun_performed": true,
+    "private_configs_copied_to_git": false,
+    "raw_logs_copied_to_git": false,
+    "remote_paths_copied_to_git": false,
+    "train_split_only": true,
+    "training_performed": false
+  },
+  "artifacts": {
+    "alignment_diagnostics": "reports/public-sample/a100-first-pass-fence-suppression-rerun/alignment_diagnostics.json",
+    "alignment_diagnostics_markdown": "reports/public-sample/a100-first-pass-fence-suppression-rerun/alignment_diagnostics.md",
+    "fence_suppression_rerun_diagnosis": "reports/public-sample/a100-first-pass-fence-suppression-rerun/fence_suppression_rerun_diagnosis.json",
+    "fence_suppression_rerun_diagnosis_markdown": "reports/public-sample/a100-first-pass-fence-suppression-rerun/fence_suppression_rerun_diagnosis.md",
+    "final_leak_scan": "reports/public-sample/a100-first-pass-fence-suppression-rerun/final_leak_scan_result.json",
+    "generation_trace": "reports/public-sample/a100-first-pass-fence-suppression-rerun/generation_trace.jsonl",
+    "human_brief": "docs/human-briefs/2026-06-08-run-a100-first-pass-fence-suppression-rerun.html",
+    "leak_scan": "reports/public-sample/a100-first-pass-fence-suppression-rerun/leak_scan_result.json",
+    "manifest": "reports/public-sample/a100-first-pass-fence-suppression-rerun/manifest.json",
+    "metrics_json": "reports/public-sample/a100-first-pass-fence-suppression-rerun/metrics.json",
+    "metrics_markdown": "reports/public-sample/a100-first-pass-fence-suppression-rerun/metrics.md",
+    "phase_validation_leak_scan": "reports/public-sample/a100-first-pass-fence-suppression-rerun/phase_validation_leak_scan_result.json",
+    "post_archive_leak_scan": "reports/public-sample/a100-first-pass-fence-suppression-rerun/post_archive_leak_scan_result.json",
+    "prediction_metadata": "reports/public-sample/a100-first-pass-fence-suppression-rerun/prediction_metadata.json",
+    "predictions": "reports/public-sample/a100-first-pass-fence-suppression-rerun/predictions.jsonl",
+    "prompt_snapshot": "reports/public-sample/a100-first-pass-fence-suppression-rerun/prompt_snapshot.json",
+    "raw_decoded_summary": "reports/public-sample/a100-first-pass-fence-suppression-rerun/raw_decoded_summary.jsonl",
+    "report": "reports/public-sample/a100-first-pass-fence-suppression-rerun/report.md",
+    "schema_diagnostics": "reports/public-sample/a100-first-pass-fence-suppression-rerun/schema_diagnostics.json",
+    "schema_diagnostics_markdown": "reports/public-sample/a100-first-pass-fence-suppression-rerun/schema_diagnostics.md",
+    "schema_guard_summary": "reports/public-sample/a100-first-pass-fence-suppression-rerun/schema_guard_summary.json",
+    "schema_guard_summary_markdown": "reports/public-sample/a100-first-pass-fence-suppression-rerun/schema_guard_summary.md",
+    "train_split_gold": "reports/public-sample/a100-first-pass-fence-suppression-rerun/train_split_gold.jsonl"
+  },
+  "change_name": "run-a100-first-pass-fence-suppression-rerun",
+  "claims": {
+    "a100_execution_performed": true,
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "evaluator_metric_change_performed": false,
+    "held_out_generalization_claim": false,
+    "live_browser_benchmark_claim": false,
+    "model_quality_improvement_claim": false,
+    "model_recovery_claim": false,
+    "parser_relaxation_performed": false,
+    "prediction_repair_or_rescore_performed": false,
+    "prediction_rerun_performed": true,
+    "production_readiness_claim": false,
+    "public_full_corpus_release_claim": false,
+    "schema_repair_or_coercion_applied": false,
+    "semantic_equivalence_scoring_performed": false,
+    "slot_normalization_performed": false,
+    "train_split_only": true,
+    "training_performed": false
+  },
+  "diagnostic_artifacts": {
+    "alignment_diagnostics": "reports/public-sample/a100-first-pass-fence-suppression-rerun/alignment_diagnostics.json",
+    "fence_suppression_rerun_diagnosis": "reports/public-sample/a100-first-pass-fence-suppression-rerun/fence_suppression_rerun_diagnosis.json",
+    "final_leak_scan": "reports/public-sample/a100-first-pass-fence-suppression-rerun/final_leak_scan_result.json",
+    "leak_scan": "reports/public-sample/a100-first-pass-fence-suppression-rerun/leak_scan_result.json",
+    "phase_validation_leak_scan": "reports/public-sample/a100-first-pass-fence-suppression-rerun/phase_validation_leak_scan_result.json",
+    "post_archive_leak_scan": "reports/public-sample/a100-first-pass-fence-suppression-rerun/post_archive_leak_scan_result.json",
+    "schema_diagnostics": "reports/public-sample/a100-first-pass-fence-suppression-rerun/schema_diagnostics.json",
+    "schema_guard_summary": "reports/public-sample/a100-first-pass-fence-suppression-rerun/schema_guard_summary.json"
+  },
+  "evidence_kind": "a100_first_pass_fence_suppression_train_split_rerun",
+  "generated_at": "2026-06-08T07:35:59.402856+00:00",
+  "observed_result": {
+    "markdown_fence_suppression_enabled": true,
+    "markdown_fence_suppression_strategy": "bad_words_ids",
+    "markdown_wrapped_prediction_count": 0,
+    "prediction_count": 3,
+    "prediction_output_boundary_visible": true,
+    "prediction_source_kind": "private_a100_adapter",
+    "prediction_split": "train",
+    "raw_attempt_schema_valid_count": 3,
+    "retry_attempt_schema_valid_count": 0,
+    "retry_attempted_count": 0,
+    "schema_recovery_vs_prior_observed": true,
+    "slot_exact_match_residual_rows": 1,
+    "strict_final_contract_exact_match": 0.6666666666666666,
+    "strict_final_json_valid_rate": 1.0,
+    "strict_final_slot_f1": 0.6666666666666666,
+    "strict_retry_parser_rejected_fragment_count": 0,
+    "trace_summary": {
+      "attempt_counts": {
+        "raw_attempt": 3
+      },
+      "finish_state_counts": {
+        "raw_attempt": {
+          "eos_observed": 3
+        }
+      },
+      "max_new_tokens_hit_counts": {
+        "raw_attempt": {
+          "False": 3
+        }
+      },
+      "trace_row_count": 3
+    },
+    "training_rows_used": 3,
+    "validated_output_schema_valid_count": 3,
+    "validated_output_source_counts": {
+      "raw_attempt": 3
+    },
+    "wrapper_count_vs_prior": {
+      "current_markdown_wrapped_prediction_count": 0,
+      "prior_markdown_wrapped_prediction_count": 3
+    },
+    "wrapper_reduction_observed": true
+  },
+  "prior_context": {
+    "prior_markdown_wrapped_prediction_count": 3,
+    "prior_schema_guard_summary": {
+      "markdown_wrapped_prediction_count": 3,
+      "prediction_count": 3,
+      "prediction_output_boundary_visible": true,
+      "prediction_source_kind": "private_a100_adapter",
+      "prediction_split": "train",
+      "raw_attempt_schema_valid_count": 0,
+      "retry_attempt_schema_valid_count": 0,
+      "retry_attempted_count": 3,
+      "schema_recovery_vs_prior_observed": false,
+      "strict_final_contract_exact_match": 0.0,
+      "strict_final_json_valid_rate": 0.0,
+      "strict_final_slot_f1": 0.0,
+      "strict_retry_parser_rejected_fragment_count": 3,
+      "trace_summary": {
+        "attempt_counts": {
+          "raw_attempt": 3,
+          "retry_attempt": 3
+        },
+        "finish_state_counts": {
+          "raw_attempt": {
+            "eos_observed": 3
+          },
+          "retry_attempt": {
+            "eos_observed": 3
+          }
+        },
+        "max_new_tokens_hit_counts": {
+          "raw_attempt": {
+            "False": 3
+          },
+          "retry_attempt": {
+            "False": 3
+          }
+        },
+        "trace_row_count": 6
+      },
+      "training_rows_used": 3,
+      "validated_output_schema_valid_count": 0,
+      "validated_output_source_counts": {
+        "none": 3
+      },
+      "wrapper_count_vs_prior": {
+        "current_markdown_wrapped_prediction_count": 3,
+        "prior_markdown_wrapped_prediction_count": 3
+      }
+    },
+    "prior_strict_final_contract_exact_match": 0.0,
+    "prior_validated_output_schema_valid_count": 0
+  },
+  "source_artifacts": {
+    "local_markdown_fence_suppression": "reports/public-sample/first-pass-markdown-fence-suppression/fence_suppression_summary.json",
+    "prior_a100_first_pass_output_boundary_rerun": "reports/public-sample/a100-first-pass-output-boundary-rerun",
+    "prior_output_boundary_diagnosis": "reports/public-sample/a100-first-pass-output-boundary-rerun/output_boundary_rerun_diagnosis.json",
+    "prior_schema_guard_summary": "reports/public-sample/a100-first-pass-output-boundary-rerun/schema_guard_summary.json",
+    "prior_wrapper_persistence_diagnosis": "reports/public-sample/a100-first-pass-wrapper-persistence-diagnosis/wrapper_persistence_diagnosis.json",
+    "public_sample_manifest": "data/public-samples/manifest_public_sample.json"
+  }
+}

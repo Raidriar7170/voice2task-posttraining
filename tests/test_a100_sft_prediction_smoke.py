@@ -3773,6 +3773,196 @@ def test_a100_first_pass_output_boundary_rerun_pack_is_public_safe_and_bounded()
     assert scan_paths([evidence_dir, human_brief_path, *existing_change_dirs]).ok is True
 
 
+def test_a100_first_pass_fence_suppression_rerun_pack_is_public_safe_and_bounded() -> None:
+    prior_dir = Path("reports/public-sample/a100-first-pass-output-boundary-rerun")
+    local_suppression_dir = Path("reports/public-sample/first-pass-markdown-fence-suppression")
+    evidence_dir = Path("reports/public-sample/a100-first-pass-fence-suppression-rerun")
+    human_brief_path = Path("docs/human-briefs/2026-06-08-run-a100-first-pass-fence-suppression-rerun.html")
+    archive_dir = Path("openspec/changes/archive/2026-06-08-run-a100-first-pass-fence-suppression-rerun")
+    change_dirs = [Path("openspec/changes/run-a100-first-pass-fence-suppression-rerun"), archive_dir]
+    required_files = {
+        "predictions.jsonl",
+        "prediction_metadata.json",
+        "prompt_snapshot.json",
+        "raw_decoded_summary.jsonl",
+        "generation_trace.jsonl",
+        "train_split_gold.jsonl",
+        "metrics.json",
+        "metrics.md",
+        "schema_diagnostics.json",
+        "schema_diagnostics.md",
+        "alignment_diagnostics.json",
+        "alignment_diagnostics.md",
+        "schema_guard_summary.json",
+        "schema_guard_summary.md",
+        "fence_suppression_rerun_diagnosis.json",
+        "fence_suppression_rerun_diagnosis.md",
+        "manifest.json",
+        "report.md",
+        "leak_scan_result.json",
+        "phase_validation_leak_scan_result.json",
+    }
+    expected_row_ids = ["seed-search-weather", "seed-search-weather-aug-1", "seed-search-weather-aug-2"]
+
+    assert evidence_dir.exists()
+    assert required_files <= {path.name for path in evidence_dir.iterdir()}
+    if archive_dir.exists():
+        assert {"post_archive_leak_scan_result.json", "final_leak_scan_result.json"} <= {
+            path.name for path in evidence_dir.iterdir()
+        }
+    assert human_brief_path.exists()
+    existing_change_dirs = [path for path in change_dirs if path.exists()]
+    assert existing_change_dirs
+
+    metadata = json.loads((evidence_dir / "prediction_metadata.json").read_text(encoding="utf-8"))
+    prompt_snapshot = json.loads((evidence_dir / "prompt_snapshot.json").read_text(encoding="utf-8"))
+    metrics = json.loads((evidence_dir / "metrics.json").read_text(encoding="utf-8"))
+    schema_guard = json.loads((evidence_dir / "schema_guard_summary.json").read_text(encoding="utf-8"))
+    diagnosis = json.loads((evidence_dir / "fence_suppression_rerun_diagnosis.json").read_text(encoding="utf-8"))
+    manifest = json.loads((evidence_dir / "manifest.json").read_text(encoding="utf-8"))
+    alignment = json.loads((evidence_dir / "alignment_diagnostics.json").read_text(encoding="utf-8"))
+    prediction_rows = [
+        json.loads(line)
+        for line in (evidence_dir / "predictions.jsonl").read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    raw_rows = [
+        json.loads(line)
+        for line in (evidence_dir / "raw_decoded_summary.jsonl").read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    generation_trace_rows = [
+        json.loads(line)
+        for line in (evidence_dir / "generation_trace.jsonl").read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    train_gold_rows = [
+        json.loads(line)
+        for line in (evidence_dir / "train_split_gold.jsonl").read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    leak_scan = json.loads((evidence_dir / "leak_scan_result.json").read_text(encoding="utf-8"))
+    phase_validation_leak_scan = json.loads(
+        (evidence_dir / "phase_validation_leak_scan_result.json").read_text(encoding="utf-8")
+    )
+    report = (evidence_dir / "report.md").read_text(encoding="utf-8")
+    diagnosis_markdown = (evidence_dir / "fence_suppression_rerun_diagnosis.md").read_text(encoding="utf-8")
+    human_brief = human_brief_path.read_text(encoding="utf-8")
+
+    assert metadata["prediction_status"] == "private_adapter_predictions_written"
+    assert metadata["prediction_source_kind"] == "private_a100_adapter"
+    assert metadata["prediction_split"] == "train"
+    assert metadata["overfit_diagnostic"] is True
+    assert metadata["generalization_claim"] is False
+    assert metadata["decoding_policy"]["markdown_fence_suppression_enabled"] is True
+    assert metadata["decoding_policy"]["markdown_fence_suppression_strategy"] == "bad_words_ids"
+    assert metadata["decoding_policy"]["markdown_fence_suppression_token_sources"] == ["```", "```json", "```JSON"]
+    assert prompt_snapshot["decoding_policy"] == metadata["decoding_policy"]
+    assert [row["id"] for row in prompt_snapshot["rows"]] == expected_row_ids
+    assert [row["id"] for row in prediction_rows] == expected_row_ids
+    assert [row["id"] for row in train_gold_rows] == expected_row_ids
+
+    assert metrics["metrics"]["json_valid_rate"] == 1.0
+    assert metrics["metrics"]["contract_exact_match"] == 2 / 3
+    assert metrics["metrics"]["slot_f1"] == 2 / 3
+    assert metrics["failure_slices"]["schema"]["count"] == 0
+    assert metrics["failure_slices"]["slot"]["count"] == 1
+    assert alignment["summary"]["schema_invalid_prediction_count"] == 0
+    assert alignment["summary"]["row_mismatch_count"] == 1
+    assert alignment["summary"]["field_mismatch_counts"] == {"slots": 1}
+
+    assert diagnosis["diagnostic_kind"] == "a100_first_pass_fence_suppression_rerun"
+    assert diagnosis["source_artifacts"]["prior_a100_first_pass_output_boundary_rerun"] == prior_dir.as_posix()
+    assert diagnosis["source_artifacts"]["local_markdown_fence_suppression"].startswith(
+        local_suppression_dir.as_posix()
+    )
+    assert diagnosis["summary"]["prediction_count"] == 3
+    assert diagnosis["summary"]["markdown_fence_suppression_enabled"] is True
+    assert diagnosis["summary"]["markdown_fence_suppression_strategy"] == "bad_words_ids"
+    assert diagnosis["summary"]["markdown_wrapped_prediction_count"] == 0
+    assert diagnosis["summary"]["validated_output_schema_valid_count"] == 3
+    assert diagnosis["summary"]["raw_attempt_schema_valid_count"] == 3
+    assert diagnosis["summary"]["retry_attempted_count"] == 0
+    assert diagnosis["summary"]["validated_output_source_counts"] == {"raw_attempt": 3}
+    assert diagnosis["summary"]["strict_final_json_valid_rate"] == metrics["metrics"]["json_valid_rate"]
+    assert diagnosis["summary"]["strict_final_contract_exact_match"] == metrics["metrics"]["contract_exact_match"]
+    assert diagnosis["summary"]["strict_final_slot_f1"] == metrics["metrics"]["slot_f1"]
+    assert diagnosis["summary"]["slot_exact_match_residual_rows"] == 1
+    assert diagnosis["comparison_to_prior"]["prior_markdown_wrapped_prediction_count"] == 3
+    assert diagnosis["comparison_to_prior"]["current_markdown_wrapped_prediction_count"] == 0
+    assert diagnosis["comparison_to_prior"]["prior_validated_output_schema_valid_count"] == 0
+    assert diagnosis["comparison_to_prior"]["current_validated_output_schema_valid_count"] == 3
+    assert diagnosis["comparison_to_prior"]["wrapper_reduction_observed"] is True
+    assert diagnosis["comparison_to_prior"]["schema_recovery_vs_prior_observed"] is True
+    assert diagnosis["interpretation"]["not_a_model_quality_improvement_claim"] is True
+    assert diagnosis["interpretation"]["not_a_held_out_generalization_claim"] is True
+    assert diagnosis["claims"]["a100_execution_performed"] is True
+    assert diagnosis["claims"]["prediction_rerun_performed"] is True
+    assert diagnosis["claims"]["training_performed"] is False
+    assert diagnosis["claims"]["parser_relaxation_performed"] is False
+    assert diagnosis["claims"]["schema_repair_or_coercion_applied"] is False
+    assert diagnosis["claims"]["prediction_repair_or_rescore_performed"] is False
+    assert diagnosis["claims"]["slot_normalization_performed"] is False
+    assert diagnosis["claims"]["held_out_generalization_claim"] is False
+    assert diagnosis["claims"]["model_quality_improvement_claim"] is False
+
+    assert schema_guard["evidence_kind"] == "a100_first_pass_fence_suppression_schema_guard_summary"
+    assert schema_guard["summary"] == diagnosis["summary"]
+    assert schema_guard["parse_status_counts"]["raw_attempt"] == {"json_object": 3}
+    assert schema_guard["parse_status_counts"]["retry_attempt"] == {}
+    assert [row["row_id"] for row in schema_guard["rows"]] == expected_row_ids
+    assert all(row["strict_schema_valid"] is True for row in schema_guard["rows"])
+    assert all(row["strict_prediction_is_markdown_wrapped"] is False for row in schema_guard["rows"])
+    assert all(row["validated_output_source"] == "raw_attempt" for row in schema_guard["rows"])
+
+    assert [row["parse_status"] for row in raw_rows] == ["json_object", "json_object", "json_object"]
+    assert [row["schema_guard"]["retry_attempted"] for row in raw_rows] == [False, False, False]
+    assert [row["attempt"] for row in generation_trace_rows] == ["raw_attempt", "raw_attempt", "raw_attempt"]
+    assert all(row["finish_state"] == "eos_observed" for row in generation_trace_rows)
+    assert all(row["max_new_tokens_hit"] is False for row in generation_trace_rows)
+
+    assert manifest["evidence_kind"] == "a100_first_pass_fence_suppression_train_split_rerun"
+    assert manifest["observed_result"] == diagnosis["summary"]
+    assert manifest["claims"] == diagnosis["claims"]
+    assert manifest["source_artifacts"] == diagnosis["source_artifacts"]
+    assert manifest["artifact_policy"]["private_configs_copied_to_git"] is False
+    assert manifest["artifact_policy"]["raw_logs_copied_to_git"] is False
+    for artifact_path in manifest["artifacts"].values():
+        assert Path(artifact_path).exists()
+
+    assert leak_scan["ok"] is True
+    assert leak_scan["findings"] == []
+    assert phase_validation_leak_scan["ok"] is True
+    assert phase_validation_leak_scan["findings"] == []
+    assert "0/3 Markdown-wrapped predictions" in report
+    assert "not a held-out generalization claim" in diagnosis_markdown
+    assert "不能声明 held-out generalization" in human_brief
+
+    serialized = "\n".join(
+        [
+            json.dumps(metadata, ensure_ascii=False, sort_keys=True),
+            json.dumps(prompt_snapshot, ensure_ascii=False, sort_keys=True),
+            json.dumps(metrics, ensure_ascii=False, sort_keys=True),
+            json.dumps(schema_guard, ensure_ascii=False, sort_keys=True),
+            json.dumps(diagnosis, ensure_ascii=False, sort_keys=True),
+            json.dumps(manifest, ensure_ascii=False, sort_keys=True),
+            json.dumps(prediction_rows, ensure_ascii=False, sort_keys=True),
+            json.dumps(raw_rows, ensure_ascii=False, sort_keys=True),
+            json.dumps(generation_trace_rows, ensure_ascii=False, sort_keys=True),
+            json.dumps(train_gold_rows, ensure_ascii=False, sort_keys=True),
+            report,
+            diagnosis_markdown,
+            human_brief,
+        ]
+    )
+    assert "/mnt/data/" not in serialized
+    assert "/Users/" not in serialized
+    assert "volcano" not in serialized
+    assert "private-overrides" not in serialized
+    assert "private-configs" not in serialized
+    assert scan_paths([evidence_dir, human_brief_path, *existing_change_dirs]).ok is True
+
+
 def test_a100_search_query_slot_wrapper_boundary_diagnosis_pack_is_public_safe_and_bounded() -> None:
     source_dir = Path("reports/public-sample/a100-search-query-slot-policy-rerun")
     evidence_dir = Path("reports/public-sample/a100-search-query-slot-wrapper-boundary-diagnosis")

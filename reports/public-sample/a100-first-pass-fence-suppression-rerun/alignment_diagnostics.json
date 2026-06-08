@@ -1,0 +1,38 @@
+{
+  "claims": {
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "field_level_public_sample_evidence_only": true,
+    "full_private_corpus_claim": false,
+    "invalid_predictions_remain_invalid": true,
+    "live_browser_benchmark_claim": false,
+    "production_readiness_claim": false
+  },
+  "diagnostic_kind": "browser_task_contract_alignment_mismatch",
+  "rows": [
+    {
+      "mismatches": [
+        {
+          "field_path": "slots",
+          "gold_value_summary": "object with keys: query",
+          "mismatch_category": "value_mismatch",
+          "prediction_value_summary": "object with keys: city, date, topic",
+          "row_id": "seed-search-weather-aug-1"
+        }
+      ],
+      "row_id": "seed-search-weather-aug-1"
+    }
+  ],
+  "summary": {
+    "field_mismatch_counts": {
+      "slots": 1
+    },
+    "gold_row_count": 3,
+    "mismatch_category_counts": {
+      "value_mismatch": 1
+    },
+    "prediction_count": 3,
+    "row_mismatch_count": 1,
+    "schema_invalid_prediction_count": 0
+  }
+}
