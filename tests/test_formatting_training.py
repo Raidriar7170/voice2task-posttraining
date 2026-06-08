@@ -385,6 +385,7 @@ def test_sft_prompts_expose_public_readonly_search_contract_policy_without_gold_
     assert summary["compact_search_query_slot_policy_visible"] is True
     assert summary["search_query_no_city_date_split_visible"] is True
     assert summary["decomposed_search_slots_rejected_visible"] is True
+    assert summary["policy_is_target_formatting_not_evaluator_normalization"] is True
 
 
 def test_public_sample_sft_training_text_stays_within_runtime_sequence_budget() -> None:

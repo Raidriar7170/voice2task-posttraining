@@ -1,0 +1,197 @@
+{
+  "change_name": "run-a100-compact-query-slot-preservation-rerun",
+  "claims": {
+    "a100_execution_performed": true,
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "evaluator_metric_change_performed": false,
+    "held_out_generalization_claim": false,
+    "live_browser_benchmark_claim": false,
+    "model_quality_improvement_claim": false,
+    "model_recovery_claim": false,
+    "parser_relaxation_performed": false,
+    "prediction_repair_or_rescore_performed": false,
+    "prediction_rerun_performed": true,
+    "production_readiness_claim": false,
+    "public_full_corpus_release_claim": false,
+    "schema_repair_or_coercion_applied": false,
+    "semantic_equivalence_scoring_performed": false,
+    "slot_normalization_performed": false,
+    "train_split_only": true,
+    "training_performed": false
+  },
+  "evidence_kind": "a100_compact_query_slot_preservation_schema_guard_summary",
+  "generated_at": "2026-06-08T11:50:00.651508+00:00",
+  "parse_status_counts": {
+    "raw_attempt": {
+      "json_object": 3
+    },
+    "retry_attempt": {}
+  },
+  "rows": [
+    {
+      "gold_normalized_command": "搜索北京明天天气",
+      "gold_slots": {
+        "query": "北京明天天气"
+      },
+      "prediction_normalized_command": "搜索北京明天的天气",
+      "prediction_slots": {
+        "query": "北京明天天气"
+      },
+      "raw_attempt_parse_status": "json_object",
+      "raw_attempt_schema_valid": true,
+      "raw_generation": {
+        "eos_token_seen": true,
+        "finish_state": "eos_observed",
+        "generated_token_count": 94,
+        "max_new_tokens_hit": false
+      },
+      "retry_attempt_parse_status": null,
+      "retry_attempt_schema_valid": null,
+      "retry_attempted": false,
+      "row_id": "seed-search-weather",
+      "source_prior_prediction_slots": {
+        "query": "北京明天天气"
+      },
+      "strict_contract_exact_match": false,
+      "strict_prediction_is_markdown_wrapped": false,
+      "strict_schema_valid": true,
+      "validated_output_source": "raw_attempt"
+    },
+    {
+      "gold_normalized_command": "搜索北京明天天气",
+      "gold_slots": {
+        "query": "北京明天天气"
+      },
+      "prediction_normalized_command": "搜索北京明天天气",
+      "prediction_slots": {
+        "city": "北京",
+        "date": "明天",
+        "topic": ""
+      },
+      "raw_attempt_parse_status": "json_object",
+      "raw_attempt_schema_valid": true,
+      "raw_generation": {
+        "eos_token_seen": true,
+        "finish_state": "eos_observed",
+        "generated_token_count": 103,
+        "max_new_tokens_hit": false
+      },
+      "retry_attempt_parse_status": null,
+      "retry_attempt_schema_valid": null,
+      "retry_attempted": false,
+      "row_id": "seed-search-weather-aug-1",
+      "source_prior_prediction_slots": {
+        "city": "北京",
+        "date": "明天",
+        "topic": ""
+      },
+      "strict_contract_exact_match": false,
+      "strict_prediction_is_markdown_wrapped": false,
+      "strict_schema_valid": true,
+      "validated_output_source": "raw_attempt"
+    },
+    {
+      "gold_normalized_command": "搜索北京明天天气",
+      "gold_slots": {
+        "query": "北京明天天气"
+      },
+      "prediction_normalized_command": "搜索北京明天的天气",
+      "prediction_slots": {
+        "query": "北京明天天气"
+      },
+      "raw_attempt_parse_status": "json_object",
+      "raw_attempt_schema_valid": true,
+      "raw_generation": {
+        "eos_token_seen": true,
+        "finish_state": "eos_observed",
+        "generated_token_count": 94,
+        "max_new_tokens_hit": false
+      },
+      "retry_attempt_parse_status": null,
+      "retry_attempt_schema_valid": null,
+      "retry_attempted": false,
+      "row_id": "seed-search-weather-aug-2",
+      "source_prior_prediction_slots": {
+        "query": "北京明天天气"
+      },
+      "strict_contract_exact_match": false,
+      "strict_prediction_is_markdown_wrapped": false,
+      "strict_schema_valid": true,
+      "validated_output_source": "raw_attempt"
+    }
+  ],
+  "summary": {
+    "exact_match_count": 0,
+    "gold_city_date_slot_count": 0,
+    "gold_compact_query_count": 3,
+    "markdown_wrapped_prediction_count": 0,
+    "prediction_count": 3,
+    "prediction_source_kind": "private_a100_adapter",
+    "prediction_split": "train",
+    "raw_attempt_schema_valid_count": 3,
+    "retry_attempt_schema_valid_count": 0,
+    "retry_attempted_count": 0,
+    "slot_exact_match_residual_rows": 1,
+    "strict_final_contract_exact_match": 0.0,
+    "strict_final_json_valid_rate": 1.0,
+    "strict_final_slot_f1": 0.6666666666666666,
+    "strict_retry_parser_rejected_fragment_count": 0,
+    "target_residual_row": {
+      "gold_slots": {
+        "query": "北京明天天气"
+      },
+      "mismatch_preserved_without_repair": true,
+      "outcome": "strict_mismatch_preserved",
+      "prediction_slots": {
+        "city": "北京",
+        "date": "明天",
+        "topic": ""
+      },
+      "prior_prediction_slots": {
+        "city": "北京",
+        "date": "明天",
+        "topic": ""
+      },
+      "row_id": "seed-search-weather-aug-1",
+      "strict_contract_exact_match": false
+    },
+    "trace_summary": {
+      "attempt_counts": {
+        "raw_attempt": 3
+      },
+      "finish_state_counts": {
+        "raw_attempt": {
+          "eos_observed": 3
+        }
+      },
+      "max_new_tokens_hit_counts": {
+        "raw_attempt": {
+          "False": 3
+        }
+      },
+      "trace_row_count": 3
+    },
+    "training_rows_used": 3,
+    "validated_output_schema_valid_count": 3,
+    "validated_output_source_counts": {
+      "raw_attempt": 3
+    }
+  },
+  "trace_summary": {
+    "attempt_counts": {
+      "raw_attempt": 3
+    },
+    "finish_state_counts": {
+      "raw_attempt": {
+        "eos_observed": 3
+      }
+    },
+    "max_new_tokens_hit_counts": {
+      "raw_attempt": {
+        "False": 3
+      }
+    },
+    "trace_row_count": 3
+  }
+}

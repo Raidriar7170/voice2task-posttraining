@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>A100 compact query slot preservation rerun</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 32px; color: #17202a; line-height: 1.55; }
+    main { max-width: 920px; margin: 0 auto; }
+    h1 { font-size: 28px; margin-bottom: 8px; }
+    h2 { font-size: 18px; margin-top: 24px; border-bottom: 1px solid #d8dee4; padding-bottom: 6px; }
+    .status { padding: 12px 14px; border-left: 4px solid #b45309; background: #fff7ed; }
+    code { background: #f6f8fa; padding: 2px 5px; border-radius: 4px; }
+    ul { padding-left: 22px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>A100 compact query slot preservation rerun</h1>
+  <p class="status"><strong>结论：</strong>A100 prediction-only rerun 已完成，但目标行仍输出 <code>city/date/topic</code>，因此只能记录为 train-split strict mismatch preserved，不能声明恢复。</p>
+
+  <h2>当前状态</h2>
+  <p>archived：本阶段已经生成 sanitized public evidence、完成 Reviewer fix，并归档到 OpenSpec archive。</p>
+
+  <h2>本阶段变化</h2>
+  <ul>
+    <li>使用当前 compact query slot preservation prompt/data policy 执行 A100 prediction-only rerun。</li>
+    <li>导入 public-safe predictions、prompt snapshot、raw decoded summary、generation trace、metrics、schema guard、diagnosis 和 manifest。</li>
+    <li>补充 prompt constraint metadata：policy 是 target formatting，不是 evaluator normalization。</li>
+  </ul>
+
+  <h2>关键文件</h2>
+  <ul>
+    <li><code>reports/public-sample/a100-compact-query-slot-preservation-rerun/report.md</code></li>
+    <li><code>reports/public-sample/a100-compact-query-slot-preservation-rerun/compact_query_slot_preservation_rerun_diagnosis.json</code></li>
+    <li><code>tests/test_a100_sft_prediction_smoke.py</code></li>
+    <li><code>src/voice2task/formatting.py</code></li>
+  </ul>
+
+  <h2>验证结果</h2>
+  <ul>
+    <li><code>PYTHONPATH=src python -m voice2task.cli.eval metrics ...</code> 已生成 strict metrics。</li>
+    <li><code>PYTHONPATH=src pytest -q</code>：193 passed。</li>
+    <li><code>uv run ruff check .</code>、<code>uv run mypy src</code>、OpenSpec strict、public data/DPO 校验、leak scans 均已通过。</li>
+  </ul>
+
+  <h2>诚实边界</h2>
+  <ul>
+    <li>这是 A100 prediction-only、train-split-only 诊断。</li>
+    <li>不做 slot normalization，不做 semantic-equivalence scoring，不做 prediction repair 或 re-score。</li>
+    <li>不能声明 held-out generalization、model-quality improvement、model recovery、production readiness 或 live-browser benchmark improvement。</li>
+    <li>不发布 checkpoint，不发布 adapter。</li>
+  </ul>
+
+  <h2>推荐下一步</h2>
+  <p>完成本阶段验证和 review 后 archive；若要真正解决目标行 slot mismatch，需要另开训练/数据或解码策略阶段。</p>
+</main>
+</body>
+</html>

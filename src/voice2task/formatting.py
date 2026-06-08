@@ -157,6 +157,11 @@ def prompt_constraint_summary(prompt: str = SYSTEM_PROMPT) -> dict[str, bool]:
         and all(slot_key in prompt for slot_key in ("city", "date", "topic")),
         "decomposed_search_slots_rejected_visible": "不要拆成 city/date/topic" in prompt
         and "该形态 rejected" in prompt,
+        "policy_is_target_formatting_not_evaluator_normalization": "不是 slot normalization" in prompt
+        and "不是 evaluator normalization" in prompt
+        and "contract_exact_match 仍然 strict" in prompt
+        and "不做 semantic-equivalence scoring" in prompt
+        and "prediction repair 或 re-score" in prompt,
         "task_type_not_route_enum_visible": "task_type 不能复用 route enum 值" in prompt
         and "search_web 不是 task_type" in prompt,
         "public_readonly_task_type_search_not_search_web_visible": "task_type 必须是 search，不能是 search_web"

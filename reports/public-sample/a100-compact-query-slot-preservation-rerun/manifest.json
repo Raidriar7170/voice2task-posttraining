@@ -1,0 +1,170 @@
+{
+  "artifact_policy": {
+    "a100_execution_performed": true,
+    "checkpoints_or_adapters_copied_to_git": false,
+    "host_details_copied_to_git": false,
+    "prediction_rerun_performed": true,
+    "private_configs_copied_to_git": false,
+    "raw_logs_copied_to_git": false,
+    "remote_paths_copied_to_git": false,
+    "train_split_only": true,
+    "training_performed": false
+  },
+  "artifacts": {
+    "compact_query_slot_preservation_rerun_diagnosis": "reports/public-sample/a100-compact-query-slot-preservation-rerun/compact_query_slot_preservation_rerun_diagnosis.json",
+    "compact_query_slot_preservation_rerun_diagnosis_markdown": "reports/public-sample/a100-compact-query-slot-preservation-rerun/compact_query_slot_preservation_rerun_diagnosis.md",
+    "final_leak_scan": "reports/public-sample/a100-compact-query-slot-preservation-rerun/final_leak_scan_result.json",
+    "generation_trace": "reports/public-sample/a100-compact-query-slot-preservation-rerun/generation_trace.jsonl",
+    "leak_scan": "reports/public-sample/a100-compact-query-slot-preservation-rerun/leak_scan_result.json",
+    "manifest": "reports/public-sample/a100-compact-query-slot-preservation-rerun/manifest.json",
+    "metrics_json": "reports/public-sample/a100-compact-query-slot-preservation-rerun/metrics.json",
+    "metrics_markdown": "reports/public-sample/a100-compact-query-slot-preservation-rerun/metrics.md",
+    "phase_validation_leak_scan": "reports/public-sample/a100-compact-query-slot-preservation-rerun/phase_validation_leak_scan_result.json",
+    "post_archive_leak_scan": "reports/public-sample/a100-compact-query-slot-preservation-rerun/post_archive_leak_scan_result.json",
+    "prediction_metadata": "reports/public-sample/a100-compact-query-slot-preservation-rerun/prediction_metadata.json",
+    "predictions": "reports/public-sample/a100-compact-query-slot-preservation-rerun/predictions.jsonl",
+    "prompt_snapshot": "reports/public-sample/a100-compact-query-slot-preservation-rerun/prompt_snapshot.json",
+    "raw_decoded_summary": "reports/public-sample/a100-compact-query-slot-preservation-rerun/raw_decoded_summary.jsonl",
+    "report": "reports/public-sample/a100-compact-query-slot-preservation-rerun/report.md",
+    "schema_guard_summary": "reports/public-sample/a100-compact-query-slot-preservation-rerun/schema_guard_summary.json",
+    "schema_guard_summary_markdown": "reports/public-sample/a100-compact-query-slot-preservation-rerun/schema_guard_summary.md",
+    "train_split_gold": "reports/public-sample/a100-compact-query-slot-preservation-rerun/train_split_gold.jsonl"
+  },
+  "change_name": "run-a100-compact-query-slot-preservation-rerun",
+  "claims": {
+    "a100_execution_performed": true,
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "evaluator_metric_change_performed": false,
+    "held_out_generalization_claim": false,
+    "live_browser_benchmark_claim": false,
+    "model_quality_improvement_claim": false,
+    "model_recovery_claim": false,
+    "parser_relaxation_performed": false,
+    "prediction_repair_or_rescore_performed": false,
+    "prediction_rerun_performed": true,
+    "production_readiness_claim": false,
+    "public_full_corpus_release_claim": false,
+    "schema_repair_or_coercion_applied": false,
+    "semantic_equivalence_scoring_performed": false,
+    "slot_normalization_performed": false,
+    "train_split_only": true,
+    "training_performed": false
+  },
+  "diagnostic_artifacts": {
+    "compact_query_slot_preservation_rerun_diagnosis": "reports/public-sample/a100-compact-query-slot-preservation-rerun/compact_query_slot_preservation_rerun_diagnosis.json",
+    "final_leak_scan": "reports/public-sample/a100-compact-query-slot-preservation-rerun/final_leak_scan_result.json",
+    "leak_scan": "reports/public-sample/a100-compact-query-slot-preservation-rerun/leak_scan_result.json",
+    "phase_validation_leak_scan": "reports/public-sample/a100-compact-query-slot-preservation-rerun/phase_validation_leak_scan_result.json",
+    "post_archive_leak_scan": "reports/public-sample/a100-compact-query-slot-preservation-rerun/post_archive_leak_scan_result.json",
+    "schema_guard_summary": "reports/public-sample/a100-compact-query-slot-preservation-rerun/schema_guard_summary.json"
+  },
+  "evidence_kind": "a100_compact_query_slot_preservation_train_split_rerun",
+  "generated_at": "2026-06-08T11:50:00.651508+00:00",
+  "observed_result": {
+    "exact_match_count": 0,
+    "gold_city_date_slot_count": 0,
+    "gold_compact_query_count": 3,
+    "markdown_wrapped_prediction_count": 0,
+    "prediction_count": 3,
+    "prediction_source_kind": "private_a100_adapter",
+    "prediction_split": "train",
+    "raw_attempt_schema_valid_count": 3,
+    "retry_attempt_schema_valid_count": 0,
+    "retry_attempted_count": 0,
+    "slot_exact_match_residual_rows": 1,
+    "strict_final_contract_exact_match": 0.0,
+    "strict_final_json_valid_rate": 1.0,
+    "strict_final_slot_f1": 0.6666666666666666,
+    "strict_retry_parser_rejected_fragment_count": 0,
+    "target_residual_row": {
+      "gold_slots": {
+        "query": "北京明天天气"
+      },
+      "mismatch_preserved_without_repair": true,
+      "outcome": "strict_mismatch_preserved",
+      "prediction_slots": {
+        "city": "北京",
+        "date": "明天",
+        "topic": ""
+      },
+      "prior_prediction_slots": {
+        "city": "北京",
+        "date": "明天",
+        "topic": ""
+      },
+      "row_id": "seed-search-weather-aug-1",
+      "strict_contract_exact_match": false
+    },
+    "trace_summary": {
+      "attempt_counts": {
+        "raw_attempt": 3
+      },
+      "finish_state_counts": {
+        "raw_attempt": {
+          "eos_observed": 3
+        }
+      },
+      "max_new_tokens_hit_counts": {
+        "raw_attempt": {
+          "False": 3
+        }
+      },
+      "trace_row_count": 3
+    },
+    "training_rows_used": 3,
+    "validated_output_schema_valid_count": 3,
+    "validated_output_source_counts": {
+      "raw_attempt": 3
+    }
+  },
+  "source_artifacts": {
+    "local_compact_query_slot_preservation": "reports/public-sample/compact-query-slot-preservation/compact_query_slot_preservation.json",
+    "prior_a100_first_pass_fence_suppression_manifest": "reports/public-sample/a100-first-pass-fence-suppression-rerun/manifest.json",
+    "prior_a100_first_pass_fence_suppression_rerun": "reports/public-sample/a100-first-pass-fence-suppression-rerun",
+    "prior_fence_suppression_diagnosis": "reports/public-sample/a100-first-pass-fence-suppression-rerun/fence_suppression_rerun_diagnosis.json",
+    "public_sample_manifest": "data/public-samples/manifest_public_sample.json"
+  },
+  "validation_commands": [
+    {
+      "command": "PYTHONPATH=src pytest -q tests/test_a100_sft_prediction_smoke.py::test_a100_compact_query_slot_preservation_rerun_pack_is_public_safe_and_bounded tests/test_formatting_training.py::test_sft_prompts_expose_public_readonly_search_contract_policy_without_gold_target",
+      "result": "2 passed"
+    },
+    {
+      "command": "PYTHONPATH=src pytest -q",
+      "result": "193 passed"
+    },
+    {
+      "command": "uv run ruff check .",
+      "result": "All checks passed"
+    },
+    {
+      "command": "uv run mypy src",
+      "result": "Success: no issues found in 16 source files"
+    },
+    {
+      "command": "PYTHONPATH=src python -m voice2task.cli.data validate --sft data/public-samples/sft_public_sample.jsonl --dpo data/public-samples/dpo_public_sample.jsonl --manifest data/public-samples/manifest_public_sample.json --public",
+      "result": "ok=true; sft_rows=12; dpo_pairs=27"
+    },
+    {
+      "command": "PYTHONPATH=src python -m voice2task.cli.data dpo-check --dpo data/public-samples/dpo_public_sample.jsonl",
+      "result": "total_pairs=27; decomposed_search_slots=1"
+    },
+    {
+      "command": "PYTHONPATH=src python - <<leak_scan phase evidence>",
+      "result": "ok=true; findings=[]"
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed"
+    },
+    {
+      "command": "OPENSPEC_TELEMETRY=0 openspec validate --all --strict",
+      "result": "5 passed, 0 failed"
+    },
+    {
+      "command": "OPENSPEC_TELEMETRY=0 openspec validate --all --strict",
+      "result": "4 passed, 0 failed (post-archive)"
+    }
+  ]
+}
