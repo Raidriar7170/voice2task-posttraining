@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Autonomous loop: A100 search-query slot wrapper-boundary diagnosis</title>
+  <style>
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:32px;line-height:1.6;color:#1f2933;background:#f8fafc}
+    main{max-width:980px;margin:0 auto;background:#fff;border:1px solid #d9e2ec;border-radius:8px;padding:28px}
+    h1{font-size:28px;margin:8px 0 12px}
+    h2{font-size:18px;margin-top:24px}
+    .status{display:inline-block;border:1px solid #9aa6b2;border-radius:6px;padding:4px 8px;font-size:13px;background:#f3f4f6}
+    .callout{border-left:4px solid #0f766e;background:#ecfdf5;padding:10px 14px;margin:16px 0}
+    .warn{border-left-color:#b45309;background:#fffbeb}
+    code{background:#f3f4f6;padding:1px 4px;border-radius:4px}
+    a{color:#075985}
+    table{width:100%;border-collapse:collapse;margin-top:8px}
+    th,td{border:1px solid #d9e2ec;padding:8px;text-align:left;vertical-align:top}
+    th{background:#f3f4f6}
+  </style>
+</head>
+<body>
+<main>
+  <p class="status">stopped: needs user confirmation</p>
+  <h1>Autonomous loop: A100 search-query slot wrapper-boundary diagnosis</h1>
+
+  <div class="callout">
+    <strong>一句话结论：</strong>本轮 opsx-auto 已完成并归档两个阶段：A100 prediction-only rerun 和本地 wrapper-boundary 诊断；当前证据显示 compact <code>slots.query</code> 内容出现了，但三条输出仍被 Markdown fence 包住，strict schema-valid 仍为 <code>0/3</code>，不能声明模型质量改善。
+  </div>
+
+  <h2>为什么停止</h2>
+  <p>精确停止条件：下一步推荐阶段需要修改 output-boundary prompt/template/decoding instrumentation，属于行为变更并会影响成功标准。因此根据 opsx-auto hard stop，需要用户明确确认后才能继续。</p>
+
+  <h2>项目阶段进度</h2>
+  <table>
+    <tr><th>当前阶段目标</th><td>未写成 MVP/v1/release 里程碑；仓库权威语言是 first-phase speech-to-contract normalization。</td></tr>
+    <tr><th>目标来源</th><td><a href="../../CONTEXT.md">CONTEXT.md</a> 和 <a href="../../README.md">README.md</a>：本仓库是 Voice2Task Post-Training companion project，第一阶段目标是把中文口语/ASR 命令转成 schema-valid browser task contracts。</td></tr>
+    <tr><th>本轮推进</th><td>把 search query target policy 的 A100 train-split prediction-only 结果和 wrapper-boundary 失败模式拆清楚，避免把 decoded fragment 误报为 strict schema recovery。</td></tr>
+    <tr><th>剩余缺口</th><td>能力：输出仍被 Markdown wrapper 包住。证据：wrapper origin 未证明。验证：strict schema-valid 与 strict exact match 仍为 <code>0/3</code>。用户决策：是否进入 output-boundary 行为变更阶段。</td></tr>
+    <tr><th>下一阶段计划</th><td>用户确认后，开一个很小的 OpenSpec behavior-change 阶段，聚焦 output-boundary prompt/template/decoding instrumentation；不默认训练、不默认 parser relaxation、不默认声明模型质量改善。</td></tr>
+  </table>
+
+  <h2>完成阶段</h2>
+  <ul>
+    <li><code>run-a100-search-query-slot-policy-rerun</code>：A100 prediction-only rerun，已归档，提交 <code>ca2cf69</code>。</li>
+    <li><code>diagnose-a100-search-query-slot-wrapper-boundary</code>：本地 evidence-only wrapper-boundary 诊断，已归档，提交 <code>b6abaa5</code>。</li>
+  </ul>
+
+  <h2>关键结果</h2>
+  <ul>
+    <li>prediction count：<code>3</code>。</li>
+    <li>embedded compact query fragments：<code>3/3</code>。</li>
+    <li>Markdown-wrapped predictions：<code>3/3</code>。</li>
+    <li>strict schema-valid：<code>0/3</code>。</li>
+    <li>strict contract exact match：<code>0/3</code>。</li>
+    <li>raw/retry EOS observed：<code>3/3</code>；raw/retry max-token hits：<code>0</code>。</li>
+  </ul>
+
+  <h2>证据与 Brief</h2>
+  <ul>
+    <li><a href="2026-06-08-run-a100-search-query-slot-policy-rerun.html">A100 search query slot policy rerun Human Brief</a></li>
+    <li><a href="2026-06-08-diagnose-a100-search-query-slot-wrapper-boundary.html">Wrapper-boundary diagnosis Human Brief</a></li>
+    <li><a href="../../reports/public-sample/a100-search-query-slot-policy-rerun/report.md">A100 rerun report.md</a></li>
+    <li><a href="../../reports/public-sample/a100-search-query-slot-policy-rerun/slot_policy_rerun_diagnosis.md">A100 rerun diagnosis.md</a></li>
+    <li><a href="../../reports/public-sample/a100-search-query-slot-wrapper-boundary-diagnosis/wrapper_boundary_diagnosis.md">Wrapper-boundary diagnosis.md</a></li>
+    <li><a href="../../reports/public-sample/a100-search-query-slot-wrapper-boundary-diagnosis/manifest.json">Wrapper-boundary manifest.json</a></li>
+    <li><a href="../../openspec/changes/archive/2026-06-08-run-a100-search-query-slot-policy-rerun/tasks.md">Archived OpenSpec tasks: rerun</a></li>
+    <li><a href="../../openspec/changes/archive/2026-06-08-diagnose-a100-search-query-slot-wrapper-boundary/tasks.md">Archived OpenSpec tasks: diagnosis</a></li>
+  </ul>
+
+  <h2>验证</h2>
+  <ul>
+    <li><code>PYTHONPATH=src pytest -q</code>：<code>176 passed</code>。</li>
+    <li><code>uv run ruff check .</code>：passed。</li>
+    <li><code>uv run mypy src</code>：passed。</li>
+    <li><code>PYTHONPATH=src python -m voice2task.cli.data validate --sft data/public-samples/sft_public_sample.jsonl --dpo data/public-samples/dpo_public_sample.jsonl --manifest data/public-samples/manifest_public_sample.json --public</code>：<code>ok true</code>，<code>sft_rows=12</code>，<code>dpo_pairs=26</code>。</li>
+    <li><code>PYTHONPATH=src python -m voice2task.cli.data dpo-check --dpo data/public-samples/dpo_public_sample.jsonl</code>：26 pairs，rejection categories as expected。</li>
+    <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：4 passed，0 failed。</li>
+    <li><code>git diff --check</code>：passed。</li>
+  </ul>
+
+  <h2>自动集成状态</h2>
+  <ul>
+    <li>已自动提交：<code>ca2cf69 Archive A100 search query slot policy rerun</code>。</li>
+    <li>已自动提交：<code>b6abaa5 Archive A100 search query wrapper boundary diagnosis</code>。</li>
+    <li>目标分支：<code>main</code>。</li>
+    <li>push：跳过；本 repo 当前没有配置 remote。</li>
+    <li>当前 OpenSpec active changes：0。</li>
+  </ul>
+
+  <h2>外部审查</h2>
+  <p>未运行 ChatGPT Pro / external review。本轮阶段是 evidence-only / train-split diagnostic，且本地验证与自审没有发现必须外审的 Must Fix。</p>
+
+  <h2>不要过度声称</h2>
+  <ul>
+    <li>不要声称模型质量已经改善。</li>
+    <li>不要声称 held-out generalization、production readiness 或 live-browser benchmark improvement。</li>
+    <li>不要把 embedded compact query fragments 算作 strict schema recovery。</li>
+    <li>不要把 EOS observed 解读为 output boundary 已修复。</li>
+    <li>不要发布或暗示存在公开 checkpoint/adapter。</li>
+  </ul>
+
+  <h2>推荐人工决策</h2>
+  <p>建议确认是否开启下一阶段：<code>repair-output-boundary-template-decoding-instrumentation</code> 或等价小阶段。范围应限于 output-boundary prompt/template/decoding instrumentation 的可验证行为变更；完成后再决定是否需要新的 A100 prediction-only rerun。</p>
+</main>
+</body>
+</html>
