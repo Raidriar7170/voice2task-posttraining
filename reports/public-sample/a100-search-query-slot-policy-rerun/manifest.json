@@ -1,0 +1,105 @@
+{
+  "artifact_policy": {
+    "a100_execution_performed": true,
+    "checkpoints_or_adapters_copied_to_git": false,
+    "host_details_copied_to_git": false,
+    "prediction_rerun_performed": true,
+    "private_configs_copied_to_git": false,
+    "raw_logs_copied_to_git": false,
+    "remote_paths_copied_to_git": false,
+    "train_split_only": true,
+    "training_performed": false
+  },
+  "artifacts": {
+    "final_leak_scan": "reports/public-sample/a100-search-query-slot-policy-rerun/final_leak_scan_result.json",
+    "generation_trace": "reports/public-sample/a100-search-query-slot-policy-rerun/generation_trace.jsonl",
+    "leak_scan": "reports/public-sample/a100-search-query-slot-policy-rerun/leak_scan_result.json",
+    "manifest": "reports/public-sample/a100-search-query-slot-policy-rerun/manifest.json",
+    "metrics_json": "reports/public-sample/a100-search-query-slot-policy-rerun/metrics.json",
+    "metrics_markdown": "reports/public-sample/a100-search-query-slot-policy-rerun/metrics.md",
+    "phase_validation_leak_scan": "reports/public-sample/a100-search-query-slot-policy-rerun/phase_validation_leak_scan_result.json",
+    "post_archive_leak_scan": "reports/public-sample/a100-search-query-slot-policy-rerun/post_archive_leak_scan_result.json",
+    "prediction_metadata": "reports/public-sample/a100-search-query-slot-policy-rerun/prediction_metadata.json",
+    "predictions": "reports/public-sample/a100-search-query-slot-policy-rerun/predictions.jsonl",
+    "prompt_snapshot": "reports/public-sample/a100-search-query-slot-policy-rerun/prompt_snapshot.json",
+    "raw_decoded_summary": "reports/public-sample/a100-search-query-slot-policy-rerun/raw_decoded_summary.jsonl",
+    "report": "reports/public-sample/a100-search-query-slot-policy-rerun/report.md",
+    "schema_guard_summary": "reports/public-sample/a100-search-query-slot-policy-rerun/schema_guard_summary.json",
+    "schema_guard_summary_markdown": "reports/public-sample/a100-search-query-slot-policy-rerun/schema_guard_summary.md",
+    "slot_policy_rerun_diagnosis": "reports/public-sample/a100-search-query-slot-policy-rerun/slot_policy_rerun_diagnosis.json",
+    "slot_policy_rerun_diagnosis_markdown": "reports/public-sample/a100-search-query-slot-policy-rerun/slot_policy_rerun_diagnosis.md",
+    "train_split_gold": "reports/public-sample/a100-search-query-slot-policy-rerun/train_split_gold.jsonl"
+  },
+  "change_name": "run-a100-search-query-slot-policy-rerun",
+  "claims": {
+    "a100_execution_performed": true,
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "evaluator_metric_change_performed": false,
+    "held_out_generalization_claim": false,
+    "live_browser_benchmark_claim": false,
+    "model_quality_improvement_claim": false,
+    "model_recovery_claim": false,
+    "parser_relaxation_performed": false,
+    "prediction_repair_or_rescore_performed": false,
+    "prediction_rerun_performed": true,
+    "production_readiness_claim": false,
+    "public_full_corpus_release_claim": false,
+    "schema_repair_or_coercion_applied": false,
+    "semantic_equivalence_scoring_performed": false,
+    "slot_normalization_performed": false,
+    "train_split_only": true,
+    "training_performed": false
+  },
+  "diagnostic_artifacts": {
+    "final_leak_scan": "reports/public-sample/a100-search-query-slot-policy-rerun/final_leak_scan_result.json",
+    "leak_scan": "reports/public-sample/a100-search-query-slot-policy-rerun/leak_scan_result.json",
+    "phase_validation_leak_scan": "reports/public-sample/a100-search-query-slot-policy-rerun/phase_validation_leak_scan_result.json",
+    "post_archive_leak_scan": "reports/public-sample/a100-search-query-slot-policy-rerun/post_archive_leak_scan_result.json",
+    "schema_guard_summary": "reports/public-sample/a100-search-query-slot-policy-rerun/schema_guard_summary.json",
+    "slot_policy_rerun_diagnosis": "reports/public-sample/a100-search-query-slot-policy-rerun/slot_policy_rerun_diagnosis.json"
+  },
+  "evidence_kind": "a100_search_query_slot_policy_train_split_rerun",
+  "generated_at": "2026-06-08T02:33:10.481197+00:00",
+  "observed_result": {
+    "embedded_city_date_slot_fragment_count": 0,
+    "embedded_compact_query_fragment_count": 3,
+    "exact_match_count": 0,
+    "exact_match_recovery_vs_prior_observed": false,
+    "gold_city_date_slot_count": 0,
+    "gold_compact_query_count": 3,
+    "gold_spaced_query_count": 0,
+    "markdown_wrapped_prediction_count": 3,
+    "prediction_count": 3,
+    "prediction_source_kind": "private_a100_adapter",
+    "prediction_split": "train",
+    "raw_attempt_schema_valid_count": 0,
+    "retry_attempt_schema_valid_count": 0,
+    "retry_attempted_count": 3,
+    "schema_recovery_vs_prior_observed": false,
+    "strict_final_contract_exact_match": 0.0,
+    "strict_final_json_valid_rate": 0.0,
+    "strict_final_slot_f1": 0.0,
+    "strict_retry_parser_rejected_fragment_count": 3,
+    "training_rows_used": 3,
+    "validated_output_schema_valid_count": 0
+  },
+  "prior_context": {
+    "local_policy_query_values": [
+      "北京明天天气"
+    ],
+    "prior_retry_template_strict_final_contract_exact_match": 0.0,
+    "prior_retry_template_strict_final_json_valid_rate": 1.0,
+    "prior_slot_family_counts": {
+      "city_date_slots_instead_of_query": 2,
+      "query_slot_strict_string_mismatch": 1
+    }
+  },
+  "source_artifacts": {
+    "local_search_query_slot_policy": "reports/public-sample/search-query-slot-target-policy/policy_summary.json",
+    "prior_a100_retry_template_boundary_manifest": "reports/public-sample/a100-retry-template-boundary-rerun/manifest.json",
+    "prior_a100_retry_template_boundary_rerun": "reports/public-sample/a100-retry-template-boundary-rerun",
+    "prior_slot_diagnosis": "reports/public-sample/retry-template-slot-exact-match-mismatch-diagnosis/slot_exact_match_mismatch_diagnosis.json",
+    "public_sample_manifest": "data/public-samples/manifest_public_sample.json"
+  }
+}
