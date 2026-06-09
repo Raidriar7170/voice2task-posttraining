@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Autonomous Loop - compact query exact-match residual diagnosis</title>
+  <style>
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:32px;line-height:1.6;color:#1f2933;background:#fff}
+    main{max-width:960px;margin:0 auto}
+    h1{font-size:28px;margin-bottom:8px}
+    h2{font-size:18px;margin-top:24px}
+    code{background:#f3f4f6;padding:1px 4px;border-radius:4px}
+    .status{display:inline-block;border:1px solid #9aa6b2;border-radius:6px;padding:4px 8px;font-size:13px}
+    .note{border-left:4px solid #64748b;padding-left:12px;color:#334155}
+    a{color:#075985}
+  </style>
+</head>
+<body>
+<main>
+  <p class="status">stopped: hard stop before behavior change</p>
+  <h1>Autonomous Loop - compact query exact-match residual diagnosis</h1>
+  <p><strong>一句话结论：</strong>本轮自动阶段已归档并本地提交，用公开安全证据解释了 <code>contract_exact_match=0.0</code> 的剩余原因：2 条 strict <code>normalized_command</code> 字符串差异和 1 条 compact query slot shape 差异。</p>
+
+  <h2>完成的阶段</h2>
+  <ul>
+    <li>OpenSpec change：<code>diagnose-compact-query-exact-match-residuals</code>。</li>
+    <li>状态：已归档到 <code>openspec/changes/archive/2026-06-09-diagnose-compact-query-exact-match-residuals/</code>。</li>
+    <li>本地 commit：<code>76f8cf5 Archive compact query exact-match residual diagnosis</code>。</li>
+  </ul>
+
+  <h2>阶段贡献</h2>
+  <ul>
+    <li>从 <code>reports/public-sample/a100-compact-query-slot-preservation-rerun/</code> 读取 sanitized public evidence。</li>
+    <li>继承 strict metrics：<code>json_valid_rate=1.0</code>、<code>slot_f1=0.6666666666666666</code>、<code>contract_exact_match=0.0</code>。</li>
+    <li>诊断 residual family：<code>strict_normalized_command_string_mismatch=2</code>、<code>compact_query_slot_shape_mismatch=1</code>。</li>
+    <li>确认 <code>seed-search-weather-aug-1</code> 仍是 gold <code>{"query":"北京明天天气"}</code> vs prediction <code>{"city":"北京","date":"明天","topic":""}</code>。</li>
+  </ul>
+
+  <h2>关键文件</h2>
+  <ul>
+    <li><a href="../../reports/public-sample/compact-query-exact-match-residuals-diagnosis/exact_match_residual_diagnosis.md">exact_match_residual_diagnosis.md</a></li>
+    <li><a href="../../reports/public-sample/compact-query-exact-match-residuals-diagnosis/manifest.json">manifest.json</a></li>
+    <li><a href="2026-06-09-diagnose-compact-query-exact-match-residuals.html">phase Human Brief</a></li>
+    <li><a href="../../openspec/changes/archive/2026-06-09-diagnose-compact-query-exact-match-residuals/tasks.md">archived OpenSpec tasks</a></li>
+    <li><a href="../../openspec/specs/contract-evaluation/spec.md">contract-evaluation spec</a></li>
+  </ul>
+
+  <h2>验证结果</h2>
+  <ul>
+    <li><code>PYTHONPATH=src pytest -q</code>：<code>194 passed</code>。</li>
+    <li><code>uv run ruff check .</code>：<code>All checks passed</code>。</li>
+    <li><code>uv run mypy src</code>：<code>Success: no issues found in 16 source files</code>。</li>
+    <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：<code>4 passed, 0 failed</code> after archive。</li>
+    <li><code>PYTHONPATH=src python -m voice2task.cli.data validate ... --public</code>：<code>ok=true</code>，<code>sft_rows=12</code>，<code>dpo_pairs=27</code>。</li>
+    <li><code>PYTHONPATH=src python -m voice2task.cli.data dpo-check ...</code>：<code>total_pairs=27</code>。</li>
+    <li><code>git diff --check</code>：passed。</li>
+    <li><code>voice2task.leak_scan.scan_paths(...)</code>：<code>ok=true; findings=[]</code>。</li>
+  </ul>
+
+  <h2>Review 与集成</h2>
+  <ul>
+    <li>Explorer：只读确认 residual 不是 schema 问题，而是 strict string + slot shape residual。</li>
+    <li>Worker：按 TDD 创建失败测试，再生成诊断包和 Human Brief。</li>
+    <li>Reviewer：<code>Pass with fixes</code>；Must Fix 是清理 Markdown 双重否定，已修复并复测。</li>
+    <li>External Pro review：未运行；本阶段为本地诊断，未需要外部设计或公开包装审查。</li>
+    <li>Auto integration：已本地 stage 并 commit；push skipped，因为当前 <code>main</code> 没有 upstream。</li>
+  </ul>
+
+  <h2>为什么停止</h2>
+  <p class="note">精确停止条件：hard stop。下一步若继续，会进入训练数据、prompt、decoding 或 evaluator-adjacent 行为改变阶段；这会改变 scope / success criteria / behavior boundary，需要用户确认后再开新的 OpenSpec 变更。</p>
+
+  <h2>当前项目阶段进展</h2>
+  <ul>
+    <li>当前目标：让 Voice2Task train-split public evidence 能解释 strict contract residual，而不是只报告单个总分。</li>
+    <li>本阶段贡献：把 <code>json_valid_rate=1.0</code> 但 <code>contract_exact_match=0.0</code> 的原因拆成可审阅的字段级残差。</li>
+    <li>剩余缺口：没有证明 held-out generalization、模型质量改善、生产可用、checkpoint/adapter release 或 live-browser benchmark improvement。</li>
+    <li>下一步计划：若你确认，可以另开小阶段决定是否改训练数据/prompt/decoding 来处理 strict <code>normalized_command</code> 和 compact query slot shape residual。</li>
+  </ul>
+
+  <h2>不要过度声明</h2>
+  <ul>
+    <li>这不是 A100 rerun、不是训练、不是 prediction rerun。</li>
+    <li>这不是 parser relaxation、evaluator metric change、slot normalization 或 semantic-equivalence scoring。</li>
+    <li>这不是 prediction repair/replacement/rescore。</li>
+    <li>不能声明 model recovery、model-quality improvement、production readiness、held-out generalization、public full-corpus release、checkpoint/adapter release 或 live-browser benchmark improvement。</li>
+  </ul>
+</main>
+</body>
+</html>
