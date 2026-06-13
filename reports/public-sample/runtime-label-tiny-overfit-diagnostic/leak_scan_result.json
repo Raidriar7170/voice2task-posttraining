@@ -1,0 +1,8 @@
+{
+  "findings": [],
+  "ok": true,
+  "scanned_paths": [
+    "reports/public-sample/runtime-label-tiny-overfit-diagnostic",
+    "openspec/changes/run-bounded-runtime-label-or-tiny-overfit-diagnostic"
+  ]
+}

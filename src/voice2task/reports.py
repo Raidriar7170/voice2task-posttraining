@@ -887,6 +887,104 @@ def write_sft_contract_learning_signal_report(
     return {"json": json_path, "markdown": markdown_path}
 
 
+def write_runtime_label_tiny_overfit_diagnostic_report(
+    diagnostics: dict[str, Any],
+    output_dir: Path,
+    title: str = "Voice2Task runtime-label and tiny-overfit diagnostic",
+) -> dict[str, Path]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    json_path = output_dir / "runtime_label_tiny_overfit_diagnostic.json"
+    markdown_path = output_dir / "runtime_label_tiny_overfit_diagnostic.md"
+    safe_diagnostics = _sanitize_report_value(diagnostics)
+    write_json(json_path, safe_diagnostics)
+
+    summary = safe_diagnostics["summary"]
+    current_manifest = safe_diagnostics["current_manifest"]
+    learning = safe_diagnostics["learning_signal_evidence"]
+    runtime = safe_diagnostics["runtime_label_evidence"]
+    tiny = safe_diagnostics["tiny_overfit_evidence"]
+    readiness = safe_diagnostics["tiny_overfit_readiness"]
+    prior = safe_diagnostics["prior_repair_evidence"]
+    lines = [
+        f"# {title}",
+        "",
+        (
+            "This local diagnostic compares public-safe artifacts for the current manifest. "
+            "It does not train, run prediction, download models, load private adapters, or repair outputs."
+        ),
+        "",
+        "## Boundary",
+        "",
+        "- This is not a model recovery claim.",
+        "- This is not a checkpoint release.",
+        "- This is not an adapter release.",
+        "- This is not held-out or private-corpus generalization evidence.",
+        "- This makes no production-readiness claim.",
+        "- This is not a public full-corpus release claim.",
+        "- This is not a live-browser benchmark or benchmark-improvement claim.",
+        "- Stale runtime-label or tiny-overfit evidence is prior context only.",
+        "",
+        "## Summary",
+        "",
+        f"- Current manifest: `{current_manifest['manifest_id']}`",
+        f"- Runtime label status: `{summary['current_runtime_label_status']}`",
+        f"- Current true label-mask status: `{summary['current_true_label_mask_status']}`",
+        f"- Tiny-overfit evidence status: `{summary['tiny_overfit_status']}`",
+        f"- Tiny-overfit readiness: `{summary['tiny_overfit_readiness']}`",
+        f"- Recommended next step: `{safe_diagnostics['recommended_next_step']}`",
+        "",
+        "## Learning Signal Context",
+        "",
+        f"- Available: `{learning['available']}`",
+        f"- Freshness: `{learning['freshness']}`",
+        f"- Source manifest: `{learning['source_manifest_id']}`",
+        f"- Assistant target spans present: `{learning['all_rows_have_assistant_target_span']}`",
+        f"- Learning-signal true label-mask status: `{learning['true_runtime_label_mask_status']}`",
+        "",
+        "## Prior Repair Evidence",
+        "",
+        f"- Available: `{prior['available']}`",
+        f"- Overall interpretation: `{prior['overall_interpretation']}`",
+        f"- Split exact match: `{prior['split_exact_match']}`",
+        "",
+        "## Runtime Label Evidence",
+        "",
+        f"- Available: `{runtime['available']}`",
+        f"- Freshness: `{runtime['freshness']}`",
+        f"- Source manifest: `{runtime['source_manifest_id']}`",
+        f"- Current manifest proof: `{runtime['current_manifest_proof']}`",
+        f"- Evidence status: `{runtime['evidence_status']}`",
+        f"- Runtime check status: `{runtime['runtime_check_status']}`",
+        f"- Prior label-mask fields: `{runtime['prior_label_mask_fields']}`",
+        f"- Current label-mask fields: `{runtime['current_label_mask_fields']}`",
+        f"- Assistant-only loss-mask claim: `{runtime['assistant_only_loss_mask_claim']}`",
+        "",
+        "## Tiny-Overfit Evidence",
+        "",
+        f"- Available: `{tiny['available']}`",
+        f"- Freshness: `{tiny['freshness']}`",
+        f"- Source manifest: `{tiny['source_manifest_id']}`",
+        f"- Current manifest proof: `{tiny['current_manifest_proof']}`",
+        f"- Overfit diagnostic: `{tiny['overfit_diagnostic']}`",
+        f"- Prediction split: `{tiny['prediction_split']}`",
+        f"- Training rows used: `{tiny['training_rows_used']}`",
+        f"- Assistant-only objective: `{tiny['assistant_only_objective']}`",
+        "",
+        "## Readiness",
+        "",
+        f"- Status: `{readiness['status']}`",
+        f"- Reason: `{readiness['reason']}`",
+        "",
+        "## Artifact Policy",
+        "",
+    ]
+    for name, value in sorted(safe_diagnostics["artifact_policy"].items()):
+        lines.append(f"- `{name}`: `{value}`")
+
+    markdown_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    return {"json": json_path, "markdown": markdown_path}
+
+
 def _sanitize_report_value(value: Any) -> Any:
     if isinstance(value, str):
         sanitized = PRIVATE_REPORT_PATH_RE.sub("<private_path>", value)

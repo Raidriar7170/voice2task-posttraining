@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Voice2Task runtime label / tiny-overfit 诊断</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.55; max-width: 940px; margin: 32px auto; padding: 0 20px; color: #20242a; }
+    h1 { font-size: 26px; margin-bottom: 8px; }
+    h2 { margin-top: 26px; font-size: 18px; }
+    .status { padding: 12px 14px; border-left: 4px solid #d97706; background: #fffbeb; }
+    code { background: #f4f4f5; padding: 1px 4px; border-radius: 4px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 8px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; }
+    th { background: #f7f7f8; }
+  </style>
+</head>
+<body>
+  <h1>Voice2Task runtime label / tiny-overfit 诊断</h1>
+  <p class="status"><strong>一句话结论：</strong>当前 public manifest 的 SFT target 结构存在，但 runtime label 和 tiny-overfit 证据都是旧 manifest；下一步不是扩数据或完整重训，而是 fresh current-manifest runtime label check。</p>
+
+  <h2>当前状态</h2>
+  <p>阶段状态：archived；证据类型：local public-safe prior-artifact comparison；没有下载模型、加载私有 adapter、训练、DPO、GRPO 或预测。</p>
+
+  <h2>本阶段改变</h2>
+  <ul>
+    <li>新增 runtime-label / tiny-overfit readiness 诊断。</li>
+    <li>新增 CLI：<code>voice2task.cli.eval diagnose-runtime-label-tiny-overfit</code>。</li>
+    <li>新增 public-safe JSON/Markdown evidence pack。</li>
+    <li>把 stale runtime-label evidence 和 current manifest proof 明确拆开。</li>
+  </ul>
+
+  <h2>关键结论</h2>
+  <table>
+    <tr><th>项目</th><th>结果</th><th>含义</th></tr>
+    <tr><td>current manifest</td><td><code>public-sample-20260613T072200Z</code></td><td>当前 30 条 public SFT rows。</td></tr>
+    <tr><td>learning signal</td><td><code>fresh_current_manifest</code></td><td>当前 SFT 渲染文本含 assistant target span。</td></tr>
+    <tr><td>runtime label</td><td><code>stale_manifest_mismatch</code></td><td>旧 label 证据来自 <code>public-sample-20260601T162313Z</code>，不能证明当前 rows。</td></tr>
+    <tr><td>tiny-overfit</td><td><code>stale_manifest_mismatch</code></td><td>旧 tiny-overfit 证据也是旧 manifest，只能当 prior context。</td></tr>
+    <tr><td>recommended next</td><td><code>run_fresh_current_manifest_runtime_label_check</code></td><td>先查当前 rows 的真实 tokenizer/collator labels。</td></tr>
+  </table>
+
+  <h2>关键文件</h2>
+  <ul>
+    <li><code>openspec/changes/archive/2026-06-13-run-bounded-runtime-label-or-tiny-overfit-diagnostic/</code></li>
+    <li><code>src/voice2task/evaluation.py</code></li>
+    <li><code>src/voice2task/reports.py</code></li>
+    <li><code>src/voice2task/cli/eval.py</code></li>
+    <li><code>tests/test_a100_sft_prediction_smoke.py</code></li>
+    <li><code>reports/public-sample/runtime-label-tiny-overfit-diagnostic/manifest.json</code></li>
+    <li><code>reports/public-sample/runtime-label-tiny-overfit-diagnostic/runtime_label_tiny_overfit_diagnostic.json</code></li>
+    <li><code>reports/public-sample/runtime-label-tiny-overfit-diagnostic/runtime_label_tiny_overfit_diagnostic.md</code></li>
+  </ul>
+
+  <h2>验证结果</h2>
+  <ul>
+    <li><code>PYTHONPATH=src pytest -q</code>：<code>230 passed</code>。</li>
+    <li><code>uv run ruff check .</code>：<code>All checks passed!</code></li>
+    <li><code>uv run mypy src</code>：<code>Success: no issues found in 16 source files</code>。</li>
+    <li><code>voice2task-data validate --public</code>：<code>ok=true</code>, <code>sft_rows=30</code>, <code>dpo_pairs=90</code>。</li>
+    <li><code>voice2task-data dpo-check</code>：<code>total_pairs=90</code>。</li>
+    <li><code>openspec validate --all --strict</code>：<code>4 passed</code>。</li>
+    <li><code>git diff --check</code>：passed。</li>
+    <li>Phase/final leak scan: <code>ok=true</code>, <code>findings=[]</code>。</li>
+  </ul>
+
+  <h2>项目阶段进度</h2>
+  <p>当前阶段目标来自 <code>CONTEXT.md</code> 和 <code>README.md</code>：Voice2Task Post-Training 的第一阶段是 speech-to-contract normalization，重点是 public sample、SFT/DPO 格式、contract metrics 和 public-safe evidence。此阶段把“当前训练目标是否真的有 fresh label 证据”从训练结果解释里拆出来，减少盲目重跑。</p>
+
+  <h2>剩余风险和不能夸大的点</h2>
+  <ul>
+    <li>不能声称当前模型已恢复；本阶段没有训练或预测。</li>
+    <li>旧 runtime-label 证据不能证明当前 manifest。</li>
+    <li>旧 tiny-overfit 证据不能证明当前 7B repair 失败的原因。</li>
+    <li>不能声称 held-out generalization、private-corpus generalization、checkpoint/adapter release、production readiness 或 live-browser benchmark 改善。</li>
+  </ul>
+
+  <h2>推荐下一步</h2>
+  <p>开启一个 fresh current-manifest runtime label check：只检查当前 public train rows 的真实 tokenizer/collator labels，确认 prompt tokens 是否 masked、assistant target tokens 是否 carry loss，再决定是否做 1-3 row tiny-overfit probe。</p>
+</body>
+</html>

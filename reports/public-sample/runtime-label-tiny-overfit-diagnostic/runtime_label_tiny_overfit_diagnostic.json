@@ -1,0 +1,152 @@
+{
+  "artifact_policy": {
+    "checkpoints_or_adapters_copied_to_git": false,
+    "host_details_omitted": true,
+    "private_corpus_rows_omitted": true,
+    "private_paths_omitted": true,
+    "raw_assistant_targets_written": false,
+    "raw_logs_copied_to_git": false,
+    "raw_rendered_prompts_written": false,
+    "ssh_details_omitted": true
+  },
+  "claims": {
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "does_not_download_model": true,
+    "does_not_load_private_adapter": true,
+    "does_not_relax_evaluator": true,
+    "does_not_repair_outputs": true,
+    "does_not_run_prediction": true,
+    "does_not_train": true,
+    "held_out_generalization_claim": false,
+    "live_browser_benchmark_claim": false,
+    "model_recovery_claim": false,
+    "private_corpus_generalization_claim": false,
+    "production_readiness_claim": false,
+    "public_full_corpus_release_claim": false,
+    "public_sample_only": true
+  },
+  "current_manifest": {
+    "counts": {
+      "dpo_pairs": 90,
+      "seed_rows": 10,
+      "sft_rows": 30
+    },
+    "manifest_id": "public-sample-20260613T072200Z",
+    "path": "data/public-samples/manifest_public_sample.json",
+    "public_safe": true,
+    "split_counts": {
+      "dev": 6,
+      "test": 6,
+      "train": 18
+    }
+  },
+  "diagnostic_mode": "local_public_safe_prior_artifact_comparison",
+  "evidence_kind": "runtime_label_tiny_overfit_diagnostic",
+  "execution_scope": {
+    "a100_execution": false,
+    "dpo_run": false,
+    "full_sft_run": false,
+    "grpo_run": false,
+    "local_public_artifact_comparison_only": true,
+    "model_download_allowed": false,
+    "prediction_run": false,
+    "private_adapter_load_allowed": false
+  },
+  "learning_signal_evidence": {
+    "all_rows_have_assistant_target_span": true,
+    "available": true,
+    "evidence_gaps": [
+      "real_training_labels_not_inspected",
+      "real_training_label_provenance_missing"
+    ],
+    "freshness": "fresh_current_manifest",
+    "recommended_next_step": "run_bounded_runtime_label_or_tiny_overfit_diagnostic",
+    "source_manifest_id": "public-sample-20260613T072200Z",
+    "target_pressure": {
+      "max_assistant_target_char_count": 244,
+      "max_assistant_target_char_ratio": 0.12248995983935743,
+      "max_training_text_char_count": 2005,
+      "min_assistant_target_char_ratio": 0.11371571072319202,
+      "rows_over_2048_chars": [],
+      "tokenizer_specific_token_counts_available": false,
+      "tokenizer_specific_token_counts_gap": "tokenizer_not_loaded_for_local_public_safe_diagnostic"
+    },
+    "true_runtime_label_mask_status": "unavailable"
+  },
+  "prior_repair_evidence": {
+    "available": true,
+    "overall_interpretation": "public_heldout_residual_repair_failed",
+    "recommended_next_step": "open_new_bounded_phase_for_runtime_label_loss_and/or_preference_signal_diagnosis_before_more_training",
+    "split_exact_match": {
+      "dev": 0.0,
+      "test": 0.0,
+      "train": 0.3333333333333333
+    },
+    "split_json_valid_rate": {
+      "dev": 1.0,
+      "test": 1.0,
+      "train": 0.8888888888888888
+    }
+  },
+  "recommended_next_step": "run_fresh_current_manifest_runtime_label_check",
+  "runtime_label_evidence": {
+    "assistant_only_loss_mask_claim": false,
+    "available": true,
+    "current_label_mask_fields": {},
+    "current_manifest_id": "public-sample-20260613T072200Z",
+    "current_manifest_proof": false,
+    "evidence_status": "labels_inspected",
+    "freshness": "stale_manifest_mismatch",
+    "prior_label_mask_fields": {
+      "assistant_token_count": 62,
+      "assistant_tokens_carry_loss": true,
+      "evidence_gaps": [],
+      "label_source_kind": "private_training_runtime",
+      "prompt_token_count": 187,
+      "prompt_tokens_masked": false,
+      "true_label_mask_status": "inspectable"
+    },
+    "runtime_check_status": "executed_runtime_label_provenance_check",
+    "source_manifest_id": "public-sample-20260601T162313Z"
+  },
+  "summary": {
+    "current_runtime_label_status": "stale_manifest_mismatch",
+    "current_true_label_mask_status": "unavailable",
+    "prior_repair_dev_contract_exact_match": 0.0,
+    "prior_repair_test_contract_exact_match": 0.0,
+    "prior_repair_train_contract_exact_match": 0.3333333333333333,
+    "tiny_overfit_readiness": "blocked_until_fresh_runtime_label_check",
+    "tiny_overfit_status": "stale_manifest_mismatch"
+  },
+  "tiny_overfit_evidence": {
+    "assistant_only_objective": {
+      "assistant_tokens_carry_loss": true,
+      "label_source_kind": "private_training_runtime",
+      "prompt_tokens_masked": true,
+      "true_label_mask_status": "inspectable"
+    },
+    "available": true,
+    "claims": {
+      "adapter_release": false,
+      "checkpoint_release": false,
+      "generalization_claim": false,
+      "held_out_generalization_claim": false,
+      "live_browser_benchmark_claim": false,
+      "model_quality_evidence": false,
+      "production_readiness_claim": false,
+      "release_claim": false
+    },
+    "current_manifest_id": "public-sample-20260613T072200Z",
+    "current_manifest_proof": false,
+    "freshness": "stale_manifest_mismatch",
+    "overfit_diagnostic": true,
+    "prediction_split": "train",
+    "source_manifest_id": "public-sample-20260601T162313Z",
+    "training_rows_used": 3
+  },
+  "tiny_overfit_readiness": {
+    "reason": "current_manifest_runtime_label_evidence_missing_or_stale",
+    "status": "blocked_until_fresh_runtime_label_check"
+  }
+}

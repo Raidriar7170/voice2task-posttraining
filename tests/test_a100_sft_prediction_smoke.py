@@ -8,9 +8,19 @@ from voice2task import training
 from voice2task.cli import eval as eval_cli
 from voice2task.cli import report as report_cli
 from voice2task.cli import train as train_cli
-from voice2task.evaluation import diagnose_sft_contract_learning_signal, evaluate_predictions, load_predictions
+from voice2task.evaluation import (
+    diagnose_runtime_label_tiny_overfit_readiness,
+    diagnose_sft_contract_learning_signal,
+    evaluate_predictions,
+    load_predictions,
+)
+from voice2task.io import read_json
 from voice2task.leak_scan import scan_paths
-from voice2task.reports import write_prediction_evidence_pack, write_sft_contract_learning_signal_report
+from voice2task.reports import (
+    write_prediction_evidence_pack,
+    write_runtime_label_tiny_overfit_diagnostic_report,
+    write_sft_contract_learning_signal_report,
+)
 from voice2task.schemas import ROUTES, TASK_TYPES, SFTDatasetRow
 from voice2task.training import run_sft_prediction_export
 
@@ -85,6 +95,116 @@ def _write_prior_repair_diagnosis(tmp_path: Path) -> Path:
         encoding="utf-8",
     )
     return prior
+
+
+def _write_learning_signal_diagnosis(tmp_path: Path, *, manifest_id: str = "public-sample-test") -> Path:
+    path = tmp_path / "sft_contract_learning_signal.json"
+    path.write_text(
+        json.dumps(
+            {
+                "evidence_kind": "sft_contract_learning_signal",
+                "source_manifest": {
+                    "manifest_id": manifest_id,
+                    "counts": {"sft_rows": 2},
+                    "path": "manifest.json",
+                    "sft_path": "sft_public_sample.jsonl",
+                },
+                "summary": {
+                    "row_count": 2,
+                    "all_rows_have_assistant_target_span": True,
+                    "true_runtime_label_mask_status": "unavailable",
+                    "evidence_gaps": [
+                        "real_training_labels_not_inspected",
+                        "real_training_label_provenance_missing",
+                    ],
+                },
+                "target_pressure": {
+                    "max_training_text_char_count": 512,
+                    "max_assistant_target_char_count": 128,
+                    "rows_over_2048_chars": [],
+                    "tokenizer_specific_token_counts_available": False,
+                },
+                "recommended_next_step": "run_bounded_runtime_label_or_tiny_overfit_diagnostic",
+                "claims": {"model_recovery_claim": False, "does_not_train": True},
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+    return path
+
+
+def _write_runtime_label_evidence(
+    tmp_path: Path,
+    *,
+    manifest_id: str,
+    true_label_mask_status: str = "inspectable",
+    prompt_tokens_masked: bool = True,
+    assistant_tokens_carry_loss: bool = True,
+) -> Path:
+    path = tmp_path / f"runtime-label-{manifest_id}.json"
+    path.write_text(
+        json.dumps(
+            {
+                "evidence_kind": "sft_runtime_label_provenance_observed",
+                "dataset_manifest_id": manifest_id,
+                "evidence_status": "labels_inspected",
+                "runtime_check_status": "executed_runtime_label_provenance_check",
+                "runtime_source_kind": "private_a100_runtime",
+                "label_source_kind": "private_training_runtime",
+                "label_tensor_available": True,
+                "true_label_mask_status": true_label_mask_status,
+                "prompt_token_count": 17,
+                "assistant_token_count": 9,
+                "prompt_tokens_masked": prompt_tokens_masked,
+                "assistant_tokens_carry_loss": assistant_tokens_carry_loss,
+                "assistant_only_loss_mask_claim": prompt_tokens_masked and assistant_tokens_carry_loss,
+                "evidence_gaps": [],
+                "claims": {
+                    "model_recovery_claim": False,
+                    "checkpoint_release": False,
+                    "adapter_release": False,
+                    "held_out_generalization_claim": False,
+                    "production_readiness_claim": False,
+                    "live_browser_benchmark_claim": False,
+                },
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+    return path
+
+
+def _write_tiny_overfit_evidence(tmp_path: Path, *, manifest_id: str) -> Path:
+    path = tmp_path / f"tiny-overfit-{manifest_id}.json"
+    path.write_text(
+        json.dumps(
+            {
+                "evidence_kind": "a100_assistant_only_train_split_rerun",
+                "dataset_manifest_id": manifest_id,
+                "overfit_diagnostic": True,
+                "prediction_split": "train",
+                "training_rows_used": 3,
+                "assistant_only_objective": {
+                    "true_label_mask_status": "inspectable",
+                    "prompt_tokens_masked": True,
+                    "assistant_tokens_carry_loss": True,
+                },
+                "claims": {
+                    "model_recovery_claim": False,
+                    "generalization_claim": False,
+                    "checkpoint_release": False,
+                    "adapter_release": False,
+                    "production_readiness_claim": False,
+                    "live_browser_benchmark_claim": False,
+                },
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+    return path
 
 
 def _write_prediction_config(
@@ -232,6 +352,131 @@ def test_public_sft_contract_learning_signal_evidence_is_bounded_and_links_prior
     assert leak_scan["ok"] is True
     assert leak_scan["findings"] == []
     assert scan_paths([evidence_dir]).ok is True
+
+
+def test_runtime_label_tiny_overfit_diagnostic_marks_stale_runtime_evidence_as_prior_context_only(
+    tmp_path: Path,
+) -> None:
+    manifest = _write_manifest(tmp_path)
+    learning_signal_path = _write_learning_signal_diagnosis(tmp_path)
+    prior_path = _write_prior_repair_diagnosis(tmp_path)
+    stale_runtime = _write_runtime_label_evidence(tmp_path, manifest_id="older-public-sample")
+    stale_tiny = _write_tiny_overfit_evidence(tmp_path, manifest_id="older-public-sample")
+
+    diagnostics = diagnose_runtime_label_tiny_overfit_readiness(
+        manifest_path=manifest,
+        learning_signal=read_json(learning_signal_path),
+        prior_repair_diagnosis=read_json(prior_path),
+        runtime_label_evidence=read_json(stale_runtime),
+        tiny_overfit_evidence=read_json(stale_tiny),
+    )
+
+    assert diagnostics["evidence_kind"] == "runtime_label_tiny_overfit_diagnostic"
+    assert diagnostics["current_manifest"]["manifest_id"] == "public-sample-test"
+    assert diagnostics["runtime_label_evidence"]["freshness"] == "stale_manifest_mismatch"
+    assert diagnostics["runtime_label_evidence"]["current_manifest_proof"] is False
+    assert diagnostics["runtime_label_evidence"]["source_manifest_id"] == "older-public-sample"
+    assert diagnostics["runtime_label_evidence"]["prior_label_mask_fields"]["true_label_mask_status"] == "inspectable"
+    assert diagnostics["summary"]["current_runtime_label_status"] == "stale_manifest_mismatch"
+    assert diagnostics["summary"]["current_true_label_mask_status"] == "unavailable"
+    assert diagnostics["recommended_next_step"] == "run_fresh_current_manifest_runtime_label_check"
+    assert diagnostics["claims"]["model_recovery_claim"] is False
+    serialized = json.dumps(diagnostics, ensure_ascii=False, sort_keys=True)
+    assert "帮我搜索" not in serialized
+    assert "/mnt/data/" not in serialized
+    assert "/Users/" not in serialized
+
+
+def test_runtime_label_tiny_overfit_diagnostic_recommends_tiny_probe_after_fresh_assistant_only_labels(
+    tmp_path: Path,
+) -> None:
+    manifest = _write_manifest(tmp_path)
+    learning_signal_path = _write_learning_signal_diagnosis(tmp_path)
+    prior_path = _write_prior_repair_diagnosis(tmp_path)
+    fresh_runtime = _write_runtime_label_evidence(tmp_path, manifest_id="public-sample-test")
+
+    diagnostics = diagnose_runtime_label_tiny_overfit_readiness(
+        manifest_path=manifest,
+        learning_signal=read_json(learning_signal_path),
+        prior_repair_diagnosis=read_json(prior_path),
+        runtime_label_evidence=read_json(fresh_runtime),
+        tiny_overfit_evidence=None,
+    )
+
+    assert diagnostics["runtime_label_evidence"]["freshness"] == "fresh_current_manifest"
+    assert diagnostics["runtime_label_evidence"]["current_manifest_proof"] is True
+    assert diagnostics["runtime_label_evidence"]["current_label_mask_fields"] == {
+        "assistant_token_count": 9,
+        "assistant_tokens_carry_loss": True,
+        "evidence_gaps": [],
+        "label_source_kind": "private_training_runtime",
+        "prompt_token_count": 17,
+        "prompt_tokens_masked": True,
+        "true_label_mask_status": "inspectable",
+    }
+    assert diagnostics["summary"]["current_true_label_mask_status"] == "inspectable"
+    assert diagnostics["tiny_overfit_readiness"]["status"] == "ready_for_1_to_3_row_probe"
+    assert diagnostics["recommended_next_step"] == "run_1_to_3_row_current_manifest_tiny_overfit_probe"
+    assert diagnostics["claims"]["held_out_generalization_claim"] is False
+    assert diagnostics["claims"]["checkpoint_release"] is False
+
+
+def test_runtime_label_tiny_overfit_cli_writes_public_safe_evidence_pack(
+    tmp_path: Path,
+    capsys: Any,
+) -> None:
+    manifest = _write_manifest(tmp_path)
+    learning_signal_path = _write_learning_signal_diagnosis(tmp_path)
+    prior_path = _write_prior_repair_diagnosis(tmp_path)
+    stale_runtime = _write_runtime_label_evidence(tmp_path, manifest_id="older-public-sample")
+    stale_tiny = _write_tiny_overfit_evidence(tmp_path, manifest_id="older-public-sample")
+    output_dir = tmp_path / "runtime-label-tiny-overfit"
+
+    assert (
+        eval_cli.main(
+            [
+                "diagnose-runtime-label-tiny-overfit",
+                "--manifest",
+                manifest.as_posix(),
+                "--learning-signal",
+                learning_signal_path.as_posix(),
+                "--prior-repair-diagnosis",
+                prior_path.as_posix(),
+                "--runtime-label-evidence",
+                stale_runtime.as_posix(),
+                "--tiny-overfit-evidence",
+                stale_tiny.as_posix(),
+                "--output",
+                output_dir.as_posix(),
+            ]
+        )
+        == 0
+    )
+
+    cli_output = json.loads(capsys.readouterr().out)
+    summary_path = output_dir / "runtime_label_tiny_overfit_diagnostic.json"
+    markdown_path = output_dir / "runtime_label_tiny_overfit_diagnostic.md"
+    assert cli_output["ok"] is True
+    assert cli_output["paths"]["json"] == summary_path.as_posix()
+    assert cli_output["paths"]["markdown"] == markdown_path.as_posix()
+
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    markdown = markdown_path.read_text(encoding="utf-8")
+    assert summary["runtime_label_evidence"]["freshness"] == "stale_manifest_mismatch"
+    assert summary["tiny_overfit_evidence"]["freshness"] == "stale_manifest_mismatch"
+    assert summary["recommended_next_step"] == "run_fresh_current_manifest_runtime_label_check"
+    assert "stale_manifest_mismatch" in markdown
+    assert "not a model recovery claim" in markdown
+    assert "not a checkpoint release" in markdown
+    assert "not a live-browser benchmark" in markdown
+    assert "帮我搜索" not in markdown
+    assert scan_paths([output_dir]).ok is True
+
+    report_output = tmp_path / "direct-runtime-report"
+    direct_paths = write_runtime_label_tiny_overfit_diagnostic_report(summary, report_output)
+    assert direct_paths["json"].exists()
+    assert direct_paths["markdown"].exists()
+    assert scan_paths([report_output]).ok is True
 
 
 def test_sft_prediction_export_requires_explicit_opt_in_and_adapter_config(tmp_path: Path) -> None:

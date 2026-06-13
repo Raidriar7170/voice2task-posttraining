@@ -1,0 +1,67 @@
+{
+  "artifact_policy": {
+    "checkpoints_or_adapters_copied_to_git": false,
+    "host_details_omitted": true,
+    "private_corpus_rows_omitted": true,
+    "private_paths_omitted": true,
+    "raw_assistant_targets_written": false,
+    "raw_logs_copied_to_git": false,
+    "raw_rendered_prompts_written": false,
+    "ssh_details_omitted": true
+  },
+  "claims": {
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "does_not_download_model": true,
+    "does_not_load_private_adapter": true,
+    "does_not_relax_evaluator": true,
+    "does_not_repair_outputs": true,
+    "does_not_run_prediction": true,
+    "does_not_train": true,
+    "held_out_generalization_claim": false,
+    "live_browser_benchmark_claim": false,
+    "model_recovery_claim": false,
+    "private_corpus_generalization_claim": false,
+    "production_readiness_claim": false,
+    "public_full_corpus_release_claim": false,
+    "public_sample_only": true
+  },
+  "current_manifest_id": "public-sample-20260613T072200Z",
+  "dataset_manifest_id": "public-sample-20260613T072200Z",
+  "diagnostic_artifacts": {
+    "final_leak_scan": "reports/public-sample/runtime-label-tiny-overfit-diagnostic/final_leak_scan_result.json",
+    "human_brief": "docs/human-briefs/2026-06-13-run-bounded-runtime-label-or-tiny-overfit-diagnostic.html",
+    "leak_scan": "reports/public-sample/runtime-label-tiny-overfit-diagnostic/leak_scan_result.json",
+    "manifest": "reports/public-sample/runtime-label-tiny-overfit-diagnostic/manifest.json",
+    "phase_validation_leak_scan": "reports/public-sample/runtime-label-tiny-overfit-diagnostic/phase_validation_leak_scan_result.json",
+    "post_archive_leak_scan": "reports/public-sample/runtime-label-tiny-overfit-diagnostic/post_archive_leak_scan_result.json",
+    "summary_json": "reports/public-sample/runtime-label-tiny-overfit-diagnostic/runtime_label_tiny_overfit_diagnostic.json",
+    "summary_markdown": "reports/public-sample/runtime-label-tiny-overfit-diagnostic/runtime_label_tiny_overfit_diagnostic.md"
+  },
+  "evidence_kind": "runtime_label_tiny_overfit_diagnostic",
+  "evidence_status": "current_manifest_runtime_label_evidence_stale",
+  "learning_signal_freshness": "fresh_current_manifest",
+  "prior_repair_exact_match": {
+    "dev": 0.0,
+    "test": 0.0,
+    "train": 0.3333333333333333
+  },
+  "recommended_next_step": "run_fresh_current_manifest_runtime_label_check",
+  "runtime_label_freshness": "stale_manifest_mismatch",
+  "source_manifest": {
+    "counts": {
+      "dpo_pairs": 90,
+      "seed_rows": 10,
+      "sft_rows": 30
+    },
+    "manifest_id": "public-sample-20260613T072200Z",
+    "path": "data/public-samples/manifest_public_sample.json",
+    "public_safe": true,
+    "split_counts": {
+      "dev": 6,
+      "test": 6,
+      "train": 18
+    }
+  },
+  "tiny_overfit_freshness": "stale_manifest_mismatch"
+}

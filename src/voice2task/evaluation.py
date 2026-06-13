@@ -227,6 +227,16 @@ def _sanitize_public_summary(text: str) -> str:
     return SECRET_RE.sub("<secret>", sanitized)
 
 
+def _sanitize_public_value(value: Any) -> Any:
+    if isinstance(value, str):
+        return _sanitize_public_summary(value)
+    if isinstance(value, dict):
+        return {str(_sanitize_public_value(key)): _sanitize_public_value(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_sanitize_public_value(item) for item in value]
+    return value
+
+
 def _observed_value_summary(value: Any) -> str:
     if isinstance(value, str):
         text = value.strip()
@@ -1649,6 +1659,276 @@ def diagnose_sft_contract_learning_signal(
             "checkpoint_release": False,
             "adapter_release": False,
             "production_readiness_claim": False,
+            "live_browser_benchmark_claim": False,
+        },
+    }
+
+
+_LABEL_MASK_FIELD_KEYS = (
+    "true_label_mask_status",
+    "prompt_tokens_masked",
+    "assistant_tokens_carry_loss",
+    "prompt_token_count",
+    "assistant_token_count",
+    "label_source_kind",
+    "evidence_gaps",
+)
+
+
+def _artifact_manifest_id(artifact: dict[str, Any] | None) -> str | None:
+    if not isinstance(artifact, dict):
+        return None
+    for key in ("dataset_manifest_id", "public_sample_manifest_id"):
+        value = artifact.get(key)
+        if isinstance(value, str) and value:
+            return _sanitize_public_summary(value)
+    source_manifest = artifact.get("source_manifest")
+    if isinstance(source_manifest, dict):
+        value = source_manifest.get("manifest_id")
+        if isinstance(value, str) and value:
+            return _sanitize_public_summary(value)
+    return None
+
+
+def _artifact_freshness(artifact: dict[str, Any] | None, current_manifest_id: str) -> str:
+    if not isinstance(artifact, dict):
+        return "unavailable"
+    source_manifest_id = _artifact_manifest_id(artifact)
+    if not source_manifest_id:
+        return "manifest_id_unavailable"
+    if source_manifest_id == current_manifest_id:
+        return "fresh_current_manifest"
+    return "stale_manifest_mismatch"
+
+
+def _runtime_label_mask_fields(artifact: dict[str, Any] | None) -> dict[str, Any]:
+    if not isinstance(artifact, dict):
+        return {
+            "true_label_mask_status": "unavailable",
+            "prompt_tokens_masked": None,
+            "assistant_tokens_carry_loss": None,
+            "prompt_token_count": None,
+            "assistant_token_count": None,
+            "label_source_kind": "unavailable",
+            "evidence_gaps": ["runtime_label_evidence_unavailable"],
+        }
+    fields = {key: artifact.get(key) for key in _LABEL_MASK_FIELD_KEYS}
+    fields["true_label_mask_status"] = fields.get("true_label_mask_status") or "unavailable"
+    fields["label_source_kind"] = fields.get("label_source_kind") or "unavailable"
+    evidence_gaps = fields.get("evidence_gaps")
+    fields["evidence_gaps"] = evidence_gaps if isinstance(evidence_gaps, list) else []
+    sanitized = _sanitize_public_value(fields)
+    if not isinstance(sanitized, dict):
+        raise AssertionError("runtime label mask fields must remain a mapping")
+    return sanitized
+
+
+def _runtime_label_evidence_summary(
+    artifact: dict[str, Any] | None,
+    *,
+    current_manifest_id: str,
+) -> dict[str, Any]:
+    freshness = _artifact_freshness(artifact, current_manifest_id)
+    prior_fields = _runtime_label_mask_fields(artifact)
+    current_fields = prior_fields if freshness == "fresh_current_manifest" else {}
+    return {
+        "available": isinstance(artifact, dict),
+        "freshness": freshness,
+        "current_manifest_proof": freshness == "fresh_current_manifest",
+        "source_manifest_id": _artifact_manifest_id(artifact) or "unavailable",
+        "current_manifest_id": current_manifest_id,
+        "evidence_status": _sanitize_public_summary(str(artifact.get("evidence_status", "unavailable")))
+        if isinstance(artifact, dict)
+        else "unavailable",
+        "runtime_check_status": _sanitize_public_summary(str(artifact.get("runtime_check_status", "unavailable")))
+        if isinstance(artifact, dict)
+        else "unavailable",
+        "prior_label_mask_fields": prior_fields,
+        "current_label_mask_fields": current_fields,
+        "assistant_only_loss_mask_claim": bool(artifact.get("assistant_only_loss_mask_claim", False))
+        if isinstance(artifact, dict)
+        else False,
+    }
+
+
+def _tiny_overfit_evidence_summary(
+    artifact: dict[str, Any] | None,
+    *,
+    current_manifest_id: str,
+) -> dict[str, Any]:
+    freshness = _artifact_freshness(artifact, current_manifest_id)
+    assistant_only_objective = {}
+    if isinstance(artifact, dict) and isinstance(artifact.get("assistant_only_objective"), dict):
+        assistant_only_objective = _sanitize_public_value(artifact["assistant_only_objective"])
+    return {
+        "available": isinstance(artifact, dict),
+        "freshness": freshness,
+        "current_manifest_proof": freshness == "fresh_current_manifest",
+        "source_manifest_id": _artifact_manifest_id(artifact) or "unavailable",
+        "current_manifest_id": current_manifest_id,
+        "overfit_diagnostic": bool(artifact.get("overfit_diagnostic", False)) if isinstance(artifact, dict) else False,
+        "prediction_split": _sanitize_public_summary(str(artifact.get("prediction_split", "unavailable")))
+        if isinstance(artifact, dict)
+        else "unavailable",
+        "training_rows_used": artifact.get("training_rows_used") if isinstance(artifact, dict) else None,
+        "assistant_only_objective": assistant_only_objective,
+        "claims": _sanitize_public_value(artifact.get("claims", {})) if isinstance(artifact, dict) else {},
+    }
+
+
+def _learning_signal_summary(learning_signal: dict[str, Any] | None, current_manifest_id: str) -> dict[str, Any]:
+    if not isinstance(learning_signal, dict):
+        return {
+            "available": False,
+            "freshness": "unavailable",
+            "source_manifest_id": "unavailable",
+            "all_rows_have_assistant_target_span": None,
+            "true_runtime_label_mask_status": "unavailable",
+            "recommended_next_step": "unavailable",
+        }
+    source_manifest_id = _artifact_manifest_id(learning_signal) or "unavailable"
+    summary = learning_signal.get("summary")
+    if not isinstance(summary, dict):
+        summary = {}
+    return {
+        "available": True,
+        "freshness": "fresh_current_manifest"
+        if source_manifest_id == current_manifest_id
+        else "stale_manifest_mismatch",
+        "source_manifest_id": source_manifest_id,
+        "all_rows_have_assistant_target_span": summary.get("all_rows_have_assistant_target_span"),
+        "true_runtime_label_mask_status": summary.get("true_runtime_label_mask_status", "unavailable"),
+        "evidence_gaps": _sanitize_public_value(summary.get("evidence_gaps", [])),
+        "target_pressure": _sanitize_public_value(learning_signal.get("target_pressure", {})),
+        "recommended_next_step": _sanitize_public_summary(str(learning_signal.get("recommended_next_step", "unknown"))),
+    }
+
+
+def _tiny_overfit_readiness(runtime_summary: dict[str, Any], tiny_summary: dict[str, Any]) -> dict[str, Any]:
+    if runtime_summary["freshness"] != "fresh_current_manifest":
+        return {
+            "status": "blocked_until_fresh_runtime_label_check",
+            "reason": "current_manifest_runtime_label_evidence_missing_or_stale",
+        }
+    fields = runtime_summary.get("current_label_mask_fields", {})
+    prompt_masked = fields.get("prompt_tokens_masked") is True
+    assistant_loss = fields.get("assistant_tokens_carry_loss") is True
+    label_status = fields.get("true_label_mask_status")
+    if label_status == "inspectable" and prompt_masked and assistant_loss:
+        if tiny_summary["freshness"] == "fresh_current_manifest":
+            return {
+                "status": "current_tiny_overfit_evidence_available",
+                "reason": "fresh_current_manifest_tiny_overfit_artifact_present",
+            }
+        return {
+            "status": "ready_for_1_to_3_row_probe",
+            "reason": "fresh_assistant_only_runtime_label_evidence_available",
+        }
+    return {
+        "status": "repair_runtime_label_mask_before_training",
+        "reason": "fresh_runtime_labels_do_not_show_assistant_only_loss_mask",
+    }
+
+
+def _runtime_tiny_recommendation(readiness: dict[str, Any]) -> str:
+    status = readiness["status"]
+    if status == "blocked_until_fresh_runtime_label_check":
+        return "run_fresh_current_manifest_runtime_label_check"
+    if status == "ready_for_1_to_3_row_probe":
+        return "run_1_to_3_row_current_manifest_tiny_overfit_probe"
+    if status == "current_tiny_overfit_evidence_available":
+        return "diagnose_preference_signal_or_data_scale_after_current_tiny_overfit"
+    return "repair_runtime_label_mask_before_training"
+
+
+def diagnose_runtime_label_tiny_overfit_readiness(
+    *,
+    manifest_path: Path,
+    learning_signal: dict[str, Any] | None = None,
+    prior_repair_diagnosis: dict[str, Any] | None = None,
+    runtime_label_evidence: dict[str, Any] | None = None,
+    tiny_overfit_evidence: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    manifest = read_json(manifest_path)
+    current_manifest_id = _sanitize_public_summary(str(manifest.get("manifest_id", manifest_path.stem)))
+    runtime_summary = _runtime_label_evidence_summary(
+        runtime_label_evidence,
+        current_manifest_id=current_manifest_id,
+    )
+    tiny_summary = _tiny_overfit_evidence_summary(
+        tiny_overfit_evidence,
+        current_manifest_id=current_manifest_id,
+    )
+    learning_summary = _learning_signal_summary(learning_signal, current_manifest_id)
+    readiness = _tiny_overfit_readiness(runtime_summary, tiny_summary)
+    current_label_fields = runtime_summary.get("current_label_mask_fields", {})
+    current_true_label_status = current_label_fields.get("true_label_mask_status", "unavailable")
+    return {
+        "evidence_kind": "runtime_label_tiny_overfit_diagnostic",
+        "diagnostic_mode": "local_public_safe_prior_artifact_comparison",
+        "current_manifest": {
+            "manifest_id": current_manifest_id,
+            "path": manifest_path.as_posix(),
+            "counts": _sanitize_public_value(manifest.get("counts", {})),
+            "split_counts": _sanitize_public_value(manifest.get("split_counts", {})),
+            "public_safe": bool(manifest.get("public_safe", False)),
+        },
+        "summary": {
+            "current_runtime_label_status": runtime_summary["freshness"],
+            "current_true_label_mask_status": current_true_label_status,
+            "tiny_overfit_status": tiny_summary["freshness"],
+            "tiny_overfit_readiness": readiness["status"],
+            "prior_repair_train_contract_exact_match": _prior_repair_summary(prior_repair_diagnosis)
+            .get("split_exact_match", {})
+            .get("train"),
+            "prior_repair_dev_contract_exact_match": _prior_repair_summary(prior_repair_diagnosis)
+            .get("split_exact_match", {})
+            .get("dev"),
+            "prior_repair_test_contract_exact_match": _prior_repair_summary(prior_repair_diagnosis)
+            .get("split_exact_match", {})
+            .get("test"),
+        },
+        "learning_signal_evidence": learning_summary,
+        "prior_repair_evidence": _prior_repair_summary(prior_repair_diagnosis),
+        "runtime_label_evidence": runtime_summary,
+        "tiny_overfit_evidence": tiny_summary,
+        "tiny_overfit_readiness": readiness,
+        "recommended_next_step": _runtime_tiny_recommendation(readiness),
+        "artifact_policy": {
+            "raw_rendered_prompts_written": False,
+            "raw_assistant_targets_written": False,
+            "raw_logs_copied_to_git": False,
+            "checkpoints_or_adapters_copied_to_git": False,
+            "private_paths_omitted": True,
+            "host_details_omitted": True,
+            "ssh_details_omitted": True,
+            "private_corpus_rows_omitted": True,
+        },
+        "execution_scope": {
+            "local_public_artifact_comparison_only": True,
+            "model_download_allowed": False,
+            "private_adapter_load_allowed": False,
+            "a100_execution": False,
+            "full_sft_run": False,
+            "dpo_run": False,
+            "grpo_run": False,
+            "prediction_run": False,
+        },
+        "claims": {
+            "public_sample_only": True,
+            "does_not_train": True,
+            "does_not_run_prediction": True,
+            "does_not_download_model": True,
+            "does_not_load_private_adapter": True,
+            "does_not_repair_outputs": True,
+            "does_not_relax_evaluator": True,
+            "model_recovery_claim": False,
+            "held_out_generalization_claim": False,
+            "private_corpus_generalization_claim": False,
+            "checkpoint_release": False,
+            "adapter_release": False,
+            "production_readiness_claim": False,
+            "public_full_corpus_release_claim": False,
             "live_browser_benchmark_claim": False,
         },
     }
