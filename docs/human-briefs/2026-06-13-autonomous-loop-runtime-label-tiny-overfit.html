@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Voice2Task opsx-auto runtime label / tiny-overfit loop</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.55; max-width: 980px; margin: 32px auto; padding: 0 20px; color: #20242a; }
+    h1 { font-size: 26px; margin-bottom: 8px; }
+    h2 { margin-top: 26px; font-size: 18px; }
+    .status { padding: 12px 14px; border-left: 4px solid #dc2626; background: #fef2f2; }
+    code { background: #f4f4f5; padding: 1px 4px; border-radius: 4px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 8px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; }
+    th { background: #f7f7f8; }
+  </style>
+</head>
+<body>
+  <h1>Voice2Task opsx-auto runtime label / tiny-overfit loop</h1>
+  <p class="status"><strong>一句话结论：</strong>本轮完成并归档一个本地 public-safe 诊断阶段，确认旧 runtime-label / tiny-overfit 证据对当前 manifest 是 stale；下一步要开新的 fresh current-manifest runtime label check，不能在同一自动循环里静默扩大范围。</p>
+
+  <h2>Loop 状态</h2>
+  <p>状态：stopped。精确停止原因：hard stop #2。推荐下一步会从“本地 public-safe prior-artifact comparison”变成“当前 manifest 的真实 tokenizer/collator runtime label 检查”，这会改变 OpenSpec 阶段范围、成功标准和私有运行边界，需要用户确认。</p>
+
+  <h2>完成阶段</h2>
+  <table>
+    <tr><th>阶段</th><th>状态</th><th>主要结论</th><th>提交</th></tr>
+    <tr>
+      <td><code>run-bounded-runtime-label-or-tiny-overfit-diagnostic</code></td>
+      <td>archived</td>
+      <td>current manifest 是 <code>public-sample-20260613T072200Z</code>；learning signal fresh，但 runtime-label 和 tiny-overfit artifacts 都来自旧 manifest，只能作为 prior context。</td>
+      <td><code>0309a19</code></td>
+    </tr>
+  </table>
+
+  <h2>项目阶段进度</h2>
+  <table>
+    <tr><th>当前目标</th><td>first-phase speech-to-contract normalization。</td></tr>
+    <tr><th>目标来源</th><td><a href="../../README.md">README.md</a> 和 <a href="../../CONTEXT.md">CONTEXT.md</a>：把中文 spoken command / ASR transcript 转成 schema-valid Browser Task Contract，第一阶段覆盖 public sample、SFT/DPO formatting、contract metrics 和 public-safe reports。</td></tr>
+    <tr><th>本阶段推进</th><td>把“当前训练目标存在”与“真实 runtime labels 是否 fresh 且 assistant-only”拆开，避免把旧 manifest 的 label/tiny-overfit 证据误读成当前 7B 路线的结论。</td></tr>
+    <tr><th>剩余缺口</th><td>能力：当前模型没有恢复声明。证据：缺少 current-manifest runtime label proof。验证：本轮没有训练、DPO、GRPO、prediction 或 held-out rerun。用户决策：是否批准新阶段做 fresh runtime label check。</td></tr>
+    <tr><th>下一阶段计划</th><td>用户确认后新开一个很小的 OpenSpec 阶段：只检查当前 public train rows 的真实 tokenizer/collator labels，确认 prompt tokens 是否 masked、assistant target tokens 是否 carry loss；通过后再决定是否做 1-3 row tiny-overfit probe。</td></tr>
+  </table>
+
+  <h2>关键文件</h2>
+  <ul>
+    <li><a href="../../openspec/changes/archive/2026-06-13-run-bounded-runtime-label-or-tiny-overfit-diagnostic/tasks.md">OpenSpec archive tasks</a></li>
+    <li><a href="../../openspec/specs/contract-evaluation/spec.md">contract-evaluation spec</a></li>
+    <li><a href="../../openspec/specs/supervised-contract-tuning/spec.md">supervised-contract-tuning spec</a></li>
+    <li><a href="../../reports/public-sample/runtime-label-tiny-overfit-diagnostic/runtime_label_tiny_overfit_diagnostic.md">diagnostic Markdown report</a></li>
+    <li><a href="../../reports/public-sample/runtime-label-tiny-overfit-diagnostic/runtime_label_tiny_overfit_diagnostic.json">diagnostic JSON evidence</a></li>
+    <li><a href="./2026-06-13-run-bounded-runtime-label-or-tiny-overfit-diagnostic.html">phase Human Brief</a></li>
+  </ul>
+
+  <h2>验证结果</h2>
+  <ul>
+    <li><code>PYTHONPATH=src pytest -q</code>：<code>230 passed</code>。</li>
+    <li><code>uv run ruff check .</code>：<code>All checks passed!</code></li>
+    <li><code>uv run mypy src</code>：<code>Success: no issues found in 16 source files</code>。</li>
+    <li><code>voice2task-data validate --public</code>：<code>ok=true</code>, <code>sft_rows=30</code>, <code>dpo_pairs=90</code>。</li>
+    <li><code>voice2task-data dpo-check</code>：<code>total_pairs=90</code>。</li>
+    <li><code>openspec validate --all --strict</code>：<code>4 passed</code>。</li>
+    <li><code>git diff --check</code> 和 staged diff check：passed。</li>
+    <li>Leak scan：<code>leak_scan=passed</code>；证据包内 <code>final_leak_scan_result.json</code> 为 <code>ok=true</code>。</li>
+  </ul>
+
+  <h2>Auto Integration</h2>
+  <p>已按 guarded policy stage 并提交阶段产物：<code>0309a19</code>。当前分支：<code>main</code>。未 push：本地 <code>main</code> 没有 configured upstream。未创建 PR、未发布、未部署。Loop report 的提交 hash 以最终 Codex 回复为准。</p>
+
+  <h2>External Review</h2>
+  <p>未运行 ChatGPT Pro / external review。本轮是本地 evidence-only 诊断，风险由 TDD、OpenSpec strict、完整本地验证、leak scan 和只读 diff/evidence review 覆盖；没有 UI/公开定位改写需要外审。</p>
+
+  <h2>不能夸大的点</h2>
+  <ul>
+    <li>不能声称模型已恢复、当前 7B 已学会 contract 输出，或 private corpus generalization 改善。</li>
+    <li>不能把旧 runtime-label / tiny-overfit artifacts 当成当前 manifest 证据。</li>
+    <li>不能声称 checkpoint release、adapter release、production readiness、public full-corpus release 或 live-browser benchmark improvement。</li>
+  </ul>
+
+  <h2>推荐手动决定</h2>
+  <p>请确认是否开启下一阶段：<code>run-fresh-current-manifest-runtime-label-check</code>。建议范围只包含 fresh label provenance check，不默认训练、不默认 tiny-overfit、不默认 DPO/GRPO。</p>
+</body>
+</html>
