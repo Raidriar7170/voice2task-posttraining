@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Voice2Task opsx-auto fresh runtime label loop</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.55; max-width: 980px; margin: 32px auto; padding: 0 20px; color: #20242a; }
+    h1 { font-size: 26px; margin-bottom: 8px; }
+    h2 { margin-top: 26px; font-size: 18px; }
+    .status { padding: 12px 14px; border-left: 4px solid #dc2626; background: #fef2f2; }
+    code { background: #f4f4f5; padding: 1px 4px; border-radius: 4px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 8px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; }
+    th { background: #f7f7f8; }
+  </style>
+</head>
+<body>
+  <h1>Voice2Task opsx-auto fresh runtime label loop</h1>
+  <p class="status"><strong>一句话结论：</strong>本轮完成并归档 fresh current-manifest runtime label check：当前 public train rows 的真实 tokenizer/collator label path 已证明 assistant-only；下一步 tiny-overfit probe 会改变阶段成功标准，因此需要用户确认。</p>
+
+  <h2>Loop 状态</h2>
+  <p>状态：stopped。精确停止原因：hard stop #2。推荐下一步从 label provenance 证据转为 1-3 row tiny-overfit probe，关注模型能否在当前 rows 上学习输出，这改变 OpenSpec 阶段范围和成功标准。</p>
+
+  <h2>完成阶段</h2>
+  <table>
+    <tr><th>阶段</th><th>状态</th><th>主要结论</th><th>提交</th></tr>
+    <tr>
+      <td><code>run-fresh-current-manifest-runtime-label-check</code></td>
+      <td>archived</td>
+      <td>current manifest <code>public-sample-20260613T072200Z</code> 的 runtime labels fresh 且 inspectable；<code>prompt_tokens_masked=true</code>，<code>assistant_tokens_carry_loss=true</code>。</td>
+      <td><code>17ff0a1</code></td>
+    </tr>
+  </table>
+
+  <h2>项目阶段进度</h2>
+  <table>
+    <tr><th>当前目标</th><td>first-phase speech-to-contract normalization。</td></tr>
+    <tr><th>目标来源</th><td><a href="../../README.md">README.md</a> 和 <a href="../../CONTEXT.md">CONTEXT.md</a>：把中文 spoken command / ASR transcript 转成 schema-valid Browser Task Contract，第一阶段覆盖 public sample、SFT/DPO formatting、contract metrics 和 public-safe reports。</td></tr>
+    <tr><th>本阶段推进</th><td>补齐当前 manifest 的 SFT objective label-path 证据，排除了“当前 7B repair 失败是因为 labels 没有 assistant-only masking”的一个关键疑点。</td></tr>
+    <tr><th>剩余缺口</th><td>能力：还没有证明模型能在当前 rows 上学会 contract 输出。证据：本轮没有训练或 prediction。验证：tiny-overfit 尚未运行。用户决策：是否批准下一阶段 tiny-overfit probe。</td></tr>
+    <tr><th>下一阶段计划</th><td>建议新开 <code>run-current-manifest-tiny-overfit-probe</code>：只做 1-3 row train-internal tiny-overfit probe，不做 held-out claim、不发布 checkpoint/adapter、不声称生产或 live-browser 改善。</td></tr>
+  </table>
+
+  <h2>关键文件</h2>
+  <ul>
+    <li><a href="../../openspec/changes/archive/2026-06-13-run-fresh-current-manifest-runtime-label-check/tasks.md">OpenSpec archive tasks</a></li>
+    <li><a href="../../reports/public-sample/current-runtime-label-provenance-check/manifest.json">current runtime-label evidence manifest</a></li>
+    <li><a href="../../reports/public-sample/current-runtime-label-provenance-check/runtime_label_provenance_check.md">runtime label Markdown report</a></li>
+    <li><a href="../../configs/sft-current-runtime-label-provenance-check.json">public-safe config template</a></li>
+    <li><a href="./2026-06-13-run-fresh-current-manifest-runtime-label-check.html">phase Human Brief</a></li>
+  </ul>
+
+  <h2>验证结果</h2>
+  <ul>
+    <li><code>PYTHONPATH=src pytest -q</code>：<code>234 passed</code>。</li>
+    <li><code>uv run ruff check .</code>：<code>All checks passed!</code></li>
+    <li><code>uv run mypy src</code>：<code>Success: no issues found in 16 source files</code>。</li>
+    <li><code>voice2task-data validate --public</code>：<code>ok=true</code>, <code>sft_rows=30</code>, <code>dpo_pairs=90</code>。</li>
+    <li><code>voice2task-data dpo-check</code>：<code>total_pairs=90</code>。</li>
+    <li><code>openspec validate --all --strict</code>：archive 后 <code>4 passed</code>。</li>
+    <li><code>git diff --check</code> 与 staged check：passed。</li>
+    <li>Leak scans：<code>ok=true</code>, <code>findings=[]</code>。</li>
+  </ul>
+
+  <h2>Auto Integration</h2>
+  <p>已按 guarded policy stage 并提交阶段产物：<code>17ff0a1</code>。当前分支：<code>main</code>。未 push：本地 <code>main</code> 没有 configured upstream。未创建 PR、未发布、未部署。Loop report 的提交 hash 以最终 Codex 回复为准。</p>
+
+  <h2>External Review</h2>
+  <p>未运行 ChatGPT Pro / external review。本轮是 ML evidence / objective-path 诊断，已有 TDD、OpenSpec strict、A100 runtime evidence、完整本地验证、leak scan 和只读 diff/evidence review 覆盖；没有 UI 或公开定位改写需要外审。</p>
+
+  <h2>不能夸大的点</h2>
+  <ul>
+    <li>不能声称模型已恢复、7B 已学会 contract 输出或 held-out/private-corpus generalization 改善。</li>
+    <li>不能声称 checkpoint release、adapter release、production readiness、public full-corpus release 或 live-browser benchmark improvement。</li>
+    <li>这轮只证明当前 manifest 的 label objective path；训练学习能力必须由下一阶段 tiny-overfit probe 单独证明。</li>
+  </ul>
+
+  <h2>推荐手动决定</h2>
+  <p>请确认是否开启下一阶段：<code>run-current-manifest-tiny-overfit-probe</code>。建议范围只包含 1-3 row train-internal tiny-overfit，不默认 DPO/GRPO、不默认 held-out rerun、不默认发布模型。</p>
+</body>
+</html>
