@@ -1,0 +1,129 @@
+{
+  "artifact_policy": {
+    "checkpoints_or_adapters_copied_to_git": false,
+    "host_details_omitted": true,
+    "private_corpus_rows_omitted": true,
+    "private_overrides_copied_to_git": false,
+    "private_paths_omitted": true,
+    "raw_logs_copied_to_git": false,
+    "remote_caches_copied_to_git": false,
+    "ssh_details_omitted": true
+  },
+  "base_model": "Qwen/Qwen2.5-7B-Instruct",
+  "claims": {
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "held_out_generalization_recovered": false,
+    "live_browser_benchmark_claim": false,
+    "model_recovery_claim": false,
+    "private_corpus_generalization_claim": false,
+    "production_readiness_claim": false,
+    "public_heldout_diagnostic": true,
+    "release_claim": false
+  },
+  "dataset_manifest_id": "public-sample-20260613T063029Z",
+  "diagnostic_artifacts": {
+    "diagnosis": "reports/public-sample/a100-public-heldout-contract-generalization/heldout_contract_generalization_diagnosis.json",
+    "final_leak_scan": "reports/public-sample/a100-public-heldout-contract-generalization/final_leak_scan_result.json",
+    "leak_scan": "reports/public-sample/a100-public-heldout-contract-generalization/leak_scan_result.json",
+    "manifest": "reports/public-sample/a100-public-heldout-contract-generalization/manifest.json",
+    "phase_validation_leak_scan": "reports/public-sample/a100-public-heldout-contract-generalization/phase_validation_leak_scan_result.json",
+    "post_archive_leak_scan": "reports/public-sample/a100-public-heldout-contract-generalization/post_archive_leak_scan_result.json",
+    "report": "reports/public-sample/a100-public-heldout-contract-generalization/report.md"
+  },
+  "evidence_kind": "a100_public_heldout_contract_generalization",
+  "evidence_status": "private_adapter_public_heldout_predictions_written",
+  "generated_at": "2026-06-13T07:01:33.388299+00:00",
+  "model_source": "private_a100_local_model_dir",
+  "overall_interpretation": "public_heldout_strict_generalization_failed",
+  "prediction_source_kind": "private_a100_adapter",
+  "prediction_splits": [
+    "dev",
+    "test"
+  ],
+  "public_sample_manifest_id": "public-sample-20260613T063029Z",
+  "source_manifest_rows": {
+    "dpo_pairs": 51,
+    "seed_rows": 6,
+    "sft_rows": 18
+  },
+  "split_results": {
+    "dev": {
+      "alignment_row_mismatch_count": 6,
+      "artifact_paths": {
+        "alignment_diagnostics": "reports/public-sample/a100-public-heldout-contract-generalization/dev/alignment_diagnostics.json",
+        "constrained_decoding_diagnosis": "reports/public-sample/a100-public-heldout-contract-generalization/dev/constrained_decoding_diagnosis.json",
+        "generation_trace": "reports/public-sample/a100-public-heldout-contract-generalization/dev/generation_trace.jsonl",
+        "gold": "reports/public-sample/a100-public-heldout-contract-generalization/dev/dev_gold.jsonl",
+        "metrics": "reports/public-sample/a100-public-heldout-contract-generalization/dev/metrics.json",
+        "prediction_metadata": "reports/public-sample/a100-public-heldout-contract-generalization/dev/prediction_metadata.json",
+        "predictions": "reports/public-sample/a100-public-heldout-contract-generalization/dev/predictions.jsonl",
+        "prompt_snapshot": "reports/public-sample/a100-public-heldout-contract-generalization/dev/prompt_snapshot.json",
+        "raw_decoded_summary": "reports/public-sample/a100-public-heldout-contract-generalization/dev/raw_decoded_summary.jsonl",
+        "schema_diagnostics": "reports/public-sample/a100-public-heldout-contract-generalization/dev/schema_diagnostics.json"
+      },
+      "confirmation_accuracy": 0.5,
+      "constrained_decode_invalid_prediction_count": 0,
+      "contract_exact_match": 0.0,
+      "field_mismatch_counts": {
+        "confirmation_required": 3,
+        "normalized_command": 5,
+        "route": 3,
+        "safety.reason": 3,
+        "slots": 6,
+        "task_type": 3
+      },
+      "gold_row_count": 6,
+      "json_valid_rate": 1.0,
+      "prediction_count": 6,
+      "prediction_source_kind": "private_a100_adapter",
+      "prediction_split": "dev",
+      "route_accuracy": 0.5,
+      "safety_precision": 1.0,
+      "safety_recall": 1.0,
+      "schema_invalid_prediction_count": 0,
+      "slot_f1": 0.0,
+      "slot_f1_soft": 0.3333333333333333,
+      "task_type_accuracy": 0.5
+    },
+    "test": {
+      "alignment_row_mismatch_count": 6,
+      "artifact_paths": {
+        "alignment_diagnostics": "reports/public-sample/a100-public-heldout-contract-generalization/test/alignment_diagnostics.json",
+        "constrained_decoding_diagnosis": "reports/public-sample/a100-public-heldout-contract-generalization/test/constrained_decoding_diagnosis.json",
+        "generation_trace": "reports/public-sample/a100-public-heldout-contract-generalization/test/generation_trace.jsonl",
+        "gold": "reports/public-sample/a100-public-heldout-contract-generalization/test/test_gold.jsonl",
+        "metrics": "reports/public-sample/a100-public-heldout-contract-generalization/test/metrics.json",
+        "prediction_metadata": "reports/public-sample/a100-public-heldout-contract-generalization/test/prediction_metadata.json",
+        "predictions": "reports/public-sample/a100-public-heldout-contract-generalization/test/predictions.jsonl",
+        "prompt_snapshot": "reports/public-sample/a100-public-heldout-contract-generalization/test/prompt_snapshot.json",
+        "raw_decoded_summary": "reports/public-sample/a100-public-heldout-contract-generalization/test/raw_decoded_summary.jsonl",
+        "schema_diagnostics": "reports/public-sample/a100-public-heldout-contract-generalization/test/schema_diagnostics.json"
+      },
+      "confirmation_accuracy": 0.3333333333333333,
+      "constrained_decode_invalid_prediction_count": 0,
+      "contract_exact_match": 0.0,
+      "field_mismatch_counts": {
+        "confirmation_required": 4,
+        "normalized_command": 5,
+        "route": 1,
+        "safety.allow": 1,
+        "safety.reason": 6,
+        "slots": 6,
+        "task_type": 3
+      },
+      "gold_row_count": 6,
+      "json_valid_rate": 1.0,
+      "prediction_count": 6,
+      "prediction_source_kind": "private_a100_adapter",
+      "prediction_split": "test",
+      "route_accuracy": 0.8333333333333334,
+      "safety_precision": 1.0,
+      "safety_recall": 0.6666666666666666,
+      "schema_invalid_prediction_count": 0,
+      "slot_f1": 0.0,
+      "slot_f1_soft": 0.0,
+      "task_type_accuracy": 0.5
+    }
+  }
+}

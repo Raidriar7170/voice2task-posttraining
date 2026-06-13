@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>public held-out 泛化诊断阶段简报</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.55; max-width: 920px; margin: 32px auto; padding: 0 20px; color: #20242a; }
+    h1 { font-size: 28px; }
+    h2 { margin-top: 28px; font-size: 18px; }
+    .status { padding: 12px 14px; border-left: 4px solid #dc2626; background: #fef2f2; }
+    code { background: #f4f4f5; padding: 1px 4px; border-radius: 4px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background: #f7f7f8; }
+  </style>
+</head>
+<body>
+  <h1>public held-out 泛化诊断阶段简报</h1>
+  <p class="status"><strong>一句话结论：</strong>上一轮 7B adapter 在 train split 上 strict exact 归零残差，但没有泛化到 public <code>dev/test</code>：两个 held-out split 的 <code>contract_exact_match</code> 都是 <code>0.0000</code>。</p>
+
+  <h2>当前状态</h2>
+  <p>阶段状态：archived；证据类型：public held-out diagnostic；不是私有语料泛化、生产可用、checkpoint/adapter release 或 live-browser benchmark 结论。</p>
+
+  <h2>本阶段改变</h2>
+  <ul>
+    <li>未重新训练；复用上一轮 private A100 7B canonical wording adapter。</li>
+    <li>新增 public-safe <code>dev</code>/<code>test</code> prediction config 模板。</li>
+    <li>在 A100 GPU 3 上分别跑 public <code>dev</code> 和 <code>test</code> prediction-only。</li>
+    <li>生成 split-specific metrics、schema/alignment/constrained diagnostics、sidecars 和总证据包。</li>
+  </ul>
+
+  <h2>关键指标</h2>
+  <table>
+    <tr><th>split</th><th>json_valid_rate</th><th>contract_exact_match</th><th>slot_f1</th><th>主要残差</th></tr>
+    <tr><td>dev</td><td>1.0000</td><td>0.0000</td><td>0.0000</td><td>navigate slot/string drift；clarify 漂到 navigate/search</td></tr>
+    <tr><td>test</td><td>1.0000</td><td>0.0000</td><td>0.0000</td><td>form slot/confirmation drift；blocked payment 漂到 navigate/search 或错误 safety</td></tr>
+  </table>
+
+  <h2>关键文件</h2>
+  <ul>
+    <li><code>reports/public-sample/a100-public-heldout-contract-generalization/manifest.json</code></li>
+    <li><code>reports/public-sample/a100-public-heldout-contract-generalization/heldout_contract_generalization_diagnosis.json</code></li>
+    <li><code>reports/public-sample/a100-public-heldout-contract-generalization/report.md</code></li>
+    <li><code>openspec/changes/archive/2026-06-13-evaluate-a100-public-heldout-contract-generalization/</code></li>
+  </ul>
+
+  <h2>验证</h2>
+  <p>已通过 post-archive 验证：<code>PYTHONPATH=src pytest -q</code>（215 passed）、<code>uv run ruff check .</code>、<code>uv run mypy src</code>、public data validate、DPO check、<code>openspec validate --all --strict</code>、post-archive leak scan 与 <code>git diff --check</code>。</p>
+
+  <h2>剩余风险</h2>
+  <p>public held-out 样本仍然很小，但已经足够否定“train split 过了就代表泛化”的说法。当前证据支持的是：schema 形状稳定，但 strict contract 语义/slot/安全/澄清能力没有泛化。</p>
+
+  <h2>推荐下一步</h2>
+  <p>归档本诊断阶段。下一阶段应做一个很小的 public held-out residual repair，优先处理 clarify、blocked action、form confirmation 和 navigate slot/string 的泛化，而不是扩大训练声明。</p>
+</body>
+</html>

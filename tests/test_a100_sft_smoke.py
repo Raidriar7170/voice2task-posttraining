@@ -271,6 +271,38 @@ def test_extract_price_canonical_wording_a100_rerun_configs_use_7b_and_stay_publ
     assert scan_paths([sft_config_path, prediction_config_path]).ok is True
 
 
+def test_public_heldout_contract_generalization_prediction_configs_are_split_specific_and_public_safe() -> None:
+    config_paths = {
+        "dev": REPO_ROOT / "configs" / "sft-a100-public-heldout-dev-prediction.json",
+        "test": REPO_ROOT / "configs" / "sft-a100-public-heldout-test-prediction.json",
+    }
+
+    for split, config_path in config_paths.items():
+        assert config_path.exists()
+        config = json.loads(config_path.read_text(encoding="utf-8"))
+        serialized = json.dumps(config, ensure_ascii=False, sort_keys=True)
+
+        assert config["base_model"] == "Qwen/Qwen2.5-7B-Instruct"
+        assert config["dataset_manifest_id"] == "public-sample-20260613T063029Z"
+        assert config["public_sample_manifest"] == "data/public-samples/manifest_public_sample.json"
+        assert config["prediction_split"] == split
+        assert config["allow_private_prediction"] is True
+        assert config["public_heldout_diagnostic"] is True
+        assert config["overfit_diagnostic"] is False
+        assert config["generalization_claim"] is False
+        assert config["output_root"] == "<a100_project_root>"
+        assert config["adapter_path"] == "<a100_project_root>/runs/a100-extract-price-canonical-wording-rerun/adapter"
+        assert config["evidence_output_dir"] == (
+            f"<a100_project_root>/evidence/a100-public-heldout-contract-generalization/{split}"
+        )
+        assert config["reference_runtime"] == f"a100-public-heldout-contract-generalization-{split}-prediction"
+        assert "allow_heavy_training" not in config
+        assert "adapter_output_dir" not in config
+        assert "/mnt/data/" not in serialized
+        assert "/Users/" not in serialized
+        assert scan_paths([config_path]).ok is True
+
+
 def test_prompt_snapshot_row_records_actual_extract_prompt_constraints() -> None:
     row = SFTDatasetRow(
         id="seed-extract-price-aug-1",
@@ -371,6 +403,38 @@ def test_extract_price_canonical_wording_a100_rerun_evidence_is_bounded_and_publ
     assert prompt_snapshot["prompt_constraints"]["extract_canonical_price_target_visible"] is True
     assert leak_scan["ok"] is True
     assert "not a model-recovery claim" in report
+    assert scan_paths([evidence_dir]).ok is True
+
+
+def test_public_heldout_contract_generalization_evidence_records_split_failures_without_release_claims() -> None:
+    evidence_dir = REPO_ROOT / "reports" / "public-sample" / "a100-public-heldout-contract-generalization"
+    manifest = json.loads((evidence_dir / "manifest.json").read_text(encoding="utf-8"))
+    diagnosis = json.loads(
+        (evidence_dir / "heldout_contract_generalization_diagnosis.json").read_text(encoding="utf-8")
+    )
+    dev_metrics = json.loads((evidence_dir / "dev" / "metrics.json").read_text(encoding="utf-8"))
+    test_metrics = json.loads((evidence_dir / "test" / "metrics.json").read_text(encoding="utf-8"))
+    leak_scan = json.loads((evidence_dir / "leak_scan_result.json").read_text(encoding="utf-8"))
+    report = (evidence_dir / "report.md").read_text(encoding="utf-8").lower()
+
+    assert manifest["evidence_kind"] == "a100_public_heldout_contract_generalization"
+    assert manifest["base_model"] == "Qwen/Qwen2.5-7B-Instruct"
+    assert manifest["prediction_splits"] == ["dev", "test"]
+    assert manifest["claims"]["held_out_generalization_recovered"] is False
+    assert manifest["claims"]["model_recovery_claim"] is False
+    assert manifest["claims"]["adapter_release"] is False
+    assert manifest["artifact_policy"]["checkpoints_or_adapters_copied_to_git"] is False
+    assert manifest["split_results"]["dev"]["contract_exact_match"] == 0.0
+    assert manifest["split_results"]["test"]["contract_exact_match"] == 0.0
+    assert manifest["split_results"]["dev"]["json_valid_rate"] == 1.0
+    assert manifest["split_results"]["test"]["json_valid_rate"] == 1.0
+    assert dev_metrics["metrics"]["contract_exact_match"] == 0.0
+    assert test_metrics["metrics"]["contract_exact_match"] == 0.0
+    assert diagnosis["summary"]["overall_interpretation"] == "public_heldout_strict_generalization_failed"
+    assert diagnosis["summary"]["split_exact_match"] == {"dev": 0.0, "test": 0.0}
+    assert leak_scan["ok"] is True
+    assert "not a release" in report
+    assert "public held-out diagnostic" in report
     assert scan_paths([evidence_dir]).ok is True
 
 

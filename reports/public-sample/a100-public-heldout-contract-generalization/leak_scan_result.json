@@ -1,0 +1,12 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-13T07:01:33.438322+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "reports/public-sample/a100-public-heldout-contract-generalization",
+    "configs/sft-a100-public-heldout-dev-prediction.json",
+    "configs/sft-a100-public-heldout-test-prediction.json",
+    "openspec/changes/evaluate-a100-public-heldout-contract-generalization"
+  ]
+}

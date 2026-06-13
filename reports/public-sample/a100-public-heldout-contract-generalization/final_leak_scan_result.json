@@ -1,0 +1,15 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-13T07:12:41.509650+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "reports/public-sample/a100-public-heldout-contract-generalization",
+    "docs/human-briefs/2026-06-13-evaluate-a100-public-heldout-contract-generalization.html",
+    "configs/sft-a100-public-heldout-dev-prediction.json",
+    "configs/sft-a100-public-heldout-test-prediction.json",
+    "openspec/changes/archive/2026-06-13-evaluate-a100-public-heldout-contract-generalization",
+    "openspec/specs/contract-evaluation/spec.md",
+    "openspec/specs/supervised-contract-tuning/spec.md"
+  ]
+}

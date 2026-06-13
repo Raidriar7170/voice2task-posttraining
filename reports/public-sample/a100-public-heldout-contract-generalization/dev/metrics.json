@@ -1,0 +1,63 @@
+{
+  "failure_slices": {
+    "confirmation": {
+      "count": 3,
+      "examples": [
+        "seed-clarify-ambiguous",
+        "seed-clarify-ambiguous-aug-1",
+        "seed-clarify-ambiguous-aug-2"
+      ]
+    },
+    "route": {
+      "count": 3,
+      "examples": [
+        "seed-clarify-ambiguous",
+        "seed-clarify-ambiguous-aug-1",
+        "seed-clarify-ambiguous-aug-2"
+      ]
+    },
+    "safety": {
+      "count": 0,
+      "examples": []
+    },
+    "schema": {
+      "count": 0,
+      "examples": []
+    },
+    "slot": {
+      "count": 6,
+      "examples": [
+        "seed-open-example",
+        "seed-open-example-aug-1",
+        "seed-open-example-aug-2",
+        "seed-clarify-ambiguous",
+        "seed-clarify-ambiguous-aug-1"
+      ]
+    },
+    "task_type": {
+      "count": 3,
+      "examples": [
+        "seed-clarify-ambiguous",
+        "seed-clarify-ambiguous-aug-1",
+        "seed-clarify-ambiguous-aug-2"
+      ]
+    },
+    "unknown": {
+      "count": 0,
+      "examples": []
+    }
+  },
+  "metrics": {
+    "confirmation_accuracy": 0.5,
+    "contract_exact_match": 0.0,
+    "json_valid_rate": 1.0,
+    "route_accuracy": 0.5,
+    "safety_gold_stop_support": 0.0,
+    "safety_precision": 1.0,
+    "safety_predicted_stop_support": 0.0,
+    "safety_recall": 1.0,
+    "slot_f1": 0.0,
+    "slot_f1_soft": 0.3333333333333333,
+    "task_type_accuracy": 0.5
+  }
+}

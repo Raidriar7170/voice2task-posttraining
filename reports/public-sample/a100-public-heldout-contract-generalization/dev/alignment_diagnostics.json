@@ -1,0 +1,222 @@
+{
+  "claims": {
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "field_level_public_sample_evidence_only": true,
+    "full_private_corpus_claim": false,
+    "invalid_predictions_remain_invalid": true,
+    "live_browser_benchmark_claim": false,
+    "production_readiness_claim": false
+  },
+  "diagnostic_kind": "browser_task_contract_alignment_mismatch",
+  "rows": [
+    {
+      "mismatches": [
+        {
+          "field_path": "slots",
+          "gold_value_summary": "object with keys: url",
+          "mismatch_category": "value_mismatch",
+          "prediction_value_summary": "object with keys: url",
+          "row_id": "seed-open-example"
+        },
+        {
+          "field_path": "normalized_command",
+          "gold_value_summary": "string(6): 打开示例网站",
+          "mismatch_category": "value_mismatch",
+          "prediction_value_summary": "string(14): 打开 example.com",
+          "row_id": "seed-open-example"
+        }
+      ],
+      "row_id": "seed-open-example"
+    },
+    {
+      "mismatches": [
+        {
+          "field_path": "slots",
+          "gold_value_summary": "object with keys: url",
+          "mismatch_category": "value_mismatch",
+          "prediction_value_summary": "empty object",
+          "row_id": "seed-open-example-aug-1"
+        }
+      ],
+      "row_id": "seed-open-example-aug-1"
+    },
+    {
+      "mismatches": [
+        {
+          "field_path": "slots",
+          "gold_value_summary": "object with keys: url",
+          "mismatch_category": "value_mismatch",
+          "prediction_value_summary": "object with keys: url",
+          "row_id": "seed-open-example-aug-2"
+        },
+        {
+          "field_path": "normalized_command",
+          "gold_value_summary": "string(6): 打开示例网站",
+          "mismatch_category": "value_mismatch",
+          "prediction_value_summary": "string(13): 去 example.com",
+          "row_id": "seed-open-example-aug-2"
+        }
+      ],
+      "row_id": "seed-open-example-aug-2"
+    },
+    {
+      "mismatches": [
+        {
+          "field_path": "task_type",
+          "gold_value_summary": "string(7): clarify",
+          "mismatch_category": "value_mismatch",
+          "prediction_value_summary": "string(8): navigate",
+          "row_id": "seed-clarify-ambiguous"
+        },
+        {
+          "field_path": "route",
+          "gold_value_summary": "string(7): clarify",
+          "mismatch_category": "value_mismatch",
+          "prediction_value_summary": "string(8): open_url",
+          "row_id": "seed-clarify-ambiguous"
+        },
+        {
+          "field_path": "safety.reason",
+          "gold_value_summary": "string(17): ambiguous_request",
+          "mismatch_category": "value_mismatch",
+          "prediction_value_summary": "string(15): public_readonly",
+          "row_id": "seed-clarify-ambiguous"
+        },
+        {
+          "field_path": "confirmation_required",
+          "gold_value_summary": "bool: True",
+          "mismatch_category": "value_mismatch",
+          "prediction_value_summary": "bool: False",
+          "row_id": "seed-clarify-ambiguous"
+        },
+        {
+          "field_path": "slots",
+          "gold_value_summary": "object with keys: ambiguity",
+          "mismatch_category": "value_mismatch",
+          "prediction_value_summary": "empty object",
+          "row_id": "seed-clarify-ambiguous"
+        },
+        {
+          "field_path": "normalized_command",
+          "gold_value_summary": "string(6): 请求澄清目标",
+          "mismatch_category": "value_mismatch",
+          "prediction_value_summary": "string(4): 打开那个",
+          "row_id": "seed-clarify-ambiguous"
+        }
+      ],
+      "row_id": "seed-clarify-ambiguous"
+    },
+    {
+      "mismatches": [
+        {
+          "field_path": "task_type",
+          "gold_value_summary": "string(7): clarify",
+          "mismatch_category": "value_mismatch",
+          "prediction_value_summary": "string(6): search",
+          "row_id": "seed-clarify-ambiguous-aug-1"
+        },
+        {
+          "field_path": "route",
+          "gold_value_summary": "string(7): clarify",
+          "mismatch_category": "value_mismatch",
+          "prediction_value_summary": "string(10): search_web",
+          "row_id": "seed-clarify-ambiguous-aug-1"
+        },
+        {
+          "field_path": "safety.reason",
+          "gold_value_summary": "string(17): ambiguous_request",
+          "mismatch_category": "value_mismatch",
+          "prediction_value_summary": "string(15): public_readonly",
+          "row_id": "seed-clarify-ambiguous-aug-1"
+        },
+        {
+          "field_path": "confirmation_required",
+          "gold_value_summary": "bool: True",
+          "mismatch_category": "value_mismatch",
+          "prediction_value_summary": "bool: False",
+          "row_id": "seed-clarify-ambiguous-aug-1"
+        },
+        {
+          "field_path": "slots",
+          "gold_value_summary": "object with keys: ambiguity",
+          "mismatch_category": "value_mismatch",
+          "prediction_value_summary": "object with keys: query",
+          "row_id": "seed-clarify-ambiguous-aug-1"
+        },
+        {
+          "field_path": "normalized_command",
+          "gold_value_summary": "string(6): 请求澄清目标",
+          "mismatch_category": "value_mismatch",
+          "prediction_value_summary": "string(6): 搜索公开信息",
+          "row_id": "seed-clarify-ambiguous-aug-1"
+        }
+      ],
+      "row_id": "seed-clarify-ambiguous-aug-1"
+    },
+    {
+      "mismatches": [
+        {
+          "field_path": "task_type",
+          "gold_value_summary": "string(7): clarify",
+          "mismatch_category": "value_mismatch",
+          "prediction_value_summary": "string(6): search",
+          "row_id": "seed-clarify-ambiguous-aug-2"
+        },
+        {
+          "field_path": "route",
+          "gold_value_summary": "string(7): clarify",
+          "mismatch_category": "value_mismatch",
+          "prediction_value_summary": "string(10): search_web",
+          "row_id": "seed-clarify-ambiguous-aug-2"
+        },
+        {
+          "field_path": "safety.reason",
+          "gold_value_summary": "string(17): ambiguous_request",
+          "mismatch_category": "value_mismatch",
+          "prediction_value_summary": "string(15): public_readonly",
+          "row_id": "seed-clarify-ambiguous-aug-2"
+        },
+        {
+          "field_path": "confirmation_required",
+          "gold_value_summary": "bool: True",
+          "mismatch_category": "value_mismatch",
+          "prediction_value_summary": "bool: False",
+          "row_id": "seed-clarify-ambiguous-aug-2"
+        },
+        {
+          "field_path": "slots",
+          "gold_value_summary": "object with keys: ambiguity",
+          "mismatch_category": "value_mismatch",
+          "prediction_value_summary": "object with keys: query",
+          "row_id": "seed-clarify-ambiguous-aug-2"
+        },
+        {
+          "field_path": "normalized_command",
+          "gold_value_summary": "string(6): 请求澄清目标",
+          "mismatch_category": "value_mismatch",
+          "prediction_value_summary": "string(6): 搜索公开信息",
+          "row_id": "seed-clarify-ambiguous-aug-2"
+        }
+      ],
+      "row_id": "seed-clarify-ambiguous-aug-2"
+    }
+  ],
+  "summary": {
+    "field_mismatch_counts": {
+      "confirmation_required": 3,
+      "normalized_command": 5,
+      "route": 3,
+      "safety.reason": 3,
+      "slots": 6,
+      "task_type": 3
+    },
+    "gold_row_count": 6,
+    "mismatch_category_counts": {
+      "value_mismatch": 23
+    },
+    "prediction_count": 6,
+    "row_mismatch_count": 6,
+    "schema_invalid_prediction_count": 0
+  }
+}
