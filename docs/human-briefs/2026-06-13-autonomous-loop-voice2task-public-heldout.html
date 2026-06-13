@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Voice2Task public held-out opsx auto 循环报告</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.56; max-width: 980px; margin: 32px auto; padding: 0 20px; color: #20242a; }
+    h1 { font-size: 28px; margin-bottom: 8px; }
+    h2 { margin-top: 28px; font-size: 18px; }
+    .status { padding: 12px 14px; border-left: 4px solid #d97706; background: #fffbeb; }
+    code { background: #f4f4f5; padding: 1px 4px; border-radius: 4px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 8px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; }
+    th { background: #f7f7f8; }
+  </style>
+</head>
+<body>
+  <h1>Voice2Task public held-out opsx auto 循环报告</h1>
+  <p class="status"><strong>一句话结论：</strong>本轮完成并归档了 public held-out 诊断和 residual repair 两个阶段；repair 负结果很清楚，dev/test 仍为 <code>contract_exact_match=0.0000</code>，下一步需要换到训练信号诊断，不能继续自动扩大范围。</p>
+
+  <h2>循环状态</h2>
+  <p>状态：stopped。精确停止原因：hard stop - 推荐下一阶段会从“public held-out residual repair”变成“SFT label/loss 或 DPO 信号诊断”，这会改变阶段范围和成功标准，需要用户确认。</p>
+
+  <h2>本轮完成</h2>
+  <table>
+    <tr><th>阶段</th><th>状态</th><th>主要结论</th><th>提交</th></tr>
+    <tr>
+      <td><code>evaluate-a100-public-heldout-contract-generalization</code></td>
+      <td>archived</td>
+      <td>上一轮 7B train split recovery 没有泛化到 public dev/test，两个 held-out split strict exact 都是 0。</td>
+      <td><code>a49121e</code></td>
+    </tr>
+    <tr>
+      <td><code>repair-public-heldout-contract-residuals</code></td>
+      <td>archived</td>
+      <td>新增 train-only repair exemplars、DPO hard negatives、repair prompt policy 后，A100 SFT-only rerun 仍失败。</td>
+      <td><code>f7aecd5</code></td>
+    </tr>
+  </table>
+
+  <h2>关键指标</h2>
+  <table>
+    <tr><th>split</th><th>json_valid_rate</th><th>contract_exact_match</th><th>slot_f1</th><th>说明</th></tr>
+    <tr><td>train</td><td>0.8889</td><td>0.3333</td><td>0.5000</td><td>repair exemplars 自身也未严格学稳。</td></tr>
+    <tr><td>dev</td><td>1.0000</td><td>0.0000</td><td>0.3333</td><td>navigate/clarify residual 仍存在。</td></tr>
+    <tr><td>test</td><td>1.0000</td><td>0.0000</td><td>0.1667</td><td>form confirmation 和 blocked payment residual 仍存在。</td></tr>
+  </table>
+
+  <h2>关键文件</h2>
+  <ul>
+    <li><code>openspec/changes/archive/2026-06-13-evaluate-a100-public-heldout-contract-generalization/</code></li>
+    <li><code>openspec/changes/archive/2026-06-13-repair-public-heldout-contract-residuals/</code></li>
+    <li><code>reports/public-sample/a100-public-heldout-contract-generalization/manifest.json</code></li>
+    <li><code>reports/public-sample/repair-public-heldout-contract-residuals/manifest.json</code></li>
+    <li><code>docs/human-briefs/2026-06-13-evaluate-a100-public-heldout-contract-generalization.html</code></li>
+    <li><code>docs/human-briefs/2026-06-13-repair-public-heldout-contract-residuals.html</code></li>
+  </ul>
+
+  <h2>验证结果</h2>
+  <ul>
+    <li><code>PYTHONPATH=src pytest -q</code>: 224 passed。</li>
+    <li><code>uv run ruff check .</code>: passed。</li>
+    <li><code>uv run mypy src</code>: passed。</li>
+    <li><code>voice2task.cli.data validate --public</code>: ok, sft_rows=30, dpo_pairs=90。</li>
+    <li><code>voice2task.cli.data dpo-check</code>: ok, total_pairs=90。</li>
+    <li><code>openspec validate --all --strict</code>: 4 specs passed after archive。</li>
+    <li>phase/post-archive/final leak scans: ok, findings=[]。</li>
+    <li><code>git diff --check</code> and staged check: passed。</li>
+  </ul>
+
+  <h2>Auto Integration</h2>
+  <p>已自动 stage 并提交本阶段归档证据，commit <code>f7aecd5</code>。未 push：当前 <code>main</code> 没有配置 upstream。未创建 PR、未发布、未部署。</p>
+
+  <h2>外部评审</h2>
+  <p>本轮未调用外部 ChatGPT Pro review。原因：本阶段主要是小样本训练/评估证据收口，已有本地测试、OpenSpec、leak scan 和只读 review 覆盖；没有 UI/公开定位改写需要外审。</p>
+
+  <h2>项目阶段进展</h2>
+  <p>当前目标是把 Voice2Task 的 public-sample contract learning 证据链收紧。此轮贡献是把“数据量不够或 held-out 覆盖不够”的假设做成可验证实验，并得到负结果：单纯小规模扩充 train exemplars + prompt policy 的 SFT-only 路线不够。</p>
+
+  <h2>剩余风险和不能夸大的点</h2>
+  <ul>
+    <li>不能声称模型真实能力约 70%，当前 strict evidence 不支持。</li>
+    <li>不能把 JSON/schema valid 当作 contract recovery。</li>
+    <li>不能声称私有语料泛化、生产可用、checkpoint/adapter release 或 live-browser benchmark 改善。</li>
+    <li>public 样本仍小，但足够否定“train split 过了就自动泛化”的说法。</li>
+  </ul>
+
+  <h2>推荐下一步</h2>
+  <p>需要用户确认后开启一个很小的新 OpenSpec 阶段：诊断 SFT label/loss mask、目标 token 压力、prompt 长度与是否需要真正启用 DPO hard negatives。该阶段不应再直接盲目 A100 rerun。</p>
+</body>
+</html>
