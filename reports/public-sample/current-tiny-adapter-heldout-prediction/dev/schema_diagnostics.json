@@ -1,0 +1,18 @@
+{
+  "claims": {
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "full_private_corpus_claim": false,
+    "invalid_predictions_remain_invalid": true,
+    "live_browser_benchmark_claim": false,
+    "production_readiness_claim": false
+  },
+  "diagnostic_kind": "browser_task_contract_schema_mismatch",
+  "rows": [],
+  "summary": {
+    "gold_row_count": 6,
+    "invalid_prediction_count": 0,
+    "issue_counts": {},
+    "prediction_count": 6
+  }
+}

@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Current Tiny Adapter Held-out Prediction Brief</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #18202a;
+      --muted: #5c6675;
+      --line: #d8dde5;
+      --panel: #f7f9fb;
+      --accent: #0f766e;
+      --warn: #b45309;
+      --bad: #b91c1c;
+    }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--ink); background: #ffffff; }
+    main { max-width: 980px; margin: 0 auto; padding: 32px 24px 56px; }
+    h1 { font-size: 28px; line-height: 1.2; margin: 0 0 8px; letter-spacing: 0; }
+    h2 { font-size: 18px; margin: 28px 0 10px; }
+    p { line-height: 1.65; margin: 8px 0; }
+    a { color: var(--accent); text-decoration: none; }
+    code { background: #eef2f7; border-radius: 4px; padding: 1px 5px; }
+    .status { display: inline-block; margin: 10px 0 18px; padding: 5px 9px; border-radius: 6px; background: #fff7ed; color: var(--warn); border: 1px solid #fed7aa; font-weight: 600; }
+    .summary { border-left: 4px solid var(--bad); padding: 10px 14px; background: #fff7f7; }
+    .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 18px 0; }
+    .metric { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
+    .metric b { display: block; font-size: 22px; margin-bottom: 4px; }
+    .metric span { color: var(--muted); font-size: 13px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+    th, td { border-bottom: 1px solid var(--line); padding: 8px 6px; text-align: left; }
+    th { color: var(--muted); font-weight: 600; }
+    ul { padding-left: 20px; }
+    li { margin: 6px 0; line-height: 1.55; }
+    .small { color: var(--muted); font-size: 13px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>当前 tiny adapter held-out 诊断</h1>
+  <div class="status">状态：archived，结论为负向泛化证据</div>
+  <section class="summary">
+    <p><strong>一句话结论：</strong>当前 7B tiny adapter 能记住上一阶段 3 条 train-internal 样本，但没有达到一开始想要的语气/合同泛化水平；当前 manifest 的 dev/test strict exact 都是 <code>0.0000</code>。</p>
+  </section>
+
+  <section class="grid" aria-label="key metrics">
+    <div class="metric"><b>100.0%</b><span>上一阶段 train-internal exact，3 行</span></div>
+    <div class="metric"><b>0.0%</b><span>当前 dev strict exact，6 行</span></div>
+    <div class="metric"><b>0.0%</b><span>当前 test strict exact，6 行</span></div>
+  </section>
+
+  <h2>这阶段做了什么</h2>
+  <ul>
+    <li>新增 current tiny adapter 的 dev/test prediction-only 公有配置模板。</li>
+    <li>在 A100 上复用上一阶段私有 7B LoRA adapter，只运行 <code>sft-predict --run-prediction</code>，没有重新训练。</li>
+    <li>导入 sanitized predictions、gold、metrics、schema/alignment/constrained diagnostics、prompt/raw/generation sidecars。</li>
+    <li>生成合并 evidence manifest 和报告，边界限定为 public-sample held-out 诊断。</li>
+  </ul>
+
+  <h2>关键结果</h2>
+  <table>
+    <thead><tr><th>split</th><th>rows</th><th>json valid</th><th>strict exact</th><th>slot F1</th><th>task type</th><th>route</th><th>schema invalid</th></tr></thead>
+    <tbody><tr><td>dev</td><td>6</td><td>100.0%</td><td>0.0%</td><td>33.3%</td><td>50.0%</td><td>50.0%</td><td>0</td></tr><tr><td>test</td><td>6</td><td>66.7%</td><td>0.0%</td><td>28.9%</td><td>66.7%</td><td>66.7%</td><td>2</td></tr></tbody>
+  </table>
+
+  <h2>如何解读</h2>
+  <p>这不是“数据量够了，模型已经学会”的证据；相反，它说明 3 行 tiny overfit 只是训练路径/adapter 可工作的小证明，没有自然迁移到当前 dev/test。dev 主要残留在 clarify/open-url 的合同字段，test 还有 2 条 form-fill schema invalid。</p>
+
+  <h2>关键文件</h2>
+  <ul>
+    <li><a href="../../reports/public-sample/current-tiny-adapter-heldout-prediction/manifest.json">manifest.json</a></li>
+    <li><a href="../../reports/public-sample/current-tiny-adapter-heldout-prediction/report.md">report.md</a></li>
+    <li><a href="../../reports/public-sample/current-tiny-adapter-heldout-prediction/current_tiny_adapter_heldout_diagnosis.json">current_tiny_adapter_heldout_diagnosis.json</a></li>
+    <li><a href="../../openspec/changes/archive/2026-06-13-evaluate-current-tiny-adapter-heldout-prediction/tasks.md">OpenSpec tasks</a></li>
+  </ul>
+
+  <h2>验证</h2>
+  <ul>
+    <li><code>pytest -q tests/test_a100_sft_smoke.py::test_current_tiny_adapter_heldout_prediction_configs_are_split_specific_and_public_safe tests/test_a100_sft_smoke.py::test_current_tiny_adapter_heldout_prediction_evidence_records_failed_transfer</code></li>
+    <li><code>openspec validate --all --strict</code></li>
+    <li><code>PYTHONPATH=src python -c "...scan_paths(... )"</code></li>
+  </ul>
+
+  <h2>不要夸大的点</h2>
+  <ul>
+    <li>不证明语气已经达到最初目标。</li>
+    <li>不证明 dev/test 泛化、私有语料泛化、生产可用、checkpoint/adapter 可发布。</li>
+    <li>不代表 DPO 或更大数据已经验证有效。</li>
+  </ul>
+
+  <h2>推荐下一步</h2>
+  <p>archive 本阶段。下一个小阶段应做覆盖/策略诊断：为什么 search-weather 三条能记住，但 open-url、clarify、form-fill、blocked payment 这些 held-out 家族没有 strict exact 转移。优先判断是任务家族覆盖不足、目标措辞/slot 规范需要更多样本，还是该进入偏好训练，而不是直接盲目扩大 SFT。</p>
+  <p class="small">Generated from public-safe evidence under <code>reports/public-sample/current-tiny-adapter-heldout-prediction</code>.</p>
+</main>
+</body>
+</html>

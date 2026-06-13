@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Autonomous Loop Report - Current Tiny Adapter Held-out</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; background: #f6f7fb; color: #1b2433; }
+    main { max-width: 1040px; margin: 0 auto; padding: 32px 24px 52px; }
+    h1 { font-size: 28px; margin: 0 0 8px; letter-spacing: 0; }
+    h2 { font-size: 18px; margin: 28px 0 10px; }
+    p, li { line-height: 1.65; }
+    a { color: #155eef; text-decoration: none; }
+    code { background: #eef1f6; padding: 1px 5px; border-radius: 4px; }
+    .panel { background: white; border: 1px solid #d8dee8; border-radius: 8px; padding: 18px 20px; }
+    .stop { border-left: 4px solid #b45309; background: #fff8eb; padding: 12px 14px; }
+    table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #d8dee8; }
+    th, td { border-bottom: 1px solid #e7ebf1; padding: 9px 11px; text-align: left; }
+    th { color: #5f6b7a; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Autonomous Loop Report: Current Tiny Adapter Held-out</h1>
+  <section class="panel"><strong>一句话结论：</strong>本轮完成并归档 current 7B tiny adapter 的 dev/test prediction-only 诊断；结果显示 train-internal 3 条全中没有迁移到 held-out，下一步会改变训练/数据/DPO 策略，需要用户确认。</section>
+
+  <h2>循环状态</h2>
+  <div class="stop">Stopped by hard stop #2: recommended next step changes scope and success criteria from prediction-only evidence gathering to training/data/preference strategy selection. Auto loop must wait for user confirmation before modifying those choices.</div>
+
+  <h2>已完成阶段</h2>
+  <ul>
+    <li>OpenSpec archived: <code>openspec/changes/archive/2026-06-13-evaluate-current-tiny-adapter-heldout-prediction/</code></li>
+    <li>Phase Human Brief: <a href="2026-06-14-evaluate-current-tiny-adapter-heldout-prediction.html">2026-06-14-evaluate-current-tiny-adapter-heldout-prediction.html</a></li>
+    <li>Evidence manifest: <a href="../../reports/public-sample/current-tiny-adapter-heldout-prediction/manifest.json">manifest.json</a></li>
+    <li>Evidence report: <a href="../../reports/public-sample/current-tiny-adapter-heldout-prediction/report.md">report.md</a></li>
+  </ul>
+
+  <h2>核心指标</h2>
+  <table>
+    <thead><tr><th>scope</th><th>rows</th><th>json valid</th><th>strict exact</th><th>slot F1</th><th>schema invalid</th></tr></thead>
+    <tbody>
+      <tr><td>prior train-internal tiny probe</td><td>3</td><td>100.0%</td><td>100.0%</td><td>100.0%</td><td>0</td></tr>
+      <tr><td>current dev</td><td>6</td><td>100.0%</td><td>0.0%</td><td>33.3%</td><td>0</td></tr>
+      <tr><td>current test</td><td>6</td><td>66.7%</td><td>0.0%</td><td>28.9%</td><td>2</td></tr>
+    </tbody>
+  </table>
+
+  <h2>验证命令</h2>
+  <ul>
+    <li><code>pytest -q tests/test_a100_sft_smoke.py</code>: 52 passed</li>
+    <li><code>openspec list --json</code>: no active changes</li>
+    <li><code>openspec validate --all --strict</code>: 4 passed</li>
+    <li><code>PYTHONPATH=src python -c "scan_paths(...)"</code>: ok true, 0 findings</li>
+    <li><code>git diff --check</code>: passed</li>
+  </ul>
+
+  <h2>项目阶段进度</h2>
+  <ul>
+    <li>Current project-stage target: first-phase speech-to-contract normalization, not explicitly labeled MVP/v1/release.</li>
+    <li>Source: <a href="../../README.md">README.md</a> and <a href="../../CONTEXT.md">CONTEXT.md</a> define the repo as a bounded post-training companion for Chinese speech-to-contract outputs.</li>
+    <li>Phase contribution: converted the previous 3-row train-internal success into a current dev/test held-out check, closing the question of whether tiny memorization already means target tone/contract behavior.</li>
+    <li>Remaining capability gaps: held-out exact match, schema validity on form-fill rows, clarify/open-url/blocked-payment family behavior, private-corpus generalization, downstream execution smoke for non-train rows.</li>
+    <li>Remaining evidence gaps: no proof that more SFT data alone fixes the issue; no DPO effect measurement; no release or production-readiness evidence.</li>
+  </ul>
+
+  <h2>Auto Integration</h2>
+  <ul>
+    <li>Status at report generation: validation passed and in-scope files are ready for guarded local commit.</li>
+    <li>Commit hash: recorded in the final Codex response after the commit is created.</li>
+    <li>Push: expected to be skipped because branch <code>main</code> has no upstream configured.</li>
+    <li>External review: skipped; this was a bounded evidence/ML diagnostic with clean local validation and no public release wording expansion.</li>
+  </ul>
+
+  <h2>不要夸大的结论</h2>
+  <p>This loop does not prove the model has reached the original desired tone, does not prove held-out generalization, does not release a checkpoint or adapter, does not validate private-corpus quality, and does not claim production readiness or live-browser benchmark improvement.</p>
+
+  <h2>推荐下一步</h2>
+  <p>建议由用户确认一个新的 bounded OpenSpec phase：针对 held-out 家族做策略选择，优先比较“补任务家族覆盖样本 / 调整目标措辞与 slot 规范 / 进入 DPO 偏好训练”的最小可证伪方案。因为这会改变训练策略和成功标准，不能由当前 auto loop 自动继续。</p>
+</main>
+</body>
+</html>

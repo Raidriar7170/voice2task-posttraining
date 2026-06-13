@@ -1,0 +1,130 @@
+{
+  "claims": {
+    "a100_model_recovery_claim": false,
+    "a100_prediction_rerun_evidence": true,
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "does_not_coerce_or_replace_invalid_predictions": true,
+    "evidence_context": "a100_prediction_rerun",
+    "full_private_corpus_claim": false,
+    "held_out_generalization_claim": false,
+    "invalid_predictions_remain_invalid": true,
+    "live_browser_benchmark_claim": false,
+    "local_decoder_output_shape_hardening_only": false,
+    "production_readiness_claim": false
+  },
+  "diagnostic_kind": "constrained_contract_decoding_diagnosis",
+  "examples": {
+    "legacy_task_type_alias": [],
+    "path_like_route": [],
+    "prose_markdown_wrapper": [
+      {
+        "parse_status": "non_json",
+        "row_id": "seed-clarify-ambiguous-aug-2",
+        "source": "raw_attempt"
+      }
+    ]
+  },
+  "rows": [
+    {
+      "raw_parse_status": "json_object",
+      "retry_parse_status": "json_object",
+      "row_id": "seed-open-example",
+      "schema_guard": {
+        "raw_attempt_schema_valid": false,
+        "retry_attempt_schema_valid": true,
+        "validated_output_schema_valid": true,
+        "validated_output_source": "retry_attempt"
+      },
+      "symptoms": []
+    },
+    {
+      "raw_parse_status": "json_object",
+      "retry_parse_status": "json_object",
+      "row_id": "seed-open-example-aug-1",
+      "schema_guard": {
+        "raw_attempt_schema_valid": false,
+        "retry_attempt_schema_valid": true,
+        "validated_output_schema_valid": true,
+        "validated_output_source": "retry_attempt"
+      },
+      "symptoms": []
+    },
+    {
+      "raw_parse_status": "json_object",
+      "retry_parse_status": "json_object",
+      "row_id": "seed-open-example-aug-2",
+      "schema_guard": {
+        "raw_attempt_schema_valid": false,
+        "retry_attempt_schema_valid": true,
+        "validated_output_schema_valid": true,
+        "validated_output_source": "retry_attempt"
+      },
+      "symptoms": []
+    },
+    {
+      "raw_parse_status": "json_object",
+      "retry_parse_status": "json_object",
+      "row_id": "seed-clarify-ambiguous",
+      "schema_guard": {
+        "raw_attempt_schema_valid": false,
+        "retry_attempt_schema_valid": true,
+        "validated_output_schema_valid": true,
+        "validated_output_source": "retry_attempt"
+      },
+      "symptoms": []
+    },
+    {
+      "raw_parse_status": "json_object",
+      "retry_parse_status": "json_object",
+      "row_id": "seed-clarify-ambiguous-aug-1",
+      "schema_guard": {
+        "raw_attempt_schema_valid": false,
+        "retry_attempt_schema_valid": true,
+        "validated_output_schema_valid": true,
+        "validated_output_source": "retry_attempt"
+      },
+      "symptoms": []
+    },
+    {
+      "raw_parse_status": "non_json",
+      "retry_parse_status": "json_object",
+      "row_id": "seed-clarify-ambiguous-aug-2",
+      "schema_guard": {
+        "raw_attempt_schema_valid": false,
+        "retry_attempt_schema_valid": true,
+        "validated_output_schema_valid": true,
+        "validated_output_source": "retry_attempt"
+      },
+      "symptoms": [
+        {
+          "observed_value_summary": "non_json",
+          "source": "raw_attempt",
+          "symptom": "prose_markdown_wrapper"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "decoded_summary_row_count": 6,
+    "invalid_prediction_count": 0,
+    "invalid_predictions_remain_invalid": true,
+    "legacy_task_type_alias_count": 0,
+    "parse_status_counts": {
+      "raw_attempt": {
+        "json_object": 5,
+        "non_json": 1
+      },
+      "retry_attempt": {
+        "json_object": 6
+      }
+    },
+    "path_like_route_count": 0,
+    "prediction_count": 6,
+    "prediction_schema_valid_count": 6,
+    "prose_markdown_wrapper_count": 1,
+    "raw_attempt_schema_valid_count": 0,
+    "retry_attempt_schema_valid_count": 6,
+    "validated_output_schema_valid_count": 6
+  }
+}

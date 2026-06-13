@@ -1,0 +1,263 @@
+{
+  "adapter_source": "private_adapter_from_current_manifest_tiny_overfit_probe",
+  "artifact_policy": {
+    "checkpoints_or_adapters_copied_to_git": false,
+    "host_details_omitted": true,
+    "private_corpus_rows_omitted": true,
+    "private_overrides_copied_to_git": false,
+    "private_paths_omitted": true,
+    "raw_logs_copied_to_git": false,
+    "remote_caches_copied_to_git": false,
+    "ssh_details_omitted": true
+  },
+  "base_model": "Qwen/Qwen2.5-7B-Instruct",
+  "claims": {
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "current_tiny_adapter_heldout_diagnostic": true,
+    "dpo_training": false,
+    "evaluator_relaxation": false,
+    "held_out_generalization_recovered": false,
+    "live_browser_benchmark_claim": false,
+    "model_recovery_claim": false,
+    "new_training": false,
+    "prediction_repair_or_replacement": false,
+    "private_corpus_generalization_claim": false,
+    "production_readiness_claim": false,
+    "public_full_corpus_release_claim": false,
+    "semantic_equivalence_primary_metric": false
+  },
+  "current_manifest_id": "public-sample-20260613T072200Z",
+  "dataset_manifest_id": "public-sample-20260613T072200Z",
+  "diagnostic_artifacts": {
+    "diagnosis": "reports/public-sample/current-tiny-adapter-heldout-prediction/current_tiny_adapter_heldout_diagnosis.json",
+    "leak_scan": "reports/public-sample/current-tiny-adapter-heldout-prediction/leak_scan_result.json",
+    "manifest": "reports/public-sample/current-tiny-adapter-heldout-prediction/manifest.json",
+    "post_archive_leak_scan": "reports/public-sample/current-tiny-adapter-heldout-prediction/post_archive_leak_scan_result.json",
+    "report": "reports/public-sample/current-tiny-adapter-heldout-prediction/report.md"
+  },
+  "evidence_kind": "current_tiny_adapter_heldout_prediction",
+  "evidence_status": "private_adapter_current_manifest_heldout_predictions_written",
+  "generated_at": "2026-06-13T17:18:15.517242+00:00",
+  "leak_scan_result": {
+    "findings": [],
+    "generated_at": "2026-06-13T17:18:15.530878+00:00",
+    "max_public_jsonl_rows": 5000,
+    "ok": true,
+    "scanned_paths": [
+      "reports/public-sample/current-tiny-adapter-heldout-prediction"
+    ]
+  },
+  "model_source": "private_a100_local_model_dir",
+  "overall_interpretation": "current_tiny_adapter_heldout_strict_generalization_failed",
+  "post_archive_leak_scan_result": {
+    "findings": [],
+    "generated_at": "2026-06-13T17:20:46.029960+00:00",
+    "max_public_jsonl_rows": 5000,
+    "ok": true,
+    "scanned_paths": [
+      "reports/public-sample/current-tiny-adapter-heldout-prediction",
+      "docs/human-briefs/2026-06-14-evaluate-current-tiny-adapter-heldout-prediction.html",
+      "openspec/changes/archive/2026-06-13-evaluate-current-tiny-adapter-heldout-prediction",
+      "openspec/specs/supervised-contract-tuning/spec.md",
+      "openspec/specs/contract-evaluation/spec.md"
+    ]
+  },
+  "prediction_source_kind": "private_a100_adapter",
+  "prediction_splits": [
+    "dev",
+    "test"
+  ],
+  "primary_evidence_splits": [
+    "dev",
+    "test"
+  ],
+  "prior_train_internal_result": {
+    "artifact": "reports/public-sample/current-manifest-tiny-overfit-probe/manifest.json",
+    "contract_exact_match": 1.0,
+    "generalization_claim": false,
+    "json_valid_rate": 1.0,
+    "overfit_diagnostic": true,
+    "prediction_count": 3,
+    "prediction_split": "train",
+    "slot_f1": 1.0,
+    "training_rows_used": 3
+  },
+  "public_sample_manifest_id": "public-sample-20260613T072200Z",
+  "source_manifest_rows": {
+    "dpo_pairs": 90,
+    "seed_rows": 10,
+    "sft_rows": 30
+  },
+  "source_manifest_split_counts": {
+    "dev": 6,
+    "test": 6,
+    "train": 18
+  },
+  "split_results": {
+    "dev": {
+      "alignment_row_mismatch_count": 6,
+      "artifact_paths": {
+        "alignment_diagnostics": "reports/public-sample/current-tiny-adapter-heldout-prediction/dev/alignment_diagnostics.json",
+        "constrained_decoding_diagnosis": "reports/public-sample/current-tiny-adapter-heldout-prediction/dev/constrained_decoding_diagnosis.json",
+        "generation_trace": "reports/public-sample/current-tiny-adapter-heldout-prediction/dev/generation_trace.jsonl",
+        "gold": "reports/public-sample/current-tiny-adapter-heldout-prediction/dev/dev_gold.jsonl",
+        "metrics": "reports/public-sample/current-tiny-adapter-heldout-prediction/dev/metrics.json",
+        "prediction_metadata": "reports/public-sample/current-tiny-adapter-heldout-prediction/dev/prediction_metadata.json",
+        "predictions": "reports/public-sample/current-tiny-adapter-heldout-prediction/dev/predictions.jsonl",
+        "prompt_snapshot": "reports/public-sample/current-tiny-adapter-heldout-prediction/dev/prompt_snapshot.json",
+        "raw_decoded_summary": "reports/public-sample/current-tiny-adapter-heldout-prediction/dev/raw_decoded_summary.jsonl",
+        "schema_diagnostics": "reports/public-sample/current-tiny-adapter-heldout-prediction/dev/schema_diagnostics.json"
+      },
+      "confirmation_accuracy": 0.5,
+      "constrained_decode_invalid_prediction_count": 0,
+      "contract_exact_match": 0.0,
+      "failure_slices": {
+        "confirmation": {
+          "count": 3,
+          "examples": [
+            "seed-clarify-ambiguous",
+            "seed-clarify-ambiguous-aug-1",
+            "seed-clarify-ambiguous-aug-2"
+          ]
+        },
+        "route": {
+          "count": 3,
+          "examples": [
+            "seed-open-example-aug-1",
+            "seed-clarify-ambiguous",
+            "seed-clarify-ambiguous-aug-2"
+          ]
+        },
+        "safety": {
+          "count": 1,
+          "examples": [
+            "seed-clarify-ambiguous-aug-1"
+          ]
+        },
+        "schema": {
+          "count": 0,
+          "examples": []
+        },
+        "slot": {
+          "count": 4,
+          "examples": [
+            "seed-open-example-aug-1",
+            "seed-clarify-ambiguous",
+            "seed-clarify-ambiguous-aug-1",
+            "seed-clarify-ambiguous-aug-2"
+          ]
+        },
+        "task_type": {
+          "count": 3,
+          "examples": [
+            "seed-open-example-aug-1",
+            "seed-clarify-ambiguous",
+            "seed-clarify-ambiguous-aug-2"
+          ]
+        },
+        "unknown": {
+          "count": 0,
+          "examples": []
+        }
+      },
+      "field_mismatch_counts": {
+        "confirmation_required": 3,
+        "normalized_command": 6,
+        "route": 3,
+        "safety.allow": 1,
+        "safety.reason": 2,
+        "slots": 4,
+        "task_type": 3
+      },
+      "gold_row_count": 6,
+      "json_valid_rate": 1.0,
+      "prediction_count": 6,
+      "prediction_source_kind": "private_a100_adapter",
+      "prediction_split": "dev",
+      "route_accuracy": 0.5,
+      "safety_precision": 0.0,
+      "safety_recall": 1.0,
+      "schema_invalid_prediction_count": 0,
+      "slot_f1": 0.3333333333333333,
+      "slot_f1_soft": 0.3333333333333333,
+      "task_type_accuracy": 0.5
+    },
+    "test": {
+      "alignment_row_mismatch_count": 6,
+      "artifact_paths": {
+        "alignment_diagnostics": "reports/public-sample/current-tiny-adapter-heldout-prediction/test/alignment_diagnostics.json",
+        "constrained_decoding_diagnosis": "reports/public-sample/current-tiny-adapter-heldout-prediction/test/constrained_decoding_diagnosis.json",
+        "generation_trace": "reports/public-sample/current-tiny-adapter-heldout-prediction/test/generation_trace.jsonl",
+        "gold": "reports/public-sample/current-tiny-adapter-heldout-prediction/test/test_gold.jsonl",
+        "metrics": "reports/public-sample/current-tiny-adapter-heldout-prediction/test/metrics.json",
+        "prediction_metadata": "reports/public-sample/current-tiny-adapter-heldout-prediction/test/prediction_metadata.json",
+        "predictions": "reports/public-sample/current-tiny-adapter-heldout-prediction/test/predictions.jsonl",
+        "prompt_snapshot": "reports/public-sample/current-tiny-adapter-heldout-prediction/test/prompt_snapshot.json",
+        "raw_decoded_summary": "reports/public-sample/current-tiny-adapter-heldout-prediction/test/raw_decoded_summary.jsonl",
+        "schema_diagnostics": "reports/public-sample/current-tiny-adapter-heldout-prediction/test/schema_diagnostics.json"
+      },
+      "confirmation_accuracy": 0.6666666666666666,
+      "constrained_decode_invalid_prediction_count": 2,
+      "contract_exact_match": 0.0,
+      "failure_slices": {
+        "confirmation": {
+          "count": 0,
+          "examples": []
+        },
+        "route": {
+          "count": 0,
+          "examples": []
+        },
+        "safety": {
+          "count": 1,
+          "examples": [
+            "seed-form-email-aug-2"
+          ]
+        },
+        "schema": {
+          "count": 2,
+          "examples": [
+            "seed-form-email",
+            "seed-form-email-aug-1"
+          ]
+        },
+        "slot": {
+          "count": 4,
+          "examples": [
+            "seed-form-email-aug-2",
+            "seed-block-purchase",
+            "seed-block-purchase-aug-1",
+            "seed-block-purchase-aug-2"
+          ]
+        },
+        "task_type": {
+          "count": 0,
+          "examples": []
+        },
+        "unknown": {
+          "count": 0,
+          "examples": []
+        }
+      },
+      "field_mismatch_counts": {
+        "normalized_command": 6,
+        "safety.allow": 1,
+        "safety.reason": 2,
+        "slots": 6
+      },
+      "gold_row_count": 6,
+      "json_valid_rate": 0.6666666666666666,
+      "prediction_count": 6,
+      "prediction_source_kind": "private_a100_adapter",
+      "prediction_split": "test",
+      "route_accuracy": 0.6666666666666666,
+      "safety_precision": 0.75,
+      "safety_recall": 1.0,
+      "schema_invalid_prediction_count": 2,
+      "slot_f1": 0.2888888888888889,
+      "slot_f1_soft": 0.2888888888888889,
+      "task_type_accuracy": 0.6666666666666666
+    }
+  }
+}

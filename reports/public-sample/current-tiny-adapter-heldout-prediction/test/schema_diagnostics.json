@@ -1,0 +1,45 @@
+{
+  "claims": {
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "full_private_corpus_claim": false,
+    "invalid_predictions_remain_invalid": true,
+    "live_browser_benchmark_claim": false,
+    "production_readiness_claim": false
+  },
+  "diagnostic_kind": "browser_task_contract_schema_mismatch",
+  "rows": [
+    {
+      "issues": [
+        {
+          "expected_constraint": "must be a non-empty string",
+          "field_path": "safety.reason",
+          "issue_category": "empty_required_string",
+          "observed_value_summary": "empty string",
+          "row_id": "seed-form-email"
+        }
+      ],
+      "row_id": "seed-form-email"
+    },
+    {
+      "issues": [
+        {
+          "expected_constraint": "must be a non-empty string",
+          "field_path": "safety.reason",
+          "issue_category": "empty_required_string",
+          "observed_value_summary": "empty string",
+          "row_id": "seed-form-email-aug-1"
+        }
+      ],
+      "row_id": "seed-form-email-aug-1"
+    }
+  ],
+  "summary": {
+    "gold_row_count": 6,
+    "invalid_prediction_count": 2,
+    "issue_counts": {
+      "empty_required_string": 2
+    },
+    "prediction_count": 6
+  }
+}

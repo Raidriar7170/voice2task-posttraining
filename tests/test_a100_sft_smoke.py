@@ -284,6 +284,39 @@ def test_current_manifest_tiny_overfit_probe_configs_use_7b_and_stay_public_safe
     assert scan_paths([sft_config_path, prediction_config_path]).ok is True
 
 
+def test_current_tiny_adapter_heldout_prediction_configs_are_split_specific_and_public_safe() -> None:
+    config_paths = {
+        "dev": REPO_ROOT / "configs" / "sft-a100-current-tiny-adapter-heldout-dev-prediction.json",
+        "test": REPO_ROOT / "configs" / "sft-a100-current-tiny-adapter-heldout-test-prediction.json",
+    }
+
+    for split, config_path in config_paths.items():
+        assert config_path.exists()
+        config = json.loads(config_path.read_text(encoding="utf-8"))
+        serialized = json.dumps(config, ensure_ascii=False, sort_keys=True)
+
+        assert config["base_model"] == "Qwen/Qwen2.5-7B-Instruct"
+        assert config["dataset_manifest_id"] == "public-sample-20260613T072200Z"
+        assert config["public_sample_manifest"] == "data/public-samples/manifest_public_sample.json"
+        assert config["prediction_split"] == split
+        assert config["allow_private_prediction"] is True
+        assert config["current_tiny_adapter_heldout_diagnostic"] is True
+        assert config["overfit_diagnostic"] is False
+        assert config["generalization_claim"] is False
+        assert config["output_root"] == "<a100_project_root>"
+        assert config["adapter_path"] == "<a100_project_root>/runs/a100-current-manifest-tiny-overfit-probe/adapter"
+        assert config["evidence_output_dir"] == (
+            f"<a100_project_root>/evidence/current-tiny-adapter-heldout-prediction/{split}"
+        )
+        assert config["reference_runtime"] == f"a100-current-tiny-adapter-heldout-{split}-prediction"
+        assert "allow_heavy_training" not in config
+        assert "adapter_output_dir" not in config
+        assert "max_prediction_rows" not in config
+        assert "/mnt/data/" not in serialized
+        assert "/Users/" not in serialized
+        assert scan_paths([config_path]).ok is True
+
+
 def test_extract_price_contract_residual_a100_rerun_configs_use_7b_and_stay_public_safe() -> None:
     sft_config_path = REPO_ROOT / "configs" / "sft-a100-extract-price-contract-residual-rerun.json"
     prediction_config_path = REPO_ROOT / "configs" / "sft-a100-extract-price-contract-residual-prediction.json"
@@ -604,6 +637,45 @@ def test_public_heldout_contract_generalization_evidence_records_split_failures_
     assert leak_scan["ok"] is True
     assert "not a release" in report
     assert "public held-out diagnostic" in report
+    assert scan_paths([evidence_dir]).ok is True
+
+
+def test_current_tiny_adapter_heldout_prediction_evidence_records_failed_transfer() -> None:
+    evidence_dir = REPO_ROOT / "reports" / "public-sample" / "current-tiny-adapter-heldout-prediction"
+    manifest = json.loads((evidence_dir / "manifest.json").read_text(encoding="utf-8"))
+    diagnosis = json.loads((evidence_dir / "current_tiny_adapter_heldout_diagnosis.json").read_text(encoding="utf-8"))
+    dev_metrics = json.loads((evidence_dir / "dev" / "metrics.json").read_text(encoding="utf-8"))
+    test_metrics = json.loads((evidence_dir / "test" / "metrics.json").read_text(encoding="utf-8"))
+    leak_scan = json.loads((evidence_dir / "leak_scan_result.json").read_text(encoding="utf-8"))
+    report = (evidence_dir / "report.md").read_text(encoding="utf-8").lower()
+
+    assert manifest["evidence_kind"] == "current_tiny_adapter_heldout_prediction"
+    assert manifest["base_model"] == "Qwen/Qwen2.5-7B-Instruct"
+    assert manifest["dataset_manifest_id"] == "public-sample-20260613T072200Z"
+    assert manifest["prediction_splits"] == ["dev", "test"]
+    assert manifest["prior_train_internal_result"]["contract_exact_match"] == 1.0
+    assert manifest["overall_interpretation"] == "current_tiny_adapter_heldout_strict_generalization_failed"
+    assert manifest["claims"]["held_out_generalization_recovered"] is False
+    assert manifest["claims"]["model_recovery_claim"] is False
+    assert manifest["claims"]["adapter_release"] is False
+    assert manifest["claims"]["checkpoint_release"] is False
+    assert manifest["claims"]["new_training"] is False
+    assert manifest["artifact_policy"]["checkpoints_or_adapters_copied_to_git"] is False
+    assert manifest["artifact_policy"]["private_paths_omitted"] is True
+    assert manifest["split_results"]["dev"]["contract_exact_match"] == 0.0
+    assert manifest["split_results"]["test"]["contract_exact_match"] == 0.0
+    assert manifest["split_results"]["dev"]["json_valid_rate"] == 1.0
+    assert manifest["split_results"]["test"]["json_valid_rate"] == pytest.approx(2 / 3)
+    assert dev_metrics["metrics"]["contract_exact_match"] == 0.0
+    assert test_metrics["metrics"]["contract_exact_match"] == 0.0
+    assert diagnosis["summary"]["overall_interpretation"] == (
+        "current_tiny_adapter_heldout_strict_generalization_failed"
+    )
+    assert diagnosis["summary"]["split_exact_match"] == {"dev": 0.0, "test": 0.0}
+    assert leak_scan["ok"] is True
+    assert "prediction-only" in report
+    assert "not a new training run" in report
+    assert "did not carry" in report
     assert scan_paths([evidence_dir]).ok is True
 
 

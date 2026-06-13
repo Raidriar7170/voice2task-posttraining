@@ -1,0 +1,13 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-13T17:20:46.029960+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "reports/public-sample/current-tiny-adapter-heldout-prediction",
+    "docs/human-briefs/2026-06-14-evaluate-current-tiny-adapter-heldout-prediction.html",
+    "openspec/changes/archive/2026-06-13-evaluate-current-tiny-adapter-heldout-prediction",
+    "openspec/specs/supervised-contract-tuning/spec.md",
+    "openspec/specs/contract-evaluation/spec.md"
+  ]
+}

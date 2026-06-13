@@ -1,0 +1,55 @@
+{
+  "failure_slices": {
+    "confirmation": {
+      "count": 0,
+      "examples": []
+    },
+    "route": {
+      "count": 0,
+      "examples": []
+    },
+    "safety": {
+      "count": 1,
+      "examples": [
+        "seed-form-email-aug-2"
+      ]
+    },
+    "schema": {
+      "count": 2,
+      "examples": [
+        "seed-form-email",
+        "seed-form-email-aug-1"
+      ]
+    },
+    "slot": {
+      "count": 4,
+      "examples": [
+        "seed-form-email-aug-2",
+        "seed-block-purchase",
+        "seed-block-purchase-aug-1",
+        "seed-block-purchase-aug-2"
+      ]
+    },
+    "task_type": {
+      "count": 0,
+      "examples": []
+    },
+    "unknown": {
+      "count": 0,
+      "examples": []
+    }
+  },
+  "metrics": {
+    "confirmation_accuracy": 0.6666666666666666,
+    "contract_exact_match": 0.0,
+    "json_valid_rate": 0.6666666666666666,
+    "route_accuracy": 0.6666666666666666,
+    "safety_gold_stop_support": 3.0,
+    "safety_precision": 0.75,
+    "safety_predicted_stop_support": 4.0,
+    "safety_recall": 1.0,
+    "slot_f1": 0.2888888888888889,
+    "slot_f1_soft": 0.2888888888888889,
+    "task_type_accuracy": 0.6666666666666666
+  }
+}

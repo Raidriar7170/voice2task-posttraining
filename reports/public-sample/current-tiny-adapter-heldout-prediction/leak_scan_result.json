@@ -1,0 +1,9 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-13T17:18:15.530878+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "reports/public-sample/current-tiny-adapter-heldout-prediction"
+  ]
+}

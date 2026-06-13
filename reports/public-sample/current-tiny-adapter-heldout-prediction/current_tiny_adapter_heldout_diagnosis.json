@@ -1,0 +1,68 @@
+{
+  "claims": {
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "current_tiny_adapter_heldout_diagnostic": true,
+    "dpo_training": false,
+    "evaluator_relaxation": false,
+    "held_out_generalization_recovered": false,
+    "live_browser_benchmark_claim": false,
+    "model_recovery_claim": false,
+    "new_training": false,
+    "prediction_repair_or_replacement": false,
+    "private_corpus_generalization_claim": false,
+    "production_readiness_claim": false,
+    "public_full_corpus_release_claim": false,
+    "semantic_equivalence_primary_metric": false
+  },
+  "evidence_kind": "current_tiny_adapter_heldout_prediction_diagnosis",
+  "generated_at": "2026-06-13T17:18:15.516810+00:00",
+  "prior_context": {
+    "prior_train_internal_contract_exact_match": 1.0,
+    "prior_train_internal_prediction_count": 3,
+    "prior_train_internal_training_row_ids": [
+      "seed-search-weather",
+      "seed-search-weather-aug-1",
+      "seed-search-weather-aug-2"
+    ],
+    "train_internal_tiny_probe": "reports/public-sample/current-manifest-tiny-overfit-probe/manifest.json"
+  },
+  "public_sample_manifest_id": "public-sample-20260613T072200Z",
+  "residual_interpretation": {
+    "dev": [
+      "open_url rows retain strict normalized-command/url-string residuals",
+      "clarify rows drift toward executable action shape with task_type, route, slot, safety, and confirmation residuals"
+    ],
+    "phase_boundary": [
+      "3-row train-internal memorization did not transfer to current dev/test exact match",
+      "the next phase should diagnose coverage/objective/preference strategy before more broad training claims"
+    ],
+    "test": [
+      "form_fill rows include schema-invalid empty required strings for two rows and slot residuals for the third row",
+      "blocked payment rows preserve stop-like shape more often than prior attempts but still miss strict safety/slot/normalized-command fields"
+    ]
+  },
+  "summary": {
+    "overall_interpretation": "current_tiny_adapter_heldout_strict_generalization_failed",
+    "row_mismatch_count": {
+      "dev": 6,
+      "test": 6
+    },
+    "schema_invalid_prediction_count": {
+      "dev": 0,
+      "test": 2
+    },
+    "split_exact_match": {
+      "dev": 0.0,
+      "test": 0.0
+    },
+    "split_json_valid_rate": {
+      "dev": 1.0,
+      "test": 0.6666666666666666
+    },
+    "split_slot_f1": {
+      "dev": 0.3333333333333333,
+      "test": 0.2888888888888889
+    }
+  }
+}
