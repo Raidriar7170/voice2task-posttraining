@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Voice2Task SFT learning-signal opsx auto 循环报告</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.56; max-width: 980px; margin: 32px auto; padding: 0 20px; color: #20242a; }
+    h1 { font-size: 28px; margin-bottom: 8px; }
+    h2 { margin-top: 28px; font-size: 18px; }
+    .status { padding: 12px 14px; border-left: 4px solid #d97706; background: #fffbeb; }
+    code { background: #f4f4f5; padding: 1px 4px; border-radius: 4px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 8px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; }
+    th { background: #f7f7f8; }
+  </style>
+</head>
+<body>
+  <h1>Voice2Task SFT learning-signal opsx auto 循环报告</h1>
+  <p class="status"><strong>一句话结论：</strong>本轮完成并归档了 <code>diagnose-sft-contract-learning-signal</code>：公开 SFT 训练文本里结构性 assistant target span 全部存在，但真实 runtime label-mask 证据仍不可用，所以不能把问题继续归因为“数据量不够”；下一步应先做 runtime label 或 tiny-overfit 诊断。</p>
+
+  <h2>循环状态</h2>
+  <p>状态：stopped。精确停止原因：hard stop #2 - 推荐下一阶段会从“本地公开学习信号证据”转为“runtime label/tiny-overfit 诊断”，会改变阶段范围和成功标准，需要用户确认后再继续。</p>
+
+  <h2>本轮完成</h2>
+  <table>
+    <tr><th>阶段</th><th>状态</th><th>主要结论</th><th>提交</th></tr>
+    <tr>
+      <td><code>diagnose-sft-contract-learning-signal</code></td>
+      <td>archived</td>
+      <td>30 条 public SFT row 均能在训练文本中找到 canonical assistant target span；未下载模型、未加载私有 adapter、未训练、未预测。前序 repair 证据仍是 train strict 0.3333、dev/test strict 0.0000。</td>
+      <td><code>f3b8d70</code></td>
+    </tr>
+  </table>
+
+  <h2>关键指标</h2>
+  <table>
+    <tr><th>项目</th><th>结果</th><th>解释</th></tr>
+    <tr><td>row_count</td><td><code>30</code></td><td>使用 committed public sample SFT rows。</td></tr>
+    <tr><td>split_counts</td><td><code>{train: 18, dev: 6, test: 6}</code></td><td>诊断覆盖 public manifest 当前 split。</td></tr>
+    <tr><td>assistant target span</td><td><code>all_rows_have_assistant_target_span=true</code></td><td>结构化目标确实进入本地渲染文本；这不是 runtime label-mask 证明。</td></tr>
+    <tr><td>true runtime label-mask</td><td><code>unavailable</code></td><td>当前证据不能证明训练时 loss 是否真正落在 assistant target token 上。</td></tr>
+    <tr><td>target pressure</td><td><code>max_training_text_char_count=2005</code></td><td>没有超过 2048 字符的 public row；tokenizer-specific token counts 未加载。</td></tr>
+  </table>
+
+  <h2>关键文件</h2>
+  <ul>
+    <li><code>openspec/changes/archive/2026-06-13-diagnose-sft-contract-learning-signal/</code></li>
+    <li><code>openspec/specs/contract-evaluation/spec.md</code></li>
+    <li><code>openspec/specs/supervised-contract-tuning/spec.md</code></li>
+    <li><code>src/voice2task/evaluation.py</code></li>
+    <li><code>src/voice2task/reports.py</code></li>
+    <li><code>src/voice2task/cli/eval.py</code></li>
+    <li><code>tests/test_a100_sft_prediction_smoke.py</code></li>
+    <li><code>reports/public-sample/sft-contract-learning-signal/manifest.json</code></li>
+    <li><code>docs/human-briefs/2026-06-13-diagnose-sft-contract-learning-signal.html</code></li>
+  </ul>
+
+  <h2>验证结果</h2>
+  <ul>
+    <li><code>PYTHONPATH=src pytest -q</code>: 227 passed。</li>
+    <li><code>uv run ruff check .</code>: passed。</li>
+    <li><code>uv run mypy src</code>: success, 16 source files。</li>
+    <li><code>voice2task.cli.data validate --public</code>: ok, sft_rows=30, dpo_pairs=90。</li>
+    <li><code>voice2task.cli.data dpo-check</code>: ok, total_pairs=90。</li>
+    <li><code>openspec validate --all --strict</code>: 4 specs passed after archive。</li>
+    <li>phase/post-archive/final leak scans: ok, findings=[]。</li>
+    <li><code>git diff --check</code> and <code>git diff --cached --check</code>: passed after removing OpenSpec archive EOF blank lines。</li>
+  </ul>
+
+  <h2>Auto Integration</h2>
+  <p>已自动 stage 并提交本阶段归档证据，phase commit <code>f3b8d70</code>，目标分支 <code>main</code>。未 push：当前 <code>main</code> 没有配置 upstream。未创建 PR、未发布、未部署。</p>
+
+  <h2>外部评审</h2>
+  <p>本轮未调用外部 ChatGPT Pro review。原因：这是本地 public-safe 诊断和证据收口，已有 TDD、OpenSpec strict、leak scan、只读 review 和全量验证覆盖；没有 UI、发布文案或公开定位改写需要外审。</p>
+
+  <h2>项目阶段进度</h2>
+  <p>当前阶段目标来自 <code>CONTEXT.md</code> 和 <code>README.md</code>：Voice2Task Post-Training 的第一阶段是 speech-to-contract normalization，围绕 public sample、SFT/DPO 格式、contract metrics 和 public-safe reports 建证据链。仓库未明确定义 MVP/v1 标签，因此这里不新增里程碑名。</p>
+  <p>本阶段推进的是“为什么 7B SFT 没学稳 contract”的证据边界：它排除了一个本地结构性问题，即 public SFT 渲染文本缺少 assistant target span；但它也明确暴露了剩余缺口，真实 runtime label-mask 和 token-level 训练信号还没被验证。</p>
+
+  <h2>剩余风险和不能夸大的点</h2>
+  <ul>
+    <li>不能声称模型已经恢复，或真实能力约 70%。本阶段没有跑 prediction，也没有训练。</li>
+    <li>不能把 assistant target span 存在等同于 runtime loss mask 正确。</li>
+    <li>不能声称 private corpus generalization、checkpoint/adapter release、production readiness 或 live-browser benchmark 改善。</li>
+    <li>public sample 仍小；它适合做诊断和 public-safe evidence，不等于完整训练集结论。</li>
+  </ul>
+
+  <h2>推荐下一步</h2>
+  <p>需要用户确认后开启一个很小的新 OpenSpec 阶段：<code>run-bounded-runtime-label-or-tiny-overfit-diagnostic</code>。优先检查真实训练 tokenizer/collator 的 assistant-label mask、target token counts、prompt budget；必要时只做 1-3 条 public row 的 tiny-overfit 诊断。不要直接盲目扩数据或启动完整 A100 rerun。</p>
+</body>
+</html>
