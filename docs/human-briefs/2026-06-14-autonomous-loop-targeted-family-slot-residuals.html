@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Voice2Task Targeted Family and Slot Residual Loop</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17202a;
+      --muted: #5f6b7a;
+      --line: #d9e0ea;
+      --panel: #f7f9fc;
+      --accent: #0f766e;
+      --warn: #a16207;
+      --bad: #b91c1c;
+      --good: #047857;
+    }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--ink); background: #fff; }
+    main { max-width: 1000px; margin: 0 auto; padding: 32px 24px 56px; }
+    h1 { font-size: 28px; line-height: 1.2; margin: 0 0 8px; letter-spacing: 0; }
+    h2 { font-size: 18px; margin: 28px 0 10px; }
+    p { line-height: 1.65; margin: 8px 0; }
+    a { color: var(--accent); text-decoration: none; }
+    code { background: #edf2f7; border-radius: 4px; padding: 1px 5px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+    th, td { border-bottom: 1px solid var(--line); padding: 8px 6px; text-align: left; vertical-align: top; }
+    th { color: var(--muted); font-weight: 600; }
+    ul { padding-left: 20px; }
+    li { margin: 6px 0; line-height: 1.55; }
+    .status { display: inline-block; margin: 10px 0 18px; padding: 5px 9px; border-radius: 6px; background: #fffbeb; color: var(--warn); border: 1px solid #fde68a; font-weight: 600; }
+    .summary { border-left: 4px solid var(--accent); padding: 10px 14px; background: #f0fdfa; }
+    .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 18px 0; }
+    .metric { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
+    .metric b { display: block; font-size: 22px; margin-bottom: 4px; }
+    .metric span { color: var(--muted); font-size: 13px; }
+    .good { color: var(--good); font-weight: 600; }
+    .bad { color: var(--bad); font-weight: 600; }
+    .small { color: var(--muted); font-size: 13px; }
+    @media (max-width: 720px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Voice2Task Targeted Family and Slot Residual Loop</h1>
+  <div class="status">状态：stopped，需要用户确认下一阶段数据设计</div>
+  <section class="summary">
+    <p><strong>一句话结论：</strong>本轮完成并归档两个阶段：7B targeted family coverage 让 dev/test strict exact 从 0 起跳到 1/6，但剩余问题已收窄为 10 个 value residual；下一步应先确认 slot value generalization 的数据设计，再决定是否训练、扩数据或 DPO。</p>
+  </section>
+
+  <section class="grid" aria-label="key metrics">
+    <div class="metric"><b class="good">2</b><span>archived OpenSpec phases</span></div>
+    <div class="metric"><b>100%</b><span>targeted train strict exact</span></div>
+    <div class="metric"><b class="bad">1/6</b><span>dev/test strict exact each</span></div>
+    <div class="metric"><b>10</b><span>remaining value residuals</span></div>
+  </section>
+
+  <h2>停止原因</h2>
+  <p>Hard stop：下一阶段会从“诊断现有证据”进入 creative slot value generalization/data-design，可能新增或改变训练样例设计。根据本地 brainstorming gate 和当前 OpenSpec 边界，生成新数据设计、进入训练、扩数据、DPO 或改变 evaluator 口径前需要用户确认。</p>
+
+  <h2>项目阶段进度</h2>
+  <ul>
+    <li>当前项目阶段目标：first-phase speech-to-contract normalization。</li>
+    <li>目标来源：<a href="../../CONTEXT.md">CONTEXT.md</a> 和 <a href="../../README.md">README.md</a>。</li>
+    <li>本轮推进：先证实 targeted family coverage 有学习信号，再把 remaining failure 从泛泛的“数据不够”收窄成 canonical slot value 和 normalized_command target policy 问题。</li>
+    <li>剩余差距：capability 上还不能稳定选择 gold canonical values；evidence 上还没有新数据设计或 rerun 证明；release 上仍不能声明 adapter/checkpoint、private-corpus 泛化、生产可用或 live-browser benchmark 改善。</li>
+    <li>下一阶段计划：用户确认后，开一个 bounded slot value generalization/data-design OpenSpec change。它应先设计少量可证伪样例，不直接 broad scaling 或 DPO。</li>
+  </ul>
+
+  <h2>完成阶段</h2>
+  <table>
+    <thead><tr><th>phase</th><th>status</th><th>核心结果</th><th>commit</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>run-targeted-family-coverage-probe</code></td>
+        <td>archived</td>
+        <td>7B targeted SFT 训练 12 条 family analog rows；train strict exact 18/18，dev/test strict exact 各 1/6。证明有部分迁移，但未恢复 held-out generalization。</td>
+        <td><code>e8ea5db</code></td>
+      </tr>
+      <tr>
+        <td><code>diagnose-targeted-slot-value-residuals</code></td>
+        <td>archived</td>
+        <td>剩余 10 个 mismatch 全是 value residual：6 个 slots，4 个 normalized_command；结构层面 JSON/schema/task/route/safety/confirmation 都已正确。</td>
+        <td><code>0aec885</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>关键证据</h2>
+  <ul>
+    <li><a href="../../reports/public-sample/a100-targeted-family-coverage-probe/manifest.json">targeted family coverage manifest</a></li>
+    <li><a href="../../reports/public-sample/a100-targeted-family-coverage-probe/report.md">targeted family coverage report</a></li>
+    <li><a href="../../reports/public-sample/targeted-slot-value-residual-diagnosis/manifest.json">slot value residual manifest</a></li>
+    <li><a href="../../reports/public-sample/targeted-slot-value-residual-diagnosis/targeted_slot_value_residual_diagnosis.md">slot value residual report</a></li>
+    <li><a href="./2026-06-14-run-targeted-family-coverage-probe.html">phase brief: targeted coverage</a></li>
+    <li><a href="./2026-06-14-diagnose-targeted-slot-value-residuals.html">phase brief: slot residuals</a></li>
+  </ul>
+
+  <h2>验证</h2>
+  <ul>
+    <li><code>PYTHONPATH=src python -m pytest -q tests/test_targeted_family_coverage_probe.py tests/test_heldout_family_strategy.py tests/test_a100_sft_smoke.py tests/test_formatting_training.py</code>：82 passed。</li>
+    <li><code>PYTHONPATH=src python -m pytest -q tests/test_targeted_slot_value_residual_diagnosis.py tests/test_targeted_family_coverage_probe.py tests/test_heldout_family_strategy.py tests/test_a100_sft_smoke.py tests/test_formatting_training.py tests/test_leak_scan.py</code>：91 passed。</li>
+    <li><code>openspec validate --all --strict</code>：4 specs passed after each archive。</li>
+    <li><code>voice2task.cli.report leak-scan</code>：targeted coverage evidence、slot residual evidence、Human Briefs、OpenSpec archive 和 updated specs 均 0 findings。</li>
+    <li><code>git diff --check</code>：已通过。</li>
+  </ul>
+
+  <h2>自动集成状态</h2>
+  <ul>
+    <li>已自动 stage 并提交阶段 1，commit <code>e8ea5db</code>。</li>
+    <li>已自动 stage 并提交阶段 2，commit <code>0aec885</code>。</li>
+    <li>未 push：当前仓库没有配置 remote/upstream。</li>
+    <li>未创建 PR、未发布、未部署。</li>
+  </ul>
+
+  <h2>不能夸大的点</h2>
+  <ul>
+    <li>dev/test strict exact 仍只有 1/6，不是模型已经达到最初语气或稳定合同泛化。</li>
+    <li>targeted coverage 不是 full private-corpus generalization，不是 production readiness。</li>
+    <li>slot soft F1 和语义近似只是诊断信息，主指标仍是 strict <code>contract_exact_match</code>。</li>
+    <li>本轮没有发布 adapter/checkpoint，没有导入 raw logs、private overrides、私有路径或缓存。</li>
+  </ul>
+
+  <h2>推荐手动决策</h2>
+  <p>确认是否进入下一阶段：bounded slot value generalization/data-design。推荐范围是只设计少量 canonical value 对照和最小 train/dev 验证样例；暂不做 broad scaling、DPO 或 evaluator relaxation。</p>
+  <p class="small">Generated from archived OpenSpec changes and public-safe evidence on 2026-06-14.</p>
+</main>
+</body>
+</html>
