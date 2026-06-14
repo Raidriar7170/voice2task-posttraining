@@ -614,11 +614,42 @@ def _configured_sft_training_row_limit(config: dict[str, Any]) -> int | None:
     return row_limit
 
 
-def _limited_sft_training_rows(rows: list[SFTDatasetRow], config: dict[str, Any]) -> tuple[list[SFTDatasetRow], int | None]:
+def _configured_sft_training_source_ids(config: dict[str, Any]) -> list[str] | None:
+    value = config.get("train_source_ids")
+    if value is None:
+        return None
+    if not isinstance(value, list) or not value or not all(isinstance(item, str) and item for item in value):
+        raise ValueError("train_source_ids must be a non-empty list of source_id strings when configured")
+    return list(value)
+
+
+def _sft_row_source_id(row: SFTDatasetRow) -> str:
+    source_id = row.provenance.get("source_id") if isinstance(row.provenance, dict) else None
+    return str(source_id or row.id)
+
+
+def _source_id_counts(rows: list[SFTDatasetRow]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for row in rows:
+        source_id = _sft_row_source_id(row)
+        counts[source_id] = counts.get(source_id, 0) + 1
+    return dict(sorted(counts.items()))
+
+
+def _limited_sft_training_rows(
+    rows: list[SFTDatasetRow],
+    config: dict[str, Any],
+) -> tuple[list[SFTDatasetRow], int | None, list[str] | None, int, int]:
+    source_ids = _configured_sft_training_source_ids(config)
+    rows_before_source_filter = len(rows)
+    if source_ids is not None:
+        source_id_set = set(source_ids)
+        rows = [row for row in rows if _sft_row_source_id(row) in source_id_set]
+    rows_before_limit = len(rows)
     row_limit = _configured_sft_training_row_limit(config)
     if row_limit is None:
-        return rows, None
-    return rows[:row_limit], row_limit
+        return rows, None, source_ids, rows_before_source_filter, rows_before_limit
+    return rows[:row_limit], row_limit, source_ids, rows_before_source_filter, rows_before_limit
 
 
 def _record_sft_training_row_selection(
@@ -627,20 +658,50 @@ def _record_sft_training_row_selection(
     split: str,
     rows: list[SFTDatasetRow],
     row_limit: int | None,
+    source_ids: list[str] | None,
     loaded_rows_before_limit: int,
+    loaded_rows_before_source_filter: int,
 ) -> None:
     row_ids = [row.id for row in rows]
     metadata["training_split"] = split
+    metadata["training_source_ids"] = source_ids
     metadata["training_row_limit"] = row_limit
     metadata["training_rows_used"] = len(rows)
     metadata["training_row_ids"] = row_ids
+    metadata["training_source_id_counts"] = _source_id_counts(rows)
+    metadata["training_rows_before_source_filter"] = loaded_rows_before_source_filter
     dataset_load = metadata.setdefault("dataset_load", {})
     if isinstance(dataset_load, dict):
         dataset_load["training_split"] = split
+        dataset_load["training_source_ids"] = source_ids
         dataset_load["training_row_limit"] = row_limit
         dataset_load["training_rows_used"] = len(rows)
         dataset_load["training_row_ids"] = row_ids
+        dataset_load["training_source_id_counts"] = _source_id_counts(rows)
+        dataset_load["training_rows_before_source_filter"] = loaded_rows_before_source_filter
         dataset_load["loaded_rows_before_training_row_limit"] = loaded_rows_before_limit
+
+
+def _record_sft_training_selection_from_config(
+    metadata: dict[str, Any],
+    config: dict[str, Any],
+    manifest_path: Path,
+) -> list[SFTDatasetRow]:
+    split = str(config.get("dataset_split", "train"))
+    all_rows = _load_sft_training_rows(manifest_path, split=split)
+    rows, row_limit, source_ids, rows_before_source_filter, rows_before_limit = _limited_sft_training_rows(
+        all_rows, config
+    )
+    _record_sft_training_row_selection(
+        metadata,
+        split=split,
+        rows=rows,
+        row_limit=row_limit,
+        source_ids=source_ids,
+        loaded_rows_before_limit=rows_before_limit,
+        loaded_rows_before_source_filter=rows_before_source_filter,
+    )
+    return rows
 
 
 def _load_sft_prediction_rows(manifest_path: Path, split: str) -> list[SFTDatasetRow]:
@@ -2324,16 +2385,7 @@ def _run_real_sft(metadata: dict[str, Any], config: dict[str, Any], manifest_pat
     from transformers import AutoModelForCausalLM, AutoTokenizer
     from trl import SFTTrainer  # type: ignore[import-not-found, unused-ignore]
 
-    split = str(config.get("dataset_split", "train"))
-    all_rows = _load_sft_training_rows(manifest_path, split=split)
-    rows, row_limit = _limited_sft_training_rows(all_rows, config)
-    _record_sft_training_row_selection(
-        metadata,
-        split=split,
-        rows=rows,
-        row_limit=row_limit,
-        loaded_rows_before_limit=len(all_rows),
-    )
+    rows = _record_sft_training_selection_from_config(metadata, config, manifest_path)
     tokenizer = AutoTokenizer.from_pretrained(config["base_model"])
     max_seq_length = int(config.get("max_seq_length", 1024))
     records = [_assistant_only_training_record(row, tokenizer, max_seq_length=max_seq_length) for row in rows]
@@ -2411,6 +2463,7 @@ def run_sft(config_path: Path, manifest_path: Path, output_dir: Path, dry_run: b
         output_dir=output_dir,
         dry_run=dry_run,
     )
+    _record_sft_training_selection_from_config(metadata, config, manifest_path)
     if not dry_run and not _heavy_training_allowed(config):
         return _write_training_skipped(metadata, "sft")
     if not dry_run and not _output_dir_within_configured_root(config, output_dir):

@@ -1,0 +1,49 @@
+{
+  "failure_slices": {
+    "confirmation": {
+      "count": 0,
+      "examples": []
+    },
+    "route": {
+      "count": 0,
+      "examples": []
+    },
+    "safety": {
+      "count": 0,
+      "examples": []
+    },
+    "schema": {
+      "count": 0,
+      "examples": []
+    },
+    "slot": {
+      "count": 3,
+      "examples": [
+        "seed-form-email",
+        "seed-form-email-aug-1",
+        "seed-form-email-aug-2"
+      ]
+    },
+    "task_type": {
+      "count": 0,
+      "examples": []
+    },
+    "unknown": {
+      "count": 0,
+      "examples": []
+    }
+  },
+  "metrics": {
+    "confirmation_accuracy": 1.0,
+    "contract_exact_match": 0.16666666666666666,
+    "json_valid_rate": 1.0,
+    "route_accuracy": 1.0,
+    "safety_gold_stop_support": 3.0,
+    "safety_precision": 1.0,
+    "safety_predicted_stop_support": 3.0,
+    "safety_recall": 1.0,
+    "slot_f1": 0.5,
+    "slot_f1_soft": 0.5,
+    "task_type_accuracy": 1.0
+  }
+}

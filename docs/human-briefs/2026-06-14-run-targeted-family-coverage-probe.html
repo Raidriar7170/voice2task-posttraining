@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Targeted Family Coverage Probe Brief</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17202a;
+      --muted: #5f6b7a;
+      --line: #d9e0ea;
+      --panel: #f7f9fc;
+      --accent: #0f766e;
+      --warn: #a16207;
+      --good: #047857;
+      --bad: #b91c1c;
+    }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--ink); background: #fff; }
+    main { max-width: 980px; margin: 0 auto; padding: 32px 24px 56px; }
+    h1 { font-size: 28px; line-height: 1.2; margin: 0 0 8px; letter-spacing: 0; }
+    h2 { font-size: 18px; margin: 28px 0 10px; }
+    p { line-height: 1.65; margin: 8px 0; }
+    a { color: var(--accent); text-decoration: none; }
+    code { background: #edf2f7; border-radius: 4px; padding: 1px 5px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+    th, td { border-bottom: 1px solid var(--line); padding: 8px 6px; text-align: left; vertical-align: top; }
+    th { color: var(--muted); font-weight: 600; }
+    ul { padding-left: 20px; }
+    li { margin: 6px 0; line-height: 1.55; }
+    .status { display: inline-block; margin: 10px 0 18px; padding: 5px 9px; border-radius: 6px; background: #fffbeb; color: var(--warn); border: 1px solid #fde68a; font-weight: 600; }
+    .summary { border-left: 4px solid var(--accent); padding: 10px 14px; background: #f0fdfa; }
+    .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 18px 0; }
+    .metric { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
+    .metric b { display: block; font-size: 22px; margin-bottom: 4px; }
+    .metric span { color: var(--muted); font-size: 13px; }
+    .good { color: var(--good); font-weight: 600; }
+    .bad { color: var(--bad); font-weight: 600; }
+    .small { color: var(--muted); font-size: 13px; }
+    @media (max-width: 720px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Targeted Family Coverage Probe</h1>
+  <div class="status">状态：archived，证据已生成并归档</div>
+  <section class="summary">
+    <p><strong>一句话结论：</strong>7B targeted family coverage 证明模型能学到目标合同格式，并把 dev/test strict exact 从 0 拉到 1/6；但它还没有恢复 held-out 泛化，剩余问题集中在 slot value 和少量 normalized_command 严格差异。</p>
+  </section>
+
+  <section class="grid" aria-label="key metrics">
+    <div class="metric"><b>100%</b><span>train strict exact，18/18</span></div>
+    <div class="metric"><b>16.7%</b><span>dev strict exact，1/6</span></div>
+    <div class="metric"><b>16.7%</b><span>test strict exact，1/6</span></div>
+    <div class="metric"><b>12</b><span>训练 rows，4 个 source families</span></div>
+  </section>
+
+  <h2>这阶段做了什么</h2>
+  <ul>
+    <li>给 SFT 训练增加 <code>train_source_ids</code> 过滤和元数据记录，避免再次不清楚到底训练了哪些家族。</li>
+    <li>创建 public-safe 7B A100 targeted SFT 和 train/dev/test prediction configs，私有路径只在远端 override 中解析。</li>
+    <li>在 A100 上训练 12 条 targeted train rows，并对 public train/dev/test split 生成预测、metrics、schema/alignment/decoding diagnostics。</li>
+    <li>导入了公开安全证据包，没有导入 adapter、checkpoint、raw logs、私有 override、缓存或机器细节。</li>
+  </ul>
+
+  <h2>指标</h2>
+  <table>
+    <thead><tr><th>split</th><th>rows</th><th>json valid</th><th>strict exact</th><th>slot F1</th><th>soft slot F1</th><th>mismatch rows</th></tr></thead>
+    <tbody>
+      <tr><td>train</td><td>18</td><td>1.0000</td><td class="good">1.0000</td><td>1.0000</td><td>1.0000</td><td>0</td></tr>
+      <tr><td>dev</td><td>6</td><td>1.0000</td><td class="bad">0.1667</td><td>0.5000</td><td>0.9333</td><td>5</td></tr>
+      <tr><td>test</td><td>6</td><td>1.0000</td><td class="bad">0.1667</td><td>0.5000</td><td>0.5000</td><td>5</td></tr>
+    </tbody>
+  </table>
+  <p class="small">注意：train prediction 覆盖全部 18 条 train rows，实际 SFT 只训练了 12 条 targeted rows。</p>
+
+  <h2>和前两阶段相比</h2>
+  <table>
+    <thead><tr><th>evidence</th><th>train exact</th><th>dev exact</th><th>test exact</th><th>含义</th></tr></thead>
+    <tbody>
+      <tr><td>current tiny adapter held-out</td><td>未作为主证据</td><td>0.0000</td><td>0.0000</td><td>held-out 完全没起跳</td></tr>
+      <tr><td>prior broad residual repair</td><td>0.3333</td><td>0.0000</td><td>0.0000</td><td>盲目 residual repair 没解决基础学习信号</td></tr>
+      <tr><td>targeted family coverage</td><td>1.0000</td><td>0.1667</td><td>0.1667</td><td>有部分迁移，但还不是目标状态</td></tr>
+    </tbody>
+  </table>
+
+  <h2>如何回答“是不是数据泛化”</h2>
+  <p>是，但更准确地说，是家族覆盖和 slot value 泛化问题，不是简单“数据量不够”。这次 12 条 targeted rows 已经让 train exact 变成 100%，dev/test 也从 0 起跳；所以后面要继续扩数据，也应该围绕失败家族和 slot value residual 做诊断式扩展，而不是直接上大规模混合训练或 DPO。</p>
+
+  <h2>关键文件</h2>
+  <ul>
+    <li><a href="../../reports/public-sample/a100-targeted-family-coverage-probe/manifest.json">targeted probe manifest</a></li>
+    <li><a href="../../reports/public-sample/a100-targeted-family-coverage-probe/report.md">targeted probe report</a></li>
+    <li><a href="../../reports/public-sample/a100-targeted-family-coverage-probe/targeted_family_coverage_diagnosis.json">diagnosis json</a></li>
+    <li><a href="../../openspec/changes/archive/2026-06-14-run-targeted-family-coverage-probe/tasks.md">OpenSpec tasks</a></li>
+  </ul>
+
+  <h2>验证</h2>
+  <ul>
+    <li><code>PYTHONPATH=src python -m pytest -q tests/test_targeted_family_coverage_probe.py</code>：已通过。</li>
+    <li><code>PYTHONPATH=src python -m voice2task.cli.report leak-scan reports/public-sample/a100-targeted-family-coverage-probe</code>：已通过。</li>
+    <li><code>openspec validate --all --strict</code> 和 <code>git diff --check</code>：已通过。</li>
+  </ul>
+
+  <h2>不要夸大的点</h2>
+  <ul>
+    <li>不证明模型已经达到一开始想要的稳定语气和完整合同泛化。</li>
+    <li>不发布 adapter/checkpoint，不声称 private corpus 泛化或生产可用。</li>
+    <li>不把 soft slot F1 当主指标；主指标仍然是 strict <code>contract_exact_match</code>。</li>
+    <li>不说明 prompt、evaluator、DPO 或大规模数据扩展已经有效。</li>
+  </ul>
+
+  <h2>推荐下一步</h2>
+  <p>先开一个很小的 residual diagnosis 阶段：只看 dev/test 剩下的 slot value 和 normalized_command mismatch，确认是值归一化、家族边界、训练样本设计，还是解码/提示造成的严格差异。这个问题弄清楚以后，再决定是否做更系统的数据泛化。</p>
+  <p class="small">Generated from public-safe evidence under <code>reports/public-sample/a100-targeted-family-coverage-probe</code>.</p>
+</main>
+</body>
+</html>

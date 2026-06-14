@@ -1,0 +1,192 @@
+{
+  "artifact_policy": {
+    "checkpoints_or_adapters_copied_to_git": false,
+    "host_details_omitted": true,
+    "private_corpus_rows_omitted": true,
+    "private_overrides_copied_to_git": false,
+    "private_paths_omitted": true,
+    "raw_logs_copied_to_git": false,
+    "remote_caches_copied_to_git": false,
+    "ssh_details_omitted": true
+  },
+  "base_model": "Qwen/Qwen2.5-7B-Instruct",
+  "claims": {
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "evaluator_relaxation": false,
+    "held_out_generalization_recovered": false,
+    "live_browser_benchmark_claim": false,
+    "model_recovery_claim": false,
+    "prediction_repair_or_replacement": false,
+    "private_corpus_generalization_claim": false,
+    "production_readiness_claim": false,
+    "semantic_equivalence_primary_metric": false,
+    "targeted_family_coverage_probe": true
+  },
+  "comparison": {
+    "current_tiny_adapter_heldout_exact": {
+      "dev": 0.0,
+      "test": 0.0
+    },
+    "dev_test_improved_from_current_tiny": {
+      "dev": true,
+      "test": true
+    },
+    "prior_broad_residual_repair_exact": {
+      "dev": 0.0,
+      "test": 0.0,
+      "train": 0.3333333333333333
+    },
+    "targeted_family_coverage_exact": {
+      "dev": 0.16666666666666666,
+      "test": 0.16666666666666666,
+      "train": 1.0
+    },
+    "train_exact_improved_from_prior_broad_residual_repair": true
+  },
+  "dataset_manifest_id": "public-sample-20260613T072200Z",
+  "diagnostic_artifacts": {
+    "adapter_metadata_public": "reports/public-sample/a100-targeted-family-coverage-probe/adapter_metadata_public.json",
+    "diagnosis": "reports/public-sample/a100-targeted-family-coverage-probe/targeted_family_coverage_diagnosis.json",
+    "manifest": "reports/public-sample/a100-targeted-family-coverage-probe/manifest.json",
+    "report": "reports/public-sample/a100-targeted-family-coverage-probe/report.md"
+  },
+  "evidence_kind": "a100_targeted_family_coverage_probe",
+  "evidence_status": "private_adapter_public_split_predictions_written",
+  "prediction_source_kind": "private_a100_adapter",
+  "split_results": {
+    "dev": {
+      "alignment_row_mismatch_count": 5,
+      "artifact_paths": {
+        "alignment_diagnostics": "reports/public-sample/a100-targeted-family-coverage-probe/dev/alignment_diagnostics.json",
+        "constrained_decoding_diagnosis": "reports/public-sample/a100-targeted-family-coverage-probe/dev/constrained_decoding_diagnosis.json",
+        "generation_trace": "reports/public-sample/a100-targeted-family-coverage-probe/dev/generation_trace.jsonl",
+        "gold": "reports/public-sample/a100-targeted-family-coverage-probe/dev/dev_gold.jsonl",
+        "metrics": "reports/public-sample/a100-targeted-family-coverage-probe/dev/metrics.json",
+        "prediction_metadata": "reports/public-sample/a100-targeted-family-coverage-probe/dev/prediction_metadata.json",
+        "predictions": "reports/public-sample/a100-targeted-family-coverage-probe/dev/predictions.jsonl",
+        "prompt_snapshot": "reports/public-sample/a100-targeted-family-coverage-probe/dev/prompt_snapshot.json",
+        "raw_decoded_summary": "reports/public-sample/a100-targeted-family-coverage-probe/dev/raw_decoded_summary.jsonl",
+        "schema_diagnostics": "reports/public-sample/a100-targeted-family-coverage-probe/dev/schema_diagnostics.json"
+      },
+      "confirmation_accuracy": 1.0,
+      "constrained_decode_invalid_prediction_count": 0,
+      "contract_exact_match": 0.16666666666666666,
+      "field_mismatch_counts": {
+        "normalized_command": 2,
+        "slots": 3
+      },
+      "gold_row_count": 6,
+      "json_valid_rate": 1.0,
+      "prediction_count": 6,
+      "prediction_split": "dev",
+      "route_accuracy": 1.0,
+      "safety_precision": 1.0,
+      "safety_recall": 1.0,
+      "schema_invalid_prediction_count": 0,
+      "slot_f1": 0.5,
+      "slot_f1_soft": 0.9333333333333332,
+      "task_type_accuracy": 1.0
+    },
+    "test": {
+      "alignment_row_mismatch_count": 5,
+      "artifact_paths": {
+        "alignment_diagnostics": "reports/public-sample/a100-targeted-family-coverage-probe/test/alignment_diagnostics.json",
+        "constrained_decoding_diagnosis": "reports/public-sample/a100-targeted-family-coverage-probe/test/constrained_decoding_diagnosis.json",
+        "generation_trace": "reports/public-sample/a100-targeted-family-coverage-probe/test/generation_trace.jsonl",
+        "gold": "reports/public-sample/a100-targeted-family-coverage-probe/test/test_gold.jsonl",
+        "metrics": "reports/public-sample/a100-targeted-family-coverage-probe/test/metrics.json",
+        "prediction_metadata": "reports/public-sample/a100-targeted-family-coverage-probe/test/prediction_metadata.json",
+        "predictions": "reports/public-sample/a100-targeted-family-coverage-probe/test/predictions.jsonl",
+        "prompt_snapshot": "reports/public-sample/a100-targeted-family-coverage-probe/test/prompt_snapshot.json",
+        "raw_decoded_summary": "reports/public-sample/a100-targeted-family-coverage-probe/test/raw_decoded_summary.jsonl",
+        "schema_diagnostics": "reports/public-sample/a100-targeted-family-coverage-probe/test/schema_diagnostics.json"
+      },
+      "confirmation_accuracy": 1.0,
+      "constrained_decode_invalid_prediction_count": 0,
+      "contract_exact_match": 0.16666666666666666,
+      "field_mismatch_counts": {
+        "normalized_command": 2,
+        "slots": 3
+      },
+      "gold_row_count": 6,
+      "json_valid_rate": 1.0,
+      "prediction_count": 6,
+      "prediction_split": "test",
+      "route_accuracy": 1.0,
+      "safety_precision": 1.0,
+      "safety_recall": 1.0,
+      "schema_invalid_prediction_count": 0,
+      "slot_f1": 0.5,
+      "slot_f1_soft": 0.5,
+      "task_type_accuracy": 1.0
+    },
+    "train": {
+      "alignment_row_mismatch_count": 0,
+      "artifact_paths": {
+        "alignment_diagnostics": "reports/public-sample/a100-targeted-family-coverage-probe/train/alignment_diagnostics.json",
+        "constrained_decoding_diagnosis": "reports/public-sample/a100-targeted-family-coverage-probe/train/constrained_decoding_diagnosis.json",
+        "generation_trace": "reports/public-sample/a100-targeted-family-coverage-probe/train/generation_trace.jsonl",
+        "gold": "reports/public-sample/a100-targeted-family-coverage-probe/train/train_gold.jsonl",
+        "metrics": "reports/public-sample/a100-targeted-family-coverage-probe/train/metrics.json",
+        "prediction_metadata": "reports/public-sample/a100-targeted-family-coverage-probe/train/prediction_metadata.json",
+        "predictions": "reports/public-sample/a100-targeted-family-coverage-probe/train/predictions.jsonl",
+        "prompt_snapshot": "reports/public-sample/a100-targeted-family-coverage-probe/train/prompt_snapshot.json",
+        "raw_decoded_summary": "reports/public-sample/a100-targeted-family-coverage-probe/train/raw_decoded_summary.jsonl",
+        "schema_diagnostics": "reports/public-sample/a100-targeted-family-coverage-probe/train/schema_diagnostics.json"
+      },
+      "confirmation_accuracy": 1.0,
+      "constrained_decode_invalid_prediction_count": 0,
+      "contract_exact_match": 1.0,
+      "field_mismatch_counts": {},
+      "gold_row_count": 18,
+      "json_valid_rate": 1.0,
+      "prediction_count": 18,
+      "prediction_split": "train",
+      "route_accuracy": 1.0,
+      "safety_precision": 1.0,
+      "safety_recall": 1.0,
+      "schema_invalid_prediction_count": 0,
+      "slot_f1": 1.0,
+      "slot_f1_soft": 1.0,
+      "task_type_accuracy": 1.0
+    }
+  },
+  "summary": {
+    "heldout_exact_match_moved_from_zero": {
+      "dev": true,
+      "test": true
+    },
+    "heldout_full_recovery": false,
+    "overall_interpretation": "targeted_family_coverage_partial_transfer",
+    "recommended_next_step": "diagnose_remaining_slot_value_residuals_before_broad_scaling_or_dpo",
+    "train_memorization_observed": true
+  },
+  "training_row_ids": [
+    "seed-open-help",
+    "seed-open-help-aug-1",
+    "seed-open-help-aug-2",
+    "seed-clarify-target",
+    "seed-clarify-target-aug-1",
+    "seed-clarify-target-aug-2",
+    "seed-form-nickname",
+    "seed-form-nickname-aug-1",
+    "seed-form-nickname-aug-2",
+    "seed-block-transfer",
+    "seed-block-transfer-aug-1",
+    "seed-block-transfer-aug-2"
+  ],
+  "training_rows_used": 12,
+  "training_source_id_counts": {
+    "seed-block-transfer": 3,
+    "seed-clarify-target": 3,
+    "seed-form-nickname": 3,
+    "seed-open-help": 3
+  },
+  "training_source_ids": [
+    "seed-open-help",
+    "seed-clarify-target",
+    "seed-form-nickname",
+    "seed-block-transfer"
+  ]
+}

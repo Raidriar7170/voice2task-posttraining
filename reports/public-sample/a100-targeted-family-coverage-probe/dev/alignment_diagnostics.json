@@ -1,0 +1,87 @@
+{
+  "claims": {
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "field_level_public_sample_evidence_only": true,
+    "full_private_corpus_claim": false,
+    "invalid_predictions_remain_invalid": true,
+    "live_browser_benchmark_claim": false,
+    "production_readiness_claim": false
+  },
+  "diagnostic_kind": "browser_task_contract_alignment_mismatch",
+  "rows": [
+    {
+      "mismatches": [
+        {
+          "field_path": "normalized_command",
+          "gold_value_summary": "string(6): 打开示例网站",
+          "mismatch_category": "value_mismatch",
+          "prediction_value_summary": "string(6): 打开示例页面",
+          "row_id": "seed-open-example"
+        }
+      ],
+      "row_id": "seed-open-example"
+    },
+    {
+      "mismatches": [
+        {
+          "field_path": "normalized_command",
+          "gold_value_summary": "string(6): 打开示例网站",
+          "mismatch_category": "value_mismatch",
+          "prediction_value_summary": "string(11): 访问Example网站",
+          "row_id": "seed-open-example-aug-2"
+        }
+      ],
+      "row_id": "seed-open-example-aug-2"
+    },
+    {
+      "mismatches": [
+        {
+          "field_path": "slots",
+          "gold_value_summary": "object with keys: ambiguity",
+          "mismatch_category": "value_mismatch",
+          "prediction_value_summary": "object with keys: ambiguity",
+          "row_id": "seed-clarify-ambiguous"
+        }
+      ],
+      "row_id": "seed-clarify-ambiguous"
+    },
+    {
+      "mismatches": [
+        {
+          "field_path": "slots",
+          "gold_value_summary": "object with keys: ambiguity",
+          "mismatch_category": "value_mismatch",
+          "prediction_value_summary": "object with keys: ambiguity",
+          "row_id": "seed-clarify-ambiguous-aug-1"
+        }
+      ],
+      "row_id": "seed-clarify-ambiguous-aug-1"
+    },
+    {
+      "mismatches": [
+        {
+          "field_path": "slots",
+          "gold_value_summary": "object with keys: ambiguity",
+          "mismatch_category": "value_mismatch",
+          "prediction_value_summary": "object with keys: ambiguity",
+          "row_id": "seed-clarify-ambiguous-aug-2"
+        }
+      ],
+      "row_id": "seed-clarify-ambiguous-aug-2"
+    }
+  ],
+  "summary": {
+    "field_mismatch_counts": {
+      "normalized_command": 2,
+      "slots": 3
+    },
+    "gold_row_count": 6,
+    "mismatch_category_counts": {
+      "value_mismatch": 5
+    },
+    "prediction_count": 6,
+    "row_mismatch_count": 5,
+    "schema_invalid_prediction_count": 0
+  }
+}

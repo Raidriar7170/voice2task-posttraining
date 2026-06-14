@@ -1,0 +1,259 @@
+{
+  "claims": {
+    "a100_model_recovery_claim": false,
+    "a100_prediction_rerun_evidence": true,
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "does_not_coerce_or_replace_invalid_predictions": true,
+    "evidence_context": "a100_prediction_rerun",
+    "full_private_corpus_claim": false,
+    "held_out_generalization_claim": false,
+    "invalid_predictions_remain_invalid": true,
+    "live_browser_benchmark_claim": false,
+    "local_decoder_output_shape_hardening_only": false,
+    "production_readiness_claim": false
+  },
+  "diagnostic_kind": "constrained_contract_decoding_diagnosis",
+  "examples": {
+    "legacy_task_type_alias": [],
+    "path_like_route": [],
+    "prose_markdown_wrapper": []
+  },
+  "rows": [
+    {
+      "raw_parse_status": "json_object",
+      "retry_parse_status": null,
+      "row_id": "seed-search-weather",
+      "schema_guard": {
+        "raw_attempt_schema_valid": true,
+        "retry_attempt_schema_valid": null,
+        "validated_output_schema_valid": true,
+        "validated_output_source": "raw_attempt"
+      },
+      "symptoms": []
+    },
+    {
+      "raw_parse_status": "json_object",
+      "retry_parse_status": null,
+      "row_id": "seed-search-weather-aug-1",
+      "schema_guard": {
+        "raw_attempt_schema_valid": true,
+        "retry_attempt_schema_valid": null,
+        "validated_output_schema_valid": true,
+        "validated_output_source": "raw_attempt"
+      },
+      "symptoms": []
+    },
+    {
+      "raw_parse_status": "json_object",
+      "retry_parse_status": null,
+      "row_id": "seed-search-weather-aug-2",
+      "schema_guard": {
+        "raw_attempt_schema_valid": true,
+        "retry_attempt_schema_valid": null,
+        "validated_output_schema_valid": true,
+        "validated_output_source": "raw_attempt"
+      },
+      "symptoms": []
+    },
+    {
+      "raw_parse_status": "json_object",
+      "retry_parse_status": null,
+      "row_id": "seed-extract-price",
+      "schema_guard": {
+        "raw_attempt_schema_valid": true,
+        "retry_attempt_schema_valid": null,
+        "validated_output_schema_valid": true,
+        "validated_output_source": "raw_attempt"
+      },
+      "symptoms": []
+    },
+    {
+      "raw_parse_status": "json_object",
+      "retry_parse_status": null,
+      "row_id": "seed-extract-price-aug-1",
+      "schema_guard": {
+        "raw_attempt_schema_valid": true,
+        "retry_attempt_schema_valid": null,
+        "validated_output_schema_valid": true,
+        "validated_output_source": "raw_attempt"
+      },
+      "symptoms": []
+    },
+    {
+      "raw_parse_status": "json_object",
+      "retry_parse_status": null,
+      "row_id": "seed-extract-price-aug-2",
+      "schema_guard": {
+        "raw_attempt_schema_valid": true,
+        "retry_attempt_schema_valid": null,
+        "validated_output_schema_valid": true,
+        "validated_output_source": "raw_attempt"
+      },
+      "symptoms": []
+    },
+    {
+      "raw_parse_status": "json_object",
+      "retry_parse_status": null,
+      "row_id": "seed-open-help",
+      "schema_guard": {
+        "raw_attempt_schema_valid": true,
+        "retry_attempt_schema_valid": null,
+        "validated_output_schema_valid": true,
+        "validated_output_source": "raw_attempt"
+      },
+      "symptoms": []
+    },
+    {
+      "raw_parse_status": "json_object",
+      "retry_parse_status": null,
+      "row_id": "seed-open-help-aug-1",
+      "schema_guard": {
+        "raw_attempt_schema_valid": true,
+        "retry_attempt_schema_valid": null,
+        "validated_output_schema_valid": true,
+        "validated_output_source": "raw_attempt"
+      },
+      "symptoms": []
+    },
+    {
+      "raw_parse_status": "json_object",
+      "retry_parse_status": null,
+      "row_id": "seed-open-help-aug-2",
+      "schema_guard": {
+        "raw_attempt_schema_valid": true,
+        "retry_attempt_schema_valid": null,
+        "validated_output_schema_valid": true,
+        "validated_output_source": "raw_attempt"
+      },
+      "symptoms": []
+    },
+    {
+      "raw_parse_status": "json_object",
+      "retry_parse_status": null,
+      "row_id": "seed-clarify-target",
+      "schema_guard": {
+        "raw_attempt_schema_valid": true,
+        "retry_attempt_schema_valid": null,
+        "validated_output_schema_valid": true,
+        "validated_output_source": "raw_attempt"
+      },
+      "symptoms": []
+    },
+    {
+      "raw_parse_status": "json_object",
+      "retry_parse_status": null,
+      "row_id": "seed-clarify-target-aug-1",
+      "schema_guard": {
+        "raw_attempt_schema_valid": true,
+        "retry_attempt_schema_valid": null,
+        "validated_output_schema_valid": true,
+        "validated_output_source": "raw_attempt"
+      },
+      "symptoms": []
+    },
+    {
+      "raw_parse_status": "json_object",
+      "retry_parse_status": null,
+      "row_id": "seed-clarify-target-aug-2",
+      "schema_guard": {
+        "raw_attempt_schema_valid": true,
+        "retry_attempt_schema_valid": null,
+        "validated_output_schema_valid": true,
+        "validated_output_source": "raw_attempt"
+      },
+      "symptoms": []
+    },
+    {
+      "raw_parse_status": "json_object",
+      "retry_parse_status": null,
+      "row_id": "seed-form-nickname",
+      "schema_guard": {
+        "raw_attempt_schema_valid": true,
+        "retry_attempt_schema_valid": null,
+        "validated_output_schema_valid": true,
+        "validated_output_source": "raw_attempt"
+      },
+      "symptoms": []
+    },
+    {
+      "raw_parse_status": "json_object",
+      "retry_parse_status": null,
+      "row_id": "seed-form-nickname-aug-1",
+      "schema_guard": {
+        "raw_attempt_schema_valid": true,
+        "retry_attempt_schema_valid": null,
+        "validated_output_schema_valid": true,
+        "validated_output_source": "raw_attempt"
+      },
+      "symptoms": []
+    },
+    {
+      "raw_parse_status": "json_object",
+      "retry_parse_status": null,
+      "row_id": "seed-form-nickname-aug-2",
+      "schema_guard": {
+        "raw_attempt_schema_valid": true,
+        "retry_attempt_schema_valid": null,
+        "validated_output_schema_valid": true,
+        "validated_output_source": "raw_attempt"
+      },
+      "symptoms": []
+    },
+    {
+      "raw_parse_status": "json_object",
+      "retry_parse_status": null,
+      "row_id": "seed-block-transfer",
+      "schema_guard": {
+        "raw_attempt_schema_valid": true,
+        "retry_attempt_schema_valid": null,
+        "validated_output_schema_valid": true,
+        "validated_output_source": "raw_attempt"
+      },
+      "symptoms": []
+    },
+    {
+      "raw_parse_status": "json_object",
+      "retry_parse_status": null,
+      "row_id": "seed-block-transfer-aug-1",
+      "schema_guard": {
+        "raw_attempt_schema_valid": true,
+        "retry_attempt_schema_valid": null,
+        "validated_output_schema_valid": true,
+        "validated_output_source": "raw_attempt"
+      },
+      "symptoms": []
+    },
+    {
+      "raw_parse_status": "json_object",
+      "retry_parse_status": null,
+      "row_id": "seed-block-transfer-aug-2",
+      "schema_guard": {
+        "raw_attempt_schema_valid": true,
+        "retry_attempt_schema_valid": null,
+        "validated_output_schema_valid": true,
+        "validated_output_source": "raw_attempt"
+      },
+      "symptoms": []
+    }
+  ],
+  "summary": {
+    "decoded_summary_row_count": 18,
+    "invalid_prediction_count": 0,
+    "invalid_predictions_remain_invalid": true,
+    "legacy_task_type_alias_count": 0,
+    "parse_status_counts": {
+      "raw_attempt": {
+        "json_object": 18
+      },
+      "retry_attempt": {}
+    },
+    "path_like_route_count": 0,
+    "prediction_count": 18,
+    "prediction_schema_valid_count": 18,
+    "prose_markdown_wrapper_count": 0,
+    "raw_attempt_schema_valid_count": 18,
+    "retry_attempt_schema_valid_count": 0,
+    "validated_output_schema_valid_count": 18
+  }
+}

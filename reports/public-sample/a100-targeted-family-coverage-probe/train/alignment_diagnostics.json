@@ -1,0 +1,21 @@
+{
+  "claims": {
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "field_level_public_sample_evidence_only": true,
+    "full_private_corpus_claim": false,
+    "invalid_predictions_remain_invalid": true,
+    "live_browser_benchmark_claim": false,
+    "production_readiness_claim": false
+  },
+  "diagnostic_kind": "browser_task_contract_alignment_mismatch",
+  "rows": [],
+  "summary": {
+    "field_mismatch_counts": {},
+    "gold_row_count": 18,
+    "mismatch_category_counts": {},
+    "prediction_count": 18,
+    "row_mismatch_count": 0,
+    "schema_invalid_prediction_count": 0
+  }
+}
