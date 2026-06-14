@@ -1598,6 +1598,177 @@ def _field_mismatch_counts_for_family(alignment: dict[str, Any], row_ids: set[st
     return dict(sorted(counts.items()))
 
 
+def _targeted_residual_field_value(value: Any) -> Any:
+    if value is _MISSING:
+        return "missing"
+    return _sanitize_public_value(value)
+
+
+def _targeted_slot_value_drift_bucket(gold_value: Any, prediction_value: Any) -> str:
+    if isinstance(gold_value, dict) and isinstance(prediction_value, dict):
+        gold_keys = set(gold_value)
+        prediction_keys = set(prediction_value)
+        if gold_keys == prediction_keys == {"field"}:
+            gold_field = str(gold_value.get("field", "")).strip().lower()
+            prediction_field = str(prediction_value.get("field", "")).strip().lower()
+            if gold_field != prediction_field and {gold_field, prediction_field} == {"邮箱", "email"}:
+                return "slot_value_language_variant"
+        if gold_keys == prediction_keys:
+            return "slot_value_canonical_phrase_drift"
+    return "other_value_drift"
+
+
+def _targeted_value_drift_bucket(field_path: str, gold_value: Any, prediction_value: Any) -> str:
+    if field_path == "normalized_command":
+        return "normalized_command_paraphrase_drift"
+    if field_path == "slots":
+        return _targeted_slot_value_drift_bucket(gold_value, prediction_value)
+    return "other_value_drift"
+
+
+def _alignment_rows_by_id(alignment: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
+    rows = alignment.get("rows") if isinstance(alignment, dict) else []
+    by_id: dict[str, list[dict[str, Any]]] = {}
+    for row in rows if isinstance(rows, list) else []:
+        if not isinstance(row, dict):
+            continue
+        row_id = _sanitize_id(str(row.get("row_id", "")))
+        mismatches = row.get("mismatches")
+        by_id[row_id] = [mismatch for mismatch in mismatches if isinstance(mismatch, dict)] if isinstance(
+            mismatches, list
+        ) else []
+    return by_id
+
+
+def diagnose_targeted_slot_value_residuals(
+    *,
+    targeted_manifest: dict[str, Any],
+    rows_by_split: dict[str, list[SFTDatasetRow]],
+    predictions_by_split: dict[str, dict[str, Any]],
+    alignment_by_split: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
+    residuals: list[dict[str, Any]] = []
+    split_results = targeted_manifest.get("split_results", {})
+
+    for split in ("dev", "test"):
+        rows = rows_by_split.get(split, [])
+        row_by_id = {_sanitize_id(row.id): row for row in rows}
+        predictions = predictions_by_split.get(split, {})
+        alignment_rows = _alignment_rows_by_id(alignment_by_split.get(split, {}))
+        for row_id, mismatches in sorted(alignment_rows.items()):
+            row = row_by_id.get(row_id)
+            if row is None:
+                continue
+            gold = as_contract(row.target_contract).to_dict()
+            raw_prediction = predictions.get(row.id)
+            parsed_prediction = raw_prediction
+            if isinstance(raw_prediction, str):
+                try:
+                    parsed_prediction = json.loads(raw_prediction)
+                except json.JSONDecodeError:
+                    parsed_prediction = {}
+            prediction_object = parsed_prediction if isinstance(parsed_prediction, dict) else {}
+            for mismatch in mismatches:
+                field_path = _sanitize_public_summary(str(mismatch.get("field_path", "unknown")))
+                gold_value = _field_value(gold, field_path)
+                prediction_value = _field_value(prediction_object, field_path)
+                drift_bucket = _targeted_value_drift_bucket(field_path, gold_value, prediction_value)
+                residuals.append(
+                    {
+                        "split": split,
+                        "row_id": row_id,
+                        "source_family_id": _source_family_id(row),
+                        "field_path": field_path,
+                        "drift_bucket": drift_bucket,
+                        "mismatch_category": _sanitize_public_summary(
+                            str(mismatch.get("mismatch_category", "unknown"))
+                        ),
+                        "gold_value": _targeted_residual_field_value(gold_value),
+                        "predicted_value": _targeted_residual_field_value(prediction_value),
+                        "gold_value_summary": _alignment_value_summary(gold_value, missing=gold_value is _MISSING),
+                        "predicted_value_summary": _alignment_value_summary(
+                            prediction_value,
+                            missing=prediction_value is _MISSING,
+                        ),
+                    }
+                )
+
+    by_split = _count_by([entry["split"] for entry in residuals])
+    by_field = _count_by([entry["field_path"] for entry in residuals])
+    by_family = _count_by([entry["source_family_id"] for entry in residuals])
+    by_bucket = _count_by([entry["drift_bucket"] for entry in residuals])
+    strict_exact = {
+        split: float(split_results.get(split, {}).get("contract_exact_match", 0.0)) for split in ("dev", "test")
+    }
+    structure_metrics_ok = all(
+        float(split_results.get(split, {}).get(metric, 0.0)) == 1.0
+        for split in ("dev", "test")
+        for metric in (
+            "json_valid_rate",
+            "task_type_accuracy",
+            "route_accuracy",
+            "confirmation_accuracy",
+            "safety_precision",
+            "safety_recall",
+        )
+    ) and all(int(split_results.get(split, {}).get("schema_invalid_prediction_count", 0)) == 0 for split in ("dev", "test"))
+
+    return {
+        "evidence_kind": "targeted_slot_value_residual_diagnosis",
+        "diagnostic_mode": "local_public_safe_no_training_no_generation_no_metric_change",
+        "source_targeted_probe": {
+            "evidence_kind": _sanitize_public_summary(str(targeted_manifest.get("evidence_kind", "unknown"))),
+            "dataset_manifest_id": _sanitize_public_summary(str(targeted_manifest.get("dataset_manifest_id", ""))),
+            "base_model": _sanitize_public_summary(str(targeted_manifest.get("base_model", ""))),
+            "overall_interpretation": _sanitize_public_summary(
+                str(targeted_manifest.get("overall_interpretation", "unknown"))
+            ),
+            "training_source_ids": _sanitize_public_value(targeted_manifest.get("training_source_ids", [])),
+        },
+        "summary": {
+            "strict_contract_exact_match": strict_exact,
+            "json_schema_task_route_safety_confirmation_ok": structure_metrics_ok,
+            "residual_row_count": len(residuals),
+            "residual_field_counts": by_field,
+            "residual_drift_bucket_counts": by_bucket,
+            "broad_scaling_recommended_now": False,
+            "dpo_recommended_now": False,
+            "recommended_next_step": "design_slot_value_generalization_cases_before_broad_scaling_or_dpo",
+        },
+        "aggregates": {
+            "by_split": by_split,
+            "by_field_path": by_field,
+            "by_source_family": by_family,
+            "by_drift_bucket": by_bucket,
+        },
+        "residuals": residuals,
+        "execution_scope": {
+            "local_public_sample_only": True,
+            "new_data_generated": False,
+            "training_run": False,
+            "dpo_run": False,
+            "a100_execution": False,
+            "prediction_run": False,
+            "evaluator_metric_change": False,
+            "prediction_repair_or_replacement": False,
+        },
+        "claims": {
+            "diagnosis_only": True,
+            "model_recovery_claim": False,
+            "held_out_generalization_recovered": False,
+            "private_corpus_generalization_claim": False,
+            "checkpoint_release": False,
+            "adapter_release": False,
+            "production_readiness_claim": False,
+            "live_browser_benchmark_claim": False,
+            "prediction_repair_or_replacement": False,
+            "semantic_equivalence_primary_metric": False,
+            "evaluator_relaxation": False,
+            "soft_slot_f1_primary_metric": False,
+        },
+    }
+
+
 def diagnose_heldout_family_strategy(
     *,
     load_rows_path: Path,

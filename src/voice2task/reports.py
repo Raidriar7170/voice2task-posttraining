@@ -1615,6 +1615,112 @@ def write_heldout_family_strategy_report(
     return {"json": json_path, "markdown": markdown_path}
 
 
+def write_targeted_slot_value_residual_report(
+    diagnostics: dict[str, Any],
+    output_dir: Path,
+    title: str = "Voice2Task targeted slot value residual diagnosis",
+) -> dict[str, Path]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    json_path = output_dir / "targeted_slot_value_residual_diagnosis.json"
+    markdown_path = output_dir / "targeted_slot_value_residual_diagnosis.md"
+    manifest_path = output_dir / "manifest.json"
+    safe_diagnostics = _sanitize_report_value(diagnostics)
+    write_json(json_path, safe_diagnostics)
+
+    manifest = {
+        "evidence_kind": safe_diagnostics["evidence_kind"],
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "source_targeted_probe": safe_diagnostics["source_targeted_probe"],
+        "summary": safe_diagnostics["summary"],
+        "aggregates": safe_diagnostics["aggregates"],
+        "claims": safe_diagnostics["claims"],
+        "artifact_policy": {
+            "raw_logs_copied_to_git": False,
+            "checkpoints_or_adapters_copied_to_git": False,
+            "private_overrides_copied_to_git": False,
+            "private_paths_omitted": True,
+            "host_details_omitted": True,
+            "ssh_details_omitted": True,
+            "private_corpus_rows_omitted": True,
+            "prediction_repair_or_replacement": False,
+            "evaluator_metric_change": False,
+        },
+        "diagnostic_artifacts": {
+            "diagnosis": "reports/public-sample/targeted-slot-value-residual-diagnosis/targeted_slot_value_residual_diagnosis.json",
+            "markdown": "reports/public-sample/targeted-slot-value-residual-diagnosis/targeted_slot_value_residual_diagnosis.md",
+            "manifest": "reports/public-sample/targeted-slot-value-residual-diagnosis/manifest.json",
+        },
+    }
+    write_json(manifest_path, manifest)
+
+    summary = safe_diagnostics["summary"]
+    aggregates = safe_diagnostics["aggregates"]
+    lines = [
+        f"# {title}",
+        "",
+        (
+            "This local public-sample diagnosis explains the remaining targeted-family held-out residuals. "
+            "It is not broad scaling yet, not DPO, not prediction repair, and not a model recovery claim."
+        ),
+        "",
+        "## Boundary",
+        "",
+        "- strict `contract_exact_match` remains primary.",
+        "- Soft slot F1 and semantic equivalence remain diagnostic-only.",
+        "- Predictions are not repaired, replaced, rewritten, or normalized.",
+        "- Evaluator rules and metrics are not relaxed.",
+        "- This is not a checkpoint release, adapter release, production-readiness claim, or live-browser benchmark claim.",
+        "",
+        "## Summary",
+        "",
+        f"- Strict exact match: `{summary['strict_contract_exact_match']}`",
+        f"- Structure metrics already correct: `{summary['json_schema_task_route_safety_confirmation_ok']}`",
+        f"- Residual rows: `{summary['residual_row_count']}`",
+        f"- Residual fields: `{summary['residual_field_counts']}`",
+        f"- Drift buckets: `{summary['residual_drift_bucket_counts']}`",
+        f"- Broad scaling recommended now: `{summary['broad_scaling_recommended_now']}`",
+        f"- DPO recommended now: `{summary['dpo_recommended_now']}`",
+        f"- Recommended next step: `{summary['recommended_next_step']}`",
+        "",
+        "## Aggregates",
+        "",
+        f"- By split: `{aggregates['by_split']}`",
+        f"- By field path: `{aggregates['by_field_path']}`",
+        f"- By source family: `{aggregates['by_source_family']}`",
+        f"- By drift bucket: `{aggregates['by_drift_bucket']}`",
+        "",
+        "## Residual Rows",
+        "",
+    ]
+    for entry in safe_diagnostics.get("residuals", []):
+        lines.extend(
+            [
+                f"### `{entry['split']} / {entry['row_id']}`",
+                "",
+                f"- Source family: `{entry['source_family_id']}`",
+                f"- Field: `{entry['field_path']}`",
+                f"- Drift bucket: `{entry['drift_bucket']}`",
+                f"- Gold: `{entry['gold_value_summary']}`",
+                f"- Prediction: `{entry['predicted_value_summary']}`",
+                "",
+            ]
+        )
+
+    lines.extend(
+        [
+            "## Recommended Next Step",
+            "",
+            (
+                "Design a bounded slot value generalization/data-design phase before broad scaling or DPO. "
+                "The next work should target canonical slot values and command wording, while preserving strict "
+                "`contract_exact_match` as the primary metric."
+            ),
+        ]
+    )
+    markdown_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    return {"json": json_path, "markdown": markdown_path, "manifest": manifest_path}
+
+
 def write_source_diagnostics_report(
     diagnostics: dict[str, Any],
     output_dir: Path,

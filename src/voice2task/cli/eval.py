@@ -12,6 +12,7 @@ from voice2task.evaluation import (
     diagnose_schema_mismatches,
     diagnose_sft_contract_learning_signal,
     diagnose_source_alignment,
+    diagnose_targeted_slot_value_residuals,
     evaluate_predictions,
     load_predictions,
     load_sft_rows,
@@ -30,6 +31,7 @@ from voice2task.reports import (
     write_schema_diagnostics_report,
     write_sft_contract_learning_signal_report,
     write_source_diagnostics_report,
+    write_targeted_slot_value_residual_report,
 )
 
 
@@ -153,6 +155,20 @@ def build_parser() -> argparse.ArgumentParser:
         default="Voice2Task held-out family strategy diagnosis",
     )
 
+    diagnose_targeted_residuals = subcommands.add_parser("diagnose-targeted-slot-value-residuals")
+    diagnose_targeted_residuals.add_argument("--targeted-manifest", type=Path, required=True)
+    diagnose_targeted_residuals.add_argument("--dev-gold", type=Path, required=True)
+    diagnose_targeted_residuals.add_argument("--dev-predictions", type=Path, required=True)
+    diagnose_targeted_residuals.add_argument("--dev-alignment", type=Path, required=True)
+    diagnose_targeted_residuals.add_argument("--test-gold", type=Path, required=True)
+    diagnose_targeted_residuals.add_argument("--test-predictions", type=Path, required=True)
+    diagnose_targeted_residuals.add_argument("--test-alignment", type=Path, required=True)
+    diagnose_targeted_residuals.add_argument("--output", type=Path, required=True)
+    diagnose_targeted_residuals.add_argument(
+        "--title",
+        default="Voice2Task targeted slot value residual diagnosis",
+    )
+
     smoke = subcommands.add_parser("smoke")
     smoke.add_argument("--gold", type=Path, required=True)
     smoke.add_argument("--predictions", type=Path, required=True)
@@ -267,6 +283,29 @@ def main(argv: list[str] | None = None) -> int:
             },
         )
         paths = write_heldout_family_strategy_report(
+            diagnostics,
+            output_dir=args.output,
+            title=args.title,
+        )
+        print(json.dumps({"ok": True, "paths": {key: value.as_posix() for key, value in paths.items()}}, indent=2))
+        return 0
+    if args.command == "diagnose-targeted-slot-value-residuals":
+        diagnostics = diagnose_targeted_slot_value_residuals(
+            targeted_manifest=read_json(args.targeted_manifest),
+            rows_by_split={
+                "dev": load_sft_rows(args.dev_gold),
+                "test": load_sft_rows(args.test_gold),
+            },
+            predictions_by_split={
+                "dev": load_predictions(args.dev_predictions),
+                "test": load_predictions(args.test_predictions),
+            },
+            alignment_by_split={
+                "dev": read_json(args.dev_alignment),
+                "test": read_json(args.test_alignment),
+            },
+        )
+        paths = write_targeted_slot_value_residual_report(
             diagnostics,
             output_dir=args.output,
             title=args.title,
