@@ -1,0 +1,31 @@
+{
+  "adapter_path": "<a100_project_root>/runs/a100-merged-slot-value-heldout-eval/adapter",
+  "allow_private_prediction": true,
+  "base_model": "Qwen/Qwen2.5-7B-Instruct",
+  "dataset_manifest_id": "public-sample-20260615T040231Z",
+  "evidence_output_dir": "<a100_project_root>/evidence/a100-hardened-canonical-policy-rerun/train",
+  "generalization_claim": false,
+  "hardened_canonical_policy": true,
+  "max_new_tokens": 256,
+  "merged_slot_value_candidates": true,
+  "model_cache_policy": "private_remote_model_cache_not_copied_to_git",
+  "model_source": "modelscope",
+  "output_policy": "hardened_canonical_policy_rerun_requires_private_override_no_direct_public_template_run",
+  "output_root": "<a100_project_root>",
+  "overfit_diagnostic": false,
+  "prediction_artifact_policy": "commit_only_sanitized_public_sample_sidecars_metrics_manifest_and_report",
+  "prediction_only": true,
+  "prediction_split": "train",
+  "private_override_required": true,
+  "private_override_requirements": [
+    "Create a private override outside git before remote execution.",
+    "Resolve <a100_project_root> to the approved private A100 project directory.",
+    "Resolve adapter_path to the existing merged slot value 7B adapter.",
+    "Run prediction only; do not launch SFT, DPO, GRPO, or adapter continuation training.",
+    "Require prediction metadata to show the hardened canonical prompt flags before interpreting results.",
+    "Keep raw logs, checkpoints, adapters, caches, host details, SSH details, tokens, and private corpus rows out of committed artifacts."
+  ],
+  "public_sample_manifest": "data/public-samples/manifest_public_sample.json",
+  "reference_runtime": "a100-hardened-canonical-policy-train-prediction",
+  "source_adapter_runtime": "a100-merged-slot-value-heldout-eval"
+}

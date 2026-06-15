@@ -2404,9 +2404,23 @@ def _merged_split_result(
     prediction_metadata_path: Path | None,
 ) -> dict[str, Any]:
     split_counts = public_manifest.get("split_counts", {})
+    metadata_manifest_id = prediction_metadata.get("dataset_manifest_id")
+    manifest_id = public_manifest.get("manifest_id")
+    if metadata_manifest_id is not None and metadata_manifest_id != manifest_id:
+        raise ValueError(
+            f"prediction metadata manifest mismatch for {split}: {metadata_manifest_id!r} != {manifest_id!r}"
+        )
+    metadata_split = prediction_metadata.get("prediction_split")
+    if metadata_split is not None and metadata_split != split:
+        raise ValueError(f"prediction metadata split mismatch for {split}: {metadata_split!r}")
     prediction_count = prediction_metadata.get("prediction_count")
     if not isinstance(prediction_count, int):
         prediction_count = int(split_counts.get(split, 0)) if isinstance(split_counts, dict) else 0
+    expected_count = int(split_counts.get(split, 0)) if isinstance(split_counts, dict) else 0
+    if expected_count and prediction_count != expected_count:
+        raise ValueError(
+            f"prediction metadata count mismatch for {split}: {prediction_count!r} != {expected_count!r}"
+        )
     exact = _metric_value(metrics_payload, "contract_exact_match")
     residual_rows = max(0, prediction_count - round(prediction_count * exact))
     return {
@@ -2649,6 +2663,306 @@ def write_merged_slot_value_heldout_eval_report(
             (
                 "- This is not a checkpoint release, adapter release, production-readiness claim, "
                 "private-corpus generalization claim, public full-corpus release, or live-browser benchmark claim."
+            ),
+        ]
+    )
+    report_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    return {"json": json_path, "manifest": manifest_path, "report": report_path}
+
+
+def _prior_merged_exact(prior_merged_manifest: dict[str, Any]) -> dict[str, float]:
+    if prior_merged_manifest.get("evidence_kind") != "a100_merged_slot_value_heldout_eval":
+        raise ValueError("prior merged manifest must be a100_merged_slot_value_heldout_eval evidence")
+    comparison = prior_merged_manifest.get("comparison")
+    if isinstance(comparison, dict) and isinstance(comparison.get("merged_slot_value_exact"), dict):
+        exact = comparison["merged_slot_value_exact"]
+        missing = [split for split in ("train", "dev", "test") if split not in exact]
+        if missing:
+            raise ValueError("prior merged manifest missing strict exact values: " + ", ".join(missing))
+        return {split: float(exact[split]) for split in ("train", "dev", "test")}
+    split_results = prior_merged_manifest.get("split_results")
+    if isinstance(split_results, dict):
+        missing = [
+            split
+            for split in ("train", "dev", "test")
+            if not isinstance(split_results.get(split), dict)
+            or "contract_exact_match" not in split_results[split]
+        ]
+        if missing:
+            raise ValueError("prior merged manifest missing split_results exact values: " + ", ".join(missing))
+        return {
+            split: float(split_results[split]["contract_exact_match"])
+            for split in ("train", "dev", "test")
+        }
+    raise ValueError("prior merged manifest missing comparison or split_results strict exact values")
+
+
+def _hardened_prompt_policy_flags(prediction_metadata: dict[str, Any]) -> dict[str, bool]:
+    constraints = prediction_metadata.get("prompt_constraints")
+    if not isinstance(constraints, dict):
+        constraints = {}
+    clarify_visible = bool(constraints.get("clarify_ambiguity_canonical_phrase_visible"))
+    unsafe_payment_visible = bool(constraints.get("unsafe_payment_canonical_command_visible"))
+    return {
+        "clarify_ambiguity_canonical_phrase_visible": clarify_visible,
+        "unsafe_payment_canonical_command_visible": unsafe_payment_visible,
+        "hardened_canonical_policy_visible": clarify_visible and unsafe_payment_visible,
+    }
+
+
+def _hardened_policy_interpretation(
+    *,
+    rerun_status: str,
+    split_results: dict[str, dict[str, Any]],
+    prior_exact: dict[str, float],
+    prompt_policy_by_split: dict[str, dict[str, bool]],
+) -> str:
+    if rerun_status == "blocked":
+        return "hardened_canonical_policy_rerun_blocked"
+    if not all(
+        prompt_policy_by_split.get(split, {}).get("hardened_canonical_policy_visible", False)
+        for split in ("train", "dev", "test")
+    ):
+        return "hardened_canonical_policy_prompt_flags_missing"
+    heldout_exact = {split: float(split_results[split]["contract_exact_match"]) for split in ("dev", "test")}
+    if all(value >= 1.0 for value in heldout_exact.values()):
+        return "hardened_canonical_policy_public_heldout_recovered"
+    if any(heldout_exact[split] < prior_exact.get(split, 0.0) for split in ("dev", "test")):
+        return "hardened_canonical_policy_heldout_regressed"
+    if any(heldout_exact[split] > prior_exact.get(split, 0.0) for split in ("dev", "test")):
+        return "hardened_canonical_policy_heldout_improved_partial"
+    return "hardened_canonical_policy_heldout_unchanged"
+
+
+def write_hardened_canonical_policy_rerun_report(
+    *,
+    public_manifest: dict[str, Any],
+    prior_merged_manifest: dict[str, Any],
+    output_dir: Path,
+    rerun_status: str = "observed",
+    blocked_reason: str | None = None,
+    metrics_by_split: dict[str, dict[str, Any]] | None = None,
+    prediction_metadata_by_split: dict[str, dict[str, Any]] | None = None,
+    metrics_paths: dict[str, Path | None] | None = None,
+    prediction_metadata_paths: dict[str, Path | None] | None = None,
+) -> dict[str, Path]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    json_path = output_dir / "hardened_canonical_policy_rerun.json"
+    manifest_path = output_dir / "manifest.json"
+    report_path = output_dir / "report.md"
+    metrics_by_split = metrics_by_split or {}
+    prediction_metadata_by_split = prediction_metadata_by_split or {}
+    metrics_paths = metrics_paths or {}
+    prediction_metadata_paths = prediction_metadata_paths or {}
+    if rerun_status not in {"observed", "blocked"}:
+        raise ValueError(f"unsupported hardened canonical policy rerun status: {rerun_status}")
+    if rerun_status == "blocked" and not (blocked_reason or "").strip():
+        raise ValueError("blocked hardened canonical policy rerun requires a blocked_reason")
+    if rerun_status == "observed":
+        missing = [
+            split
+            for split in ("train", "dev", "test")
+            if split not in metrics_by_split or split not in prediction_metadata_by_split
+        ]
+        if missing:
+            raise ValueError(f"observed hardened rerun missing split artifacts: {', '.join(missing)}")
+
+    prior_exact = _prior_merged_exact(prior_merged_manifest)
+    split_results = (
+        {
+            split: _merged_split_result(
+                split=split,
+                metrics_payload=metrics_by_split[split],
+                prediction_metadata=prediction_metadata_by_split[split],
+                public_manifest=public_manifest,
+                metrics_path=metrics_paths[split] or Path("not_provided"),
+                prediction_metadata_path=prediction_metadata_paths.get(split),
+            )
+            for split in ("train", "dev", "test")
+        }
+        if rerun_status == "observed"
+        else {}
+    )
+    prompt_policy_by_split = (
+        {
+            split: _hardened_prompt_policy_flags(prediction_metadata_by_split[split])
+            for split in ("train", "dev", "test")
+        }
+        if rerun_status == "observed"
+        else {}
+    )
+    hardened_exact = (
+        {split: split_results[split]["contract_exact_match"] for split in ("train", "dev", "test")}
+        if rerun_status == "observed"
+        else {}
+    )
+    exact_delta = (
+        {split: hardened_exact[split] - prior_exact.get(split, 0.0) for split in ("train", "dev", "test")}
+        if rerun_status == "observed"
+        else {}
+    )
+    prompt_policy_visible = (
+        all(prompt_policy_by_split[split]["hardened_canonical_policy_visible"] for split in ("train", "dev", "test"))
+        if rerun_status == "observed"
+        else False
+    )
+    public_heldout_recovered = rerun_status == "observed" and prompt_policy_visible and all(
+        hardened_exact.get(split, 0.0) >= 1.0 for split in ("dev", "test")
+    )
+    interpretation = _hardened_policy_interpretation(
+        rerun_status=rerun_status,
+        split_results=split_results,
+        prior_exact=prior_exact,
+        prompt_policy_by_split=prompt_policy_by_split,
+    )
+    safe_prediction_metadata = _sanitize_report_value(prediction_metadata_by_split)
+    evidence = {
+        "evidence_kind": "a100_hardened_canonical_policy_rerun",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "rerun_status": rerun_status,
+        "blocked_reason": blocked_reason if rerun_status == "blocked" else None,
+        "base_model": "Qwen/Qwen2.5-7B-Instruct",
+        "dataset_manifest_id": public_manifest.get("manifest_id"),
+        "formal_public_sample_counts": public_manifest.get("counts", {}),
+        "formal_public_sample_split_counts": public_manifest.get("split_counts", {}),
+        "source_adapter_runtime": "a100-merged-slot-value-heldout-eval",
+        "training_status": "prediction_only_no_training",
+        "prediction_splits": ["train", "dev", "test"],
+        "primary_evidence_splits": ["dev", "test"],
+        "split_results": split_results,
+        "prompt_policy_by_split": prompt_policy_by_split,
+        "comparison": {
+            "prior_merged_slot_value_exact": prior_exact,
+            "hardened_canonical_policy_exact": hardened_exact,
+            "dev_test_exact_delta": {split: exact_delta[split] for split in ("dev", "test")}
+            if exact_delta
+            else {},
+            "train_exact_delta": exact_delta.get("train") if exact_delta else None,
+        },
+        "overall_interpretation": interpretation,
+        "claims": {
+            "prediction_only_rerun": True,
+            "training_performed": False,
+            "data_changed": False,
+            "evaluator_relaxation": False,
+            "prediction_repair_or_replacement": False,
+            "hardened_prompt_policy_visible": prompt_policy_visible,
+            "public_sample_heldout_strict_exact_recovered": public_heldout_recovered,
+            "held_out_generalization_recovered": public_heldout_recovered,
+            "model_recovery_claim": False,
+            "private_corpus_generalization_claim": False,
+            "adapter_release": False,
+            "checkpoint_release": False,
+            "production_readiness_claim": False,
+            "live_browser_benchmark_claim": False,
+            "semantic_equivalence_primary_metric": False,
+            "soft_slot_f1_primary_metric": False,
+        },
+        "artifact_policy": {
+            "raw_logs_copied_to_git": False,
+            "checkpoints_or_adapters_copied_to_git": False,
+            "remote_caches_copied_to_git": False,
+            "private_overrides_copied_to_git": False,
+            "private_paths_omitted": True,
+            "host_details_omitted": True,
+            "ssh_details_omitted": True,
+            "private_corpus_rows_omitted": True,
+        },
+        "prediction_metadata_by_split": safe_prediction_metadata,
+    }
+    safe_evidence = _sanitize_report_value(evidence)
+    write_json(json_path, safe_evidence)
+    manifest = {
+        "evidence_kind": "a100_hardened_canonical_policy_rerun",
+        "generated_at": safe_evidence["generated_at"],
+        "rerun_status": safe_evidence["rerun_status"],
+        "blocked_reason": safe_evidence["blocked_reason"],
+        "dataset_manifest_id": safe_evidence["dataset_manifest_id"],
+        "formal_public_sample_counts": safe_evidence["formal_public_sample_counts"],
+        "prediction_splits": safe_evidence["prediction_splits"],
+        "primary_evidence_splits": safe_evidence["primary_evidence_splits"],
+        "split_results": safe_evidence["split_results"],
+        "prompt_policy_by_split": safe_evidence["prompt_policy_by_split"],
+        "comparison": safe_evidence["comparison"],
+        "overall_interpretation": safe_evidence["overall_interpretation"],
+        "claims": safe_evidence["claims"],
+        "artifact_policy": safe_evidence["artifact_policy"],
+        "diagnostic_artifacts": {
+            "evidence": (
+                "reports/public-sample/a100-hardened-canonical-policy-rerun/"
+                "hardened_canonical_policy_rerun.json"
+            ),
+            "manifest": "reports/public-sample/a100-hardened-canonical-policy-rerun/manifest.json",
+            "report": "reports/public-sample/a100-hardened-canonical-policy-rerun/report.md",
+            "prior_merged_manifest": "reports/public-sample/a100-merged-slot-value-heldout-eval/manifest.json",
+        },
+    }
+    write_json(manifest_path, manifest)
+
+    lines = [
+        "# A100 hardened canonical policy rerun",
+        "",
+        (
+            "Status: prediction-only hardened prompt rerun. This phase reuses the prior merged slot-value "
+            "7B adapter and does not train, repair, normalize, or re-score predictions."
+        ),
+        "",
+        "## Scope",
+        "",
+        f"- Dataset manifest: `{safe_evidence['dataset_manifest_id']}`",
+        f"- Rerun status: `{safe_evidence['rerun_status']}`",
+        f"- Source adapter runtime: `{safe_evidence['source_adapter_runtime']}`",
+        f"- Overall interpretation: `{safe_evidence['overall_interpretation']}`",
+    ]
+    if rerun_status == "blocked":
+        lines.extend(
+            [
+                f"- Blocked reason: `{safe_evidence['blocked_reason']}`",
+                "",
+                "## Blocked Status",
+                "",
+                (
+                    "Blocked before private prediction. No A100 prediction, training, metric comparison, "
+                    "or model-quality evidence was produced."
+                ),
+            ]
+        )
+    else:
+        lines.extend(
+            [
+                "",
+                "## Split Results",
+                "",
+                (
+                    "| split | rows | contract_exact_match | prior exact | delta | slot_f1 | "
+                    "json_valid_rate | residual rows | hardened prompt visible |"
+                ),
+                "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |",
+            ]
+        )
+        for split in ("train", "dev", "test"):
+            result = safe_evidence["split_results"][split]
+            policy = safe_evidence["prompt_policy_by_split"][split]
+            delta = safe_evidence["comparison"]["hardened_canonical_policy_exact"][split] - safe_evidence["comparison"][
+                "prior_merged_slot_value_exact"
+            ].get(split, 0.0)
+            lines.append(
+                f"| {split} | {result['prediction_count']} | {result['contract_exact_match']:.4f} | "
+                f"{safe_evidence['comparison']['prior_merged_slot_value_exact'].get(split, 0.0):.4f} | "
+                f"{delta:.4f} | {result['slot_f1']:.4f} | {result['json_valid_rate']:.4f} | "
+                f"{result['residual_row_count']} | {policy['hardened_canonical_policy_visible']} |"
+            )
+    lines.extend(
+        [
+            "",
+            "## Boundary",
+            "",
+            "- strict `contract_exact_match` remains primary.",
+            "- Train exact match, JSON-valid rate, and soft slot F1 are not model recovery claims.",
+            "- Predictions are not repaired, replaced, normalized, or re-scored.",
+            (
+                "- This is not new training, checkpoint release, adapter release, production-readiness evidence, "
+                "private-corpus generalization evidence, public full-corpus release, or a live-browser benchmark claim."
             ),
         ]
     )

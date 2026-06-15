@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hardened Canonical Policy Rerun Brief</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17202a;
+      --muted: #596579;
+      --line: #d7dee9;
+      --panel: #f7f9fc;
+      --accent: #0f766e;
+      --warn: #b45309;
+      --bad: #991b1b;
+    }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--ink); background: #fff; }
+    main { max-width: 980px; margin: 0 auto; padding: 32px 24px 56px; }
+    h1 { font-size: 28px; line-height: 1.2; margin: 0 0 8px; letter-spacing: 0; }
+    h2 { font-size: 18px; margin: 28px 0 10px; }
+    p { line-height: 1.65; margin: 8px 0; }
+    a { color: var(--accent); text-decoration: none; }
+    code { background: #edf2f7; border-radius: 4px; padding: 1px 5px; }
+    .status { display: inline-block; margin: 10px 0 18px; padding: 5px 9px; border-radius: 6px; background: #fff7ed; color: var(--warn); border: 1px solid #fed7aa; font-weight: 600; }
+    .summary { border-left: 4px solid var(--warn); padding: 10px 14px; background: #fffbeb; }
+    .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 18px 0; }
+    .metric { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
+    .metric b { display: block; font-size: 20px; margin-bottom: 4px; }
+    .metric span { color: var(--muted); font-size: 13px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+    th, td { border-bottom: 1px solid var(--line); padding: 8px 6px; text-align: left; vertical-align: top; }
+    th { color: var(--muted); font-weight: 600; }
+    ul { padding-left: 20px; }
+    li { margin: 6px 0; line-height: 1.55; }
+    .warn { color: var(--bad); font-weight: 600; }
+    .note { color: var(--muted); font-size: 13px; }
+    @media (max-width: 720px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Hardened Canonical Policy Rerun</h1>
+  <div class="status">状态：blocked，未产生真实 7B prediction/eval 指标</div>
+  <section class="summary">
+    <p><strong>一句话结论：</strong>远端 A100 可连接、GPU 可用、当前 prompt dry-run 已能看到 hardened canonical flags，但本阶段必须复用的 <code>a100-merged-slot-value-heldout-eval</code> adapter 在远端开发机缺失，所以没有启动真实 prediction，也没有新模型效果指标。</p>
+  </section>
+
+  <section class="grid" aria-label="phase status">
+    <div class="metric"><b>seen</b><span>SSH / remote root preflight</span></div>
+    <div class="metric"><b>seen</b><span>idle GPU preflight</span></div>
+    <div class="metric"><b>seen</b><span>prompt flags in dry-run</span></div>
+    <div class="metric"><b>BLOCKED</b><span>source adapter missing</span></div>
+  </section>
+
+  <h2>这阶段实际做了什么</h2>
+  <ul>
+    <li>新建 OpenSpec change：<code>run-a100-hardened-canonical-policy-rerun</code>。</li>
+    <li>新增 train/dev/test 三份 prediction-only A100 configs，指向上一轮 merged slot-value adapter 占位路径。</li>
+    <li>新增 hardened rerun evidence writer，支持 observed metrics 和 blocked status 两种输出。</li>
+    <li>同步当前源码/config/data 到远端允许目录，并做了只读 GPU 与 adapter preflight。</li>
+    <li>由于 required adapter 缺失，生成 public-safe blocked evidence，而不是改用其它旧 adapter。</li>
+  </ul>
+
+  <h2>为什么阻塞</h2>
+  <p>下面三项 <code>seen</code> 是本轮交互中的远端 preflight 观察，不是 machine-readable evidence 里的模型结果；公开 evidence 只记录可提交的阻塞结论和 claim 边界。</p>
+  <table>
+    <thead>
+      <tr><th>检查项</th><th>结果</th><th>含义</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>SSH / project root</td><td><code>pass</code></td><td>远端开发机和批准写入目录可用。</td></tr>
+      <tr><td>GPU occupancy</td><td><code>pass</code></td><td>至少一张 A100 可安全选择。</td></tr>
+      <tr><td>CLI dry-run</td><td><code>pass</code></td><td>新 config 能解析，且 prompt metadata 暴露 hardened flags。</td></tr>
+      <tr><td>source adapter</td><td><code>missing</code></td><td>没有找到本阶段要求的 merged slot-value adapter，不能真实跑 prediction。</td></tr>
+    </tbody>
+  </table>
+
+  <h2>关键文件</h2>
+  <ul>
+    <li><a href="../../reports/public-sample/a100-hardened-canonical-policy-rerun/manifest.json">blocked evidence manifest</a></li>
+    <li><a href="../../reports/public-sample/a100-hardened-canonical-policy-rerun/report.md">blocked evidence report</a></li>
+    <li><a href="../../reports/public-sample/a100-hardened-canonical-policy-rerun/hardened_canonical_policy_rerun.json">machine-readable evidence</a></li>
+    <li><a href="../../reports/public-sample/a100-hardened-canonical-policy-rerun/leak_scan_result.json">leak scan result</a></li>
+    <li><a href="../../configs/sft-a100-hardened-canonical-policy-train-prediction.json">train prediction config</a></li>
+    <li><a href="../../configs/sft-a100-hardened-canonical-policy-dev-prediction.json">dev prediction config</a></li>
+    <li><a href="../../configs/sft-a100-hardened-canonical-policy-test-prediction.json">test prediction config</a></li>
+    <li><a href="../../openspec/changes/archive/2026-06-15-run-a100-hardened-canonical-policy-rerun/tasks.md">OpenSpec tasks</a></li>
+  </ul>
+
+  <h2>验证</h2>
+  <ul>
+    <li><code>PYTHONPATH=src pytest -q tests/test_hardened_canonical_policy_rerun.py</code> -> pass。</li>
+    <li><code>PYTHONPATH=src pytest -q tests/test_formatting_training.py tests/test_slot_value_candidate_public_sample_merge.py tests/test_hardened_canonical_policy_rerun.py</code> -> pass。</li>
+    <li><code>PYTHONPATH=src python -m voice2task.cli.data validate --sft data/public-samples/sft_public_sample.jsonl --dpo data/public-samples/dpo_public_sample.jsonl --manifest data/public-samples/manifest_public_sample.json --public</code> -> pass。</li>
+    <li><code>openspec validate run-a100-hardened-canonical-policy-rerun --strict</code> -> pass。</li>
+    <li><code>openspec validate --all --strict</code> -> pass。</li>
+  </ul>
+
+  <h2>不要夸大的点</h2>
+  <ul>
+    <li class="warn">没有真实 7B hardened-policy train/dev/test prediction 指标。</li>
+    <li>没有新训练、没有 evaluator 放宽、没有 prediction repair 或 re-score。</li>
+    <li>不能据此更新“距离最初目标”的模型效果判断；上一轮 merged evidence 仍是最新真实指标。</li>
+    <li>不发布 checkpoint/adapter，不声称 private-corpus 泛化、生产可用或 live-browser benchmark 提升。</li>
+  </ul>
+
+  <h2>推荐下一步</h2>
+  <p>先恢复或重新生成上一轮 <code>a100-merged-slot-value-heldout-eval</code> adapter 到批准远端目录，然后重跑本 OpenSpec phase 的 prediction-only train/dev/test eval。不要改用旧 full-corpus、targeted-family 或其它 adapter，否则指标无法回答本阶段问题。</p>
+
+  <p class="note">Generated from OpenSpec artifacts, local tests, remote preflight, and public-safe evidence under <code>reports/public-sample/a100-hardened-canonical-policy-rerun</code>.</p>
+</main>
+</body>
+</html>

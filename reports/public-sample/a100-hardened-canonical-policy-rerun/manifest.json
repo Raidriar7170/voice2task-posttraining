@@ -1,0 +1,68 @@
+{
+  "artifact_policy": {
+    "checkpoints_or_adapters_copied_to_git": false,
+    "host_details_omitted": true,
+    "private_corpus_rows_omitted": true,
+    "private_overrides_copied_to_git": false,
+    "private_paths_omitted": true,
+    "raw_logs_copied_to_git": false,
+    "remote_caches_copied_to_git": false,
+    "ssh_details_omitted": true
+  },
+  "blocked_reason": "source_adapter_missing_on_a100",
+  "claims": {
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "data_changed": false,
+    "evaluator_relaxation": false,
+    "hardened_prompt_policy_visible": false,
+    "held_out_generalization_recovered": false,
+    "live_browser_benchmark_claim": false,
+    "model_recovery_claim": false,
+    "prediction_only_rerun": true,
+    "prediction_repair_or_replacement": false,
+    "private_corpus_generalization_claim": false,
+    "production_readiness_claim": false,
+    "public_sample_heldout_strict_exact_recovered": false,
+    "semantic_equivalence_primary_metric": false,
+    "soft_slot_f1_primary_metric": false,
+    "training_performed": false
+  },
+  "comparison": {
+    "dev_test_exact_delta": {},
+    "hardened_canonical_policy_exact": {},
+    "prior_merged_slot_value_exact": {
+      "dev": 0.5,
+      "test": 0.8333333333333334,
+      "train": 1.0
+    },
+    "train_exact_delta": null
+  },
+  "dataset_manifest_id": "public-sample-20260615T040231Z",
+  "diagnostic_artifacts": {
+    "evidence": "reports/public-sample/a100-hardened-canonical-policy-rerun/hardened_canonical_policy_rerun.json",
+    "manifest": "reports/public-sample/a100-hardened-canonical-policy-rerun/manifest.json",
+    "prior_merged_manifest": "reports/public-sample/a100-merged-slot-value-heldout-eval/manifest.json",
+    "report": "reports/public-sample/a100-hardened-canonical-policy-rerun/report.md"
+  },
+  "evidence_kind": "a100_hardened_canonical_policy_rerun",
+  "formal_public_sample_counts": {
+    "dpo_pairs": 125,
+    "seed_rows": 14,
+    "sft_rows": 42
+  },
+  "generated_at": "2026-06-15T07:45:46.034378+00:00",
+  "overall_interpretation": "hardened_canonical_policy_rerun_blocked",
+  "prediction_splits": [
+    "train",
+    "dev",
+    "test"
+  ],
+  "primary_evidence_splits": [
+    "dev",
+    "test"
+  ],
+  "prompt_policy_by_split": {},
+  "rerun_status": "blocked",
+  "split_results": {}
+}

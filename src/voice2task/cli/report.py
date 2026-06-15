@@ -8,6 +8,7 @@ from pathlib import Path
 from voice2task.io import read_json
 from voice2task.leak_scan import scan_paths
 from voice2task.reports import (
+    write_hardened_canonical_policy_rerun_report,
     write_merged_slot_value_heldout_eval_report,
     write_runtime_label_provenance_check_evidence_pack,
     write_runtime_label_provenance_prep_evidence_pack,
@@ -86,6 +87,19 @@ def build_parser() -> argparse.ArgumentParser:
     merged_eval.add_argument("--test-prediction-metadata", type=Path)
     merged_eval.add_argument("--prior-targeted-manifest", type=Path)
     merged_eval.add_argument("--output", type=Path, required=True)
+
+    hardened_rerun = subcommands.add_parser("hardened-canonical-policy-rerun")
+    hardened_rerun.add_argument("--public-manifest", type=Path, required=True)
+    hardened_rerun.add_argument("--prior-merged-manifest", type=Path, required=True)
+    hardened_rerun.add_argument("--rerun-status", choices=("observed", "blocked"), default="observed")
+    hardened_rerun.add_argument("--blocked-reason")
+    hardened_rerun.add_argument("--train-metrics", type=Path)
+    hardened_rerun.add_argument("--dev-metrics", type=Path)
+    hardened_rerun.add_argument("--test-metrics", type=Path)
+    hardened_rerun.add_argument("--train-prediction-metadata", type=Path)
+    hardened_rerun.add_argument("--dev-prediction-metadata", type=Path)
+    hardened_rerun.add_argument("--test-prediction-metadata", type=Path)
+    hardened_rerun.add_argument("--output", type=Path, required=True)
     return parser
 
 
@@ -244,6 +258,66 @@ def main(argv: list[str] | None = None) -> int:
                     "ok": True,
                     "paths": {key: value.as_posix() for key, value in report_paths.items()},
                     "summary": {
+                        "overall_interpretation": evidence.get("overall_interpretation"),
+                        "split_results": evidence.get("split_results", {}),
+                    },
+                },
+                indent=2,
+            )
+        )
+        return 0
+    if args.command == "hardened-canonical-policy-rerun":
+        metrics_paths = {
+            "train": args.train_metrics,
+            "dev": args.dev_metrics,
+            "test": args.test_metrics,
+        }
+        prediction_metadata_paths = {
+            "train": args.train_prediction_metadata,
+            "dev": args.dev_prediction_metadata,
+            "test": args.test_prediction_metadata,
+        }
+        if args.rerun_status == "observed":
+            missing = [
+                name
+                for name, path in {
+                    **{f"{split}_metrics": metrics_paths[split] for split in ("train", "dev", "test")},
+                    **{
+                        f"{split}_prediction_metadata": prediction_metadata_paths[split]
+                        for split in ("train", "dev", "test")
+                    },
+                }.items()
+                if path is None
+            ]
+            if missing:
+                raise SystemExit(
+                    "observed hardened-canonical-policy-rerun requires: " + ", ".join(sorted(missing))
+                )
+        if args.rerun_status == "blocked" and not (args.blocked_reason or "").strip():
+            raise SystemExit("blocked hardened-canonical-policy-rerun requires --blocked-reason")
+        report_paths = write_hardened_canonical_policy_rerun_report(
+            public_manifest=read_json(args.public_manifest),
+            prior_merged_manifest=read_json(args.prior_merged_manifest),
+            output_dir=args.output,
+            rerun_status=args.rerun_status,
+            blocked_reason=args.blocked_reason,
+            metrics_by_split={
+                split: read_json(path) for split, path in metrics_paths.items() if path is not None
+            },
+            prediction_metadata_by_split={
+                split: read_json(path) for split, path in prediction_metadata_paths.items() if path is not None
+            },
+            metrics_paths=metrics_paths,
+            prediction_metadata_paths=prediction_metadata_paths,
+        )
+        evidence = read_json(report_paths["json"])
+        print(
+            json.dumps(
+                {
+                    "ok": True,
+                    "paths": {key: value.as_posix() for key, value in report_paths.items()},
+                    "summary": {
+                        "rerun_status": evidence.get("rerun_status"),
                         "overall_interpretation": evidence.get("overall_interpretation"),
                         "split_results": evidence.get("split_results", {}),
                     },
