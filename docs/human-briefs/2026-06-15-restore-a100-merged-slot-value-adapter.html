@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>恢复 merged slot-value adapter 阶段简报</title>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #172033; background: #f7f8fb; }
+    main { max-width: 980px; margin: 0 auto; padding: 32px 22px 44px; }
+    h1 { font-size: 28px; margin: 0 0 10px; }
+    h2 { font-size: 18px; margin: 28px 0 10px; }
+    p, li { line-height: 1.68; }
+    code { background: #eef1f6; padding: 2px 5px; border-radius: 4px; }
+    .summary { background: #ffffff; border: 1px solid #dde3ee; border-radius: 8px; padding: 18px 20px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin: 18px 0; }
+    .metric { background: #ffffff; border: 1px solid #dde3ee; border-radius: 8px; padding: 14px 16px; }
+    .metric b { display: block; font-size: 20px; margin-bottom: 5px; }
+    table { width: 100%; border-collapse: collapse; background: #ffffff; border: 1px solid #dde3ee; }
+    th, td { padding: 10px 12px; border-bottom: 1px solid #e7ebf2; text-align: left; vertical-align: top; }
+    th { background: #eef2f8; }
+    a { color: #2357c6; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>恢复 merged slot-value adapter 阶段简报</h1>
+  <div class="summary">
+    <p><strong>一句话结论：</strong>远端缺失的 <code>a100-merged-slot-value-heldout-eval</code> adapter 已按同名运行重新生成，并已写入 public-safe prerequisite evidence；本阶段不产生新的 prediction/eval 指标。</p>
+    <p><strong>当前状态：</strong>archived。</p>
+  </div>
+
+  <div class="grid">
+    <div class="metric"><b>available</b><span>adapter prerequisite</span></div>
+    <div class="metric"><b>regenerated</b><span>acquisition method</span></div>
+    <div class="metric"><b>30</b><span>SFT train rows used</span></div>
+    <div class="metric"><b>0</b><span>leak-scan findings in evidence dir</span></div>
+  </div>
+
+  <h2>本阶段做了什么</h2>
+  <ul>
+    <li>确认远端目标 adapter 不存在，未复用不等价的其它 adapter。</li>
+    <li>同步当前 source/config/public sample 到远端批准项目目录，并在空闲 GPU 上执行 merged slot-value SFT 再生成。</li>
+    <li>验证目标 adapter 目录包含 <code>adapter_config.json</code> 与 <code>adapter_model.safetensors</code>。</li>
+    <li>新增 public-safe report CLI/writer，记录 adapter prerequisite 可用性和边界。</li>
+  </ul>
+
+  <h2>关键文件</h2>
+  <table>
+    <tr><th>文件</th><th>作用</th></tr>
+    <tr><td><a href="../../reports/public-sample/a100-merged-slot-value-adapter-restore/report.md">adapter restore report</a></td><td>人可读 prerequisite evidence。</td></tr>
+    <tr><td><a href="../../reports/public-sample/a100-merged-slot-value-adapter-restore/manifest.json">adapter restore manifest</a></td><td>机器可读 evidence manifest。</td></tr>
+    <tr><td><a href="../../reports/public-sample/a100-merged-slot-value-adapter-restore/leak_scan_result.json">leak scan result</a></td><td>本阶段 public evidence 文件的泄露扫描结果。</td></tr>
+    <tr><td><a href="../../openspec/changes/archive/2026-06-15-restore-a100-merged-slot-value-adapter/tasks.md">OpenSpec tasks</a></td><td>本阶段已归档任务清单。</td></tr>
+    <tr><td><a href="../../tests/test_merged_slot_value_adapter_restore.py">focused tests</a></td><td>覆盖 regenerated、blocked 和边界断言。</td></tr>
+  </table>
+
+  <h2>验证</h2>
+  <ul>
+    <li><code>PYTHONPATH=src pytest -q tests/test_merged_slot_value_adapter_restore.py</code> -> 7 passed。</li>
+    <li><code>PYTHONPATH=src pytest -q tests/test_merged_slot_value_adapter_restore.py tests/test_hardened_canonical_policy_rerun.py tests/test_slot_value_candidate_public_sample_merge.py</code> -> 22 passed。</li>
+    <li><code>openspec validate restore-a100-merged-slot-value-adapter --strict</code> -> passed。</li>
+    <li><code>voice2task.leak_scan.scan_paths(...adapter-restore dir...)</code> -> ok, 0 findings。</li>
+  </ul>
+
+  <h2>不要过度声称</h2>
+  <ul>
+    <li>这不是 checkpoint 或 adapter release。</li>
+    <li>这不证明 hardened canonical policy rerun 已完成。</li>
+    <li>这不证明 held-out generalization、生产可用性、真实浏览器任务能力或语气目标已经达到。</li>
+    <li>本阶段没有提交 raw logs、host details、SSH details、private overrides、cache、checkpoint 或 adapter 权重。</li>
+  </ul>
+
+  <h2>推荐下一步</h2>
+  <p>如果 Reviewer 通过并归档本阶段，下一步回到 hardened canonical policy prediction-only rerun，使用刚恢复的 adapter 观察 train/dev/test contract metrics 和失败样本，而不是继续改数据或改 evaluator。</p>
+</main>
+</body>
+</html>

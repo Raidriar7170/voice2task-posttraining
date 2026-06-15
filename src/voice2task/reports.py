@@ -7,6 +7,7 @@ from typing import Any
 
 from voice2task.evaluation import EvaluationResult
 from voice2task.io import write_json, write_jsonl
+from voice2task.leak_scan import scan_paths
 from voice2task.schemas import PRIVATE_IP_RE, PRIVATE_PATH_RE, SECRET_RE
 
 PRIVATE_REPORT_PATH_RE = re.compile(r"(/(?:mnt/data|Users|root|tmp|private)/[^\s\"')]+|data/local-private/[^\s\"')]+)")
@@ -2968,6 +2969,179 @@ def write_hardened_canonical_policy_rerun_report(
     )
     report_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
     return {"json": json_path, "manifest": manifest_path, "report": report_path}
+
+
+def write_a100_merged_slot_value_adapter_restore_report(
+    *,
+    public_manifest: dict[str, Any],
+    prior_merged_manifest: dict[str, Any],
+    output_dir: Path,
+    restore_status: str,
+    acquisition_method: str,
+    blocked_reason: str | None = None,
+    adapter_checks: dict[str, bool] | None = None,
+    training_metadata: dict[str, Any] | None = None,
+    dependency_status: str = "not_recorded",
+    gpu_status: str = "not_recorded",
+) -> dict[str, Path]:
+    if prior_merged_manifest.get("evidence_kind") != "a100_merged_slot_value_heldout_eval":
+        raise ValueError("prior merged manifest must be a100_merged_slot_value_heldout_eval evidence")
+    if restore_status not in {"available", "blocked"}:
+        raise ValueError(f"unsupported adapter restore status: {restore_status}")
+    if acquisition_method not in {"restored", "regenerated", "not_available"}:
+        raise ValueError(f"unsupported adapter acquisition method: {acquisition_method}")
+    if restore_status == "available" and acquisition_method not in {"restored", "regenerated"}:
+        raise ValueError("available adapter restore requires restored or regenerated acquisition")
+    if restore_status == "blocked" and acquisition_method != "not_available":
+        raise ValueError("blocked adapter restore requires not_available acquisition")
+    if restore_status == "blocked" and not (blocked_reason or "").strip():
+        raise ValueError("blocked adapter restore requires a blocked_reason")
+    adapter_checks = dict(adapter_checks or {})
+    adapter_available = (
+        restore_status == "available"
+        and bool(adapter_checks.get("adapter_config.json"))
+        and bool(
+            adapter_checks.get("adapter_model.safetensors")
+            or adapter_checks.get("adapter_model.bin")
+        )
+    )
+    if restore_status == "available" and not adapter_available:
+        raise ValueError("available adapter restore requires adapter_config.json and adapter model file checks")
+    safe_training_metadata = _sanitize_report_value(training_metadata or {})
+    output_dir.mkdir(parents=True, exist_ok=True)
+    json_path = output_dir / "merged_slot_value_adapter_restore.json"
+    manifest_path = output_dir / "manifest.json"
+    report_path = output_dir / "report.md"
+    leak_scan_path = output_dir / "leak_scan_result.json"
+    evidence = {
+        "evidence_kind": "a100_merged_slot_value_adapter_restore",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "restore_status": restore_status,
+        "acquisition_method": acquisition_method,
+        "blocked_reason": blocked_reason if restore_status == "blocked" else None,
+        "adapter_available": adapter_available,
+        "source_adapter_runtime": "a100-merged-slot-value-heldout-eval",
+        "target_adapter_path_policy": "<a100_project_root>/runs/a100-merged-slot-value-heldout-eval/adapter",
+        "base_model": "Qwen/Qwen2.5-7B-Instruct",
+        "dataset_manifest_id": public_manifest.get("manifest_id"),
+        "formal_public_sample_counts": public_manifest.get("counts", {}),
+        "prior_merged_reference": {
+            "evidence_kind": prior_merged_manifest.get("evidence_kind"),
+            "manifest": "reports/public-sample/a100-merged-slot-value-heldout-eval/manifest.json",
+            "metrics_role": "historical_prior_only_not_this_phase",
+        },
+        "dependency_status": dependency_status,
+        "gpu_status": gpu_status,
+        "required_adapter_files": adapter_checks if restore_status == "available" else {},
+        "training_metadata": safe_training_metadata,
+        "claims": {
+            "adapter_prerequisite_available": adapter_available,
+            "prediction_metrics_produced": False,
+            "hardened_policy_rerun_completed": False,
+            "model_recovery_claim": False,
+            "adapter_release": False,
+            "checkpoint_release": False,
+            "private_corpus_generalization_claim": False,
+            "production_readiness_claim": False,
+            "live_browser_benchmark_claim": False,
+            "evaluator_relaxation": False,
+            "prediction_repair_or_replacement": False,
+        },
+        "artifact_policy": {
+            "raw_logs_copied_to_git": False,
+            "checkpoints_or_adapters_copied_to_git": False,
+            "remote_caches_copied_to_git": False,
+            "private_overrides_copied_to_git": False,
+            "private_paths_omitted": True,
+            "host_details_omitted": True,
+            "ssh_details_omitted": True,
+            "private_corpus_rows_omitted": True,
+        },
+    }
+    safe_evidence = _sanitize_report_value(evidence)
+    write_json(json_path, safe_evidence)
+    manifest = {
+        "evidence_kind": "a100_merged_slot_value_adapter_restore",
+        "generated_at": safe_evidence["generated_at"],
+        "restore_status": safe_evidence["restore_status"],
+        "acquisition_method": safe_evidence["acquisition_method"],
+        "blocked_reason": safe_evidence["blocked_reason"],
+        "adapter_available": safe_evidence["adapter_available"],
+        "dataset_manifest_id": safe_evidence["dataset_manifest_id"],
+        "source_adapter_runtime": safe_evidence["source_adapter_runtime"],
+        "dependency_status": safe_evidence["dependency_status"],
+        "gpu_status": safe_evidence["gpu_status"],
+        "required_adapter_files": safe_evidence["required_adapter_files"],
+        "claims": safe_evidence["claims"],
+        "artifact_policy": safe_evidence["artifact_policy"],
+        "diagnostic_artifacts": {
+            "evidence": (
+                "reports/public-sample/a100-merged-slot-value-adapter-restore/"
+                "merged_slot_value_adapter_restore.json"
+            ),
+            "manifest": "reports/public-sample/a100-merged-slot-value-adapter-restore/manifest.json",
+            "report": "reports/public-sample/a100-merged-slot-value-adapter-restore/report.md",
+            "leak_scan": "reports/public-sample/a100-merged-slot-value-adapter-restore/leak_scan_result.json",
+            "prior_merged_manifest": "reports/public-sample/a100-merged-slot-value-heldout-eval/manifest.json",
+        },
+    }
+    write_json(manifest_path, manifest)
+    lines = [
+        "# A100 merged slot value adapter restore",
+        "",
+        (
+            "Status: prerequisite adapter evidence. This report records whether the private merged "
+            "slot-value adapter is available for later prediction-only evaluation."
+        ),
+        "",
+        "## Scope",
+        "",
+        f"- Dataset manifest: `{safe_evidence['dataset_manifest_id']}`",
+        f"- Restore status: `{safe_evidence['restore_status']}`",
+        f"- Acquisition method: `{safe_evidence['acquisition_method']}`",
+        f"- Adapter available: `{safe_evidence['adapter_available']}`",
+        f"- Dependency status: `{safe_evidence['dependency_status']}`",
+        f"- GPU status: `{safe_evidence['gpu_status']}`",
+    ]
+    if restore_status == "blocked":
+        lines.append(f"- Blocked reason: `{safe_evidence['blocked_reason']}`")
+    lines.extend(
+        [
+            "",
+            "## Adapter Checks",
+            "",
+        ]
+    )
+    if safe_evidence["required_adapter_files"]:
+        for name, present in sorted(safe_evidence["required_adapter_files"].items()):
+            lines.append(f"- `{name}`: `{present}`")
+    else:
+        lines.append("- no adapter files accepted")
+    lines.extend(
+        [
+            "",
+            "## Boundary",
+            "",
+            "- This phase produces no train/dev/test prediction metrics.",
+            "- This is not a checkpoint release or adapter release.",
+            "- This is not model recovery, private-corpus generalization, production-readiness, or live-browser benchmark evidence.",
+            "- Public evidence leak scan is recorded in `leak_scan_result.json`.",
+        ]
+    )
+    report_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    leak_scan_result = scan_paths([json_path, manifest_path, report_path])
+    write_json(
+        leak_scan_path,
+        {
+            "evidence_kind": "a100_merged_slot_value_adapter_restore_leak_scan",
+            "generated_at": safe_evidence["generated_at"],
+            "paths_scanned": [json_path.name, manifest_path.name, report_path.name],
+            "ok": leak_scan_result.ok,
+            "finding_count": len(leak_scan_result.findings),
+            "findings": _sanitize_report_value([finding.__dict__ for finding in leak_scan_result.findings]),
+        },
+    )
+    return {"json": json_path, "manifest": manifest_path, "report": report_path, "leak_scan": leak_scan_path}
 
 
 def write_source_diagnostics_report(

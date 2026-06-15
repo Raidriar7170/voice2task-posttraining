@@ -8,6 +8,7 @@ from pathlib import Path
 from voice2task.io import read_json
 from voice2task.leak_scan import scan_paths
 from voice2task.reports import (
+    write_a100_merged_slot_value_adapter_restore_report,
     write_hardened_canonical_policy_rerun_report,
     write_merged_slot_value_heldout_eval_report,
     write_runtime_label_provenance_check_evidence_pack,
@@ -100,6 +101,22 @@ def build_parser() -> argparse.ArgumentParser:
     hardened_rerun.add_argument("--dev-prediction-metadata", type=Path)
     hardened_rerun.add_argument("--test-prediction-metadata", type=Path)
     hardened_rerun.add_argument("--output", type=Path, required=True)
+
+    adapter_restore = subcommands.add_parser("merged-slot-value-adapter-restore")
+    adapter_restore.add_argument("--public-manifest", type=Path, required=True)
+    adapter_restore.add_argument("--prior-merged-manifest", type=Path, required=True)
+    adapter_restore.add_argument("--restore-status", choices=("available", "blocked"), required=True)
+    adapter_restore.add_argument(
+        "--acquisition-method",
+        choices=("restored", "regenerated", "not_available"),
+        required=True,
+    )
+    adapter_restore.add_argument("--blocked-reason")
+    adapter_restore.add_argument("--adapter-check", action="append", default=[])
+    adapter_restore.add_argument("--training-metadata", type=Path)
+    adapter_restore.add_argument("--dependency-status", default="not_recorded")
+    adapter_restore.add_argument("--gpu-status", default="not_recorded")
+    adapter_restore.add_argument("--output", type=Path, required=True)
     return parser
 
 
@@ -320,6 +337,49 @@ def main(argv: list[str] | None = None) -> int:
                         "rerun_status": evidence.get("rerun_status"),
                         "overall_interpretation": evidence.get("overall_interpretation"),
                         "split_results": evidence.get("split_results", {}),
+                    },
+                },
+                indent=2,
+            )
+        )
+        return 0
+    if args.command == "merged-slot-value-adapter-restore":
+        if args.restore_status == "blocked" and not (args.blocked_reason or "").strip():
+            raise SystemExit("blocked merged-slot-value-adapter-restore requires --blocked-reason")
+        adapter_checks: dict[str, bool] = {}
+        for value in args.adapter_check:
+            if "=" not in value:
+                raise SystemExit("--adapter-check values must use name=present|missing")
+            name, status = value.split("=", 1)
+            name = name.strip()
+            status = status.strip().lower()
+            if not name:
+                raise SystemExit("--adapter-check requires a non-empty file name")
+            if status not in {"present", "missing", "true", "false"}:
+                raise SystemExit("--adapter-check values must use name=present|missing")
+            adapter_checks[name] = status in {"present", "true"}
+        report_paths = write_a100_merged_slot_value_adapter_restore_report(
+            public_manifest=read_json(args.public_manifest),
+            prior_merged_manifest=read_json(args.prior_merged_manifest),
+            output_dir=args.output,
+            restore_status=args.restore_status,
+            acquisition_method=args.acquisition_method,
+            blocked_reason=args.blocked_reason,
+            adapter_checks=adapter_checks,
+            training_metadata=read_json(args.training_metadata) if args.training_metadata else None,
+            dependency_status=args.dependency_status,
+            gpu_status=args.gpu_status,
+        )
+        evidence = read_json(report_paths["json"])
+        print(
+            json.dumps(
+                {
+                    "ok": True,
+                    "paths": {key: value.as_posix() for key, value in report_paths.items()},
+                    "summary": {
+                        "restore_status": evidence.get("restore_status"),
+                        "acquisition_method": evidence.get("acquisition_method"),
+                        "adapter_available": evidence.get("adapter_available"),
                     },
                 },
                 indent=2,

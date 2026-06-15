@@ -1,0 +1,46 @@
+{
+  "acquisition_method": "regenerated",
+  "adapter_available": true,
+  "artifact_policy": {
+    "checkpoints_or_adapters_copied_to_git": false,
+    "host_details_omitted": true,
+    "private_corpus_rows_omitted": true,
+    "private_overrides_copied_to_git": false,
+    "private_paths_omitted": true,
+    "raw_logs_copied_to_git": false,
+    "remote_caches_copied_to_git": false,
+    "ssh_details_omitted": true
+  },
+  "blocked_reason": null,
+  "claims": {
+    "adapter_prerequisite_available": true,
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "evaluator_relaxation": false,
+    "hardened_policy_rerun_completed": false,
+    "live_browser_benchmark_claim": false,
+    "model_recovery_claim": false,
+    "prediction_metrics_produced": false,
+    "prediction_repair_or_replacement": false,
+    "private_corpus_generalization_claim": false,
+    "production_readiness_claim": false
+  },
+  "dataset_manifest_id": "public-sample-20260615T040231Z",
+  "dependency_status": "remote_venv_verified: torch/transformers/peft/datasets/trl/accelerate available",
+  "diagnostic_artifacts": {
+    "evidence": "reports/public-sample/a100-merged-slot-value-adapter-restore/merged_slot_value_adapter_restore.json",
+    "leak_scan": "reports/public-sample/a100-merged-slot-value-adapter-restore/leak_scan_result.json",
+    "manifest": "reports/public-sample/a100-merged-slot-value-adapter-restore/manifest.json",
+    "prior_merged_manifest": "reports/public-sample/a100-merged-slot-value-heldout-eval/manifest.json",
+    "report": "reports/public-sample/a100-merged-slot-value-adapter-restore/report.md"
+  },
+  "evidence_kind": "a100_merged_slot_value_adapter_restore",
+  "generated_at": "2026-06-15T08:41:14.393873+00:00",
+  "gpu_status": "idle_gpu_selected_for_regeneration",
+  "required_adapter_files": {
+    "adapter_config.json": true,
+    "adapter_model.safetensors": true
+  },
+  "restore_status": "available",
+  "source_adapter_runtime": "a100-merged-slot-value-heldout-eval"
+}

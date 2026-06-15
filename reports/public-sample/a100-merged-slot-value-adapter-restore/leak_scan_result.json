@@ -1,0 +1,12 @@
+{
+  "evidence_kind": "a100_merged_slot_value_adapter_restore_leak_scan",
+  "finding_count": 0,
+  "findings": [],
+  "generated_at": "2026-06-15T08:41:14.393873+00:00",
+  "ok": true,
+  "paths_scanned": [
+    "merged_slot_value_adapter_restore.json",
+    "manifest.json",
+    "report.md"
+  ]
+}
