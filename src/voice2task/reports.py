@@ -1646,8 +1646,14 @@ def write_targeted_slot_value_residual_report(
             "evaluator_metric_change": False,
         },
         "diagnostic_artifacts": {
-            "diagnosis": "reports/public-sample/targeted-slot-value-residual-diagnosis/targeted_slot_value_residual_diagnosis.json",
-            "markdown": "reports/public-sample/targeted-slot-value-residual-diagnosis/targeted_slot_value_residual_diagnosis.md",
+            "diagnosis": (
+                "reports/public-sample/targeted-slot-value-residual-diagnosis/"
+                "targeted_slot_value_residual_diagnosis.json"
+            ),
+            "markdown": (
+                "reports/public-sample/targeted-slot-value-residual-diagnosis/"
+                "targeted_slot_value_residual_diagnosis.md"
+            ),
             "manifest": "reports/public-sample/targeted-slot-value-residual-diagnosis/manifest.json",
         },
     }
@@ -1669,7 +1675,10 @@ def write_targeted_slot_value_residual_report(
         "- Soft slot F1 and semantic equivalence remain diagnostic-only.",
         "- Predictions are not repaired, replaced, rewritten, or normalized.",
         "- Evaluator rules and metrics are not relaxed.",
-        "- This is not a checkpoint release, adapter release, production-readiness claim, or live-browser benchmark claim.",
+        (
+            "- This is not a checkpoint release, adapter release, production-readiness claim, "
+            "or live-browser benchmark claim."
+        ),
         "",
         "## Summary",
         "",
@@ -1721,6 +1730,127 @@ def write_targeted_slot_value_residual_report(
     return {"json": json_path, "markdown": markdown_path, "manifest": manifest_path}
 
 
+def write_merged_slot_value_residual_report(
+    diagnostics: dict[str, Any],
+    output_dir: Path,
+    title: str = "Voice2Task merged slot value residual diagnosis",
+) -> dict[str, Path]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    json_path = output_dir / "merged_slot_value_residual_diagnosis.json"
+    markdown_path = output_dir / "merged_slot_value_residual_diagnosis.md"
+    manifest_path = output_dir / "manifest.json"
+    safe_diagnostics = _sanitize_report_value(diagnostics)
+    write_json(json_path, safe_diagnostics)
+
+    manifest = {
+        "evidence_kind": safe_diagnostics["evidence_kind"],
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "source_merged_eval": safe_diagnostics["source_merged_eval"],
+        "summary": safe_diagnostics["summary"],
+        "aggregates": safe_diagnostics["aggregates"],
+        "claims": safe_diagnostics["claims"],
+        "artifact_policy": {
+            "raw_predictions_copied_to_git": False,
+            "raw_logs_copied_to_git": False,
+            "checkpoints_or_adapters_copied_to_git": False,
+            "private_overrides_copied_to_git": False,
+            "private_paths_omitted": True,
+            "host_details_omitted": True,
+            "ssh_details_omitted": True,
+            "private_corpus_rows_omitted": True,
+            "prediction_repair_or_replacement": False,
+            "evaluator_metric_change": False,
+            "slot_normalization": False,
+        },
+        "diagnostic_artifacts": {
+            "diagnosis": (
+                "reports/public-sample/merged-slot-value-residual-diagnosis/"
+                "merged_slot_value_residual_diagnosis.json"
+            ),
+            "markdown": (
+                "reports/public-sample/merged-slot-value-residual-diagnosis/"
+                "merged_slot_value_residual_diagnosis.md"
+            ),
+            "manifest": "reports/public-sample/merged-slot-value-residual-diagnosis/manifest.json",
+        },
+    }
+    write_json(manifest_path, manifest)
+
+    summary = safe_diagnostics["summary"]
+    aggregates = safe_diagnostics["aggregates"]
+    lines = [
+        f"# {title}",
+        "",
+        (
+            "This diagnosis explains the remaining merged slot-value dev/test strict residuals. "
+            "It is not training, not prediction rerun, not held-out recovery, and not evaluator relaxation."
+        ),
+        "",
+        "## Boundary",
+        "",
+        "- strict `contract_exact_match` remains primary.",
+        "- Strict `slot_f1` remains authoritative for slot scoring.",
+        "- Soft slot F1 is internal diagnostic-only, not semantic-equivalence scoring.",
+        "- Predictions are not repaired, replaced, rewritten, normalized, or re-scored.",
+        (
+            "- This is not a checkpoint release, adapter release, production-readiness claim, "
+            "or live-browser benchmark claim."
+        ),
+        "",
+        "## Summary",
+        "",
+        f"- Strict exact match: `{summary['strict_contract_exact_match']}`",
+        f"- Strict slot F1: `{summary['strict_slot_f1']}`",
+        f"- Soft slot F1: `{summary['soft_slot_f1']}`",
+        f"- Soft slot F1 primary metric: `{summary['soft_slot_f1_primary_metric']}`",
+        f"- Residual rows: `{summary['residual_row_count']}`",
+        f"- Source count consistency: `{summary['source_count_consistency']}`",
+        f"- Residual fields: `{summary['residual_field_counts']}`",
+        f"- Residual categories: `{summary['residual_category_counts']}`",
+        f"- Recommended next step: `{summary['recommended_next_step']}`",
+        "",
+        "## Aggregates",
+        "",
+        f"- By split residual rows: `{aggregates['by_split_residual_rows']}`",
+        f"- By split residual fields: `{aggregates['by_split_residual_fields']}`",
+        f"- By field path: `{aggregates['by_field_path']}`",
+        f"- By category: `{aggregates['by_category']}`",
+        f"- By source family: `{aggregates['by_source_family']}`",
+        "",
+        "## Residual Fields",
+        "",
+    ]
+    for entry in safe_diagnostics.get("residuals", []):
+        lines.extend(
+            [
+                f"### `{entry['split']} / {entry['row_id']} / {entry['field_path']}`",
+                "",
+                f"- Source family: `{entry['source_family_id']}`",
+                f"- Task family: `{entry['task_family']}`",
+                f"- Category: `{entry['category']}`",
+                f"- Mismatch: `{entry['mismatch_category']}`",
+                f"- Gold value: `{entry.get('gold_value')}`",
+                f"- Prediction value: `{entry.get('predicted_value')}`",
+                f"- Gold: `{entry['gold_value_summary']}`",
+                f"- Prediction: `{entry['predicted_value_summary']}`",
+                "",
+            ]
+        )
+
+    lines.extend(
+        [
+            "## Recommended Next Step",
+            "",
+            (
+                "Review the residual buckets before any data, training, gold-policy, or evaluator change. "
+                "If the next action changes those policies, it should be a separate OpenSpec phase."
+            ),
+        ]
+    )
+    markdown_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    return {"json": json_path, "markdown": markdown_path, "manifest": manifest_path}
+
+
 def write_slot_value_generalization_case_design_report(
     diagnostics: dict[str, Any],
     output_dir: Path,
@@ -1754,8 +1884,14 @@ def write_slot_value_generalization_case_design_report(
             "evaluator_metric_change": False,
         },
         "diagnostic_artifacts": {
-            "design": "reports/public-sample/slot-value-generalization-case-design/slot_value_generalization_case_design.json",
-            "markdown": "reports/public-sample/slot-value-generalization-case-design/slot_value_generalization_case_design.md",
+            "design": (
+                "reports/public-sample/slot-value-generalization-case-design/"
+                "slot_value_generalization_case_design.json"
+            ),
+            "markdown": (
+                "reports/public-sample/slot-value-generalization-case-design/"
+                "slot_value_generalization_case_design.md"
+            ),
             "manifest": "reports/public-sample/slot-value-generalization-case-design/manifest.json",
         },
     }
@@ -1866,7 +2002,10 @@ def write_slot_value_generalization_materialization_report(
         },
         "diagnostic_artifacts": {
             "candidate_seed": safe_materialization["artifact_files"]["candidate_seed"],
-            "candidate_sft": "reports/public-sample/slot-value-generalization-materialized-candidates/sft_candidate_rows.jsonl",
+            "candidate_sft": (
+                "reports/public-sample/slot-value-generalization-materialized-candidates/"
+                "sft_candidate_rows.jsonl"
+            ),
             "materialization": (
                 "reports/public-sample/slot-value-generalization-materialized-candidates/"
                 "slot_value_generalization_materialization.json"
@@ -2039,7 +2178,11 @@ def write_slot_value_candidate_sft_probe_report(
         else (
             "decide_candidate_merge_or_heldout_strategy"
             if prediction_status == "private_adapter_predictions_written"
-            else ("run_candidate_train_prediction" if training_status == "training_completed" else "run_private_a100_candidate_probe")
+            else (
+                "run_candidate_train_prediction"
+                if training_status == "training_completed"
+                else "run_private_a100_candidate_probe"
+            )
         ),
     }
     a100_preflight = {
@@ -2085,8 +2228,12 @@ def write_slot_value_candidate_sft_probe_report(
         "live_browser_benchmark_claim": False,
     }
     artifact_files = {
-        "dry_run_metadata": dry_run_metadata_path.as_posix() if dry_run_metadata_path is not None else "not_provided",
-        "training_metadata": training_metadata_path.as_posix() if training_metadata_path is not None else "not_provided",
+        "dry_run_metadata": (
+            dry_run_metadata_path.as_posix() if dry_run_metadata_path is not None else "not_provided"
+        ),
+        "training_metadata": (
+            training_metadata_path.as_posix() if training_metadata_path is not None else "not_provided"
+        ),
         "prediction_metadata": prediction_metadata_path.as_posix()
         if prediction_metadata_path is not None
         else "not_provided",
@@ -2105,11 +2252,15 @@ def write_slot_value_candidate_sft_probe_report(
         "candidate train-split evidence does not prove held-out generalization",
     ]
     if training_run:
-        limitations.append("A100 adapters, checkpoints, caches, private overrides, host details, and raw logs remain private")
+        limitations.append(
+            "A100 adapters, checkpoints, caches, private overrides, host details, and raw logs remain private"
+        )
     else:
         limitations.append("candidate-only dry-run or preflight evidence is not SFT learning evidence")
     if missing_dependencies:
-        limitations.append("blocked_missing_train_dependencies means no private A100 training or prediction was launched")
+        limitations.append(
+            "blocked_missing_train_dependencies means no private A100 training or prediction was launched"
+        )
     evidence = {
         "evidence_kind": "slot_value_candidate_sft_probe",
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -2480,16 +2631,25 @@ def write_merged_slot_value_heldout_eval_report(
             "",
             "## Comparison",
             "",
-            f"- Prior targeted family coverage exact: `{safe_evidence['comparison']['prior_targeted_family_coverage_exact']}`",
+            (
+                "- Prior targeted family coverage exact: "
+                f"`{safe_evidence['comparison']['prior_targeted_family_coverage_exact']}`"
+            ),
             f"- Merged slot value exact: `{safe_evidence['comparison']['merged_slot_value_exact']}`",
-            f"- Dev/test improved from prior targeted: `{safe_evidence['comparison']['dev_test_improved_from_prior_targeted']}`",
+            (
+                "- Dev/test improved from prior targeted: "
+                f"`{safe_evidence['comparison']['dev_test_improved_from_prior_targeted']}`"
+            ),
             "",
             "## Boundary",
             "",
             "- strict `contract_exact_match` remains primary.",
             "- Soft slot F1 and semantic equivalence remain diagnostic-only.",
             "- Predictions are not repaired, replaced, normalized, or re-scored.",
-            "- This is not a checkpoint release, adapter release, production-readiness claim, private-corpus generalization claim, public full-corpus release, or live-browser benchmark claim.",
+            (
+                "- This is not a checkpoint release, adapter release, production-readiness claim, "
+                "private-corpus generalization claim, public full-corpus release, or live-browser benchmark claim."
+            ),
         ]
     )
     report_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")

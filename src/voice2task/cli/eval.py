@@ -5,15 +5,16 @@ import json
 from pathlib import Path
 
 from voice2task.evaluation import (
+    design_slot_value_generalization_cases,
     diagnose_alignment_mismatches,
     diagnose_constrained_contract_decoding,
     diagnose_heldout_family_strategy,
+    diagnose_merged_slot_value_residuals,
     diagnose_runtime_label_tiny_overfit_readiness,
     diagnose_schema_mismatches,
     diagnose_sft_contract_learning_signal,
     diagnose_source_alignment,
     diagnose_targeted_slot_value_residuals,
-    design_slot_value_generalization_cases,
     evaluate_predictions,
     load_predictions,
     load_sft_rows,
@@ -27,14 +28,20 @@ from voice2task.reports import (
     write_alignment_diagnostics_report,
     write_constrained_decoding_diagnosis_report,
     write_heldout_family_strategy_report,
+    write_merged_slot_value_residual_report,
     write_metrics_report,
     write_runtime_label_tiny_overfit_diagnostic_report,
     write_schema_diagnostics_report,
     write_sft_contract_learning_signal_report,
-    write_source_diagnostics_report,
     write_slot_value_generalization_case_design_report,
+    write_source_diagnostics_report,
     write_targeted_slot_value_residual_report,
 )
+from voice2task.schemas import SFTDatasetRow
+
+
+def _load_sft_rows_for_split(path: Path, split: str) -> list[SFTDatasetRow]:
+    return [row for row in load_sft_rows(path) if row.split == split]
 
 
 def _existing_artifact_paths(predictions_path: Path, prediction_metadata: dict[str, object]) -> dict[str, str]:
@@ -169,6 +176,18 @@ def build_parser() -> argparse.ArgumentParser:
     diagnose_targeted_residuals.add_argument(
         "--title",
         default="Voice2Task targeted slot value residual diagnosis",
+    )
+
+    diagnose_merged_residuals = subcommands.add_parser("diagnose-merged-slot-value-residuals")
+    diagnose_merged_residuals.add_argument("--merged-manifest", type=Path, required=True)
+    diagnose_merged_residuals.add_argument("--dev-gold", type=Path, required=True)
+    diagnose_merged_residuals.add_argument("--dev-predictions", type=Path, required=True)
+    diagnose_merged_residuals.add_argument("--test-gold", type=Path, required=True)
+    diagnose_merged_residuals.add_argument("--test-predictions", type=Path, required=True)
+    diagnose_merged_residuals.add_argument("--output", type=Path, required=True)
+    diagnose_merged_residuals.add_argument(
+        "--title",
+        default="Voice2Task merged slot value residual diagnosis",
     )
 
     design_slot_values = subcommands.add_parser("design-slot-value-generalization-cases")
@@ -317,6 +336,25 @@ def main(argv: list[str] | None = None) -> int:
             },
         )
         paths = write_targeted_slot_value_residual_report(
+            diagnostics,
+            output_dir=args.output,
+            title=args.title,
+        )
+        print(json.dumps({"ok": True, "paths": {key: value.as_posix() for key, value in paths.items()}}, indent=2))
+        return 0
+    if args.command == "diagnose-merged-slot-value-residuals":
+        diagnostics = diagnose_merged_slot_value_residuals(
+            merged_manifest=read_json(args.merged_manifest),
+            rows_by_split={
+                "dev": _load_sft_rows_for_split(args.dev_gold, "dev"),
+                "test": _load_sft_rows_for_split(args.test_gold, "test"),
+            },
+            predictions_by_split={
+                "dev": load_predictions(args.dev_predictions),
+                "test": load_predictions(args.test_predictions),
+            },
+        )
+        paths = write_merged_slot_value_residual_report(
             diagnostics,
             output_dir=args.output,
             title=args.title,

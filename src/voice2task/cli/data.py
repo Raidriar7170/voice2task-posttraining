@@ -77,12 +77,12 @@ def main(argv: list[str] | None = None) -> int:
             seed_output_path=args.seed_output,
             output_dir=args.output,
         )
-        manifest = json.loads(paths["manifest"].read_text(encoding="utf-8"))
+        materialization_manifest = json.loads(paths["manifest"].read_text(encoding="utf-8"))
         payload = {
             "ok": True,
             "paths": {name: path.as_posix() for name, path in paths.items()},
-            "summary": manifest["summary"],
-            "execution_scope": manifest["execution_scope"],
+            "summary": materialization_manifest["summary"],
+            "execution_scope": materialization_manifest["execution_scope"],
         }
         print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
         return 0

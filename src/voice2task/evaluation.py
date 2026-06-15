@@ -1711,7 +1711,10 @@ def diagnose_targeted_slot_value_residuals(
             "safety_precision",
             "safety_recall",
         )
-    ) and all(int(split_results.get(split, {}).get("schema_invalid_prediction_count", 0)) == 0 for split in ("dev", "test"))
+    ) and all(
+        int(split_results.get(split, {}).get("schema_invalid_prediction_count", 0)) == 0
+        for split in ("dev", "test")
+    )
 
     return {
         "evidence_kind": "targeted_slot_value_residual_diagnosis",
@@ -1755,6 +1758,201 @@ def diagnose_targeted_slot_value_residuals(
         "claims": {
             "diagnosis_only": True,
             "model_recovery_claim": False,
+            "held_out_generalization_recovered": False,
+            "private_corpus_generalization_claim": False,
+            "checkpoint_release": False,
+            "adapter_release": False,
+            "production_readiness_claim": False,
+            "live_browser_benchmark_claim": False,
+            "prediction_repair_or_replacement": False,
+            "semantic_equivalence_primary_metric": False,
+            "evaluator_relaxation": False,
+            "soft_slot_f1_primary_metric": False,
+        },
+    }
+
+
+def _merged_split_metric(
+    split_results: dict[str, Any],
+    split: str,
+    metric: str,
+    default: float = 0.0,
+) -> float:
+    split_payload = split_results.get(split, {})
+    if not isinstance(split_payload, dict):
+        return default
+    value = split_payload.get(metric, default)
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _merged_residual_category(
+    *,
+    split_results: dict[str, Any],
+    split: str,
+    field_path: str,
+) -> str:
+    if field_path == "slots":
+        strict_slot_f1 = _merged_split_metric(split_results, split, "slot_f1")
+        soft_slot_f1 = _merged_split_metric(split_results, split, "slot_f1_soft")
+        if strict_slot_f1 < 1.0 and soft_slot_f1 >= 1.0:
+            return "slot_value_strict_mismatch_soft_match"
+        return "slot_strict_mismatch"
+    if field_path == "normalized_command":
+        return "normalized_command_strict_string_mismatch"
+    if field_path.startswith("safety."):
+        return "safety_field_strict_mismatch"
+    return f"{field_path.replace('.', '_')}_strict_mismatch"
+
+
+def _expected_residual_row_count(split_results: dict[str, Any], split: str) -> int:
+    split_payload = split_results.get(split, {})
+    if not isinstance(split_payload, dict) or "residual_row_count" not in split_payload:
+        return 0
+    try:
+        return int(split_payload["residual_row_count"])
+    except (TypeError, ValueError):
+        return 0
+
+
+def diagnose_merged_slot_value_residuals(
+    *,
+    merged_manifest: dict[str, Any],
+    rows_by_split: dict[str, list[SFTDatasetRow]],
+    predictions_by_split: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
+    split_results = merged_manifest.get("split_results", {})
+    split_results = split_results if isinstance(split_results, dict) else {}
+    residuals: list[dict[str, Any]] = []
+    residual_row_keys: set[tuple[str, str]] = set()
+
+    for split in ("dev", "test"):
+        predictions = predictions_by_split.get(split, {})
+        for row in rows_by_split.get(split, []):
+            gold_contract = as_contract(row.target_contract)
+            gold = gold_contract.to_dict()
+            raw_prediction = predictions.get(row.id)
+            predicted_contract = _prediction_to_contract(raw_prediction)
+            if predicted_contract is None:
+                residual_row_keys.add((split, _sanitize_id(row.id)))
+                residuals.append(
+                    {
+                        "split": split,
+                        "row_id": _sanitize_id(row.id),
+                        "source_family_id": _source_family_id(row),
+                        "task_family": _contract_family_key(gold_contract),
+                        "field_path": "schema",
+                        "category": "schema_invalid_prediction",
+                        "mismatch_category": "schema_invalid_prediction",
+                        "gold_value_summary": "valid Browser Task Contract",
+                        "predicted_value_summary": _observed_value_summary(raw_prediction),
+                    }
+                )
+                continue
+            prediction = predicted_contract.to_dict()
+            if prediction == gold:
+                continue
+            residual_row_keys.add((split, _sanitize_id(row.id)))
+            for field_path in _ALIGNMENT_FIELD_PATHS:
+                gold_value = _field_value(gold, field_path)
+                prediction_value = _field_value(prediction, field_path)
+                if gold_value == prediction_value:
+                    continue
+                mismatch = _alignment_mismatch(
+                    row_id=row.id,
+                    field_path=field_path,
+                    gold_value=gold_value,
+                    prediction_value=prediction_value,
+                )
+                residuals.append(
+                    {
+                        "split": split,
+                        "row_id": _sanitize_id(row.id),
+                        "source_family_id": _source_family_id(row),
+                        "task_family": _contract_family_key(gold_contract),
+                        "field_path": field_path,
+                        "category": _merged_residual_category(
+                            split_results=split_results,
+                            split=split,
+                            field_path=field_path,
+                        ),
+                        "mismatch_category": mismatch["mismatch_category"],
+                        "gold_value": _targeted_residual_field_value(gold_value),
+                        "predicted_value": _targeted_residual_field_value(prediction_value),
+                        "gold_value_summary": mismatch["gold_value_summary"],
+                        "predicted_value_summary": mismatch["prediction_value_summary"],
+                    }
+                )
+
+    strict_exact = {
+        split: _merged_split_metric(split_results, split, "contract_exact_match") for split in ("dev", "test")
+    }
+    strict_slot_f1 = {split: _merged_split_metric(split_results, split, "slot_f1") for split in ("dev", "test")}
+    soft_slot_f1 = {split: _merged_split_metric(split_results, split, "slot_f1_soft") for split in ("dev", "test")}
+    residual_fields = [entry["field_path"] for entry in residuals]
+    residual_categories = [entry["category"] for entry in residuals]
+    residual_rows_by_split = _count_by([split for split, _row_id in sorted(residual_row_keys)])
+    source_count_by_split: dict[str, dict[str, Any]] = {}
+    for split in ("dev", "test"):
+        expected = _expected_residual_row_count(split_results, split)
+        computed = int(residual_rows_by_split.get(split, 0))
+        source_count_by_split[split] = {
+            "expected": expected,
+            "computed": computed,
+            "ok": computed == expected,
+        }
+    source_count_consistency = {
+        "ok": all(entry["ok"] for entry in source_count_by_split.values()),
+        "by_split": source_count_by_split,
+    }
+    if not source_count_consistency["ok"]:
+        raise ValueError(f"residual count mismatch: {source_count_by_split}")
+
+    return {
+        "evidence_kind": "merged_slot_value_residual_diagnosis",
+        "diagnostic_mode": "public_safe_no_training_no_prediction_no_metric_change",
+        "source_merged_eval": {
+            "evidence_kind": _sanitize_public_summary(str(merged_manifest.get("evidence_kind", "unknown"))),
+            "dataset_manifest_id": _sanitize_public_summary(str(merged_manifest.get("dataset_manifest_id", ""))),
+            "base_model": _sanitize_public_summary(str(merged_manifest.get("base_model", ""))),
+        },
+        "summary": {
+            "strict_contract_exact_match": strict_exact,
+            "strict_slot_f1": strict_slot_f1,
+            "soft_slot_f1": soft_slot_f1,
+            "soft_slot_f1_primary_metric": False,
+            "residual_row_count": len(residual_row_keys),
+            "source_count_consistency": source_count_consistency,
+            "residual_field_counts": _count_by(residual_fields),
+            "residual_category_counts": _count_by(residual_categories),
+            "recommended_next_step": "review_residual_buckets_before_data_or_training_change",
+        },
+        "aggregates": {
+            "by_split_residual_rows": residual_rows_by_split,
+            "by_split_residual_fields": _count_by([entry["split"] for entry in residuals]),
+            "by_field_path": _count_by(residual_fields),
+            "by_category": _count_by(residual_categories),
+            "by_source_family": _count_by([entry["source_family_id"] for entry in residuals]),
+            "by_task_family": _count_by([entry["task_family"] for entry in residuals]),
+        },
+        "residuals": residuals,
+        "execution_scope": {
+            "local_public_sample_only": True,
+            "private_predictions_read_as_input": True,
+            "new_data_generated": False,
+            "training_run": False,
+            "dpo_run": False,
+            "prediction_run": False,
+            "evaluator_metric_change": False,
+            "prediction_repair_or_replacement": False,
+            "slot_normalization": False,
+        },
+        "claims": {
+            "diagnosis_only": True,
+            "model_recovery_claim": False,
+            "held_out_recovery_claim": False,
             "held_out_generalization_recovered": False,
             "private_corpus_generalization_claim": False,
             "checkpoint_release": False,
@@ -1944,7 +2142,8 @@ def diagnose_heldout_family_strategy(
     for split in heldout_splits:
         split_rows = [row for row in rows if row.split == split]
         split_schema = heldout_schema_by_split.get(split, {})
-        schema_rows = split_schema.get("rows") if isinstance(split_schema, dict) else []
+        schema_rows_raw = split_schema.get("rows") if isinstance(split_schema, dict) else []
+        schema_rows = schema_rows_raw if isinstance(schema_rows_raw, list) else []
         schema_invalid_row_ids = {
             _sanitize_id(str(row.get("row_id", "")))
             for row in schema_rows

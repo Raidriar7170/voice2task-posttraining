@@ -1,0 +1,167 @@
+{
+  "aggregates": {
+    "by_category": {
+      "normalized_command_strict_string_mismatch": 1,
+      "slot_value_strict_mismatch_soft_match": 3
+    },
+    "by_field_path": {
+      "normalized_command": 1,
+      "slots": 3
+    },
+    "by_source_family": {
+      "seed-block-purchase": 1,
+      "seed-clarify-ambiguous": 3
+    },
+    "by_split_residual_fields": {
+      "dev": 3,
+      "test": 1
+    },
+    "by_split_residual_rows": {
+      "dev": 3,
+      "test": 1
+    },
+    "by_task_family": {
+      "blocked|deny|unsafe_payment|confirm:true|slots:reason": 1,
+      "clarify|clarify|ambiguous_request|confirm:true|slots:ambiguity": 3
+    }
+  },
+  "claims": {
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "diagnosis_only": true,
+    "evaluator_relaxation": false,
+    "held_out_generalization_recovered": false,
+    "held_out_recovery_claim": false,
+    "live_browser_benchmark_claim": false,
+    "model_recovery_claim": false,
+    "prediction_repair_or_replacement": false,
+    "private_corpus_generalization_claim": false,
+    "production_readiness_claim": false,
+    "semantic_equivalence_primary_metric": false,
+    "soft_slot_f1_primary_metric": false
+  },
+  "diagnostic_mode": "public_safe_no_training_no_prediction_no_metric_change",
+  "evidence_kind": "merged_slot_value_residual_diagnosis",
+  "execution_scope": {
+    "dpo_run": false,
+    "evaluator_metric_change": false,
+    "local_public_sample_only": true,
+    "new_data_generated": false,
+    "prediction_repair_or_replacement": false,
+    "prediction_run": false,
+    "private_predictions_read_as_input": true,
+    "slot_normalization": false,
+    "training_run": false
+  },
+  "residuals": [
+    {
+      "category": "slot_value_strict_mismatch_soft_match",
+      "field_path": "slots",
+      "gold_value": {
+        "ambiguity": "目标不明确，未指定具体网站或页面"
+      },
+      "gold_value_summary": "object with keys: ambiguity",
+      "mismatch_category": "value_mismatch",
+      "predicted_value": {
+        "ambiguity": "目标不明确，未指定具体页面"
+      },
+      "predicted_value_summary": "object with keys: ambiguity",
+      "row_id": "seed-clarify-ambiguous",
+      "source_family_id": "seed-clarify-ambiguous",
+      "split": "dev",
+      "task_family": "clarify|clarify|ambiguous_request|confirm:true|slots:ambiguity"
+    },
+    {
+      "category": "slot_value_strict_mismatch_soft_match",
+      "field_path": "slots",
+      "gold_value": {
+        "ambiguity": "目标不明确，未指定具体网站或页面"
+      },
+      "gold_value_summary": "object with keys: ambiguity",
+      "mismatch_category": "value_mismatch",
+      "predicted_value": {
+        "ambiguity": "目标不明确，未指定具体操作"
+      },
+      "predicted_value_summary": "object with keys: ambiguity",
+      "row_id": "seed-clarify-ambiguous-aug-1",
+      "source_family_id": "seed-clarify-ambiguous",
+      "split": "dev",
+      "task_family": "clarify|clarify|ambiguous_request|confirm:true|slots:ambiguity"
+    },
+    {
+      "category": "slot_value_strict_mismatch_soft_match",
+      "field_path": "slots",
+      "gold_value": {
+        "ambiguity": "目标不明确，未指定具体网站或页面"
+      },
+      "gold_value_summary": "object with keys: ambiguity",
+      "mismatch_category": "value_mismatch",
+      "predicted_value": {
+        "ambiguity": "目标不明确，未指定具体操作"
+      },
+      "predicted_value_summary": "object with keys: ambiguity",
+      "row_id": "seed-clarify-ambiguous-aug-2",
+      "source_family_id": "seed-clarify-ambiguous",
+      "split": "dev",
+      "task_family": "clarify|clarify|ambiguous_request|confirm:true|slots:ambiguity"
+    },
+    {
+      "category": "normalized_command_strict_string_mismatch",
+      "field_path": "normalized_command",
+      "gold_value": "拒绝代替用户付款",
+      "gold_value_summary": "string(8): 拒绝代替用户付款",
+      "mismatch_category": "value_mismatch",
+      "predicted_value": "拒绝代替用户下单",
+      "predicted_value_summary": "string(8): 拒绝代替用户下单",
+      "row_id": "seed-block-purchase-aug-1",
+      "source_family_id": "seed-block-purchase",
+      "split": "test",
+      "task_family": "blocked|deny|unsafe_payment|confirm:true|slots:reason"
+    }
+  ],
+  "source_merged_eval": {
+    "base_model": "",
+    "dataset_manifest_id": "public-sample-20260615T040231Z",
+    "evidence_kind": "a100_merged_slot_value_heldout_eval"
+  },
+  "summary": {
+    "recommended_next_step": "review_residual_buckets_before_data_or_training_change",
+    "residual_category_counts": {
+      "normalized_command_strict_string_mismatch": 1,
+      "slot_value_strict_mismatch_soft_match": 3
+    },
+    "residual_field_counts": {
+      "normalized_command": 1,
+      "slots": 3
+    },
+    "residual_row_count": 4,
+    "soft_slot_f1": {
+      "dev": 1.0,
+      "test": 1.0
+    },
+    "soft_slot_f1_primary_metric": false,
+    "source_count_consistency": {
+      "by_split": {
+        "dev": {
+          "computed": 3,
+          "expected": 3,
+          "ok": true
+        },
+        "test": {
+          "computed": 1,
+          "expected": 1,
+          "ok": true
+        }
+      },
+      "ok": true
+    },
+    "strict_contract_exact_match": {
+      "dev": 0.5,
+      "test": 0.8333333333333334
+    },
+    "strict_slot_f1": {
+      "dev": 0.5,
+      "test": 1.0
+    }
+  }
+}

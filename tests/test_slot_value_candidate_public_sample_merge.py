@@ -309,7 +309,13 @@ def test_merged_slot_value_report_cli_writes_public_safe_evidence(tmp_path: Path
                 "--test-prediction-metadata",
                 metadata_paths["test"].as_posix(),
                 "--prior-targeted-manifest",
-                (REPO_ROOT / "reports" / "public-sample" / "a100-targeted-family-coverage-probe" / "manifest.json").as_posix(),
+                (
+                    REPO_ROOT
+                    / "reports"
+                    / "public-sample"
+                    / "a100-targeted-family-coverage-probe"
+                    / "manifest.json"
+                ).as_posix(),
                 "--output",
                 output_dir.as_posix(),
             ]

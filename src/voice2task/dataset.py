@@ -668,7 +668,8 @@ def _validate_reviewed_slot_value_candidate_seed_rows(candidate_seed_rows: list[
         raise ValueError("expected exactly one row per reviewed slot-value candidate seed ID")
 
     for row in candidate_seed_rows:
-        provenance = row.get("provenance") if isinstance(row.get("provenance"), dict) else {}
+        provenance_raw = row.get("provenance")
+        provenance = provenance_raw if isinstance(provenance_raw, dict) else {}
         if row.get("split") != "train":
             raise ValueError("reviewed slot-value candidate seeds must stay in train split")
         if provenance.get("source_mode") != "slot_value_generalization_candidate_seed":
