@@ -1721,6 +1721,108 @@ def write_targeted_slot_value_residual_report(
     return {"json": json_path, "markdown": markdown_path, "manifest": manifest_path}
 
 
+def write_slot_value_generalization_case_design_report(
+    diagnostics: dict[str, Any],
+    output_dir: Path,
+    title: str = "Voice2Task slot value generalization case design",
+) -> dict[str, Path]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    json_path = output_dir / "slot_value_generalization_case_design.json"
+    markdown_path = output_dir / "slot_value_generalization_case_design.md"
+    manifest_path = output_dir / "manifest.json"
+    safe_diagnostics = _sanitize_report_value(diagnostics)
+    write_json(json_path, safe_diagnostics)
+
+    manifest = {
+        "evidence_kind": safe_diagnostics["evidence_kind"],
+        "design_status": safe_diagnostics["design_status"],
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "source_residual_diagnosis": safe_diagnostics["source_residual_diagnosis"],
+        "summary": safe_diagnostics["summary"],
+        "execution_scope": safe_diagnostics["execution_scope"],
+        "claims": safe_diagnostics["claims"],
+        "artifact_policy": {
+            "new_data_generated": False,
+            "public_sample_modified": False,
+            "raw_logs_copied_to_git": False,
+            "checkpoints_or_adapters_copied_to_git": False,
+            "private_overrides_copied_to_git": False,
+            "private_paths_omitted": True,
+            "host_details_omitted": True,
+            "ssh_details_omitted": True,
+            "prediction_repair_or_replacement": False,
+            "evaluator_metric_change": False,
+        },
+        "diagnostic_artifacts": {
+            "design": "reports/public-sample/slot-value-generalization-case-design/slot_value_generalization_case_design.json",
+            "markdown": "reports/public-sample/slot-value-generalization-case-design/slot_value_generalization_case_design.md",
+            "manifest": "reports/public-sample/slot-value-generalization-case-design/manifest.json",
+        },
+    }
+    write_json(manifest_path, manifest)
+
+    summary = safe_diagnostics["summary"]
+    lines = [
+        f"# {title}",
+        "",
+        (
+            "This is design-only evidence for a later slot value generalization phase. "
+            "It is not materialized into seed_traces.jsonl, not broad scaling, not DPO, "
+            "not training evidence, and not a model recovery claim."
+        ),
+        "",
+        "## Boundary",
+        "",
+        "- Candidate cases are not public sample rows yet.",
+        "- No dataset was rebuilt and no training or prediction run was launched.",
+        "- strict `contract_exact_match` remains primary.",
+        "- Soft slot F1 and semantic equivalence remain diagnostic-only.",
+        "- Predictions are not repaired, replaced, rewritten, normalized, or re-scored.",
+        "",
+        "## Summary",
+        "",
+        f"- Candidate groups: `{summary['candidate_group_count']}`",
+        f"- Covered residual buckets: `{summary['covered_residual_bucket_counts']}`",
+        f"- Public sample modified: `{summary['public_sample_modified']}`",
+        f"- New data generated: `{summary['new_data_generated']}`",
+        f"- Recommended next step: `{summary['recommended_next_step']}`",
+        "",
+        "## Candidate Case Groups",
+        "",
+    ]
+    for group in safe_diagnostics.get("candidate_case_groups", []):
+        lines.extend(
+            [
+                f"### `{group['case_group_id']}`",
+                "",
+                f"- Source family: `{group['source_family_id']}`",
+                f"- Residual bucket: `{group['residual_bucket']}`",
+                f"- Affected fields: `{group['affected_field_paths']}`",
+                f"- Residual rows: `{group['residual_row_ids']}`",
+                f"- Canonical gold values: `{group['canonical_gold_values']}`",
+                f"- Observed wrong values: `{group['observed_wrong_values']}`",
+                f"- Purpose: {group['case_purpose']}",
+                f"- Recommended split role: `{group['recommended_split_role']}`",
+                f"- Requires user review before materialization: `{group['materialization_requires_user_review']}`",
+                "",
+            ]
+        )
+
+    lines.extend(
+        [
+            "## Recommended Next Step",
+            "",
+            (
+                "Open a later bounded OpenSpec change to materialize reviewed cases into public-safe seed traces "
+                "or a separate candidate dataset. That later change should decide split policy explicitly and "
+                "still avoid broad scaling, DPO, evaluator relaxation, or release claims unless separately approved."
+            ),
+        ]
+    )
+    markdown_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    return {"json": json_path, "markdown": markdown_path, "manifest": manifest_path}
+
+
 def write_source_diagnostics_report(
     diagnostics: dict[str, Any],
     output_dir: Path,

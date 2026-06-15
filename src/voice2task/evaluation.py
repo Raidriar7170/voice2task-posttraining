@@ -1769,6 +1769,149 @@ def diagnose_targeted_slot_value_residuals(
     }
 
 
+def _unique_public_values(values: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    seen: set[str] = set()
+    unique: list[dict[str, Any]] = []
+    for value in values:
+        key = json.dumps(value, ensure_ascii=False, sort_keys=True)
+        if key in seen:
+            continue
+        seen.add(key)
+        unique.append(value)
+    return unique
+
+
+_SLOT_VALUE_CASE_GROUP_IDS = {
+    ("seed-clarify-ambiguous", "slot_value_canonical_phrase_drift"): (
+        "clarify-ambiguous-slot-value-canonical-phrase"
+    ),
+    ("seed-form-email", "slot_value_language_variant"): "form-email-slot-value-language-variant",
+    ("seed-open-example", "normalized_command_paraphrase_drift"): "navigate-open-url-normalized-command-paraphrase",
+    ("seed-block-purchase", "normalized_command_paraphrase_drift"): (
+        "blocked-payment-normalized-command-paraphrase"
+    ),
+}
+
+
+_SLOT_VALUE_CASE_PURPOSES = {
+    "clarify-ambiguous-slot-value-canonical-phrase": (
+        "teach the canonical ambiguity scope phrase without evaluator-side normalization"
+    ),
+    "form-email-slot-value-language-variant": "teach Chinese canonical slot values instead of English aliases",
+    "navigate-open-url-normalized-command-paraphrase": (
+        "teach open-url canonical command wording without accepting paraphrase drift"
+    ),
+    "blocked-payment-normalized-command-paraphrase": (
+        "teach blocked-payment canonical command wording without accepting action paraphrase drift"
+    ),
+}
+
+
+def design_slot_value_generalization_cases(
+    *,
+    residual_diagnosis: dict[str, Any],
+    residual_manifest: dict[str, Any],
+) -> dict[str, Any]:
+    residuals = [entry for entry in residual_diagnosis.get("residuals", []) if isinstance(entry, dict)]
+    grouped: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    for residual in residuals:
+        source_family = _sanitize_public_summary(str(residual.get("source_family_id", "unknown")))
+        drift_bucket = _sanitize_public_summary(str(residual.get("drift_bucket", "unknown")))
+        grouped.setdefault((source_family, drift_bucket), []).append(residual)
+
+    candidate_groups: list[dict[str, Any]] = []
+    for key, entries in sorted(grouped.items()):
+        source_family, drift_bucket = key
+        group_id = _SLOT_VALUE_CASE_GROUP_IDS.get(
+            key,
+            f"{source_family}-{drift_bucket}".replace("_", "-"),
+        )
+        field_paths = sorted({_sanitize_public_summary(str(entry.get("field_path", "unknown"))) for entry in entries})
+        canonical_values = _unique_public_values(
+            [
+                {
+                    "field_path": _sanitize_public_summary(str(entry.get("field_path", "unknown"))),
+                    "value": _sanitize_public_value(entry.get("gold_value")),
+                }
+                for entry in entries
+            ]
+        )
+        wrong_values = _unique_public_values(
+            [
+                {
+                    "field_path": _sanitize_public_summary(str(entry.get("field_path", "unknown"))),
+                    "value": _sanitize_public_value(entry.get("predicted_value")),
+                }
+                for entry in entries
+            ]
+        )
+        candidate_groups.append(
+            {
+                "case_group_id": group_id,
+                "source_family_id": source_family,
+                "residual_bucket": drift_bucket,
+                "residual_row_ids": sorted(_sanitize_id(str(entry.get("row_id", ""))) for entry in entries),
+                "affected_field_paths": field_paths,
+                "canonical_gold_values": canonical_values,
+                "observed_wrong_values": wrong_values,
+                "case_purpose": _SLOT_VALUE_CASE_PURPOSES.get(
+                    group_id,
+                    "teach canonical value selection without evaluator-side normalization",
+                ),
+                "recommended_split_role": "candidate_train_or_validation_design_only",
+                "materialization_requires_user_review": True,
+                "public_sample_materialized": False,
+            }
+        )
+
+    covered_bucket_counts = residual_diagnosis.get("summary", {}).get("residual_drift_bucket_counts", {})
+    return {
+        "evidence_kind": "slot_value_generalization_case_design",
+        "design_status": "design_only_not_materialized",
+        "source_residual_diagnosis": {
+            "evidence_kind": _sanitize_public_summary(str(residual_diagnosis.get("evidence_kind", "unknown"))),
+            "summary": _sanitize_public_value(residual_diagnosis.get("summary", {})),
+        },
+        "source_residual_manifest": {
+            "evidence_kind": _sanitize_public_summary(str(residual_manifest.get("evidence_kind", "unknown"))),
+            "summary": _sanitize_public_value(residual_manifest.get("summary", {})),
+        },
+        "summary": {
+            "candidate_group_count": len(candidate_groups),
+            "covered_residual_bucket_counts": _sanitize_public_value(covered_bucket_counts),
+            "public_sample_modified": False,
+            "new_data_generated": False,
+            "recommended_next_step": "materialize_reviewed_cases_in_later_openspec_change",
+        },
+        "candidate_case_groups": candidate_groups,
+        "execution_scope": {
+            "local_public_sample_only": True,
+            "new_data_generated": False,
+            "public_sample_modified": False,
+            "training_run": False,
+            "prediction_run": False,
+            "dpo_run": False,
+            "a100_execution": False,
+            "evaluator_metric_change": False,
+            "prediction_repair_or_replacement": False,
+        },
+        "claims": {
+            "design_only": True,
+            "model_recovery_claim": False,
+            "held_out_generalization_recovered": False,
+            "private_corpus_generalization_claim": False,
+            "checkpoint_release": False,
+            "adapter_release": False,
+            "production_readiness_claim": False,
+            "live_browser_benchmark_claim": False,
+            "prediction_repair_or_replacement": False,
+            "semantic_equivalence_primary_metric": False,
+            "soft_slot_f1_primary_metric": False,
+            "evaluator_relaxation": False,
+        },
+    }
+
+
 def diagnose_heldout_family_strategy(
     *,
     load_rows_path: Path,

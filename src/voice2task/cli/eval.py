@@ -13,6 +13,7 @@ from voice2task.evaluation import (
     diagnose_sft_contract_learning_signal,
     diagnose_source_alignment,
     diagnose_targeted_slot_value_residuals,
+    design_slot_value_generalization_cases,
     evaluate_predictions,
     load_predictions,
     load_sft_rows,
@@ -31,6 +32,7 @@ from voice2task.reports import (
     write_schema_diagnostics_report,
     write_sft_contract_learning_signal_report,
     write_source_diagnostics_report,
+    write_slot_value_generalization_case_design_report,
     write_targeted_slot_value_residual_report,
 )
 
@@ -167,6 +169,15 @@ def build_parser() -> argparse.ArgumentParser:
     diagnose_targeted_residuals.add_argument(
         "--title",
         default="Voice2Task targeted slot value residual diagnosis",
+    )
+
+    design_slot_values = subcommands.add_parser("design-slot-value-generalization-cases")
+    design_slot_values.add_argument("--residual-diagnosis", type=Path, required=True)
+    design_slot_values.add_argument("--residual-manifest", type=Path, required=True)
+    design_slot_values.add_argument("--output", type=Path, required=True)
+    design_slot_values.add_argument(
+        "--title",
+        default="Voice2Task slot value generalization case design",
     )
 
     smoke = subcommands.add_parser("smoke")
@@ -306,6 +317,18 @@ def main(argv: list[str] | None = None) -> int:
             },
         )
         paths = write_targeted_slot_value_residual_report(
+            diagnostics,
+            output_dir=args.output,
+            title=args.title,
+        )
+        print(json.dumps({"ok": True, "paths": {key: value.as_posix() for key, value in paths.items()}}, indent=2))
+        return 0
+    if args.command == "design-slot-value-generalization-cases":
+        diagnostics = design_slot_value_generalization_cases(
+            residual_diagnosis=read_json(args.residual_diagnosis),
+            residual_manifest=read_json(args.residual_manifest),
+        )
+        paths = write_slot_value_generalization_case_design_report(
             diagnostics,
             output_dir=args.output,
             title=args.title,

@@ -1,0 +1,230 @@
+{
+  "candidate_case_groups": [
+    {
+      "affected_field_paths": [
+        "normalized_command"
+      ],
+      "canonical_gold_values": [
+        {
+          "field_path": "normalized_command",
+          "value": "拒绝代替用户付款"
+        }
+      ],
+      "case_group_id": "blocked-payment-normalized-command-paraphrase",
+      "case_purpose": "teach blocked-payment canonical command wording without accepting action paraphrase drift",
+      "materialization_requires_user_review": true,
+      "observed_wrong_values": [
+        {
+          "field_path": "normalized_command",
+          "value": "拒绝代替用户购买和付款"
+        },
+        {
+          "field_path": "normalized_command",
+          "value": "拒绝代替用户下单"
+        }
+      ],
+      "public_sample_materialized": false,
+      "recommended_split_role": "candidate_train_or_validation_design_only",
+      "residual_bucket": "normalized_command_paraphrase_drift",
+      "residual_row_ids": [
+        "seed-block-purchase",
+        "seed-block-purchase-aug-1"
+      ],
+      "source_family_id": "seed-block-purchase"
+    },
+    {
+      "affected_field_paths": [
+        "slots"
+      ],
+      "canonical_gold_values": [
+        {
+          "field_path": "slots",
+          "value": {
+            "ambiguity": "目标不明确，未指定具体网站或页面"
+          }
+        }
+      ],
+      "case_group_id": "clarify-ambiguous-slot-value-canonical-phrase",
+      "case_purpose": "teach the canonical ambiguity scope phrase without evaluator-side normalization",
+      "materialization_requires_user_review": true,
+      "observed_wrong_values": [
+        {
+          "field_path": "slots",
+          "value": {
+            "ambiguity": "目标不明确，未指定具体页面"
+          }
+        },
+        {
+          "field_path": "slots",
+          "value": {
+            "ambiguity": "目标不明确，未指定具体操作"
+          }
+        },
+        {
+          "field_path": "slots",
+          "value": {
+            "ambiguity": "目标不明确，无法确定具体操作"
+          }
+        }
+      ],
+      "public_sample_materialized": false,
+      "recommended_split_role": "candidate_train_or_validation_design_only",
+      "residual_bucket": "slot_value_canonical_phrase_drift",
+      "residual_row_ids": [
+        "seed-clarify-ambiguous",
+        "seed-clarify-ambiguous-aug-1",
+        "seed-clarify-ambiguous-aug-2"
+      ],
+      "source_family_id": "seed-clarify-ambiguous"
+    },
+    {
+      "affected_field_paths": [
+        "slots"
+      ],
+      "canonical_gold_values": [
+        {
+          "field_path": "slots",
+          "value": {
+            "field": "邮箱"
+          }
+        }
+      ],
+      "case_group_id": "form-email-slot-value-language-variant",
+      "case_purpose": "teach Chinese canonical slot values instead of English aliases",
+      "materialization_requires_user_review": true,
+      "observed_wrong_values": [
+        {
+          "field_path": "slots",
+          "value": {
+            "field": "email"
+          }
+        }
+      ],
+      "public_sample_materialized": false,
+      "recommended_split_role": "candidate_train_or_validation_design_only",
+      "residual_bucket": "slot_value_language_variant",
+      "residual_row_ids": [
+        "seed-form-email",
+        "seed-form-email-aug-1",
+        "seed-form-email-aug-2"
+      ],
+      "source_family_id": "seed-form-email"
+    },
+    {
+      "affected_field_paths": [
+        "normalized_command"
+      ],
+      "canonical_gold_values": [
+        {
+          "field_path": "normalized_command",
+          "value": "打开示例网站"
+        }
+      ],
+      "case_group_id": "navigate-open-url-normalized-command-paraphrase",
+      "case_purpose": "teach open-url canonical command wording without accepting paraphrase drift",
+      "materialization_requires_user_review": true,
+      "observed_wrong_values": [
+        {
+          "field_path": "normalized_command",
+          "value": "打开示例页面"
+        },
+        {
+          "field_path": "normalized_command",
+          "value": "访问Example网站"
+        }
+      ],
+      "public_sample_materialized": false,
+      "recommended_split_role": "candidate_train_or_validation_design_only",
+      "residual_bucket": "normalized_command_paraphrase_drift",
+      "residual_row_ids": [
+        "seed-open-example",
+        "seed-open-example-aug-2"
+      ],
+      "source_family_id": "seed-open-example"
+    }
+  ],
+  "claims": {
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "design_only": true,
+    "evaluator_relaxation": false,
+    "held_out_generalization_recovered": false,
+    "live_browser_benchmark_claim": false,
+    "model_recovery_claim": false,
+    "prediction_repair_or_replacement": false,
+    "private_corpus_generalization_claim": false,
+    "production_readiness_claim": false,
+    "semantic_equivalence_primary_metric": false,
+    "soft_slot_f1_primary_metric": false
+  },
+  "design_status": "design_only_not_materialized",
+  "evidence_kind": "slot_value_generalization_case_design",
+  "execution_scope": {
+    "a100_execution": false,
+    "dpo_run": false,
+    "evaluator_metric_change": false,
+    "local_public_sample_only": true,
+    "new_data_generated": false,
+    "prediction_repair_or_replacement": false,
+    "prediction_run": false,
+    "public_sample_modified": false,
+    "training_run": false
+  },
+  "source_residual_diagnosis": {
+    "evidence_kind": "targeted_slot_value_residual_diagnosis",
+    "summary": {
+      "broad_scaling_recommended_now": false,
+      "dpo_recommended_now": false,
+      "json_schema_task_route_safety_confirmation_ok": true,
+      "recommended_next_step": "design_slot_value_generalization_cases_before_broad_scaling_or_dpo",
+      "residual_drift_bucket_counts": {
+        "normalized_command_paraphrase_drift": 4,
+        "slot_value_canonical_phrase_drift": 3,
+        "slot_value_language_variant": 3
+      },
+      "residual_field_counts": {
+        "normalized_command": 4,
+        "slots": 6
+      },
+      "residual_row_count": 10,
+      "strict_contract_exact_match": {
+        "dev": 0.16666666666666666,
+        "test": 0.16666666666666666
+      }
+    }
+  },
+  "source_residual_manifest": {
+    "evidence_kind": "targeted_slot_value_residual_diagnosis",
+    "summary": {
+      "broad_scaling_recommended_now": false,
+      "dpo_recommended_now": false,
+      "json_schema_task_route_safety_confirmation_ok": true,
+      "recommended_next_step": "design_slot_value_generalization_cases_before_broad_scaling_or_dpo",
+      "residual_drift_bucket_counts": {
+        "normalized_command_paraphrase_drift": 4,
+        "slot_value_canonical_phrase_drift": 3,
+        "slot_value_language_variant": 3
+      },
+      "residual_field_counts": {
+        "normalized_command": 4,
+        "slots": 6
+      },
+      "residual_row_count": 10,
+      "strict_contract_exact_match": {
+        "dev": 0.16666666666666666,
+        "test": 0.16666666666666666
+      }
+    }
+  },
+  "summary": {
+    "candidate_group_count": 4,
+    "covered_residual_bucket_counts": {
+      "normalized_command_paraphrase_drift": 4,
+      "slot_value_canonical_phrase_drift": 3,
+      "slot_value_language_variant": 3
+    },
+    "new_data_generated": false,
+    "public_sample_modified": false,
+    "recommended_next_step": "materialize_reviewed_cases_in_later_openspec_change"
+  }
+}
