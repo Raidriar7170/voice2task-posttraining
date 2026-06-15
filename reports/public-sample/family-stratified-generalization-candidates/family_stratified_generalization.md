@@ -16,9 +16,9 @@ This is candidate data only: it creates a standalone public-safe family-stratifi
 - Candidate seed rows: `63`
 - Candidate SFT rows: `189`
 - SFT split counts: `{'train': 63, 'dev': 63, 'test': 63}`
-- Formal public sample seed rows: `14`
-- Formal public sample SFT rows: `42`
-- Formal public sample DPO pairs: `125`
+- Formal public sample seed rows: `77`
+- Formal public sample SFT rows: `231`
+- Formal public sample DPO pairs: `661`
 - Formal public sample modified: `False`
 - Recommended next step: `review_candidate_dataset_before_merge_or_training`
 

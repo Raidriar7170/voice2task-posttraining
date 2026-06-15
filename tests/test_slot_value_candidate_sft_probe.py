@@ -8,7 +8,7 @@ from voice2task.leak_scan import scan_paths
 from voice2task.training import run_sft
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-FORMAL_COUNTS_AFTER_CANDIDATE_MERGE = {"dpo_pairs": 125, "seed_rows": 14, "sft_rows": 42}
+FORMAL_COUNTS_AFTER_CANDIDATE_MERGE = {"dpo_pairs": 661, "seed_rows": 77, "sft_rows": 231}
 CANDIDATE_MANIFEST = REPO_ROOT / "data" / "public-samples" / "manifest_slot_value_candidate_probe.json"
 SFT_CONFIG = REPO_ROOT / "configs" / "sft-a100-slot-value-candidate-probe.json"
 PREDICTION_CONFIG = REPO_ROOT / "configs" / "sft-a100-slot-value-candidate-probe-prediction.json"

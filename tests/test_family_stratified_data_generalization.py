@@ -27,6 +27,8 @@ EXPECTED_FAMILIES = {
     "navigation",
     "search",
 }
+CURRENT_FORMAL_COUNTS = {"dpo_pairs": 661, "seed_rows": 77, "sft_rows": 231}
+CURRENT_FORMAL_SPLITS = {"dev": 69, "test": 69, "train": 93}
 
 
 def _sha256_by_path(paths: list[Path]) -> dict[Path, str]:
@@ -158,12 +160,13 @@ def test_committed_family_stratified_generalization_candidates_are_public_safe()
     seed_rows = read_jsonl(COMMITTED_SEED)
     sft_rows = read_jsonl(COMMITTED_REPORT_DIR / "sft_candidate_rows.jsonl")
 
-    assert public_manifest["counts"] == {"dpo_pairs": 125, "seed_rows": 14, "sft_rows": 42}
-    assert public_manifest["split_counts"] == {"dev": 6, "test": 6, "train": 30}
+    assert public_manifest["counts"] == CURRENT_FORMAL_COUNTS
+    assert public_manifest["split_counts"] == CURRENT_FORMAL_SPLITS
+    assert public_manifest["source_summary"]["family_stratified_candidates_formal_public_sample"] is True
     _assert_family_stratified_payload(seed_rows, sft_rows)
-    assert evidence["summary"]["formal_public_sample_seed_rows"] == 14
-    assert evidence["summary"]["formal_public_sample_sft_rows"] == 42
-    assert evidence["summary"]["formal_public_sample_dpo_pairs"] == 125
+    assert evidence["summary"]["formal_public_sample_seed_rows"] == 77
+    assert evidence["summary"]["formal_public_sample_sft_rows"] == 231
+    assert evidence["summary"]["formal_public_sample_dpo_pairs"] == 661
     assert manifest["claims"]["held_out_generalization_recovered"] is False
     assert manifest["execution_scope"]["training_run"] is False
     assert manifest["execution_scope"]["prediction_run"] is False

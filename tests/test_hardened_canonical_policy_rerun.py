@@ -22,6 +22,10 @@ HARDENED_CONFIGS = {
 }
 
 
+def _current_public_manifest() -> dict:
+    return read_json(PUBLIC_SAMPLE_DIR / "manifest_public_sample.json")
+
+
 def _write_json(path: Path, payload: dict) -> Path:
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True), encoding="utf-8")
     return path
@@ -55,7 +59,7 @@ def _metrics_payload(exact: float, slot_f1: float, *, slot_failures: int = 0) ->
 def _prediction_metadata(split: str, count: int, private_root: str) -> dict:
     return {
         "adapter_path": f"{private_root}/runs/a100-merged-slot-value-heldout-eval/adapter",
-        "dataset_manifest_id": "public-sample-20260615T040231Z",
+        "dataset_manifest_id": _current_public_manifest()["manifest_id"],
         "prediction_count": count,
         "prediction_source_kind": "private_a100_adapter",
         "prediction_split": split,
@@ -81,7 +85,7 @@ def _observed_cli_args(
     }
     metadata_paths = {
         split: _write_json(tmp_path / f"{split}_metadata.raw.json", _prediction_metadata(split, count, private_root))
-        for split, count in {"train": 30, "dev": 6, "test": 6}.items()
+        for split, count in _current_public_manifest()["split_counts"].items()
     }
     return [
         "hardened-canonical-policy-rerun",
@@ -109,13 +113,15 @@ def _observed_cli_args(
 def test_hardened_canonical_policy_configs_are_prediction_only_and_public_safe() -> None:
     manifest = read_json(PUBLIC_SAMPLE_DIR / "manifest_public_sample.json")
     manifest_id = manifest["manifest_id"]
+    legacy_manifest_id = read_json(HARDENED_OBSERVED_EVIDENCE_DIR / "manifest.json")["dataset_manifest_id"]
 
     for split, path in HARDENED_CONFIGS.items():
         config = read_json(path)
         serialized = json.dumps(config, ensure_ascii=False, sort_keys=True)
 
         assert config["base_model"] == "Qwen/Qwen2.5-7B-Instruct"
-        assert config["dataset_manifest_id"] == manifest_id
+        assert config["dataset_manifest_id"] == legacy_manifest_id
+        assert legacy_manifest_id != manifest_id
         assert config["public_sample_manifest"] == "data/public-samples/manifest_public_sample.json"
         assert config["prediction_split"] == split
         assert config["allow_private_prediction"] is True
@@ -238,7 +244,7 @@ def test_hardened_canonical_policy_report_fails_closed_when_prompt_flags_missing
         "test": _write_json(tmp_path / "test_metrics.json", _metrics_payload(1.0, 1.0)),
     }
     metadata_paths = {}
-    for split, count in {"train": 30, "dev": 6, "test": 6}.items():
+    for split, count in _current_public_manifest()["split_counts"].items():
         payload = _prediction_metadata(split, count, private_root)
         if split == "dev":
             payload["prompt_constraints"] = {}
@@ -303,7 +309,7 @@ def test_hardened_canonical_policy_report_rejects_wrong_split_metadata(tmp_path:
         "test": _write_json(tmp_path / "test_metrics.json", _metrics_payload(1.0, 1.0)),
     }
     metadata_paths = {}
-    for split, count in {"train": 30, "dev": 6, "test": 6}.items():
+    for split, count in _current_public_manifest()["split_counts"].items():
         payload = _prediction_metadata(split, count, private_root)
         if split == "dev":
             payload["prediction_split"] = "test"

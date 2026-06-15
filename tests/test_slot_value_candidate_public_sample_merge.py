@@ -14,8 +14,10 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 PUBLIC_SAMPLE_DIR = REPO_ROOT / "data" / "public-samples"
 CANDIDATE_SEED = PUBLIC_SAMPLE_DIR / "slot_value_generalization_seed_candidates.jsonl"
 
-EXPECTED_COUNTS = {"dpo_pairs": 125, "seed_rows": 14, "sft_rows": 42}
-EXPECTED_SPLITS = {"dev": 6, "test": 6, "train": 30}
+EXPECTED_COUNTS = {"dpo_pairs": 661, "seed_rows": 77, "sft_rows": 231}
+EXPECTED_SPLITS = {"dev": 69, "test": 69, "train": 93}
+LEGACY_MERGED_SLOT_VALUE_COUNTS = {"dpo_pairs": 125, "seed_rows": 14, "sft_rows": 42}
+LEGACY_MERGED_SLOT_VALUE_SPLITS = {"dev": 6, "test": 6, "train": 30}
 EXPECTED_CANDIDATE_IDS = {
     "candidate-blocked-payment-canonical-command",
     "candidate-clarify-ambiguous-canonical-scope",
@@ -62,9 +64,11 @@ def test_merge_slot_value_candidates_rebuilds_formal_public_sample(tmp_path: Pat
     assert manifest_payload["split_counts"] == EXPECTED_SPLITS
     assert manifest_payload["source_summary"]["slot_value_candidate_seed_rows"] == 4
     assert manifest_payload["source_summary"]["slot_value_candidates_formal_public_sample"] is True
-    assert len(seed_rows) == 14
-    assert len(sft_rows) == 42
-    assert len(dpo_rows) == 125
+    assert manifest_payload["source_summary"]["family_stratified_candidate_seed_rows"] == 63
+    assert manifest_payload["source_summary"]["family_stratified_candidates_formal_public_sample"] is True
+    assert len(seed_rows) == 77
+    assert len(sft_rows) == 231
+    assert len(dpo_rows) == 661
 
     seed_by_id = {row["id"]: row for row in seed_rows}
     sft_by_id = {row["id"]: row for row in sft_rows}
@@ -130,6 +134,7 @@ def test_merge_slot_value_candidates_cli(tmp_path: Path, capsys) -> None:
     assert payload["counts"] == EXPECTED_COUNTS
     assert payload["split_counts"] == EXPECTED_SPLITS
     assert payload["source_summary"]["slot_value_candidate_seed_rows"] == 4
+    assert payload["source_summary"]["family_stratified_candidate_seed_rows"] == 63
 
 
 def test_merge_slot_value_candidates_rejects_unreviewed_candidate_rows(tmp_path: Path) -> None:
@@ -169,7 +174,7 @@ def test_committed_merged_slot_value_a100_evidence_is_bounded_and_public_safe() 
     evidence = read_json(MERGED_EVIDENCE_DIR / "merged_slot_value_heldout_eval.json")
     manifest = read_json(MERGED_EVIDENCE_DIR / "manifest.json")
 
-    assert manifest["formal_public_sample_counts"] == EXPECTED_COUNTS
+    assert manifest["formal_public_sample_counts"] == LEGACY_MERGED_SLOT_VALUE_COUNTS
     assert manifest["comparison"]["merged_slot_value_exact"] == {
         "dev": 0.5,
         "test": 5 / 6,
@@ -188,11 +193,14 @@ def test_committed_merged_slot_value_a100_evidence_is_bounded_and_public_safe() 
 def test_merged_slot_value_a100_configs_are_split_specific_and_public_safe() -> None:
     manifest = read_json(PUBLIC_SAMPLE_DIR / "manifest_public_sample.json")
     manifest_id = manifest["manifest_id"]
+    legacy_manifest = read_json(MERGED_EVIDENCE_DIR / "manifest.json")
+    legacy_manifest_id = legacy_manifest["dataset_manifest_id"]
     sft_config = read_json(MERGED_A100_CONFIGS["sft"])
     serialized_sft = json.dumps(sft_config, ensure_ascii=False, sort_keys=True)
 
     assert sft_config["base_model"] == "Qwen/Qwen2.5-7B-Instruct"
-    assert sft_config["dataset_manifest_id"] == manifest_id
+    assert sft_config["dataset_manifest_id"] == legacy_manifest_id
+    assert legacy_manifest_id != manifest_id
     assert sft_config["public_sample_manifest"] == "data/public-samples/manifest_public_sample.json"
     assert sft_config["dataset_split"] == "train"
     assert sft_config["allow_heavy_training"] is True
@@ -209,7 +217,7 @@ def test_merged_slot_value_a100_configs_are_split_specific_and_public_safe() -> 
         config = read_json(MERGED_A100_CONFIGS[split])
         serialized = json.dumps(config, ensure_ascii=False, sort_keys=True)
         assert config["base_model"] == "Qwen/Qwen2.5-7B-Instruct"
-        assert config["dataset_manifest_id"] == manifest_id
+        assert config["dataset_manifest_id"] == legacy_manifest_id
         assert config["public_sample_manifest"] == "data/public-samples/manifest_public_sample.json"
         assert config["prediction_split"] == split
         assert config["allow_private_prediction"] is True
@@ -262,19 +270,19 @@ def test_merged_slot_value_report_cli_writes_public_safe_evidence(tmp_path: Path
     manifest = read_json(PUBLIC_SAMPLE_DIR / "manifest_public_sample.json")
     training_metadata = _write_json(
         tmp_path / "training_metadata.raw.json",
-        {
-            "base_model": f"{private_root}/models/qwen2.5-7b",
-            "dataset_manifest_id": manifest["manifest_id"],
-            "training_rows_used": 30,
-            "training_status": "training_completed",
-            "adapter_path": f"{private_root}/runs/adapter",
-        },
+            {
+                "base_model": f"{private_root}/models/qwen2.5-7b",
+                "dataset_manifest_id": manifest["manifest_id"],
+                "training_rows_used": EXPECTED_SPLITS["train"],
+                "training_status": "training_completed",
+                "adapter_path": f"{private_root}/runs/adapter",
+            },
     )
     train_metrics = _write_json(tmp_path / "train_metrics.json", _metrics_payload(1.0, 1.0))
     dev_metrics = _write_json(tmp_path / "dev_metrics.json", _metrics_payload(0.5, 0.75, slot_failures=3))
     test_metrics = _write_json(tmp_path / "test_metrics.json", _metrics_payload(1 / 3, 0.75, slot_failures=4))
     metadata_paths = {}
-    for split, count in {"train": 30, "dev": 6, "test": 6}.items():
+    for split, count in EXPECTED_SPLITS.items():
         metadata_paths[split] = _write_json(
             tmp_path / f"{split}_prediction_metadata.raw.json",
             {
@@ -334,9 +342,9 @@ def test_merged_slot_value_report_cli_writes_public_safe_evidence(tmp_path: Path
     assert payload["summary"]["overall_interpretation"] == "merged_slot_value_heldout_improved_partial"
     assert evidence["dataset_manifest_id"] == manifest["manifest_id"]
     assert evidence["formal_public_sample_counts"] == EXPECTED_COUNTS
-    assert evidence["split_results"]["train"]["prediction_count"] == 30
-    assert evidence["split_results"]["dev"]["prediction_count"] == 6
-    assert evidence["split_results"]["test"]["prediction_count"] == 6
+    assert evidence["split_results"]["train"]["prediction_count"] == EXPECTED_SPLITS["train"]
+    assert evidence["split_results"]["dev"]["prediction_count"] == EXPECTED_SPLITS["dev"]
+    assert evidence["split_results"]["test"]["prediction_count"] == EXPECTED_SPLITS["test"]
     assert evidence["split_results"]["dev"]["contract_exact_match"] == 0.5
     assert evidence["comparison"]["prior_targeted_family_coverage_exact"] == {
         "dev": 1 / 6,

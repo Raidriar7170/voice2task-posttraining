@@ -4572,7 +4572,7 @@ def test_compact_query_slot_preservation_pack_is_public_safe_and_bounded() -> No
     assert public_sample["counts"]["seed_rows"] <= public_manifest["counts"]["seed_rows"]
     assert public_sample["counts"]["sft_rows"] <= public_manifest["counts"]["sft_rows"]
     assert public_sample["counts"]["dpo_pairs"] <= public_manifest["counts"]["dpo_pairs"]
-    assert public_sample["dpo_rejection_counts"]["decomposed_search_slots"] == (
+    assert public_sample["dpo_rejection_counts"]["decomposed_search_slots"] <= (
         public_manifest["dpo_rejection_counts"]["decomposed_search_slots"]
     )
     assert public_sample["manifest_id"].startswith("public-sample-")

@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Family-Stratified Public Sample Merge Brief</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17202a;
+      --muted: #596575;
+      --line: #d8dee8;
+      --panel: #f6f8fb;
+      --accent: #0f766e;
+      --ok: #166534;
+      --warn: #b45309;
+    }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--ink); background: #fff; }
+    main { max-width: 980px; margin: 0 auto; padding: 32px 24px 56px; }
+    h1 { font-size: 28px; line-height: 1.2; margin: 0 0 8px; letter-spacing: 0; }
+    h2 { font-size: 18px; margin: 28px 0 10px; }
+    p { line-height: 1.65; margin: 8px 0; }
+    a { color: var(--accent); text-decoration: none; }
+    code { background: #edf2f7; border-radius: 4px; padding: 1px 5px; }
+    .status { display: inline-block; margin: 10px 0 18px; padding: 5px 9px; border-radius: 6px; background: #ecfdf5; color: var(--ok); border: 1px solid #bbf7d0; font-weight: 600; }
+    .summary { border-left: 4px solid var(--accent); padding: 10px 14px; background: #f0fdfa; }
+    .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 18px 0; }
+    .metric { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
+    .metric b { display: block; font-size: 22px; margin-bottom: 4px; }
+    .metric span { color: var(--muted); font-size: 13px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+    th, td { border-bottom: 1px solid var(--line); padding: 8px 6px; text-align: left; vertical-align: top; }
+    th { color: var(--muted); font-weight: 600; }
+    ul { padding-left: 20px; }
+    li { margin: 6px 0; line-height: 1.55; }
+    .callout { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 10px 12px; color: var(--warn); }
+    .small { color: var(--muted); font-size: 13px; }
+    @media (max-width: 720px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Family-stratified 候选集合并进 formal public sample</h1>
+  <div class="status">状态：archived，formal public sample 已重建并验证</div>
+  <section class="summary">
+    <p><strong>一句话结论：</strong>7 个 family 的 63 条候选 seed 已正式合并进 public sample，并重建出 231 条 SFT、661 对 DPO；这改变了正式数据边界，但还不是训练或 held-out 恢复证据。</p>
+  </section>
+
+  <section class="grid" aria-label="key metrics">
+    <div class="metric"><b>77</b><span>formal seed rows</span></div>
+    <div class="metric"><b>231</b><span>formal SFT rows</span></div>
+    <div class="metric"><b>661</b><span>formal DPO pairs</span></div>
+    <div class="metric"><b>93/69/69</b><span>SFT train/dev/test</span></div>
+  </section>
+
+  <h2>这阶段做了什么</h2>
+  <ul>
+    <li>把 <code>family_stratified_generalization_seed_candidates.jsonl</code> 的 63 条 reviewed candidate seed 合并进 <code>seed_traces.jsonl</code>。</li>
+    <li>保留 candidate 原本的 <code>train/dev/test</code> split：每个 split 21 条 seed。</li>
+    <li>重新生成 formal <code>sft_public_sample.jsonl</code>、<code>dpo_public_sample.jsonl</code>、<code>manifest_public_sample.json</code>。</li>
+    <li>Manifest 继续保留 slot-value merge metadata，同时新增 family-stratified formal metadata。</li>
+  </ul>
+
+  <h2>Family 覆盖</h2>
+  <table>
+    <thead><tr><th>family</th><th>status</th></tr></thead>
+    <tbody>
+      <tr><td><code>blocked_payment</code></td><td>formal public sample</td></tr>
+      <tr><td><code>clarify</code></td><td>formal public sample</td></tr>
+      <tr><td><code>confirmation</code></td><td>formal public sample</td></tr>
+      <tr><td><code>extract</code></td><td>formal public sample</td></tr>
+      <tr><td><code>form_fill</code></td><td>formal public sample</td></tr>
+      <tr><td><code>navigation</code></td><td>formal public sample</td></tr>
+      <tr><td><code>search</code></td><td>formal public sample</td></tr>
+    </tbody>
+  </table>
+
+  <h2>关键文件</h2>
+  <ul>
+    <li><a href="../../data/public-samples/manifest_public_sample.json">formal manifest</a></li>
+    <li><a href="../../data/public-samples/seed_traces.jsonl">formal seed_traces.jsonl</a></li>
+    <li><a href="../../data/public-samples/sft_public_sample.jsonl">formal SFT JSONL</a></li>
+    <li><a href="../../data/public-samples/dpo_public_sample.jsonl">formal DPO JSONL</a></li>
+    <li><a href="../../reports/public-sample/family-stratified-public-sample-merge/manifest.json">merge evidence manifest</a></li>
+    <li><a href="../../openspec/changes/archive/2026-06-15-merge-family-stratified-candidates-public-sample/tasks.md">OpenSpec tasks</a></li>
+  </ul>
+
+  <h2>验证</h2>
+  <ul>
+    <li><code>PYTHONPATH=src pytest -q tests/test_family_stratified_public_sample_merge.py</code>：通过，5 passed。</li>
+    <li><code>PYTHONPATH=src pytest -q</code>：通过，300 passed。</li>
+    <li><code>python -m ruff check ...</code>：通过。</li>
+    <li><code>voice2task-data validate --public</code>：通过，231 SFT rows / 661 DPO pairs。</li>
+    <li><code>voice2task-data dpo-check</code>：通过，661 total pairs。</li>
+    <li><code>voice2task-report leak-scan</code>：通过，无发现。</li>
+    <li><code>openspec validate --all --strict</code>：通过。</li>
+    <li><code>git diff --check</code>：通过。</li>
+  </ul>
+
+  <h2>不要夸大的点</h2>
+  <div class="callout">
+    <p>这只是 formal public sample 数据边界更新。没有训练、没有 A100 prediction、没有 evaluator 语义变化，也不能声称 held-out generalization recovered。下一次 eval 必须使用新的 manifest ID。</p>
+  </div>
+
+  <h2>推荐下一步</h2>
+  <p>本阶段验证并归档后，开一个单独 prediction-only eval phase：用当前新的 public manifest 对 train/dev/test 重新跑严格 <code>contract_exact_match</code>，再判断模型离目标还差多少。</p>
+  <p class="small">Generated from public-safe evidence under <code>reports/public-sample/family-stratified-public-sample-merge</code>.</p>
+</main>
+</body>
+</html>

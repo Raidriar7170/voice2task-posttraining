@@ -1,28 +1,28 @@
 {
   "counts": {
-    "dpo_pairs": 125,
-    "seed_rows": 14,
-    "sft_rows": 42
+    "dpo_pairs": 661,
+    "seed_rows": 77,
+    "sft_rows": 231
   },
   "dpo_rejection_counts": {
-    "blocked_payment_action_drift": 3,
-    "clarify_action_drift": 3,
-    "decomposed_search_slots": 1,
-    "extract_extra_particle_wording": 1,
-    "extract_generic_price_wording": 1,
-    "extract_listed_price_wording": 1,
-    "extract_query_slot": 1,
-    "extract_search_fallback": 1,
-    "form_confirmation_drift": 3,
-    "malformed_schema": 14,
-    "missing_confirmation": 9,
-    "missing_slot": 14,
-    "navigate_canonical_url_drift": 3,
-    "underspecified_request": 14,
-    "unsafe_allowance": 14,
-    "wrong_route": 14,
-    "wrong_slot": 14,
-    "wrong_task_type": 14
+    "blocked_payment_action_drift": 4,
+    "clarify_action_drift": 12,
+    "decomposed_search_slots": 2,
+    "extract_extra_particle_wording": 2,
+    "extract_generic_price_wording": 2,
+    "extract_listed_price_wording": 2,
+    "extract_query_slot": 10,
+    "extract_search_fallback": 10,
+    "form_confirmation_drift": 21,
+    "malformed_schema": 77,
+    "missing_confirmation": 45,
+    "missing_slot": 77,
+    "navigate_canonical_url_drift": 12,
+    "underspecified_request": 77,
+    "unsafe_allowance": 77,
+    "wrong_route": 77,
+    "wrong_slot": 77,
+    "wrong_task_type": 77
   },
   "files": {
     "dpo": "data/public-samples/dpo_public_sample.jsonl",
@@ -30,19 +30,36 @@
     "seed": "data/public-samples/seed_traces.jsonl",
     "sft": "data/public-samples/sft_public_sample.jsonl"
   },
-  "generated_at": "2026-06-15T04:02:31.805845+00:00",
-  "manifest_id": "public-sample-20260615T040231Z",
+  "generated_at": "2026-06-15T11:13:16.741157+00:00",
+  "manifest_id": "public-sample-20260615T111316Z",
   "mode": "public_sample",
   "public_safe": true,
   "source_summary": {
-    "seed_rows": 14,
+    "family_stratified_candidate_seed_rows": 63,
+    "family_stratified_candidate_sft_rows": 189,
+    "family_stratified_candidates_formal_public_sample": true,
+    "family_stratified_families": [
+      "blocked_payment",
+      "clarify",
+      "confirmation",
+      "extract",
+      "form_fill",
+      "navigation",
+      "search"
+    ],
+    "family_stratified_seed_split_counts": {
+      "dev": 21,
+      "test": 21,
+      "train": 21
+    },
+    "seed_rows": 77,
     "slot_value_candidate_seed_rows": 4,
     "slot_value_candidates_formal_public_sample": true,
     "source": "sanitized_public_seed_fixture"
   },
   "split_counts": {
-    "dev": 6,
-    "test": 6,
-    "train": 30
+    "dev": 69,
+    "test": 69,
+    "train": 93
   }
 }

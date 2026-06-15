@@ -1,0 +1,101 @@
+{
+  "artifact_policy": {
+    "a100_execution": false,
+    "candidate_rows_promoted_to_formal_sample": true,
+    "checkpoints_or_adapters_copied_to_git": false,
+    "dpo_artifacts_rebuilt": true,
+    "evaluator_metric_change": false,
+    "host_details_omitted": true,
+    "prediction_repair_or_replacement": false,
+    "prediction_run": false,
+    "private_overrides_copied_to_git": false,
+    "private_paths_omitted": true,
+    "public_sample_modified": true,
+    "raw_logs_copied_to_git": false,
+    "sft_artifacts_rebuilt": true,
+    "ssh_details_omitted": true,
+    "training_run": false
+  },
+  "candidate_source": {
+    "candidate_seed": "data/public-samples/family_stratified_generalization_seed_candidates.jsonl",
+    "candidate_seed_rows": 63,
+    "candidate_sft_rows": 189,
+    "families": [
+      "blocked_payment",
+      "clarify",
+      "confirmation",
+      "extract",
+      "form_fill",
+      "navigation",
+      "search"
+    ],
+    "seed_split_counts": {
+      "dev": 21,
+      "test": 21,
+      "train": 21
+    }
+  },
+  "claims": {
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "held_out_generalization_recovered": false,
+    "live_browser_benchmark_claim": false,
+    "model_recovery_claim": false,
+    "private_corpus_generalization_claim": false,
+    "production_readiness_claim": false,
+    "public_full_corpus_release_claim": false,
+    "semantic_equivalence_primary_metric": false,
+    "soft_slot_f1_primary_metric": false,
+    "strict_contract_exact_match_primary_metric": true
+  },
+  "diagnostic_artifacts": {
+    "manifest": "reports/public-sample/family-stratified-public-sample-merge/manifest.json",
+    "markdown": "reports/public-sample/family-stratified-public-sample-merge/family_stratified_public_sample_merge.md",
+    "materialization": "reports/public-sample/family-stratified-public-sample-merge/family_stratified_public_sample_merge.json"
+  },
+  "evidence_kind": "family_stratified_public_sample_merge",
+  "execution_scope": {
+    "a100_execution": false,
+    "dpo_artifacts_rebuilt": true,
+    "evaluator_metric_change": false,
+    "formal_public_sample_modified": true,
+    "prediction_run": false,
+    "sft_artifacts_rebuilt": true,
+    "training_run": false
+  },
+  "formal_public_sample_counts": {
+    "dpo_pairs": 661,
+    "seed_rows": 77,
+    "sft_rows": 231
+  },
+  "formal_public_sample_split_counts": {
+    "dev": 69,
+    "test": 69,
+    "train": 93
+  },
+  "generated_at": "2026-06-15T11:13:16.741510+00:00",
+  "merge_status": "formal_public_sample_rebuilt",
+  "source_summary": {
+    "family_stratified_candidate_seed_rows": 63,
+    "family_stratified_candidate_sft_rows": 189,
+    "family_stratified_candidates_formal_public_sample": true,
+    "family_stratified_families": [
+      "blocked_payment",
+      "clarify",
+      "confirmation",
+      "extract",
+      "form_fill",
+      "navigation",
+      "search"
+    ],
+    "family_stratified_seed_split_counts": {
+      "dev": 21,
+      "test": 21,
+      "train": 21
+    },
+    "seed_rows": 77,
+    "slot_value_candidate_seed_rows": 4,
+    "slot_value_candidates_formal_public_sample": true,
+    "source": "sanitized_public_seed_fixture"
+  }
+}

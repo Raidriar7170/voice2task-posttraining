@@ -58,7 +58,7 @@ def test_sft_dry_run_records_targeted_train_source_id_selection(tmp_path: Path) 
 
     assert metadata["training_split"] == "train"
     assert metadata["training_source_ids"] == TARGETED_SOURCE_IDS
-    assert metadata["training_rows_before_source_filter"] == 30
+    assert metadata["training_rows_before_source_filter"] == 93
     assert metadata["training_rows_used"] == 12
     assert metadata["training_row_ids"] == TARGETED_ROW_IDS
     assert metadata["training_source_id_counts"] == {
@@ -67,7 +67,7 @@ def test_sft_dry_run_records_targeted_train_source_id_selection(tmp_path: Path) 
         "seed-form-nickname": 3,
         "seed-open-help": 3,
     }
-    assert metadata["dataset_load"]["training_rows_before_source_filter"] == 30
+    assert metadata["dataset_load"]["training_rows_before_source_filter"] == 93
     assert metadata["dataset_load"]["training_rows_used"] == 12
     assert metadata["dataset_load"]["training_source_ids"] == TARGETED_SOURCE_IDS
 

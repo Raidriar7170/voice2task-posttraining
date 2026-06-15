@@ -2214,6 +2214,97 @@ def write_family_stratified_generalization_report(
     return {"json": json_path, "markdown": markdown_path, "manifest": manifest_path, "sft": sft_path}
 
 
+def write_family_stratified_public_sample_merge_report(
+    evidence: dict[str, Any],
+    output_dir: Path,
+    title: str = "Voice2Task family-stratified public sample merge",
+) -> dict[str, Path]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    json_path = output_dir / "family_stratified_public_sample_merge.json"
+    markdown_path = output_dir / "family_stratified_public_sample_merge.md"
+    manifest_path = output_dir / "manifest.json"
+    safe_evidence = _sanitize_report_value(evidence)
+    write_json(json_path, safe_evidence)
+
+    manifest = {
+        "evidence_kind": safe_evidence["evidence_kind"],
+        "merge_status": safe_evidence["merge_status"],
+        "generated_at": safe_evidence["generated_at"],
+        "formal_public_sample_counts": safe_evidence["formal_public_sample_counts"],
+        "formal_public_sample_split_counts": safe_evidence["formal_public_sample_split_counts"],
+        "source_summary": safe_evidence["source_summary"],
+        "candidate_source": safe_evidence["candidate_source"],
+        "execution_scope": safe_evidence["execution_scope"],
+        "claims": safe_evidence["claims"],
+        "artifact_policy": {
+            "public_sample_modified": True,
+            "candidate_rows_promoted_to_formal_sample": True,
+            "sft_artifacts_rebuilt": True,
+            "dpo_artifacts_rebuilt": True,
+            "training_run": False,
+            "prediction_run": False,
+            "a100_execution": False,
+            "raw_logs_copied_to_git": False,
+            "checkpoints_or_adapters_copied_to_git": False,
+            "private_overrides_copied_to_git": False,
+            "private_paths_omitted": True,
+            "host_details_omitted": True,
+            "ssh_details_omitted": True,
+            "prediction_repair_or_replacement": False,
+            "evaluator_metric_change": False,
+        },
+        "diagnostic_artifacts": {
+            "materialization": "reports/public-sample/family-stratified-public-sample-merge/"
+            "family_stratified_public_sample_merge.json",
+            "markdown": "reports/public-sample/family-stratified-public-sample-merge/"
+            "family_stratified_public_sample_merge.md",
+            "manifest": "reports/public-sample/family-stratified-public-sample-merge/manifest.json",
+        },
+    }
+    write_json(manifest_path, manifest)
+
+    counts = safe_evidence["formal_public_sample_counts"]
+    splits = safe_evidence["formal_public_sample_split_counts"]
+    candidate = safe_evidence["candidate_source"]
+    lines = [
+        f"# {title}",
+        "",
+        (
+            "This report records a data merge into the formal public sample. "
+            "It does not prove held-out recovery, model recovery, adapter release, "
+            "checkpoint release, production readiness, or live-browser improvement."
+        ),
+        "",
+        "## Boundary",
+        "",
+        "- Formal public sample seed, SFT, DPO, and manifest files were rebuilt.",
+        "- No SFT/DPO/GRPO training, prediction run, or A100 execution was performed.",
+        "- strict `contract_exact_match` remains the future primary evaluation metric.",
+        "- Soft slot F1 and semantic equivalence remain diagnostic-only.",
+        "",
+        "## Summary",
+        "",
+        f"- Seed rows: `{counts['seed_rows']}`",
+        f"- SFT rows: `{counts['sft_rows']}`",
+        f"- DPO pairs: `{counts['dpo_pairs']}`",
+        f"- SFT split counts: `{splits}`",
+        f"- Merged candidate seed rows: `{candidate['candidate_seed_rows']}`",
+        f"- Merged candidate SFT rows: `{candidate['candidate_sft_rows']}`",
+        f"- Families: `{candidate['families']}`",
+        f"- Candidate seed split counts: `{candidate['seed_split_counts']}`",
+        "",
+        "## Recommended Next Step",
+        "",
+        (
+            "Use the new manifest ID for a later prediction-only eval phase. "
+            "Do not compare new results to prior held-out metrics without noting "
+            "that the formal public sample boundary changed."
+        ),
+    ]
+    markdown_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    return {"json": json_path, "markdown": markdown_path, "manifest": manifest_path}
+
+
 def write_slot_value_candidate_sft_probe_report(
     *,
     candidate_manifest: dict[str, Any],

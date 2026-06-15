@@ -48,7 +48,7 @@
     "prediction_run": false,
     "training_run": false
   },
-  "generated_at": "2026-06-15T10:32:56.917305+00:00",
+  "generated_at": "2026-06-15T11:13:16.642599+00:00",
   "materialization_status": "candidate_dataset_materialized",
   "summary": {
     "candidate_seed_rows": 63,
@@ -66,19 +66,19 @@
     "family_slot_signatures": {
       "blocked_payment": {
         "dev": [
-          "{\"action\": \"捐款\", \"reason\": \"donation_requires_user_control\"}",
-          "{\"action\": \"订阅付款\", \"reason\": \"subscription_requires_user_control\"}",
-          "{\"action\": \"退款确认\", \"reason\": \"refund_requires_user_control\"}"
+          "{\"action\": \"捐款\", \"reason\": \"donation_control\"}",
+          "{\"action\": \"订阅付款\", \"reason\": \"subscription_control\"}",
+          "{\"action\": \"退款确认\", \"reason\": \"refund_control\"}"
         ],
         "test": [
-          "{\"action\": \"充值\", \"reason\": \"recharge_requires_user_control\"}",
-          "{\"action\": \"出价付款\", \"reason\": \"bid_requires_user_control\"}",
-          "{\"action\": \"打赏\", \"reason\": \"tip_requires_user_control\"}"
+          "{\"action\": \"充值\", \"reason\": \"recharge_control\"}",
+          "{\"action\": \"出价付款\", \"reason\": \"bid_control\"}",
+          "{\"action\": \"打赏\", \"reason\": \"tip_control\"}"
         ],
         "train": [
-          "{\"action\": \"下单付款\", \"reason\": \"purchase_requires_user_control\"}",
+          "{\"action\": \"下单付款\", \"reason\": \"purchase_control\"}",
           "{\"action\": \"付款\", \"reason\": \"payment_requires_user_control\"}",
-          "{\"action\": \"转账\", \"reason\": \"transfer_requires_user_control\"}"
+          "{\"action\": \"转账\", \"reason\": \"transfer_control\"}"
         ]
       },
       "clarify": {
@@ -260,10 +260,10 @@
         }
       }
     },
-    "formal_public_sample_dpo_pairs": 125,
+    "formal_public_sample_dpo_pairs": 661,
     "formal_public_sample_modified": false,
-    "formal_public_sample_seed_rows": 14,
-    "formal_public_sample_sft_rows": 42,
+    "formal_public_sample_seed_rows": 77,
+    "formal_public_sample_sft_rows": 231,
     "recommended_next_step": "review_candidate_dataset_before_merge_or_training",
     "seed_split_counts": {
       "dev": 21,

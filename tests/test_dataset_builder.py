@@ -213,9 +213,9 @@ def test_build_public_sample_dataset_adds_train_only_heldout_repair_exemplars(tm
     assert rows_by_id["seed-clarify-ambiguous"]["split"] == "dev"
     assert rows_by_id["seed-form-email"]["split"] == "test"
     assert rows_by_id["seed-block-purchase"]["split"] == "test"
-    assert manifest.split_counts["dev"] == 6
-    assert manifest.split_counts["test"] == 6
-    assert manifest.split_counts["train"] >= 18
+    assert manifest.split_counts["dev"] == 69
+    assert manifest.split_counts["test"] == 69
+    assert manifest.split_counts["train"] == 93
 
     expected_repair_categories = {
         "clarify_action_drift",

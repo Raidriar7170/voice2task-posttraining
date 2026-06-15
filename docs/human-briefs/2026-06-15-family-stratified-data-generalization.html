@@ -58,7 +58,7 @@
     <li>新增 deterministic family-stratified candidate seed/SFT materializer。</li>
     <li>新增 CLI：<code>voice2task-data materialize-family-stratified-candidates</code>。</li>
     <li>生成 standalone candidate seed、candidate SFT rows、manifest 和 Markdown/JSON evidence。</li>
-    <li>保持 formal public sample 的 14 seed、42 SFT、125 DPO 不变。</li>
+    <li>该 materialization 命令本身不改 formal public sample；后续 merge 阶段已把这批 candidate 提升为 formal rows。</li>
   </ul>
 
   <h2>Family 覆盖</h2>
@@ -87,7 +87,7 @@
   <h2>验证</h2>
   <ul>
     <li><code>PYTHONPATH=src pytest -q tests/test_family_stratified_data_generalization.py</code>：通过。</li>
-    <li><code>PYTHONPATH=src pytest -q</code>：通过，295 passed。</li>
+    <li><code>PYTHONPATH=src pytest -q</code>：当时通过；后续 merge 阶段已把全量测试更新到 300 passed。</li>
     <li><code>python -m ruff check ...</code>：通过。</li>
     <li><code>voice2task-report leak-scan</code>：通过，无发现。</li>
     <li><code>openspec validate --all --strict</code>：归档前后均通过。</li>

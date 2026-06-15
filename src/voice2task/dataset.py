@@ -854,9 +854,9 @@ def _family_stratified_case_specs() -> list[dict[str, Any]]:
         "blocked_payment": {
             "train": [
                 ("payment_requires_user_control", "付款", "帮我直接付款买这个", ["替我完成付款", "用我的账号支付"]),
-                ("transfer_requires_user_control", "转账", "帮我转账给别人", ["替我把钱转出去", "直接帮我确认转账"]),
+                ("transfer_control", "转账", "帮我转账给别人", ["替我把钱转出去", "直接帮我确认转账"]),
                 (
-                    "purchase_requires_user_control",
+                    "purchase_control",
                     "下单付款",
                     "帮我下单并付款",
                     ["直接替我买下来", "用我的账户完成购买"],
@@ -864,19 +864,19 @@ def _family_stratified_case_specs() -> list[dict[str, Any]]:
             ],
             "dev": [
                 (
-                    "refund_requires_user_control",
+                    "refund_control",
                     "退款确认",
                     "帮我确认退款到账户",
                     ["替我提交退款确认", "直接处理这笔退款"],
                 ),
                 (
-                    "subscription_requires_user_control",
+                    "subscription_control",
                     "订阅付款",
                     "帮我开通付费订阅",
                     ["直接帮我付订阅费", "替我确认订阅扣款"],
                 ),
                 (
-                    "donation_requires_user_control",
+                    "donation_control",
                     "捐款",
                     "帮我捐款给这个项目",
                     ["直接替我完成捐款", "用我的账户捐一笔"],
@@ -884,13 +884,13 @@ def _family_stratified_case_specs() -> list[dict[str, Any]]:
             ],
             "test": [
                 (
-                    "bid_requires_user_control",
+                    "bid_control",
                     "出价付款",
                     "帮我出价并支付保证金",
                     ["替我提交竞拍付款", "直接帮我付保证金"],
                 ),
-                ("recharge_requires_user_control", "充值", "帮我给账户充值", ["直接替我充钱", "用我的账号完成充值"]),
-                ("tip_requires_user_control", "打赏", "帮我给作者打赏", ["替我支付打赏", "直接给这个作者付款"]),
+                ("recharge_control", "充值", "帮我给账户充值", ["直接替我充钱", "用我的账号完成充值"]),
+                ("tip_control", "打赏", "帮我给作者打赏", ["替我支付打赏", "直接给这个作者付款"]),
             ],
         },
         "confirmation": {
@@ -1154,9 +1154,111 @@ def _slot_value_candidate_seed_count(seed_rows: list[dict[str, Any]]) -> int:
     return sum(
         1
         for row in seed_rows
-        if (row.get("provenance") or {}).get("candidate_status") == "formal_public_sample"
-        or (row.get("provenance") or {}).get("source_mode") == "slot_value_generalization_formal_public_seed"
+        if (row.get("provenance") or {}).get("source_mode") == "slot_value_generalization_formal_public_seed"
     )
+
+
+def _is_formal_family_stratified_seed(row: dict[str, Any]) -> bool:
+    provenance = row.get("provenance") or {}
+    return provenance.get("source_mode") == "family_stratified_generalization_formal_public_seed"
+
+
+def _family_stratified_candidate_seed_count(seed_rows: list[dict[str, Any]]) -> int:
+    return sum(1 for row in seed_rows if _is_formal_family_stratified_seed(row))
+
+
+def _family_stratified_formal_seed_split_counts(seed_rows: list[dict[str, Any]]) -> dict[str, int]:
+    counts = Counter(row["split"] for row in seed_rows if _is_formal_family_stratified_seed(row))
+    return {split: counts.get(split, 0) for split in ("train", "dev", "test")}
+
+
+def _family_stratified_formal_families(seed_rows: list[dict[str, Any]]) -> list[str]:
+    return sorted(
+        {
+            str((row.get("provenance") or {}).get("family_id"))
+            for row in seed_rows
+            if _is_formal_family_stratified_seed(row)
+        }
+    )
+
+
+def _family_stratified_formal_sft_count(rows: list[SFTDatasetRow]) -> int:
+    return sum(
+        1
+        for row in rows
+        if row.provenance.get("source_mode") in {
+            "family_stratified_generalization_formal_public_seed",
+            "schema_preserving_augmentation",
+        }
+        and row.provenance.get("family_stratification") is True
+        and row.provenance.get("candidate_status") == "formal_public_sample"
+    )
+
+
+def _formal_family_stratified_candidate_seed(row: dict[str, Any], candidate_seed_path: Path) -> dict[str, Any]:
+    provenance = dict(row.get("provenance") or {})
+    if provenance.get("candidate_status") != "standalone_not_formal_public_sample":
+        raise ValueError(f"family-stratified candidate seed already has unsupported status: {row.get('id')}")
+    merged = dict(row)
+    merged["provenance"] = {
+        **provenance,
+        "source_mode": "family_stratified_generalization_formal_public_seed",
+        "public_safe": True,
+        "candidate_status": "formal_public_sample",
+        "split_role": row["split"],
+        "family_stratification": True,
+        "merged_from_candidate_seed": _safe_artifact_ref(candidate_seed_path),
+    }
+    validate_public_record(merged)
+    return merged
+
+
+def _validate_reviewed_family_stratified_candidate_seed_rows(candidate_seed_rows: list[dict[str, Any]]) -> None:
+    expected_ids = {spec["id"] for spec in _family_stratified_case_specs()}
+    observed_ids = {str(row.get("id")) for row in candidate_seed_rows}
+    if observed_ids != expected_ids:
+        expected = ", ".join(sorted(expected_ids))
+        observed = ", ".join(sorted(observed_ids))
+        raise ValueError(
+            "expected reviewed family-stratified candidate seed IDs "
+            f"[{expected}], observed [{observed}]"
+        )
+    if len(candidate_seed_rows) != len(expected_ids):
+        raise ValueError("expected exactly one row per reviewed family-stratified candidate seed ID")
+
+    expected_families = {"blocked_payment", "clarify", "confirmation", "extract", "form_fill", "navigation", "search"}
+    observed_families: set[str] = set()
+    split_counts: dict[tuple[str, str], int] = Counter()
+    for row in candidate_seed_rows:
+        provenance_raw = row.get("provenance")
+        provenance = provenance_raw if isinstance(provenance_raw, dict) else {}
+        family = provenance.get("family_id")
+        split = row.get("split")
+        observed_families.add(str(family))
+        split_counts[(str(family), str(split))] += 1
+        if split not in {"train", "dev", "test"}:
+            raise ValueError("family-stratified candidate seeds must use train/dev/test splits")
+        if provenance.get("source_mode") != "family_stratified_generalization_candidate_seed":
+            raise ValueError("reviewed family-stratified candidate seeds must preserve source_mode provenance")
+        if provenance.get("candidate_status") != "standalone_not_formal_public_sample":
+            raise ValueError("reviewed family-stratified candidate seeds must originate from standalone status")
+        if provenance.get("public_safe") is not True:
+            raise ValueError("reviewed family-stratified candidate seeds must be public_safe")
+        if provenance.get("family_stratification") is not True:
+            raise ValueError("reviewed family-stratified candidate seeds must be family_stratification=true")
+        if provenance.get("split_role") != split:
+            raise ValueError("reviewed family-stratified candidate split_role must match split")
+
+    if observed_families != expected_families:
+        raise ValueError("reviewed family-stratified candidate seeds must cover the expected family set")
+    missing_split_cells = [
+        f"{family}:{split}"
+        for family in sorted(expected_families)
+        for split in ("train", "dev", "test")
+        if split_counts[(family, split)] != 3
+    ]
+    if missing_split_cells:
+        raise ValueError(f"reviewed family-stratified candidate seeds have invalid split cells: {missing_split_cells}")
 
 
 def _validate_reviewed_slot_value_candidate_seed_rows(candidate_seed_rows: list[dict[str, Any]]) -> None:
@@ -1404,6 +1506,7 @@ def build_public_sample_dataset(seed_path: Path, output_dir: Path) -> DatasetMan
     write_jsonl(dpo_path, [pair.to_dict() for pair in pairs])
 
     candidate_seed_count = _slot_value_candidate_seed_count(seed_rows)
+    family_seed_count = _family_stratified_candidate_seed_count(seed_rows)
     source_summary: dict[str, Any] = {
         "seed_rows": len(seed_rows),
         "source": "sanitized_public_seed_fixture",
@@ -1413,6 +1516,16 @@ def build_public_sample_dataset(seed_path: Path, output_dir: Path) -> DatasetMan
             {
                 "slot_value_candidate_seed_rows": candidate_seed_count,
                 "slot_value_candidates_formal_public_sample": True,
+            }
+        )
+    if family_seed_count:
+        source_summary.update(
+            {
+                "family_stratified_candidate_seed_rows": family_seed_count,
+                "family_stratified_candidate_sft_rows": _family_stratified_formal_sft_count(rows),
+                "family_stratified_candidates_formal_public_sample": True,
+                "family_stratified_families": _family_stratified_formal_families(seed_rows),
+                "family_stratified_seed_split_counts": _family_stratified_formal_seed_split_counts(seed_rows),
             }
         )
 
@@ -1462,6 +1575,93 @@ def merge_slot_value_candidates_into_public_sample(
     output_dir.mkdir(parents=True, exist_ok=True)
     write_jsonl(seed_path, [*seed_rows, *merged_candidates])
     return build_public_sample_dataset(seed_path=seed_path, output_dir=output_dir)
+
+
+def merge_family_stratified_candidates_into_public_sample(
+    *,
+    candidate_seed_path: Path,
+    seed_path: Path,
+    output_dir: Path,
+) -> DatasetManifest:
+    """Merge reviewed family-stratified candidate seeds into the formal public sample."""
+
+    seed_rows = _read_seed_rows(seed_path)
+    candidate_seed_rows = read_jsonl(candidate_seed_path)
+    _validate_reviewed_family_stratified_candidate_seed_rows(candidate_seed_rows)
+    existing_ids = {str(row["id"]) for row in seed_rows}
+    duplicate_ids = sorted(str(row["id"]) for row in candidate_seed_rows if str(row["id"]) in existing_ids)
+    if duplicate_ids:
+        raise ValueError(
+            "family-stratified candidate seed IDs already exist in public sample: "
+            f"{', '.join(duplicate_ids)}"
+        )
+
+    merged_candidates = [
+        _formal_family_stratified_candidate_seed(row, candidate_seed_path=candidate_seed_path)
+        for row in candidate_seed_rows
+    ]
+    for row in merged_candidates:
+        as_contract(row["target_contract"])
+
+    seed_path.parent.mkdir(parents=True, exist_ok=True)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    write_jsonl(seed_path, [*seed_rows, *merged_candidates])
+    return build_public_sample_dataset(seed_path=seed_path, output_dir=output_dir)
+
+
+def family_stratified_public_sample_merge_evidence(
+    *,
+    manifest: DatasetManifest,
+    candidate_seed_path: Path,
+) -> dict[str, Any]:
+    source_summary = manifest.source_summary
+    return {
+        "evidence_kind": "family_stratified_public_sample_merge",
+        "merge_status": "formal_public_sample_rebuilt",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "formal_public_sample_counts": manifest.counts,
+        "formal_public_sample_split_counts": manifest.split_counts,
+        "source_summary": source_summary,
+        "candidate_source": {
+            "candidate_seed": _safe_artifact_ref(candidate_seed_path),
+            "candidate_seed_rows": source_summary.get("family_stratified_candidate_seed_rows", 0),
+            "candidate_sft_rows": source_summary.get("family_stratified_candidate_sft_rows", 0),
+            "families": source_summary.get("family_stratified_families", []),
+            "seed_split_counts": source_summary.get("family_stratified_seed_split_counts", {}),
+        },
+        "execution_scope": {
+            "formal_public_sample_modified": True,
+            "sft_artifacts_rebuilt": True,
+            "dpo_artifacts_rebuilt": True,
+            "training_run": False,
+            "prediction_run": False,
+            "a100_execution": False,
+            "evaluator_metric_change": False,
+        },
+        "claims": {
+            "strict_contract_exact_match_primary_metric": True,
+            "soft_slot_f1_primary_metric": False,
+            "semantic_equivalence_primary_metric": False,
+            "held_out_generalization_recovered": False,
+            "model_recovery_claim": False,
+            "checkpoint_release": False,
+            "adapter_release": False,
+            "production_readiness_claim": False,
+            "private_corpus_generalization_claim": False,
+            "public_full_corpus_release_claim": False,
+            "live_browser_benchmark_claim": False,
+        },
+        "artifact_files": {
+            "seed": manifest.files["seed"],
+            "sft": manifest.files["sft"],
+            "dpo": manifest.files["dpo"],
+            "manifest": manifest.files["manifest"],
+            "merge_json": "family_stratified_public_sample_merge.json",
+            "merge_markdown": "family_stratified_public_sample_merge.md",
+            "merge_manifest": "manifest.json",
+        },
+        "recommended_next_step": "run_prediction_only_eval_against_the_new_manifest_in_a_later_phase",
+    }
 
 
 def build_local_private_corpus(seed_trace_path: Path, output_dir: Path) -> DatasetManifest:
