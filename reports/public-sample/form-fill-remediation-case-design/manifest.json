@@ -1,0 +1,153 @@
+{
+  "acceptance_boundary": {
+    "case_design_does_not_authorize_materialization": true,
+    "future_training_requires_separate_user_confirmed_phase": true,
+    "materialization_requires_later_user_confirmed_phase": true,
+    "must_preserve_strict_contract_exact_match_as_primary": true,
+    "must_preserve_strict_slot_f1_as_primary": true,
+    "slot_f1_soft_diagnostic_only": true
+  },
+  "artifact_policy": {
+    "a100_job": false,
+    "checkpoints_or_adapters_copied_to_git": false,
+    "dpo_run": false,
+    "evaluator_metric_change": false,
+    "gold_policy_change": false,
+    "host_details_omitted": true,
+    "new_data_generated": false,
+    "prediction_repair_or_replacement": false,
+    "prediction_run": false,
+    "private_corpus_rows_omitted": true,
+    "private_overrides_copied_to_git": false,
+    "private_paths_omitted": true,
+    "public_heldout_modified": false,
+    "public_sample_modified": false,
+    "raw_logs_copied_to_git": false,
+    "raw_predictions_copied_to_git": false,
+    "seed_traces_modified": false,
+    "slot_normalization": false,
+    "ssh_details_omitted": true,
+    "training_run": false
+  },
+  "claims": {
+    "adapter_release_claim": false,
+    "checkpoint_release_claim": false,
+    "design_only": true,
+    "held_out_recovery_claim": false,
+    "live_browser_benchmark_claim": false,
+    "model_recovery_claim": false,
+    "production_readiness_claim": false,
+    "semantic_equivalence_primary_metric": false,
+    "soft_slot_f1_primary_metric": false
+  },
+  "design_status": "design_only_not_materialized",
+  "diagnostic_artifacts": {
+    "design": "reports/public-sample/form-fill-remediation-case-design/form_fill_remediation_case_design.json",
+    "manifest": "reports/public-sample/form-fill-remediation-case-design/manifest.json",
+    "markdown": "reports/public-sample/form-fill-remediation-case-design/form_fill_remediation_case_design.md"
+  },
+  "evidence_kind": "form_fill_remediation_case_design",
+  "execution_scope": {
+    "a100_job": false,
+    "dpo_run": false,
+    "evaluator_metric_change": false,
+    "gold_policy_change": false,
+    "new_data_generated": false,
+    "prediction_repair_or_replacement": false,
+    "prediction_run": false,
+    "public_heldout_modified": false,
+    "public_sample_modified": false,
+    "raw_predictions_read": false,
+    "seed_traces_modified": false,
+    "slot_normalization": false,
+    "source_remediation_plan_read_as_input": true,
+    "training_run": false
+  },
+  "generated_at": "2026-06-15T17:20:36.696132+00:00",
+  "source_remediation_plan": {
+    "evidence_kind": "formal_heldout_form_fill_remediation_plan",
+    "plan_artifact": "reports/public-sample/form-fill-remediation-plan/form_fill_remediation_plan.json",
+    "remediation_status": "plan_only_no_data_no_training_no_metric_change",
+    "summary": {
+      "bucket_field_counts": {
+        "clarify_boundary_confusion": 8,
+        "confirmation_marker_missing_or_reordered": 23,
+        "field_name_specificity_drift": 18
+      },
+      "bucket_row_counts": {
+        "clarify_boundary_confusion": 2,
+        "confirmation_marker_missing_or_reordered": 23,
+        "field_name_specificity_drift": 16
+      },
+      "by_field_path": {
+        "normalized_command": 27,
+        "route": 2,
+        "safety.reason": 2,
+        "slots": 16,
+        "task_type": 2
+      },
+      "by_source_family": {
+        "family-confirmation-dev-1": 6,
+        "family-confirmation-dev-2": 3,
+        "family-confirmation-dev-3": 5,
+        "family-confirmation-test-1": 2,
+        "family-confirmation-test-2": 2,
+        "family-confirmation-test-3": 5,
+        "family-form_fill-dev-1": 2,
+        "family-form_fill-dev-2": 2,
+        "family-form_fill-dev-3": 6,
+        "family-form_fill-test-1": 4,
+        "family-form_fill-test-2": 5,
+        "family-form_fill-test-3": 7
+      },
+      "by_split": {
+        "dev": 24,
+        "test": 25
+      },
+      "count_consistency": {
+        "computed_residual_fields": 49,
+        "computed_residual_rows": 29,
+        "expected_residual_fields": 49,
+        "expected_residual_rows": 29,
+        "ok": true
+      },
+      "dpo_recommended_now": false,
+      "evaluator_change_recommended_now": false,
+      "recommended_next_change": "design-form-fill-remediation-cases",
+      "recommended_strategy": "prompt_policy_clarification_plus_targeted_public_safe_case_design",
+      "residual_field_count": 49,
+      "residual_row_count": 29,
+      "target": "form_fill",
+      "target_task_family": "form_fill|fill_form|requires_confirmation|confirm:true|slots:field",
+      "training_recommended_now": false
+    }
+  },
+  "summary": {
+    "candidate_case_count": 9,
+    "case_group_count": 3,
+    "covered_bucket_field_counts": {
+      "clarify_boundary_confusion": 8,
+      "confirmation_marker_missing_or_reordered": 23,
+      "field_name_specificity_drift": 18
+    },
+    "covered_bucket_row_counts": {
+      "clarify_boundary_confusion": 2,
+      "confirmation_marker_missing_or_reordered": 23,
+      "field_name_specificity_drift": 16
+    },
+    "new_data_generated": false,
+    "public_sample_modified": false,
+    "recommended_next_step": "review_then_materialize_independent_candidate_dataset_in_later_change",
+    "source_count_consistency": {
+      "computed_residual_fields": 49,
+      "computed_residual_rows": 29,
+      "expected_residual_fields": 49,
+      "expected_residual_rows": 29,
+      "ok": true
+    },
+    "source_residual_field_count": 49,
+    "source_residual_row_count": 29,
+    "target": "form_fill",
+    "target_task_family": "form_fill|fill_form|requires_confirmation|confirm:true|slots:field"
+  }
+}

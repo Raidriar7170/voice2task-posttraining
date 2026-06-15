@@ -2380,6 +2380,250 @@ def diagnose_form_fill_remediation_plan(
     }
 
 
+_FORM_FILL_CASE_DESIGN_GROUPS = {
+    "confirmation_marker_missing_or_reordered": {
+        "case_group_id": "form-fill-confirmation-marker-preservation",
+        "policy_guidance_id": "form-fill-confirmation-marker-policy",
+        "policy_guidance": (
+            "When the user explicitly asks to confirm after filling a form field, preserve that "
+            "confirmation intent in `normalized_command`, set `confirmation_required=true`, and keep "
+            "`safety.reason=requires_confirmation`."
+        ),
+        "review_rationale": (
+            "The largest residual bucket drops or reorders the explicit `并确认` marker even when the "
+            "contract otherwise stays in the form-fill family."
+        ),
+        "candidate_cases": [
+            {
+                "case_id": "ff-confirm-phone",
+                "input_intent": "填写手机号并确认",
+                "expected_normalized_command_pattern": "填写手机号并确认",
+                "expected_slots": {"field": "手机号"},
+                "avoid": "Do not shorten to 填写手机号 when the input explicitly includes confirmation.",
+            },
+            {
+                "case_id": "ff-confirm-shipping-address",
+                "input_intent": "填写收货地址并确认",
+                "expected_normalized_command_pattern": "填写收货地址并确认",
+                "expected_slots": {"field": "收货地址"},
+                "avoid": "Do not rewrite to a generic address form-fill command that drops confirmation.",
+            },
+            {
+                "case_id": "ff-confirm-invoice-title",
+                "input_intent": "填写发票抬头并确认",
+                "expected_normalized_command_pattern": "填写发票抬头并确认",
+                "expected_slots": {"field": "发票抬头"},
+                "avoid": "Do not emit only 填写发票抬头 when confirmation is requested.",
+            },
+        ],
+    },
+    "field_name_specificity_drift": {
+        "case_group_id": "form-fill-field-specificity-preservation",
+        "policy_guidance_id": "form-fill-field-specificity-policy",
+        "policy_guidance": (
+            "For `form_fill` slots, preserve the most specific field name from the request; do not "
+            "collapse domain-specific fields such as 收货地址, 发票抬头, or 预约时间 into generic aliases."
+        ),
+        "review_rationale": (
+            "The second-largest bucket keeps the slot shape but loses specificity, for example "
+            "收货地址 to 地址 or 发票抬头 to 抬头."
+        ),
+        "candidate_cases": [
+            {
+                "case_id": "ff-field-shipping-address",
+                "input_intent": "填写收货地址",
+                "expected_normalized_command_pattern": "填写收货地址",
+                "expected_slots": {"field": "收货地址"},
+                "avoid": "Do not collapse the field to 地址.",
+            },
+            {
+                "case_id": "ff-field-invoice-title",
+                "input_intent": "填写发票抬头",
+                "expected_normalized_command_pattern": "填写发票抬头",
+                "expected_slots": {"field": "发票抬头"},
+                "avoid": "Do not collapse the field to 抬头 or 发票信息.",
+            },
+            {
+                "case_id": "ff-field-appointment-time",
+                "input_intent": "填写预约时间",
+                "expected_normalized_command_pattern": "填写预约时间",
+                "expected_slots": {"field": "预约时间"},
+                "avoid": "Do not collapse the field to 时间.",
+            },
+        ],
+    },
+    "clarify_boundary_confusion": {
+        "case_group_id": "form-fill-clarify-boundary-protection",
+        "policy_guidance_id": "form-fill-clarify-boundary-policy",
+        "policy_guidance": (
+            "If the user specifies a concrete form field and asks the assistant to fill or confirm it, "
+            "route to `form_fill` even when the value itself is absent; use `clarify` only when the target "
+            "field/action is ambiguous."
+        ),
+        "review_rationale": (
+            "A small but high-impact bucket turns concrete field-fill requests into `clarify`, changing "
+            "task type, route, safety reason, and slot shape."
+        ),
+        "candidate_cases": [
+            {
+                "case_id": "ff-boundary-appointment-time",
+                "input_intent": "填写预约时间并确认",
+                "expected_normalized_command_pattern": "填写预约时间并确认",
+                "expected_slots": {"field": "预约时间"},
+                "expected_contract": {
+                    "confirmation_required": True,
+                    "route": "fill_form",
+                    "safety.reason": "requires_confirmation",
+                    "task_type": "form_fill",
+                },
+                "avoid": "Do not switch to clarify when the field is explicit.",
+            },
+            {
+                "case_id": "ff-boundary-delivery-info",
+                "input_intent": "确认前填写配送信息",
+                "expected_normalized_command_pattern": "填写配送信息并确认",
+                "expected_slots": {"field": "配送信息"},
+                "expected_contract": {
+                    "confirmation_required": True,
+                    "route": "fill_form",
+                    "safety.reason": "requires_confirmation",
+                    "task_type": "form_fill",
+                },
+                "avoid": "Do not treat confirmation wording as an ambiguity request.",
+            },
+            {
+                "case_id": "ff-boundary-contact-phone",
+                "input_intent": "填联系电话，提交前确认",
+                "expected_normalized_command_pattern": "填写联系电话并确认",
+                "expected_slots": {"field": "联系电话"},
+                "expected_contract": {
+                    "confirmation_required": True,
+                    "route": "fill_form",
+                    "safety.reason": "requires_confirmation",
+                    "task_type": "form_fill",
+                },
+                "avoid": "Do not emit slots.ambiguity when the field target is present.",
+            },
+        ],
+    },
+}
+
+
+def design_form_fill_remediation_cases(*, remediation_plan: dict[str, Any]) -> dict[str, Any]:
+    if remediation_plan.get("evidence_kind") != "formal_heldout_form_fill_remediation_plan":
+        raise ValueError("source must be a formal_heldout_form_fill_remediation_plan form_fill remediation plan")
+    if remediation_plan.get("remediation_status") != "plan_only_no_data_no_training_no_metric_change":
+        raise ValueError("source form_fill remediation plan must be plan-only before case design")
+
+    summary = remediation_plan.get("summary", {})
+    if summary.get("target") != "form_fill" or summary.get("target_task_family") != _FORM_FILL_TASK_FAMILY:
+        raise ValueError("source must be a form_fill remediation plan for the selected form_fill family")
+    if summary.get("recommended_next_change") != "design-form-fill-remediation-cases":
+        raise ValueError("source form_fill remediation plan does not recommend this case-design change")
+    if summary.get("count_consistency", {}).get("ok") is not True:
+        raise ValueError("source form_fill remediation plan count consistency must be ok")
+
+    buckets = [bucket for bucket in remediation_plan.get("remediation_buckets", []) if isinstance(bucket, dict)]
+    buckets_by_name = {str(bucket.get("bucket", "")): bucket for bucket in buckets}
+    missing_buckets = sorted(set(_FORM_FILL_CASE_DESIGN_GROUPS) - set(buckets_by_name))
+    if missing_buckets:
+        raise ValueError(f"source form_fill remediation plan missing buckets: {missing_buckets}")
+
+    guidance: list[dict[str, Any]] = []
+    case_groups: list[dict[str, Any]] = []
+    for bucket_name, template in sorted(_FORM_FILL_CASE_DESIGN_GROUPS.items()):
+        bucket = buckets_by_name[bucket_name]
+        candidate_cases = _sanitize_public_value(template["candidate_cases"])
+        guidance.append(
+            {
+                "guidance_id": template["policy_guidance_id"],
+                "source_bucket": bucket_name,
+                "guidance": template["policy_guidance"],
+                "review_rationale": template["review_rationale"],
+            }
+        )
+        case_groups.append(
+            {
+                "case_group_id": template["case_group_id"],
+                "source_bucket": bucket_name,
+                "source_bucket_field_count": int(bucket.get("residual_field_count", 0)),
+                "source_bucket_row_count": int(bucket.get("residual_row_count", 0)),
+                "source_field_paths": _sanitize_public_value(bucket.get("by_field_path", {})),
+                "source_representative_row_refs": _sanitize_public_value(bucket.get("residual_row_refs", []))[:8],
+                "case_purpose": template["review_rationale"],
+                "policy_guidance_id": template["policy_guidance_id"],
+                "candidate_cases": candidate_cases,
+                "candidate_case_count": len(candidate_cases),
+                "recommended_split_role": "candidate_dataset_design_only",
+                "materialization_requires_user_review": True,
+                "public_sample_materialized": False,
+            }
+        )
+
+    bucket_field_counts = summary.get("bucket_field_counts", {})
+    return {
+        "evidence_kind": "form_fill_remediation_case_design",
+        "design_status": "design_only_not_materialized",
+        "source_remediation_plan": {
+            "evidence_kind": _sanitize_public_summary(str(remediation_plan.get("evidence_kind", "unknown"))),
+            "remediation_status": _sanitize_public_summary(str(remediation_plan.get("remediation_status", "unknown"))),
+            "plan_artifact": "reports/public-sample/form-fill-remediation-plan/form_fill_remediation_plan.json",
+            "summary": _sanitize_public_value(summary),
+        },
+        "summary": {
+            "target": "form_fill",
+            "target_task_family": _FORM_FILL_TASK_FAMILY,
+            "source_residual_row_count": int(summary.get("residual_row_count", 0)),
+            "source_residual_field_count": int(summary.get("residual_field_count", 0)),
+            "case_group_count": len(case_groups),
+            "candidate_case_count": sum(group["candidate_case_count"] for group in case_groups),
+            "covered_bucket_field_counts": _sanitize_public_value(bucket_field_counts),
+            "covered_bucket_row_counts": _sanitize_public_value(summary.get("bucket_row_counts", {})),
+            "source_count_consistency": _sanitize_public_value(summary.get("count_consistency", {})),
+            "public_sample_modified": False,
+            "new_data_generated": False,
+            "recommended_next_step": "review_then_materialize_independent_candidate_dataset_in_later_change",
+        },
+        "policy_guidance": guidance,
+        "case_groups": case_groups,
+        "acceptance_boundary": {
+            "must_preserve_strict_contract_exact_match_as_primary": True,
+            "must_preserve_strict_slot_f1_as_primary": True,
+            "slot_f1_soft_diagnostic_only": True,
+            "case_design_does_not_authorize_materialization": True,
+            "materialization_requires_later_user_confirmed_phase": True,
+            "future_training_requires_separate_user_confirmed_phase": True,
+        },
+        "execution_scope": {
+            "source_remediation_plan_read_as_input": True,
+            "raw_predictions_read": False,
+            "new_data_generated": False,
+            "seed_traces_modified": False,
+            "public_sample_modified": False,
+            "public_heldout_modified": False,
+            "gold_policy_change": False,
+            "training_run": False,
+            "dpo_run": False,
+            "prediction_run": False,
+            "a100_job": False,
+            "evaluator_metric_change": False,
+            "slot_normalization": False,
+            "prediction_repair_or_replacement": False,
+        },
+        "claims": {
+            "design_only": True,
+            "model_recovery_claim": False,
+            "held_out_recovery_claim": False,
+            "production_readiness_claim": False,
+            "semantic_equivalence_primary_metric": False,
+            "soft_slot_f1_primary_metric": False,
+            "adapter_release_claim": False,
+            "checkpoint_release_claim": False,
+            "live_browser_benchmark_claim": False,
+        },
+    }
+
+
 def _unique_public_values(values: list[dict[str, Any]]) -> list[dict[str, Any]]:
     seen: set[str] = set()
     unique: list[dict[str, Any]] = []

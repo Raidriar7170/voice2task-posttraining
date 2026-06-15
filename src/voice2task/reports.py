@@ -2231,6 +2231,148 @@ def write_form_fill_remediation_plan_report(
     return {"json": json_path, "markdown": markdown_path, "manifest": manifest_path}
 
 
+def write_form_fill_remediation_case_design_report(
+    design: dict[str, Any],
+    output_dir: Path,
+    title: str = "Voice2Task form-fill remediation case design",
+) -> dict[str, Path]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    json_path = output_dir / "form_fill_remediation_case_design.json"
+    markdown_path = output_dir / "form_fill_remediation_case_design.md"
+    manifest_path = output_dir / "manifest.json"
+    safe_design = _sanitize_report_value(design)
+    write_json(json_path, safe_design)
+
+    manifest = {
+        "evidence_kind": safe_design["evidence_kind"],
+        "design_status": safe_design["design_status"],
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "source_remediation_plan": safe_design["source_remediation_plan"],
+        "summary": safe_design["summary"],
+        "acceptance_boundary": safe_design["acceptance_boundary"],
+        "execution_scope": safe_design["execution_scope"],
+        "claims": safe_design["claims"],
+        "artifact_policy": {
+            "new_data_generated": False,
+            "seed_traces_modified": False,
+            "public_sample_modified": False,
+            "public_heldout_modified": False,
+            "gold_policy_change": False,
+            "training_run": False,
+            "dpo_run": False,
+            "prediction_run": False,
+            "a100_job": False,
+            "evaluator_metric_change": False,
+            "slot_normalization": False,
+            "prediction_repair_or_replacement": False,
+            "raw_predictions_copied_to_git": False,
+            "raw_logs_copied_to_git": False,
+            "checkpoints_or_adapters_copied_to_git": False,
+            "private_overrides_copied_to_git": False,
+            "private_paths_omitted": True,
+            "host_details_omitted": True,
+            "ssh_details_omitted": True,
+            "private_corpus_rows_omitted": True,
+        },
+        "diagnostic_artifacts": {
+            "design": (
+                "reports/public-sample/form-fill-remediation-case-design/"
+                "form_fill_remediation_case_design.json"
+            ),
+            "markdown": (
+                "reports/public-sample/form-fill-remediation-case-design/"
+                "form_fill_remediation_case_design.md"
+            ),
+            "manifest": "reports/public-sample/form-fill-remediation-case-design/manifest.json",
+        },
+    }
+    write_json(manifest_path, manifest)
+
+    summary = safe_design["summary"]
+    lines = [
+        f"# {title}",
+        "",
+        (
+            "This is design-only evidence for a later `form_fill` remediation phase. It does not "
+            "materialize seed rows, modify public sample splits, change held-out gold labels, launch "
+            "training, rerun predictions, or relax evaluator metrics."
+        ),
+        "",
+        "## Boundary",
+        "",
+        "- strict `contract_exact_match` remains primary.",
+        "- Strict `slot_f1` remains authoritative for slot scoring.",
+        "- `slot_f1_soft` remains diagnostic-only.",
+        "- Candidate cases require user review before materialization.",
+        "- Any future dataset, SFT, DPO, prediction, or A100 phase needs separate confirmation.",
+        "",
+        "## Summary",
+        "",
+        f"- Target: `{summary['target']}`",
+        f"- Source residual rows: `{summary['source_residual_row_count']}`",
+        f"- Source residual fields: `{summary['source_residual_field_count']}`",
+        f"- Case groups: `{summary['case_group_count']}`",
+        f"- Candidate cases: `{summary['candidate_case_count']}`",
+        f"- Covered bucket field counts: `{summary['covered_bucket_field_counts']}`",
+        f"- Public sample modified: `{summary['public_sample_modified']}`",
+        f"- New data generated: `{summary['new_data_generated']}`",
+        f"- Recommended next step: `{summary['recommended_next_step']}`",
+        "",
+        "## Policy Guidance",
+        "",
+    ]
+    for item in safe_design.get("policy_guidance", []):
+        lines.extend(
+            [
+                f"### `{item['guidance_id']}`",
+                "",
+                f"- Source bucket: `{item['source_bucket']}`",
+                f"- Guidance: {item['guidance']}",
+                f"- Rationale: {item['review_rationale']}",
+                "",
+            ]
+        )
+
+    lines.extend(["## Candidate Case Groups", ""])
+    for group in safe_design.get("case_groups", []):
+        lines.extend(
+            [
+                f"### `{group['case_group_id']}`",
+                "",
+                f"- Source bucket: `{group['source_bucket']}`",
+                f"- Source bucket rows: `{group['source_bucket_row_count']}`",
+                f"- Source bucket fields: `{group['source_bucket_field_count']}`",
+                f"- Source field paths: `{group['source_field_paths']}`",
+                f"- Purpose: {group['case_purpose']}",
+                f"- Recommended split role: `{group['recommended_split_role']}`",
+                f"- Requires user review before materialization: `{group['materialization_requires_user_review']}`",
+                "",
+                "Candidate cases:",
+            ]
+        )
+        for case in group.get("candidate_cases", []):
+            lines.append(
+                "- "
+                f"`{case['case_id']}`: {case['input_intent']} -> "
+                f"`{case['expected_normalized_command_pattern']}`, slots `{case['expected_slots']}`"
+            )
+        lines.append("")
+
+    lines.extend(
+        [
+            "## Recommended Next Step",
+            "",
+            (
+                "Review these case groups. If accepted, open a later bounded OpenSpec change to materialize "
+                "the reviewed cases into an independent candidate dataset. Do not merge them into active "
+                "held-out splits or start training from this design artifact alone."
+            ),
+        ]
+    )
+    markdown_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    return {"json": json_path, "markdown": markdown_path, "manifest": manifest_path}
+
+
 def write_slot_value_generalization_case_design_report(
     diagnostics: dict[str, Any],
     output_dir: Path,

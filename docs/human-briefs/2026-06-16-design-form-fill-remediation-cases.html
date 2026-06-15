@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Voice2Task form_fill remediation case design</title>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #172033; background: #f6f8fb; }
+    main { max-width: 980px; margin: 0 auto; padding: 32px 20px 48px; }
+    h1 { margin: 0 0 10px; font-size: 28px; }
+    h2 { margin: 24px 0 10px; font-size: 18px; }
+    p, li { line-height: 1.7; }
+    .summary { padding: 18px 20px; border: 1px solid #d7dfeb; border-radius: 8px; background: #fff; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+    .metric { padding: 14px 16px; border: 1px solid #d7dfeb; border-radius: 8px; background: #fff; }
+    .metric strong { display: block; font-size: 24px; margin-bottom: 4px; }
+    code { padding: 2px 5px; border-radius: 4px; background: #e9eef6; }
+    a { color: #2457a7; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Voice2Task form_fill remediation case design</h1>
+  <p class="summary">结论：本阶段把 formal held-out 上的 <code>form_fill</code> 残差计划转成 3 组可审阅 case design 和 prompt/policy guidance；没有生成训练数据、没有改 held-out、没有训练或跑 A100。</p>
+
+  <h2>当前状态</h2>
+  <div class="grid">
+    <div class="metric"><strong>design-only</strong>阶段状态</div>
+    <div class="metric"><strong>3</strong>case groups</div>
+    <div class="metric"><strong>9</strong>candidate cases</div>
+    <div class="metric"><strong>0</strong>data/training changes</div>
+  </div>
+
+  <h2>本阶段做了什么</h2>
+  <ul>
+    <li>从既有 <code>form_fill</code> remediation plan 读取 29 行 / 49 字段 strict residual。</li>
+    <li>为 <code>confirmation_marker_missing_or_reordered</code>、<code>field_name_specificity_drift</code>、<code>clarify_boundary_confusion</code> 生成三组 case design。</li>
+    <li>为每组补了 prompt/policy guidance，后续可由人工审阅后再决定是否 materialize。</li>
+  </ul>
+
+  <h2>关键产物</h2>
+  <ul>
+    <li><a href="../../reports/public-sample/form-fill-remediation-case-design/form_fill_remediation_case_design.md">case design Markdown</a></li>
+    <li><a href="../../reports/public-sample/form-fill-remediation-case-design/form_fill_remediation_case_design.json">case design JSON</a></li>
+    <li><a href="../../reports/public-sample/form-fill-remediation-case-design/manifest.json">manifest</a></li>
+    <li><a href="../../openspec/changes/design-form-fill-remediation-cases/proposal.md">OpenSpec proposal</a></li>
+  </ul>
+
+  <h2>不要过度解读</h2>
+  <ul>
+    <li>这不是模型恢复证明；<code>contract_exact_match</code> 和 strict <code>slot_f1</code> 仍是主指标。</li>
+    <li>这些 candidate cases 还不是 seed rows，也没有进入任何训练/验证 split。</li>
+    <li><code>slot_f1_soft</code> 仍然只是 diagnostic，不是主指标。</li>
+  </ul>
+
+  <h2>推荐下一步</h2>
+  <p>人工审阅 3 组 case design；如果接受，再开一个独立 OpenSpec 阶段，把通过审阅的 cases materialize 到独立 candidate dataset，而不是直接污染当前 held-out split。</p>
+</main>
+</body>
+</html>
