@@ -1967,6 +1967,36 @@ def diagnose_merged_slot_value_residuals(
     }
 
 
+def diagnose_formal_heldout_residual_families(
+    *,
+    formal_manifest: dict[str, Any],
+    rows_by_split: dict[str, list[SFTDatasetRow]],
+    predictions_by_split: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
+    diagnosis = diagnose_merged_slot_value_residuals(
+        merged_manifest=formal_manifest,
+        rows_by_split=rows_by_split,
+        predictions_by_split=predictions_by_split,
+    )
+    source = diagnosis.pop("source_merged_eval", {})
+    diagnosis["evidence_kind"] = "formal_heldout_residual_family_diagnosis"
+    diagnosis["diagnostic_kind"] = "formal_public_heldout_residual_family_diagnosis"
+    diagnosis["source_formal_heldout_evidence"] = {
+        "evidence_kind": _sanitize_public_summary(str(formal_manifest.get("evidence_kind", "unknown"))),
+        "dataset_manifest_id": _sanitize_public_summary(str(formal_manifest.get("dataset_manifest_id", ""))),
+        "base_model": _sanitize_public_summary(str(formal_manifest.get("base_model", source.get("base_model", "")))),
+        "overall_interpretation": _sanitize_public_summary(
+            str(formal_manifest.get("overall_interpretation", "unknown"))
+        ),
+        "prediction_splits": _sanitize_public_value(formal_manifest.get("prediction_splits", ["dev", "test"])),
+    }
+    diagnosis["summary"]["recommended_next_step"] = (
+        "inspect_residual_family_clusters_before_data_training_or_evaluator_change"
+    )
+    diagnosis["execution_scope"]["source_formal_heldout_predictions_read_as_input"] = True
+    return diagnosis
+
+
 def _unique_public_values(values: list[dict[str, Any]]) -> list[dict[str, Any]]:
     seen: set[str] = set()
     unique: list[dict[str, Any]] = []

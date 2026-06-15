@@ -8,6 +8,7 @@ from voice2task.evaluation import (
     design_slot_value_generalization_cases,
     diagnose_alignment_mismatches,
     diagnose_constrained_contract_decoding,
+    diagnose_formal_heldout_residual_families,
     diagnose_heldout_family_strategy,
     diagnose_merged_slot_value_residuals,
     diagnose_runtime_label_tiny_overfit_readiness,
@@ -27,6 +28,7 @@ from voice2task.io import read_json, read_jsonl
 from voice2task.reports import (
     write_alignment_diagnostics_report,
     write_constrained_decoding_diagnosis_report,
+    write_formal_heldout_residual_family_report,
     write_heldout_family_strategy_report,
     write_merged_slot_value_residual_report,
     write_metrics_report,
@@ -188,6 +190,18 @@ def build_parser() -> argparse.ArgumentParser:
     diagnose_merged_residuals.add_argument(
         "--title",
         default="Voice2Task merged slot value residual diagnosis",
+    )
+
+    diagnose_formal_residuals = subcommands.add_parser("diagnose-formal-heldout-residual-families")
+    diagnose_formal_residuals.add_argument("--formal-manifest", type=Path, required=True)
+    diagnose_formal_residuals.add_argument("--dev-gold", type=Path, required=True)
+    diagnose_formal_residuals.add_argument("--dev-predictions", type=Path, required=True)
+    diagnose_formal_residuals.add_argument("--test-gold", type=Path, required=True)
+    diagnose_formal_residuals.add_argument("--test-predictions", type=Path, required=True)
+    diagnose_formal_residuals.add_argument("--output", type=Path, required=True)
+    diagnose_formal_residuals.add_argument(
+        "--title",
+        default="Voice2Task formal held-out residual family diagnosis",
     )
 
     design_slot_values = subcommands.add_parser("design-slot-value-generalization-cases")
@@ -355,6 +369,25 @@ def main(argv: list[str] | None = None) -> int:
             },
         )
         paths = write_merged_slot_value_residual_report(
+            diagnostics,
+            output_dir=args.output,
+            title=args.title,
+        )
+        print(json.dumps({"ok": True, "paths": {key: value.as_posix() for key, value in paths.items()}}, indent=2))
+        return 0
+    if args.command == "diagnose-formal-heldout-residual-families":
+        diagnostics = diagnose_formal_heldout_residual_families(
+            formal_manifest=read_json(args.formal_manifest),
+            rows_by_split={
+                "dev": _load_sft_rows_for_split(args.dev_gold, "dev"),
+                "test": _load_sft_rows_for_split(args.test_gold, "test"),
+            },
+            predictions_by_split={
+                "dev": load_predictions(args.dev_predictions),
+                "test": load_predictions(args.test_predictions),
+            },
+        )
+        paths = write_formal_heldout_residual_family_report(
             diagnostics,
             output_dir=args.output,
             title=args.title,

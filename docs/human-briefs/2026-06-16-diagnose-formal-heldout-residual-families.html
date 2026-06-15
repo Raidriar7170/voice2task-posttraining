@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Diagnose formal held-out residual families</title>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #172033; background: #f7f8fb; }
+    main { max-width: 980px; margin: 0 auto; padding: 32px 22px 44px; }
+    h1 { font-size: 28px; margin: 0 0 10px; }
+    h2 { font-size: 18px; margin: 28px 0 10px; }
+    p, li { line-height: 1.68; }
+    code { background: #eef1f6; padding: 2px 5px; border-radius: 4px; }
+    .summary { background: #ffffff; border: 1px solid #dde3ee; border-radius: 8px; padding: 18px 20px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin: 18px 0; }
+    .metric { background: #ffffff; border: 1px solid #dde3ee; border-radius: 8px; padding: 14px 16px; }
+    .metric b { display: block; font-size: 20px; margin-bottom: 5px; }
+    table { width: 100%; border-collapse: collapse; background: #ffffff; border: 1px solid #dde3ee; }
+    th, td { padding: 10px 12px; border-bottom: 1px solid #e7ebf2; text-align: left; vertical-align: top; }
+    th { background: #eef2f8; }
+    a { color: #2357c6; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Diagnose formal held-out residual families</h1>
+  <div class="summary">
+    <p><strong>一句话结论：</strong>本轮完成 formal public held-out residual/family diagnosis：dev/test 共 97 个 strict residual rows，和源 manifest 的 48/49 完全一致；失败不是单一 clarify 问题，而是多字段、多家族残差。</p>
+    <p><strong>当前状态：</strong>applying，诊断 evidence 已生成，等待验证与 OpenSpec 归档。</p>
+    <p><strong>边界：</strong>没有训练、没有改数据、没有重跑 prediction、没有改 evaluator，也没有把 <code>slot_f1_soft</code> 作为主指标。</p>
+  </div>
+
+  <div class="grid">
+    <div class="metric"><b>97</b><span>strict residual rows</span></div>
+    <div class="metric"><b>48 / 49</b><span>dev/test residual rows</span></div>
+    <div class="metric"><b>77</b><span>normalized_command residual fields</span></div>
+    <div class="metric"><b>76</b><span>slot residual fields</span></div>
+  </div>
+
+  <h2>主要残差分布</h2>
+  <table>
+    <tr><th>Field path</th><th>Residual field count</th><th>Interpretation</th></tr>
+    <tr><td><code>normalized_command</code></td><td>77</td><td>规范意图短语仍有大量严格字符串差异。</td></tr>
+    <tr><td><code>slots</code></td><td>76</td><td>slot value / slot shape 仍是主残差。</td></tr>
+    <tr><td><code>task_type</code></td><td>16</td><td>分类边界错误仍存在，不能只看 slot。</td></tr>
+    <tr><td><code>route</code></td><td>16</td><td>路由边界错误与 task_type 错误同步出现。</td></tr>
+    <tr><td><code>safety.allow/reason</code></td><td>17</td><td>safety stop/allow 和 reason 仍需单独看。</td></tr>
+    <tr><td><code>confirmation_required</code></td><td>2</td><td>确认字段问题较少，但仍非零。</td></tr>
+  </table>
+
+  <h2>按任务家族聚合</h2>
+  <table>
+    <tr><th>Task family</th><th>Residual field count</th></tr>
+    <tr><td><code>form_fill|fill_form|requires_confirmation|confirm:true|slots:field</code></td><td>49</td></tr>
+    <tr><td><code>blocked|deny|unsafe_payment|confirm:true|slots:action,reason</code></td><td>46</td></tr>
+    <tr><td><code>clarify|clarify|ambiguous_request|confirm:true|slots:ambiguity</code></td><td>44</td></tr>
+    <tr><td><code>extract|extract_page|public_readonly|confirm:false|slots:target</code></td><td>26</td></tr>
+    <tr><td><code>navigate|open_url|public_readonly|confirm:false|slots:url</code></td><td>19</td></tr>
+    <tr><td><code>search|search_web|public_readonly|confirm:false|slots:query</code></td><td>19</td></tr>
+  </table>
+
+  <h2>本阶段产物</h2>
+  <ul>
+    <li><a href="../../reports/public-sample/formal-heldout-residual-family-diagnosis/formal_heldout_residual_family_diagnosis.md">Markdown diagnosis</a></li>
+    <li><a href="../../reports/public-sample/formal-heldout-residual-family-diagnosis/formal_heldout_residual_family_diagnosis.json">Machine-readable diagnosis</a></li>
+    <li><a href="../../reports/public-sample/formal-heldout-residual-family-diagnosis/manifest.json">Diagnosis manifest</a></li>
+    <li><a href="../../reports/public-sample/a100-formal-public-heldout-prediction/report.md">Source formal held-out report</a></li>
+  </ul>
+
+  <h2>不要过度声称</h2>
+  <ul>
+    <li>不能说 held-out 已恢复；本阶段只是诊断 97 个 strict residual rows。</li>
+    <li>不能说生产可用、checkpoint 发布、adapter 发布、私有语料泛化或 live-browser benchmark 提升。</li>
+    <li><code>slot_f1_soft</code> 仍然只能作为 internal diagnostic。</li>
+    <li>不能直接跳到补数据或训练；下一步需要先选一个明确 residual family 和验收边界。</li>
+  </ul>
+
+  <h2>推荐下一步</h2>
+  <p>建议开一个很小的新阶段，只选一个 residual family 做 remediation 设计。优先候选是 form_fill / blocked_payment / clarify 三者之一，因为它们的 residual field count 更高，而且涉及 task/route/safety/slot 多字段，不只是中文 query 同义改写。</p>
+</main>
+</body>
+</html>

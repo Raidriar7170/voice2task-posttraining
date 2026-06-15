@@ -1852,6 +1852,129 @@ def write_merged_slot_value_residual_report(
     return {"json": json_path, "markdown": markdown_path, "manifest": manifest_path}
 
 
+def write_formal_heldout_residual_family_report(
+    diagnostics: dict[str, Any],
+    output_dir: Path,
+    title: str = "Voice2Task formal held-out residual family diagnosis",
+) -> dict[str, Path]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    json_path = output_dir / "formal_heldout_residual_family_diagnosis.json"
+    markdown_path = output_dir / "formal_heldout_residual_family_diagnosis.md"
+    manifest_path = output_dir / "manifest.json"
+    safe_diagnostics = _sanitize_report_value(diagnostics)
+    write_json(json_path, safe_diagnostics)
+
+    manifest = {
+        "evidence_kind": safe_diagnostics["evidence_kind"],
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "source_formal_heldout_evidence": safe_diagnostics["source_formal_heldout_evidence"],
+        "summary": safe_diagnostics["summary"],
+        "aggregates": safe_diagnostics["aggregates"],
+        "claims": safe_diagnostics["claims"],
+        "artifact_policy": {
+            "raw_predictions_copied_to_git": False,
+            "raw_logs_copied_to_git": False,
+            "checkpoints_or_adapters_copied_to_git": False,
+            "private_overrides_copied_to_git": False,
+            "private_paths_omitted": True,
+            "host_details_omitted": True,
+            "ssh_details_omitted": True,
+            "private_corpus_rows_omitted": True,
+            "prediction_repair_or_replacement": False,
+            "evaluator_metric_change": False,
+            "slot_normalization": False,
+            "data_generation": False,
+            "training_run": False,
+            "dpo_run": False,
+        },
+        "diagnostic_artifacts": {
+            "diagnosis": (
+                "reports/public-sample/formal-heldout-residual-family-diagnosis/"
+                "formal_heldout_residual_family_diagnosis.json"
+            ),
+            "markdown": (
+                "reports/public-sample/formal-heldout-residual-family-diagnosis/"
+                "formal_heldout_residual_family_diagnosis.md"
+            ),
+            "manifest": "reports/public-sample/formal-heldout-residual-family-diagnosis/manifest.json",
+        },
+    }
+    write_json(manifest_path, manifest)
+
+    summary = safe_diagnostics["summary"]
+    aggregates = safe_diagnostics["aggregates"]
+    lines = [
+        f"# {title}",
+        "",
+        (
+            "This diagnosis groups the current formal public held-out dev/test strict residuals. "
+            "It is not training, not a prediction rerun, not held-out recovery, and not evaluator relaxation."
+        ),
+        "",
+        "## Boundary",
+        "",
+        "- strict `contract_exact_match` remains primary.",
+        "- Strict `slot_f1` remains authoritative for slot scoring.",
+        "- `slot_f1_soft` is internal diagnostic-only, not semantic-equivalence scoring.",
+        "- Predictions are not repaired, replaced, rewritten, normalized, or re-scored.",
+        "- No new data, SFT, DPO, A100 job, checkpoint release, or adapter release is performed.",
+        "",
+        "## Summary",
+        "",
+        f"- Source evidence: `{safe_diagnostics['source_formal_heldout_evidence']}`",
+        f"- Strict exact match: `{summary['strict_contract_exact_match']}`",
+        f"- Strict slot F1: `{summary['strict_slot_f1']}`",
+        f"- Soft slot F1: `{summary['soft_slot_f1']}`",
+        f"- Soft slot F1 primary metric: `{summary['soft_slot_f1_primary_metric']}`",
+        f"- Residual rows: `{summary['residual_row_count']}`",
+        f"- Source count consistency: `{summary['source_count_consistency']}`",
+        f"- Residual fields: `{summary['residual_field_counts']}`",
+        f"- Residual categories: `{summary['residual_category_counts']}`",
+        f"- Recommended next step: `{summary['recommended_next_step']}`",
+        "",
+        "## Aggregates",
+        "",
+        f"- By split residual rows: `{aggregates['by_split_residual_rows']}`",
+        f"- By split residual fields: `{aggregates['by_split_residual_fields']}`",
+        f"- By field path: `{aggregates['by_field_path']}`",
+        f"- By category: `{aggregates['by_category']}`",
+        f"- By source family: `{aggregates['by_source_family']}`",
+        f"- By task family: `{aggregates['by_task_family']}`",
+        "",
+        "## Residual Fields",
+        "",
+    ]
+    for entry in safe_diagnostics.get("residuals", []):
+        lines.extend(
+            [
+                f"### `{entry['split']} / {entry['row_id']} / {entry['field_path']}`",
+                "",
+                f"- Source family: `{entry['source_family_id']}`",
+                f"- Task family: `{entry['task_family']}`",
+                f"- Category: `{entry['category']}`",
+                f"- Mismatch: `{entry['mismatch_category']}`",
+                f"- Gold value: `{entry.get('gold_value')}`",
+                f"- Prediction value: `{entry.get('predicted_value')}`",
+                f"- Gold: `{entry['gold_value_summary']}`",
+                f"- Prediction: `{entry['predicted_value_summary']}`",
+                "",
+            ]
+        )
+
+    lines.extend(
+        [
+            "## Recommended Next Step",
+            "",
+            (
+                "Use this residual grouping to choose one bounded follow-up. Do not add data, train, rerun DPO, "
+                "or change evaluator behavior until the target residual family and acceptance boundary are explicit."
+            ),
+        ]
+    )
+    markdown_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    return {"json": json_path, "markdown": markdown_path, "manifest": manifest_path}
+
+
 def write_slot_value_generalization_case_design_report(
     diagnostics: dict[str, Any],
     output_dir: Path,
