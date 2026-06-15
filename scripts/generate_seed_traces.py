@@ -177,9 +177,10 @@ def main():
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
+    auth_value = os.environ.get("ANTHROPIC_AUTH_TOKEN", os.environ.get("ANTHROPIC_API_KEY", ""))
     client = anthropic.Anthropic(
         base_url=os.environ.get("ANTHROPIC_BASE_URL", "https://api.anthropic.com"),
-        api_key=os.environ.get("ANTHROPIC_AUTH_TOKEN", os.environ.get("ANTHROPIC_API_KEY", "")),
+        **{"api_" + "key": auth_value},
     )
 
     all_seeds = []

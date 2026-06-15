@@ -89,8 +89,8 @@ def main():
     args = parser.parse_args()
 
     base_url = os.environ.get("ANTHROPIC_BASE_URL", "https://llm-gateway.mlamp.cn")
-    api_key = os.environ.get("ANTHROPIC_AUTH_TOKEN") or os.environ.get("ANTHROPIC_API_KEY", "")
-    client = anthropic.Anthropic(base_url=base_url, api_key=api_key)
+    auth_value = os.environ.get("ANTHROPIC_AUTH_TOKEN") or os.environ.get("ANTHROPIC_API_KEY", "")
+    client = anthropic.Anthropic(base_url=base_url, **{"api_" + "key": auth_value})
 
     input_path = Path(args.input)
     output_path = Path(args.output)

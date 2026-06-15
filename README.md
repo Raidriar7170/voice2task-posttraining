@@ -155,15 +155,19 @@ Prediction-only private runs should write sanitized public-sample outputs and me
 | [`docs/human-briefs/`](docs/human-briefs/) | Chinese human-readable phase summaries | Source of truth for specs or metrics |
 | [`openspec/changes/archive/`](openspec/changes/archive/) | Durable proposal/design/task history | Runtime evidence by itself |
 
-## Metric Boundaries
+## Metric Interpretation Boundaries
 
-`contract_exact_match` is the primary metric. It is intentionally strict: a slot-value wording mismatch, missing field, wrong task type, or policy contract difference can fail the whole row. `slot_f1`, JSON-valid rate, residual diagnosis, and normalized-command notes are diagnostic signals only; they do not repair, replace, normalize, semantically rescore, or relax predictions.
+`contract_exact_match` is a hard full-contract exact-match metric. `normalized_command` string-mismatch diagnostics are explanatory row-level evidence only: they do not relax, normalize, semantically score, repair, replace, or re-score predictions, and they do not automatically mark Chinese phrase differences such as `搜索/查询` or `明天的天气/明天天气` as equivalent.
 
 The latest result therefore reads as:
 
 - train exact match = 1.0000: training-path memorization and output format are working;
 - dev exact match = 0.5000 and test exact match = 0.8333: held-out behavior is still uneven;
 - hardened prompt delta = 0.0000 on dev/test: prompt hardening alone did not solve the residuals.
+
+## Normalized Command Target Policy
+
+`normalized_command` gold targets are canonical Chinese intent phrases, not verbatim transcripts or ASR text. First-phase public samples use concise target phrases such as `搜索北京明天天气`, `打开示例网站`, `填写邮箱并确认`, and `拒绝代替用户付款`; schema-preserving paraphrases keep the same target contract. This is target-writing guidance for SFT/DPO data and prompts, not evaluator-side normalization, semantic-equivalence scoring, prediction repair, or re-scoring.
 
 ## Recommended Next Stage
 

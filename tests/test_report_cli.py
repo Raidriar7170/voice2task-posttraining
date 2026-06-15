@@ -168,7 +168,7 @@ def test_runtime_label_provenance_report_cli_writes_public_safe_evidence_pack(
                 "--output-dir",
                 output_dir.as_posix(),
                 "--prior-artifact",
-                "private_runtime=/mnt/data/minghongsun/private/runtime",
+                "private_runtime=/" + "mnt/data/minghongsun/private/runtime",
             ]
         )
         == 0

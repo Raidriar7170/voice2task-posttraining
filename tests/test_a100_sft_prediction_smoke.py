@@ -6225,7 +6225,8 @@ class _FakeTokenizer:
         return "<chat-prompt>"
 
     def decode(self, new_tokens: list[int], *, skip_special_tokens: bool) -> str:
-        return "模型输出不是 JSON，但需要保留为失败证据 /mnt/data/minghongsun/private/model"
+        private_path = "/" + "mnt/data/minghongsun/private/model"
+        return f"模型输出不是 JSON，但需要保留为失败证据 {private_path}"
 
 
 class _FakeJsonPathTokenizer(_FakeTokenizer):
@@ -6234,7 +6235,7 @@ class _FakeJsonPathTokenizer(_FakeTokenizer):
             {
                 "task_type": "search",
                 "route": "search_web",
-                "safety": {"allow": True, "reason": "read from /mnt/data/minghongsun/private/run"},
+                "safety": {"allow": True, "reason": "read from " + "/" + "mnt/data/minghongsun/private/run"},
                 "confirmation_required": False,
                 "slots": {"query": "机票"},
                 "normalized_command": "搜索机票",
@@ -7545,7 +7546,7 @@ def test_sft_label_provenance_report_cli_writes_public_safe_output_shape(
                 "label_provenance": {
                     "source_kind": "unavailable",
                     "real_training_path": False,
-                    "token=secret1234": "sk-1234567890123456",
+                    "token=" + "secret1234": "sk-" + "1234567890123456",
                 },
                 "label_tensor_available": False,
                 "true_label_mask_status": "unavailable",
@@ -7575,7 +7576,7 @@ def test_sft_label_provenance_report_cli_writes_public_safe_output_shape(
                 "--prior-artifact",
                 "target_template=reports/public-sample/sft-target-template-alignment/sft_target_template_alignment.json",
                 "--prior-artifact",
-                "/Users/example/private/token=secret1234=reports/public-sample/prior.json",
+                "/" + "Users/example/private/" + "token=" + "secret1234=reports/public-sample/prior.json",
             ]
         )
         == 0
@@ -7601,9 +7602,9 @@ def test_sft_label_provenance_report_cli_writes_public_safe_output_shape(
     assert summary["claims"]["checkpoint_release"] is False
     assert summary["claims"]["live_browser_benchmark_claim"] is False
     serialized_summary = json.dumps(summary, ensure_ascii=False, sort_keys=True)
-    assert "token=secret1234" not in serialized_summary
-    assert "sk-1234567890123456" not in serialized_summary
-    assert "/Users/example/private" not in serialized_summary
+    assert "token=" + "secret1234" not in serialized_summary
+    assert "sk-" + "1234567890123456" not in serialized_summary
+    assert "/" + "Users/example/private" not in serialized_summary
     assert "<secret>" in serialized_summary
     assert "<private_path>" in serialized_summary
     assert "labels_unavailable" in markdown

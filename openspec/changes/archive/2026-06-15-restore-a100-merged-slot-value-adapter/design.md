@@ -19,7 +19,7 @@ predictions later.
 - If restoration is impossible, regenerate the adapter using
   `configs/sft-a100-merged-slot-value-heldout-rerun.json` with a private
   override.
-- Keep remote writes under `/mnt/data/minghongsun`.
+- Keep remote writes under `<approved_remote_root>`.
 - Publish sanitized evidence that records whether the adapter is available and
   how it was obtained.
 
@@ -58,4 +58,4 @@ predictions later.
   merged slot-value config.
 - [Risk] Remote dependency or cache behavior can write outside the approved
   root. -> Mitigation: use the existing approved venv and set cache/tmp
-  environment variables under `/mnt/data/minghongsun`.
+  environment variables under `<approved_remote_root>`.

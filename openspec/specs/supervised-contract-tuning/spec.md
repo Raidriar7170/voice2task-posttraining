@@ -1348,7 +1348,7 @@ later prediction-only reruns.
   `allow_heavy_training=true`, dataset manifest
   `public-sample-20260615T040231Z`, and train split only
 - **AND** it MUST keep all generated adapter, cache, log, and temporary outputs
-  under `/mnt/data/minghongsun`
+  under `<approved_remote_root>`
 
 #### Scenario: Preserve prerequisite boundary
 - **WHEN** the adapter restore/regeneration phase completes

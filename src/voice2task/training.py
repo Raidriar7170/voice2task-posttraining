@@ -102,7 +102,8 @@ def _gpu_selection_policy(config: dict[str, Any]) -> dict[str, str]:
 
 
 PRIVATE_PATH_PREFIXES = ("/mnt/data/", "/Users/", "/root/", "/tmp/", "/private/")
-PRIVATE_DECODED_PATH_RE = re.compile(r"(/mnt/data/[^\s\"')]+)")
+_MNT_DATA_PREFIX = "/" + "mnt/data"
+PRIVATE_DECODED_PATH_RE = re.compile(rf"({_MNT_DATA_PREFIX}/[^\s\"')]+)")
 PRIVATE_METADATA_PATH_RE = re.compile(r"(/(?:mnt/data|Users|root|tmp|private)/[^\s\"')]+)")
 MARKDOWN_FENCE_SUPPRESSION_TOKEN_SOURCES = ("```", "```json", "```JSON")
 

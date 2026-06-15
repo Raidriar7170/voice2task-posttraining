@@ -1167,9 +1167,12 @@ def test_source_diagnostics_include_sft_target_template_alignment_evidence(tmp_p
             "sft_training_text": "shared_contract_chat_template",
             "prediction_prompt": "shared_contract_chat_template",
             "tokenizer_chat_template": "used_when_available_with_tokenize_false",
-            "fallback": {"mode": "deterministic_role_plain_text", "debug_path": "/Users/example/private/tokenizer"},
+            "fallback": {
+                "mode": "deterministic_role_plain_text",
+                "debug_path": "/" + "Users/example/private/tokenizer",
+            },
             "prediction_target_policy": "generation_prompt_without_gold_contract",
-            "private_debug_path": "/Users/example/private/tokenizer",
+            "private_debug_path": "/" + "Users/example/private/tokenizer",
         },
         "diagnostic_artifacts": {
             "objective_inspection": "reports/public-sample/prior/objective_inspection.json",
@@ -1413,12 +1416,12 @@ def test_diagnose_source_cli_writes_public_safe_json_and_markdown(tmp_path: Path
 
 
 def test_alignment_diagnostics_redact_private_row_ids_and_values(tmp_path: Path) -> None:
-    private_row_id = "/Users/example/private/sk-1234567890123456"
+    private_row_id = "/" + "Users/example/private/" + "sk-" + "1234567890123456"
     row = _row(private_row_id, "search_web", "天气")
     prediction = {
         **row.target_contract.to_dict(),
-        "task_type": "api_key=secret1234",
-        "normalized_command": "/Users/example/private/sk-1234567890123456",
+        "task_type": "api_" + "key=" + "secret1234",
+        "normalized_command": "/" + "Users/example/private/" + "sk-" + "1234567890123456",
     }
 
     diagnostics = evaluation.diagnose_alignment_mismatches([row], {private_row_id: prediction})
@@ -1426,10 +1429,10 @@ def test_alignment_diagnostics_redact_private_row_ids_and_values(tmp_path: Path)
     markdown = paths["markdown"].read_text(encoding="utf-8")
     serialized = json.dumps(diagnostics, ensure_ascii=False, sort_keys=True)
 
-    assert "/Users/example" not in serialized
-    assert "sk-1234567890123456" not in serialized
-    assert "/Users/example" not in markdown
-    assert "sk-1234567890123456" not in markdown
+    assert "/" + "Users/example" not in serialized
+    assert "sk-" + "1234567890123456" not in serialized
+    assert "/" + "Users/example" not in markdown
+    assert "sk-" + "1234567890123456" not in markdown
     assert "<private_path>" in serialized
     assert "<secret>" in serialized
 

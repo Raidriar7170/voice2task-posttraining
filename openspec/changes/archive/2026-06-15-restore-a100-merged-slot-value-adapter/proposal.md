@@ -11,7 +11,7 @@ prediction-only evaluation can run without changing data or evaluator semantics.
 - Check the approved A100 project root for an existing reusable merged
   slot-value adapter.
 - If no reusable adapter exists, run the existing merged slot-value SFT training
-  config on an idle A100 using only `/mnt/data/minghongsun` paths.
+  config on an idle A100 using only `<approved_remote_root>` paths.
 - Publish a public-safe adapter restore/regeneration evidence pack with
   sanitized dependency, GPU-preflight, adapter-file, and training-status fields.
 - Generate a concise Chinese Human Brief for this prerequisite phase.
