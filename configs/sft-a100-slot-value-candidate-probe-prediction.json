@@ -1,0 +1,28 @@
+{
+  "adapter_path": "<a100_project_root>/runs/slot-value-candidate-sft-probe/adapter",
+  "allow_private_prediction": true,
+  "base_model": "Qwen/Qwen2.5-7B-Instruct",
+  "candidate_sft_probe": true,
+  "dataset_manifest_id": "slot-value-candidate-probe-20260615",
+  "evidence_output_dir": "<a100_project_root>/evidence/slot-value-candidate-sft-probe/train-prediction",
+  "generalization_claim": false,
+  "max_new_tokens": 256,
+  "max_prediction_rows": 12,
+  "model_cache_policy": "private_remote_model_cache_not_copied_to_git",
+  "model_source": "modelscope",
+  "output_policy": "candidate_only_prediction_requires_private_override_no_direct_public_template_run",
+  "output_root": "<a100_project_root>",
+  "overfit_diagnostic": true,
+  "prediction_artifact_policy": "commit_only_sanitized_candidate_train_split_sidecars_metrics_manifest_and_report",
+  "prediction_split": "train",
+  "private_override_required": true,
+  "private_override_requirements": [
+    "Create a private override outside git before remote execution.",
+    "Resolve <a100_project_root> to the approved private A100 project directory.",
+    "Resolve adapter_path to the private 7B candidate probe adapter produced by this phase.",
+    "Run prediction only; do not launch SFT or DPO training.",
+    "Keep raw logs, checkpoints, adapters, caches, host details, SSH details, tokens, and private corpus rows out of committed artifacts."
+  ],
+  "public_sample_manifest": "data/public-samples/manifest_slot_value_candidate_probe.json",
+  "reference_runtime": "a100-slot-value-candidate-sft-probe-prediction"
+}

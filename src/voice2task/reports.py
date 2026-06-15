@@ -1943,6 +1943,194 @@ def write_slot_value_generalization_materialization_report(
     return {"json": json_path, "markdown": markdown_path, "manifest": manifest_path, "sft": sft_path}
 
 
+def write_slot_value_candidate_sft_probe_report(
+    *,
+    dry_run_metadata: dict[str, Any],
+    candidate_manifest: dict[str, Any],
+    materialization_manifest: dict[str, Any],
+    sft_config: dict[str, Any],
+    prediction_config: dict[str, Any],
+    output_dir: Path,
+    dry_run_metadata_path: Path,
+    candidate_manifest_path: Path,
+    materialization_manifest_path: Path,
+    sft_config_path: Path,
+    prediction_config_path: Path,
+    a100_ssh_status: str,
+    a100_output_root_status: str,
+    a100_idle_gpu_status: str,
+    a100_selected_gpu_index: str,
+    a100_train_dependencies: list[str],
+    a100_missing_dependencies: list[str],
+    title: str = "Voice2Task slot value candidate SFT probe",
+) -> dict[str, Path]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    json_path = output_dir / "slot_value_candidate_sft_probe.json"
+    markdown_path = output_dir / "slot_value_candidate_sft_probe.md"
+    manifest_path = output_dir / "manifest.json"
+
+    safe_dry_run = _sanitize_report_value(dry_run_metadata)
+    safe_candidate_manifest = _sanitize_report_value(candidate_manifest)
+    safe_materialization_manifest = _sanitize_report_value(materialization_manifest)
+    safe_sft_config = _sanitize_report_value(sft_config)
+    safe_prediction_config = _sanitize_report_value(prediction_config)
+
+    counts = safe_candidate_manifest.get("counts", {}) if isinstance(safe_candidate_manifest, dict) else {}
+    candidate_sft_rows = int(counts.get("sft_rows", safe_dry_run.get("training_rows_used", 0)))
+    selected_rows = int(safe_dry_run.get("training_rows_used", 0))
+    missing_dependencies = list(a100_missing_dependencies)
+    training_status = "blocked_missing_train_dependencies" if missing_dependencies else "ready_for_private_a100_execution"
+
+    summary = {
+        "candidate_sft_rows": candidate_sft_rows,
+        "selected_candidate_training_rows": selected_rows,
+        "formal_public_sample_modified": bool(safe_candidate_manifest.get("formal_public_sample_modified", False)),
+        "a100_training_status": training_status,
+        "local_dry_run_status": safe_dry_run.get("training_status", "unknown"),
+        "recommended_next_step": (
+            "prepare_private_a100_train_environment_then_run_candidate_probe"
+            if missing_dependencies
+            else "run_private_a100_candidate_probe"
+        ),
+    }
+    a100_preflight = {
+        "ssh_status": a100_ssh_status,
+        "output_root_status": a100_output_root_status,
+        "idle_gpu_status": a100_idle_gpu_status,
+        "selected_gpu_index": a100_selected_gpu_index,
+        "train_dependencies_available": list(a100_train_dependencies),
+        "missing_train_dependencies": missing_dependencies,
+        "safe_to_launch_training": not missing_dependencies
+        and a100_ssh_status == "ok"
+        and a100_output_root_status == "ok"
+        and a100_idle_gpu_status == "idle_gpu_available",
+    }
+    execution_scope = {
+        "candidate_only_dry_run": True,
+        "formal_public_sample_modified": summary["formal_public_sample_modified"],
+        "training_run": False,
+        "prediction_run": False,
+        "dpo_run": False,
+        "a100_training_launched": False,
+        "a100_prediction_launched": False,
+        "evaluator_metric_change": False,
+    }
+    claims = {
+        "checkpoint_release": False,
+        "adapter_release": False,
+        "model_recovery_claim": False,
+        "held_out_generalization_recovered": False,
+        "private_corpus_generalization_claim": False,
+        "production_readiness_claim": False,
+        "live_browser_benchmark_claim": False,
+    }
+    artifact_files = {
+        "dry_run_metadata": dry_run_metadata_path.as_posix(),
+        "candidate_manifest": candidate_manifest_path.as_posix(),
+        "materialization_manifest": materialization_manifest_path.as_posix(),
+        "sft_config": sft_config_path.as_posix(),
+        "prediction_config": prediction_config_path.as_posix(),
+        "evidence_json": json_path.as_posix(),
+        "evidence_markdown": markdown_path.as_posix(),
+        "manifest": manifest_path.as_posix(),
+    }
+    safe_artifact_files = _sanitize_report_value(artifact_files)
+    evidence = {
+        "evidence_kind": "slot_value_candidate_sft_probe",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "summary": summary,
+        "a100_preflight": a100_preflight,
+        "execution_scope": execution_scope,
+        "claims": claims,
+        "dry_run_metadata": safe_dry_run,
+        "candidate_manifest": safe_candidate_manifest,
+        "materialization_manifest": safe_materialization_manifest,
+        "sft_config": safe_sft_config,
+        "prediction_config": safe_prediction_config,
+        "artifact_files": safe_artifact_files,
+        "limitations": [
+            "candidate-only dry-run evidence is not SFT learning evidence",
+            "blocked_missing_train_dependencies means no private A100 training or prediction was launched",
+            "formal public sample files remain unchanged",
+            "held-out generalization remains unproven",
+        ],
+    }
+    safe_evidence = _sanitize_report_value(evidence)
+    if not isinstance(safe_evidence, dict):
+        raise AssertionError("candidate SFT probe evidence must be a mapping")
+    write_json(json_path, safe_evidence)
+
+    manifest = {
+        "evidence_kind": "slot_value_candidate_sft_probe",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "summary": summary,
+        "a100_preflight": a100_preflight,
+        "execution_scope": execution_scope,
+        "claims": claims,
+        "source_candidate_manifest_id": safe_candidate_manifest.get("manifest_id"),
+        "source_materialization_evidence_kind": safe_materialization_manifest.get("evidence_kind"),
+        "artifact_policy": {
+            "candidate_only": True,
+            "formal_public_sample_files_modified": False,
+            "training_run": False,
+            "prediction_run": False,
+            "dpo_run": False,
+            "raw_logs_copied_to_git": False,
+            "checkpoints_or_adapters_copied_to_git": False,
+            "private_overrides_copied_to_git": False,
+            "private_paths_omitted": True,
+            "host_details_omitted": True,
+            "ssh_details_omitted": True,
+        },
+        "diagnostic_artifacts": safe_artifact_files,
+    }
+    write_json(manifest_path, _sanitize_report_value(manifest))
+
+    lines = [
+        f"# {title}",
+        "",
+        (
+            "This is candidate-only dry-run evidence for the standalone slot value candidate SFT rows. "
+            "It records row selection and A100 readiness only; it does not publish adapter outputs or claim "
+            "model recovery."
+        ),
+        "",
+        "## Boundary",
+        "",
+        "- Formal public sample seed, SFT, DPO, and manifest files are unchanged.",
+        "- No DPO training, SFT training, prediction run, checkpoint release, or adapter release is claimed.",
+        "- strict `contract_exact_match` remains primary; no evaluator relaxation is introduced.",
+        "- This is not held-out, private-corpus, production-readiness, or live-browser evidence.",
+        "",
+        "## Summary",
+        "",
+        f"- Candidate SFT rows: `{summary['candidate_sft_rows']}`",
+        f"- Selected dry-run training rows: `{summary['selected_candidate_training_rows']}`",
+        f"- Formal public sample modified: `{summary['formal_public_sample_modified']}`",
+        f"- A100 training status: `{summary['a100_training_status']}`",
+        f"- Recommended next step: `{summary['recommended_next_step']}`",
+        "",
+        "## A100 Preflight",
+        "",
+        f"- SSH status: `{a100_preflight['ssh_status']}`",
+        f"- Output root status: `{a100_preflight['output_root_status']}`",
+        f"- Idle GPU status: `{a100_preflight['idle_gpu_status']}`",
+        f"- Selected GPU index: `{a100_preflight['selected_gpu_index']}`",
+        f"- Available train dependencies: `{a100_preflight['train_dependencies_available']}`",
+        f"- Missing train dependencies: `{a100_preflight['missing_train_dependencies']}`",
+        f"- Safe to launch training now: `{a100_preflight['safe_to_launch_training']}`",
+        "",
+        "## Evidence",
+        "",
+        f"- Dry-run metadata: `{safe_artifact_files['dry_run_metadata']}`",
+        f"- Candidate manifest: `{safe_artifact_files['candidate_manifest']}`",
+        f"- SFT config: `{safe_artifact_files['sft_config']}`",
+        f"- Prediction config: `{safe_artifact_files['prediction_config']}`",
+    ]
+    markdown_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    return {"json": json_path, "markdown": markdown_path, "manifest": manifest_path}
+
+
 def write_source_diagnostics_report(
     diagnostics: dict[str, Any],
     output_dir: Path,

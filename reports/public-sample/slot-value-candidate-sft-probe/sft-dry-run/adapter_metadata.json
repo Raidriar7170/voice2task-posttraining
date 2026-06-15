@@ -1,0 +1,192 @@
+{
+  "adapter_path": "reports/public-sample/slot-value-candidate-sft-probe/sft-dry-run/adapter",
+  "adapter_release_status": "not_released",
+  "base_model": "Qwen/Qwen2.5-7B-Instruct",
+  "command_summary": {
+    "config": "configs/sft-a100-slot-value-candidate-probe.json",
+    "entrypoint": "voice2task-train sft",
+    "manifest": "data/public-samples/manifest_slot_value_candidate_probe.json",
+    "mode": "dry_run",
+    "output_dir": "reports/public-sample/slot-value-candidate-sft-probe/sft-dry-run",
+    "requires_cli_run_training": false,
+    "requires_config_allow_heavy_training": true
+  },
+  "created_at": "2026-06-15T03:18:19.541708+00:00",
+  "dataset_load": {
+    "dataset_key": "sft",
+    "dataset_path": "reports/public-sample/slot-value-generalization-materialized-candidates/sft_candidate_rows.jsonl",
+    "loaded_rows": 12,
+    "loaded_rows_before_training_row_limit": 12,
+    "manifest_counts": {
+      "candidate_seed_rows": 4,
+      "formal_public_sample_dpo_pairs": 90,
+      "formal_public_sample_seed_rows": 10,
+      "formal_public_sample_sft_rows": 30,
+      "sft_rows": 12
+    },
+    "manifest_id": "slot-value-candidate-probe-20260615",
+    "training_row_ids": [
+      "candidate-blocked-payment-canonical-command",
+      "candidate-blocked-payment-canonical-command-aug-1",
+      "candidate-blocked-payment-canonical-command-aug-2",
+      "candidate-clarify-ambiguous-canonical-scope",
+      "candidate-clarify-ambiguous-canonical-scope-aug-1",
+      "candidate-clarify-ambiguous-canonical-scope-aug-2",
+      "candidate-form-email-canonical-field",
+      "candidate-form-email-canonical-field-aug-1",
+      "candidate-form-email-canonical-field-aug-2",
+      "candidate-navigate-open-url-canonical-command",
+      "candidate-navigate-open-url-canonical-command-aug-1",
+      "candidate-navigate-open-url-canonical-command-aug-2"
+    ],
+    "training_row_limit": 12,
+    "training_rows_before_source_filter": 12,
+    "training_rows_used": 12,
+    "training_source_id_counts": {
+      "candidate-blocked-payment-canonical-command": 3,
+      "candidate-clarify-ambiguous-canonical-scope": 3,
+      "candidate-form-email-canonical-field": 3,
+      "candidate-navigate-open-url-canonical-command": 3
+    },
+    "training_source_ids": [
+      "candidate-blocked-payment-canonical-command",
+      "candidate-clarify-ambiguous-canonical-scope",
+      "candidate-form-email-canonical-field",
+      "candidate-navigate-open-url-canonical-command"
+    ],
+    "training_split": "train"
+  },
+  "dataset_manifest_id": "slot-value-candidate-probe-20260615",
+  "dataset_manifest_path": "data/public-samples/manifest_slot_value_candidate_probe.json",
+  "dry_run": true,
+  "formatting_policy": {
+    "fallback": "deterministic_role_plain_text",
+    "normalized_command_policy": "canonical_chinese_intent_phrase_not_verbatim_transcript",
+    "policy": "shared_contract_chat_template",
+    "prediction_prompt": "shared_contract_chat_template",
+    "prediction_target_policy": "generation_prompt_without_gold_contract",
+    "sft_training_text": "shared_contract_chat_template",
+    "tokenizer_chat_template": "used_when_available_with_tokenize_false"
+  },
+  "gpu_selection_policy": {
+    "identifier_policy": "policy_only_no_host_ip_or_gpu_uuid",
+    "policy": "select_idle_gpu_only_no_process_interruption"
+  },
+  "heavy_training_gate": {
+    "cli_run_training": false,
+    "config_allow_heavy_training": true,
+    "will_run_heavy_training": false
+  },
+  "hyperparameters": {
+    "a100_project_root_policy": "must_resolve_to_approved_private_a100_project_root",
+    "adapter_output_dir": "<a100_project_root>/runs/slot-value-candidate-sft-probe/adapter",
+    "allow_heavy_training": true,
+    "base_model": "Qwen/Qwen2.5-7B-Instruct",
+    "candidate_sft_probe": true,
+    "dataset_manifest_id": "slot-value-candidate-probe-20260615",
+    "dataset_split": "train",
+    "evidence_output_dir": "<a100_project_root>/evidence/slot-value-candidate-sft-probe/train",
+    "generalization_claim": false,
+    "gpu_identifier_policy": "policy_only_no_host_ip_or_gpu_uuid",
+    "gpu_selection_policy": "select_idle_gpu_only_no_process_interruption",
+    "logging_steps": 1,
+    "lora": {
+      "alpha": 32,
+      "dropout": 0.05,
+      "r": 16,
+      "target_modules": [
+        "q_proj",
+        "k_proj",
+        "v_proj",
+        "o_proj"
+      ]
+    },
+    "max_seq_length": 2048,
+    "max_train_rows": 12,
+    "num_train_epochs": 12,
+    "output_dir": "<a100_project_root>/runs/slot-value-candidate-sft-probe",
+    "output_policy": "candidate_only_sft_probe_outputs_remain_private_by_default",
+    "output_root": "<a100_project_root>",
+    "overfit_diagnostic": true,
+    "per_device_train_batch_size": 1,
+    "private_override_required": true,
+    "private_override_requirements": [
+      "Create a private override outside git before remote execution.",
+      "Resolve <a100_project_root> to the approved private A100 project directory.",
+      "Keep the manifest on the standalone candidate SFT rows; do not merge into the formal public sample in this phase.",
+      "Keep raw logs, checkpoints, adapters, caches, host details, SSH details, tokens, and private corpus rows out of committed artifacts."
+    ],
+    "public_sample_manifest": "data/public-samples/manifest_slot_value_candidate_probe.json",
+    "reference_runtime": "a100-slot-value-candidate-sft-probe",
+    "save_strategy": "no",
+    "train_source_ids": [
+      "candidate-blocked-payment-canonical-command",
+      "candidate-clarify-ambiguous-canonical-scope",
+      "candidate-form-email-canonical-field",
+      "candidate-navigate-open-url-canonical-command"
+    ],
+    "trainer": "trl.SFTTrainer"
+  },
+  "loss_mask_policy": {
+    "assistant_target": "browser_task_contract_json",
+    "full_text_causal_lm_labels": false,
+    "policy": "assistant_only_completion_only",
+    "prompt_label_id": -100,
+    "trainer_integration": "trl_sfttrainer_pretokenized_input_ids_attention_mask_labels"
+  },
+  "metadata_path": "reports/public-sample/slot-value-candidate-sft-probe/sft-dry-run/adapter_metadata.json",
+  "notes": "Dry-run metadata only; no model download or heavy training was executed.",
+  "output_paths": {
+    "adapter_path": "reports/public-sample/slot-value-candidate-sft-probe/sft-dry-run/adapter",
+    "configured_adapter_output_dir": "<a100_project_root>/runs/slot-value-candidate-sft-probe/adapter",
+    "configured_evidence_output_dir": "<a100_project_root>/evidence/slot-value-candidate-sft-probe/train",
+    "configured_output_dir": "<a100_project_root>/runs/slot-value-candidate-sft-probe",
+    "configured_output_root": "<a100_project_root>",
+    "metadata_path": "reports/public-sample/slot-value-candidate-sft-probe/sft-dry-run/adapter_metadata.json",
+    "run_output_dir": "reports/public-sample/slot-value-candidate-sft-probe/sft-dry-run"
+  },
+  "package_versions": {
+    "accelerate": "not_installed",
+    "datasets": "not_installed",
+    "peft": "not_installed",
+    "python": "3.12.2",
+    "transformers": "5.9.0",
+    "trl": "not_installed"
+  },
+  "release_status": "not_released",
+  "stack": "transformers+peft+trl+pretokenized_assistant_only_labels",
+  "stage": "sft",
+  "trainer_available": false,
+  "training_command": "voice2task-train sft --config configs/sft-a100-slot-value-candidate-probe.json --manifest data/public-samples/manifest_slot_value_candidate_probe.json --output-dir reports/public-sample/slot-value-candidate-sft-probe/sft-dry-run --dry-run",
+  "training_row_ids": [
+    "candidate-blocked-payment-canonical-command",
+    "candidate-blocked-payment-canonical-command-aug-1",
+    "candidate-blocked-payment-canonical-command-aug-2",
+    "candidate-clarify-ambiguous-canonical-scope",
+    "candidate-clarify-ambiguous-canonical-scope-aug-1",
+    "candidate-clarify-ambiguous-canonical-scope-aug-2",
+    "candidate-form-email-canonical-field",
+    "candidate-form-email-canonical-field-aug-1",
+    "candidate-form-email-canonical-field-aug-2",
+    "candidate-navigate-open-url-canonical-command",
+    "candidate-navigate-open-url-canonical-command-aug-1",
+    "candidate-navigate-open-url-canonical-command-aug-2"
+  ],
+  "training_row_limit": 12,
+  "training_rows_before_source_filter": 12,
+  "training_rows_used": 12,
+  "training_source_id_counts": {
+    "candidate-blocked-payment-canonical-command": 3,
+    "candidate-clarify-ambiguous-canonical-scope": 3,
+    "candidate-form-email-canonical-field": 3,
+    "candidate-navigate-open-url-canonical-command": 3
+  },
+  "training_source_ids": [
+    "candidate-blocked-payment-canonical-command",
+    "candidate-clarify-ambiguous-canonical-scope",
+    "candidate-form-email-canonical-field",
+    "candidate-navigate-open-url-canonical-command"
+  ],
+  "training_split": "train",
+  "training_status": "dry_run"
+}

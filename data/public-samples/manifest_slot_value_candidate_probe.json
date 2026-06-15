@@ -1,0 +1,40 @@
+{
+  "claims": {
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "held_out_generalization_recovered": false,
+    "live_browser_benchmark_claim": false,
+    "model_recovery_claim": false,
+    "private_corpus_generalization_claim": false,
+    "production_readiness_claim": false
+  },
+  "counts": {
+    "candidate_seed_rows": 4,
+    "formal_public_sample_dpo_pairs": 90,
+    "formal_public_sample_seed_rows": 10,
+    "formal_public_sample_sft_rows": 30,
+    "sft_rows": 12
+  },
+  "files": {
+    "manifest": "data/public-samples/manifest_slot_value_candidate_probe.json",
+    "materialization_manifest": "reports/public-sample/slot-value-generalization-materialized-candidates/manifest.json",
+    "sft": "reports/public-sample/slot-value-generalization-materialized-candidates/sft_candidate_rows.jsonl"
+  },
+  "formal_public_sample_modified": false,
+  "generated_at": "2026-06-15T00:00:00+00:00",
+  "manifest_id": "slot-value-candidate-probe-20260615",
+  "mode": "slot_value_candidate_probe",
+  "public_safe": true,
+  "source_summary": {
+    "candidate_seed_rows": 4,
+    "candidate_sft_rows": 12,
+    "formal_public_sample_manifest": "data/public-samples/manifest_public_sample.json",
+    "source": "standalone_slot_value_generalization_candidate_dataset",
+    "source_materialization": "reports/public-sample/slot-value-generalization-materialized-candidates/slot_value_generalization_materialization.json"
+  },
+  "split_counts": {
+    "dev": 0,
+    "test": 0,
+    "train": 12
+  }
+}

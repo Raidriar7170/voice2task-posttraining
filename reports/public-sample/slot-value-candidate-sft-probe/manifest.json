@@ -1,0 +1,73 @@
+{
+  "a100_preflight": {
+    "idle_gpu_status": "idle_gpu_available",
+    "missing_train_dependencies": [
+      "trl",
+      "datasets"
+    ],
+    "output_root_status": "ok",
+    "safe_to_launch_training": false,
+    "selected_gpu_index": "3",
+    "ssh_status": "ok",
+    "train_dependencies_available": [
+      "torch",
+      "transformers",
+      "peft",
+      "accelerate"
+    ]
+  },
+  "artifact_policy": {
+    "candidate_only": true,
+    "checkpoints_or_adapters_copied_to_git": false,
+    "dpo_run": false,
+    "formal_public_sample_files_modified": false,
+    "host_details_omitted": true,
+    "prediction_run": false,
+    "private_overrides_copied_to_git": false,
+    "private_paths_omitted": true,
+    "raw_logs_copied_to_git": false,
+    "ssh_details_omitted": true,
+    "training_run": false
+  },
+  "claims": {
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "held_out_generalization_recovered": false,
+    "live_browser_benchmark_claim": false,
+    "model_recovery_claim": false,
+    "private_corpus_generalization_claim": false,
+    "production_readiness_claim": false
+  },
+  "diagnostic_artifacts": {
+    "candidate_manifest": "data/public-samples/manifest_slot_value_candidate_probe.json",
+    "dry_run_metadata": "reports/public-sample/slot-value-candidate-sft-probe/sft-dry-run/adapter_metadata.json",
+    "evidence_json": "reports/public-sample/slot-value-candidate-sft-probe/slot_value_candidate_sft_probe.json",
+    "evidence_markdown": "reports/public-sample/slot-value-candidate-sft-probe/slot_value_candidate_sft_probe.md",
+    "manifest": "reports/public-sample/slot-value-candidate-sft-probe/manifest.json",
+    "materialization_manifest": "reports/public-sample/slot-value-generalization-materialized-candidates/manifest.json",
+    "prediction_config": "configs/sft-a100-slot-value-candidate-probe-prediction.json",
+    "sft_config": "configs/sft-a100-slot-value-candidate-probe.json"
+  },
+  "evidence_kind": "slot_value_candidate_sft_probe",
+  "execution_scope": {
+    "a100_prediction_launched": false,
+    "a100_training_launched": false,
+    "candidate_only_dry_run": true,
+    "dpo_run": false,
+    "evaluator_metric_change": false,
+    "formal_public_sample_modified": false,
+    "prediction_run": false,
+    "training_run": false
+  },
+  "generated_at": "2026-06-15T03:21:42.345475+00:00",
+  "source_candidate_manifest_id": "slot-value-candidate-probe-20260615",
+  "source_materialization_evidence_kind": "slot_value_generalization_materialization",
+  "summary": {
+    "a100_training_status": "blocked_missing_train_dependencies",
+    "candidate_sft_rows": 12,
+    "formal_public_sample_modified": false,
+    "local_dry_run_status": "dry_run",
+    "recommended_next_step": "prepare_private_a100_train_environment_then_run_candidate_probe",
+    "selected_candidate_training_rows": 12
+  }
+}

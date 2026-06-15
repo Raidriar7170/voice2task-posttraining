@@ -11,6 +11,7 @@ from voice2task.reports import (
     write_runtime_label_provenance_check_evidence_pack,
     write_runtime_label_provenance_prep_evidence_pack,
     write_sft_label_provenance_evidence_pack,
+    write_slot_value_candidate_sft_probe_report,
 )
 
 PRIVATE_SCAN_PREFIXES = (
@@ -51,7 +52,24 @@ def build_parser() -> argparse.ArgumentParser:
     runtime_check.add_argument("--leak-scan-result", type=Path)
     runtime_check.add_argument("--expected-manifest-id")
     runtime_check.add_argument("--prior-artifact", action="append", default=[])
+    candidate_probe = subcommands.add_parser("slot-value-candidate-sft-probe")
+    candidate_probe.add_argument("--dry-run-metadata", type=Path, required=True)
+    candidate_probe.add_argument("--candidate-manifest", type=Path, required=True)
+    candidate_probe.add_argument("--materialization-manifest", type=Path, required=True)
+    candidate_probe.add_argument("--sft-config", type=Path, required=True)
+    candidate_probe.add_argument("--prediction-config", type=Path, required=True)
+    candidate_probe.add_argument("--a100-ssh-status", required=True)
+    candidate_probe.add_argument("--a100-output-root-status", required=True)
+    candidate_probe.add_argument("--a100-idle-gpu-status", required=True)
+    candidate_probe.add_argument("--a100-selected-gpu-index", required=True)
+    candidate_probe.add_argument("--a100-train-dependencies", default="")
+    candidate_probe.add_argument("--a100-missing-dependencies", default="")
+    candidate_probe.add_argument("--output", type=Path, required=True)
     return parser
+
+
+def _comma_list(value: str) -> list[str]:
+    return [item.strip() for item in value.split(",") if item.strip()]
 
 
 def _prior_artifacts(values: list[str]) -> dict[str, str]:
@@ -128,6 +146,38 @@ def main(argv: list[str] | None = None) -> int:
         print(
             json.dumps(
                 {"ok": True, "paths": {key: value.as_posix() for key, value in report_paths.items()}},
+                indent=2,
+            )
+        )
+        return 0
+    if args.command == "slot-value-candidate-sft-probe":
+        report_paths = write_slot_value_candidate_sft_probe_report(
+            dry_run_metadata=read_json(args.dry_run_metadata),
+            candidate_manifest=read_json(args.candidate_manifest),
+            materialization_manifest=read_json(args.materialization_manifest),
+            sft_config=read_json(args.sft_config),
+            prediction_config=read_json(args.prediction_config),
+            output_dir=args.output,
+            dry_run_metadata_path=args.dry_run_metadata,
+            candidate_manifest_path=args.candidate_manifest,
+            materialization_manifest_path=args.materialization_manifest,
+            sft_config_path=args.sft_config,
+            prediction_config_path=args.prediction_config,
+            a100_ssh_status=args.a100_ssh_status,
+            a100_output_root_status=args.a100_output_root_status,
+            a100_idle_gpu_status=args.a100_idle_gpu_status,
+            a100_selected_gpu_index=args.a100_selected_gpu_index,
+            a100_train_dependencies=_comma_list(args.a100_train_dependencies),
+            a100_missing_dependencies=_comma_list(args.a100_missing_dependencies),
+        )
+        evidence = read_json(report_paths["json"])
+        print(
+            json.dumps(
+                {
+                    "ok": True,
+                    "paths": {key: value.as_posix() for key, value in report_paths.items()},
+                    "summary": evidence.get("summary", {}),
+                },
                 indent=2,
             )
         )
