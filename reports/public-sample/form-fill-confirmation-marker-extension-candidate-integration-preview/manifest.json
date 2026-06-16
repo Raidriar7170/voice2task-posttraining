@@ -1,0 +1,112 @@
+{
+  "artifact_policy": {
+    "a100_execution": false,
+    "candidate_rows_promoted_to_formal_sample": false,
+    "checkpoints_or_adapters_copied_to_git": false,
+    "dpo_artifacts_rebuilt_in_place": false,
+    "evaluator_metric_change": false,
+    "formal_public_sample_files_modified": false,
+    "host_details_omitted": true,
+    "prediction_repair_or_replacement": false,
+    "prediction_run": false,
+    "preview_dpo_pairs_generated": true,
+    "preview_only": true,
+    "preview_only_not_formal_public_sample": true,
+    "preview_public_sample_generated": true,
+    "private_overrides_copied_to_git": false,
+    "private_paths_omitted": true,
+    "raw_logs_copied_to_git": false,
+    "sft_artifacts_rebuilt_in_place": false,
+    "ssh_details_omitted": true,
+    "training_run": false
+  },
+  "candidate_source": {
+    "candidate_ids": [
+      "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-confirmation-dev-1",
+      "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-confirmation-dev-2",
+      "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-confirmation-dev-3",
+      "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-confirmation-test-1",
+      "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-confirmation-test-2",
+      "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-confirmation-test-3",
+      "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-form_fill-dev-1",
+      "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-form_fill-dev-2",
+      "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-form_fill-dev-3",
+      "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-form_fill-test-1",
+      "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-form_fill-test-2",
+      "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-form_fill-test-3"
+    ],
+    "candidate_preview_dpo_pairs": 108,
+    "candidate_seed": "data/public-samples/form_fill_confirmation_marker_extension_seed_candidates.jsonl",
+    "candidate_seed_rows": 12,
+    "candidate_sft_rows": 12,
+    "candidate_source_mode": "form_fill_confirmation_marker_extension_candidate_seed",
+    "preview_source_mode": "form_fill_confirmation_marker_extension_preview_public_seed"
+  },
+  "claims": {
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "held_out_generalization_recovered": false,
+    "held_out_recovery_claim": false,
+    "live_browser_benchmark_claim": false,
+    "model_recovery_claim": false,
+    "private_corpus_generalization_claim": false,
+    "production_readiness_claim": false,
+    "public_full_corpus_release_claim": false,
+    "semantic_equivalence_primary_metric": false,
+    "soft_slot_f1_primary_metric": false,
+    "strict_contract_exact_match_primary_metric": true,
+    "strict_slot_f1_primary_metric": true
+  },
+  "diagnostic_artifacts": {
+    "integration": "form_fill_confirmation_marker_extension_candidate_integration_preview.json",
+    "manifest": "manifest.json",
+    "markdown": "form_fill_confirmation_marker_extension_candidate_integration_preview.md",
+    "preview_dpo": "public-sample-preview/dpo_public_sample.jsonl",
+    "preview_manifest": "public-sample-preview/manifest_public_sample.json",
+    "preview_seed": "public-sample-preview/seed_traces.jsonl",
+    "preview_sft": "public-sample-preview/sft_public_sample.jsonl"
+  },
+  "evidence_kind": "form_fill_confirmation_marker_extension_candidate_integration_preview",
+  "execution_scope": {
+    "a100_execution": false,
+    "dpo_training_run": false,
+    "evaluator_metric_change": false,
+    "formal_public_sample_modified": false,
+    "prediction_run": false,
+    "preview_dpo_pairs_generated": true,
+    "preview_only_not_formal_public_sample": true,
+    "preview_public_sample_generated": true,
+    "seed_traces_modified": false,
+    "training_run": false
+  },
+  "formal_public_sample_counts_before": {
+    "dpo_pairs": 742,
+    "seed_rows": 86,
+    "sft_rows": 240
+  },
+  "formal_public_sample_split_counts_before": {
+    "dev": 69,
+    "test": 69,
+    "train": 102
+  },
+  "generated_at": "2026-06-16T06:58:53.223369+00:00",
+  "integration_status": "preview_build_validated",
+  "preview_counts": {
+    "dpo_pairs": 850,
+    "seed_rows": 98,
+    "sft_rows": 252
+  },
+  "preview_split_counts": {
+    "dev": 69,
+    "test": 69,
+    "train": 114
+  },
+  "validation": {
+    "counts": {
+      "dpo_pairs": 850,
+      "sft_rows": 252
+    },
+    "failures": [],
+    "ok": true
+  }
+}

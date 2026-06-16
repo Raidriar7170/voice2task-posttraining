@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>form_fill 确认标记扩展候选 preview integration 简报</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1f2937;
+      --muted: #5b6472;
+      --line: #d8dee8;
+      --ok: #0f766e;
+      --warn: #9a5b00;
+      --bg: #f7f8fb;
+      --panel: #ffffff;
+    }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+    }
+    h1 {
+      margin: 0 0 10px;
+      font-size: 28px;
+      line-height: 1.2;
+    }
+    h2 {
+      margin: 28px 0 10px;
+      font-size: 18px;
+    }
+    p {
+      margin: 8px 0;
+    }
+    a {
+      color: #2563eb;
+    }
+    .lead {
+      font-size: 17px;
+      color: var(--muted);
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      margin-top: 18px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+    }
+    .metric {
+      border-left: 4px solid var(--ok);
+      padding-left: 12px;
+    }
+    .metric strong {
+      display: block;
+      font-size: 22px;
+    }
+    ul {
+      margin: 8px 0 0;
+      padding-left: 20px;
+    }
+    code {
+      background: #eef2f7;
+      border-radius: 4px;
+      padding: 1px 4px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.92em;
+    }
+    .ok {
+      color: var(--ok);
+      font-weight: 700;
+    }
+    .pending {
+      color: var(--warn);
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>form_fill 确认标记扩展候选 preview integration 简报</h1>
+    <p class="lead">结论：12 条 standalone confirmation-marker extension 候选已通过 report-scoped public builder preview；正式 public sample 文件未被改写。</p>
+
+    <section class="panel">
+      <h2>当前状态</h2>
+      <p><span class="ok">applying / preview evidence generated</span>。本简报只概括本阶段 preview integration 证据，不替代 OpenSpec、测试输出或 JSON 报告。</p>
+      <p><span class="pending">归档状态</span>：待 Reviewer pass、完整验证和 OpenSpec archive。</p>
+    </section>
+
+    <section class="panel">
+      <h2>本阶段变化</h2>
+      <div class="grid">
+        <div class="metric"><strong>12</strong>candidate seed rows</div>
+        <div class="metric"><strong>98</strong>preview seed rows</div>
+        <div class="metric"><strong>252</strong>preview SFT rows</div>
+        <div class="metric"><strong>850</strong>preview DPO pairs</div>
+      </div>
+      <ul>
+        <li>新增 CLI：<code>check-form-fill-confirmation-marker-extension-candidate-integration</code>。</li>
+        <li>新增 fail-closed 校验：必须是 12 个已评审 candidate IDs，且保持 standalone、public_safe、train split provenance。</li>
+        <li>preview corpus 只写入 report 目录下的 <code>public-sample-preview/</code>。</li>
+        <li>正式 <code>seed_traces.jsonl</code>、SFT、DPO 和 manifest 四个 public sample 文件 hash 前后一致。</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>关键文件</h2>
+      <ul>
+        <li><a href="../../openspec/changes/check-form-fill-confirmation-marker-extension-candidate-integration/proposal.md">OpenSpec proposal</a></li>
+        <li><a href="../../reports/public-sample/form-fill-confirmation-marker-extension-candidate-integration-preview/form_fill_confirmation_marker_extension_candidate_integration_preview.json">preview integration JSON</a></li>
+        <li><a href="../../reports/public-sample/form-fill-confirmation-marker-extension-candidate-integration-preview/form_fill_confirmation_marker_extension_candidate_integration_preview.md">preview integration Markdown</a></li>
+        <li><a href="../../reports/public-sample/form-fill-confirmation-marker-extension-candidate-integration-preview/manifest.json">preview manifest</a></li>
+        <li><code>tests/test_form_fill_confirmation_marker_extension_candidate_integration_preview.py</code></li>
+        <li><code>src/voice2task/dataset.py</code>, <code>src/voice2task/reports.py</code>, <code>src/voice2task/cli/data.py</code></li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>验证状态</h2>
+      <ul>
+        <li><span class="ok">RED confirmed</span>：focused test 首次失败，原因是 preview 函数尚不存在。</li>
+        <li><span class="ok">GREEN</span>：新 focused test 6 passed。</li>
+        <li><span class="ok">Related tests</span>：form-fill/confirmation-marker 相关测试 24 passed。</li>
+        <li><span class="ok">Full pytest</span>：365 passed。</li>
+        <li><span class="ok">Ruff</span>：all checks passed。</li>
+        <li><span class="ok">OpenSpec strict</span>：5 passed, 0 failed。</li>
+        <li><span class="ok">Preview validation</span>：public validator 返回 ok=true，252 SFT rows / 850 DPO pairs。</li>
+        <li><span class="ok">Formal validation</span>：正式 public sample validator 返回 ok=true，240 SFT rows / 742 DPO pairs。</li>
+        <li><span class="ok">DPO checks</span>：formal/preview DPO summaries 成功生成，total pairs 分别为 742 / 850。</li>
+        <li><span class="ok">Leak scan</span>：candidate seed、preview report、Human Brief、OpenSpec change 均通过。</li>
+        <li><span class="ok">Boundary check</span>：formal public sample 四个文件 hash 前后一致。</li>
+        <li><span class="ok">Reviewer pass</span>：完成，Must Fix 已处理。</li>
+        <li><span class="pending">Remaining</span>：还需 archive 本 OpenSpec change。</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>复现命令</h2>
+      <p><code>PYTHONPATH=src python3 -m voice2task.cli.data check-form-fill-confirmation-marker-extension-candidate-integration --candidate-seed data/public-samples/form_fill_confirmation_marker_extension_seed_candidates.jsonl --seed data/public-samples/seed_traces.jsonl --output reports/public-sample/form-fill-confirmation-marker-extension-candidate-integration-preview</code></p>
+    </section>
+
+    <section class="panel">
+      <h2>不要过度声称</h2>
+      <ul>
+        <li>strict <code>contract_exact_match</code>、strict <code>slot_f1</code> 与 contract evaluation ladder 仍是权威口径。</li>
+        <li><code>slot_f1_soft</code> 仅为 diagnostic-only。</li>
+        <li>本阶段没有 SFT/DPO/GRPO training、prediction、A100 execution、prompt change、evaluator relaxation、held-out recovery、model recovery、checkpoint/adaptor release 或 live-browser benchmark improvement claim。</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>项目阶段进度</h2>
+      <p>当前项目阶段目标未在 <code>CONTEXT.md</code> 中显式命名为 MVP/v1/release；可确认的目标是 speech-to-contract post-training companion project，并用 contract evaluation ladder 作为证据边界。</p>
+      <p>本阶段推进的是 public sample 数据准备链路的可见性和边界控制：候选能通过 builder，但仍没有合入正式 public sample，也没有模型质量声明。</p>
+    </section>
+
+    <section class="panel">
+      <h2>建议下一步</h2>
+      <p>完成 Reviewer pass 和全量验证后归档本 change；后续若继续推进，应另开 bounded OpenSpec phase 决定是否正式 merge 这 12 条候选。</p>
+    </section>
+  </main>
+</body>
+</html>

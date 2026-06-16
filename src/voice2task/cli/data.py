@@ -7,6 +7,7 @@ from pathlib import Path
 from voice2task.dataset import (
     build_local_private_corpus,
     build_public_sample_dataset,
+    check_form_fill_confirmation_marker_extension_candidate_integration_preview,
     check_form_fill_remediation_candidate_integration_preview,
     family_stratified_public_sample_merge_evidence,
     form_fill_remediation_public_sample_merge_evidence,
@@ -71,6 +72,14 @@ def build_parser() -> argparse.ArgumentParser:
     check_form_fill_parser.add_argument("--candidate-seed", type=Path, required=True)
     check_form_fill_parser.add_argument("--seed", type=Path, required=True)
     check_form_fill_parser.add_argument("--output", type=Path, required=True)
+
+    check_confirmation_marker_extension_parser = subcommands.add_parser(
+        "check-form-fill-confirmation-marker-extension-candidate-integration",
+        help="Build a report-scoped preview dataset for standalone form-fill confirmation-marker extension candidates.",
+    )
+    check_confirmation_marker_extension_parser.add_argument("--candidate-seed", type=Path, required=True)
+    check_confirmation_marker_extension_parser.add_argument("--seed", type=Path, required=True)
+    check_confirmation_marker_extension_parser.add_argument("--output", type=Path, required=True)
 
     family_parser = subcommands.add_parser("materialize-family-stratified-candidates")
     family_parser.add_argument("--seed-output", type=Path, required=True)
@@ -166,6 +175,27 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "check-form-fill-remediation-candidate-integration":
         paths = check_form_fill_remediation_candidate_integration_preview(
+            candidate_seed_path=args.candidate_seed,
+            seed_path=args.seed,
+            output_dir=args.output,
+        )
+        manifest = json.loads(paths["manifest"].read_text(encoding="utf-8"))
+        ok = bool(manifest["validation"]["ok"])
+        payload = {
+            "ok": ok,
+            "paths": {name: path.as_posix() for name, path in paths.items()},
+            "preview_counts": manifest["preview_counts"],
+            "preview_split_counts": manifest["preview_split_counts"],
+            "candidate_source": manifest["candidate_source"],
+            "formal_public_sample_counts_before": manifest["formal_public_sample_counts_before"],
+            "validation": manifest["validation"],
+            "execution_scope": manifest["execution_scope"],
+            "claims": manifest["claims"],
+        }
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+        return 0 if ok else 1
+    if args.command == "check-form-fill-confirmation-marker-extension-candidate-integration":
+        paths = check_form_fill_confirmation_marker_extension_candidate_integration_preview(
             candidate_seed_path=args.candidate_seed,
             seed_path=args.seed,
             output_dir=args.output,

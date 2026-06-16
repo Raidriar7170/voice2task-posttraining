@@ -3700,6 +3700,129 @@ def write_form_fill_remediation_candidate_integration_preview_report(
     return {"json": json_path, "markdown": markdown_path, "manifest": manifest_path}
 
 
+def write_form_fill_confirmation_marker_extension_candidate_integration_preview_report(
+    evidence: dict[str, Any],
+    output_dir: Path,
+    title: str = "Voice2Task form-fill confirmation-marker extension candidate integration preview",
+) -> dict[str, Path]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    json_path = output_dir / "form_fill_confirmation_marker_extension_candidate_integration_preview.json"
+    markdown_path = output_dir / "form_fill_confirmation_marker_extension_candidate_integration_preview.md"
+    manifest_path = output_dir / "manifest.json"
+    safe_evidence = _sanitize_report_value(evidence)
+    scope = safe_evidence.get("execution_scope", {})
+    claims = safe_evidence.get("claims", {})
+    allowed_true_scope = {
+        "preview_dpo_pairs_generated",
+        "preview_only_not_formal_public_sample",
+        "preview_public_sample_generated",
+    }
+    allowed_true_claims = {
+        "strict_contract_exact_match_primary_metric",
+        "strict_slot_f1_primary_metric",
+    }
+    bad_scope = [key for key, value in scope.items() if value is True and key not in allowed_true_scope]
+    bad_claims = [key for key, value in claims.items() if value is True and key not in allowed_true_claims]
+    if bad_scope or bad_claims or scope.get("preview_only_not_formal_public_sample") is not True:
+        raise ValueError(
+            "preview integration report cannot claim unsupported scope or recovery signals: "
+            f"scope={bad_scope}, claims={bad_claims}"
+        )
+    write_json(json_path, safe_evidence)
+
+    manifest = {
+        "evidence_kind": safe_evidence["evidence_kind"],
+        "integration_status": safe_evidence["integration_status"],
+        "generated_at": safe_evidence["generated_at"],
+        "formal_public_sample_counts_before": safe_evidence["formal_public_sample_counts_before"],
+        "formal_public_sample_split_counts_before": safe_evidence["formal_public_sample_split_counts_before"],
+        "preview_counts": safe_evidence["preview_counts"],
+        "preview_split_counts": safe_evidence["preview_split_counts"],
+        "candidate_source": safe_evidence["candidate_source"],
+        "validation": safe_evidence["validation"],
+        "execution_scope": safe_evidence["execution_scope"],
+        "claims": safe_evidence["claims"],
+        "artifact_policy": {
+            "preview_only": True,
+            "formal_public_sample_files_modified": False,
+            "preview_only_not_formal_public_sample": True,
+            "preview_public_sample_generated": True,
+            "preview_dpo_pairs_generated": True,
+            "candidate_rows_promoted_to_formal_sample": False,
+            "sft_artifacts_rebuilt_in_place": False,
+            "dpo_artifacts_rebuilt_in_place": False,
+            "training_run": False,
+            "prediction_run": False,
+            "a100_execution": False,
+            "raw_logs_copied_to_git": False,
+            "checkpoints_or_adapters_copied_to_git": False,
+            "private_overrides_copied_to_git": False,
+            "private_paths_omitted": True,
+            "host_details_omitted": True,
+            "ssh_details_omitted": True,
+            "prediction_repair_or_replacement": False,
+            "evaluator_metric_change": False,
+        },
+        "diagnostic_artifacts": {
+            "preview_seed": "public-sample-preview/seed_traces.jsonl",
+            "preview_sft": "public-sample-preview/sft_public_sample.jsonl",
+            "preview_dpo": "public-sample-preview/dpo_public_sample.jsonl",
+            "preview_manifest": "public-sample-preview/manifest_public_sample.json",
+            "integration": "form_fill_confirmation_marker_extension_candidate_integration_preview.json",
+            "markdown": "form_fill_confirmation_marker_extension_candidate_integration_preview.md",
+            "manifest": "manifest.json",
+        },
+    }
+    write_json(manifest_path, manifest)
+
+    candidate = safe_evidence["candidate_source"]
+    validation = safe_evidence["validation"]
+    lines = [
+        f"# {title}",
+        "",
+        (
+            "This is a preview-only integration check: it proves the standalone form-fill "
+            "confirmation-marker extension candidate seeds can be consumed by the public dataset builder "
+            "in a report-scoped directory. It does not rewrite formal public sample files."
+        ),
+        "",
+        "## Boundary",
+        "",
+        "- Preview seed/SFT/DPO/manifest artifacts live only under this report directory.",
+        "- Formal public sample seed, SFT, DPO, and manifest files are not rewritten.",
+        "- Preview DPO pairs are data-construction evidence only, not DPO training evidence.",
+        "- No SFT/DPO/GRPO training, prediction run, or A100 execution is performed.",
+        "- strict `contract_exact_match` remains primary.",
+        "- strict `slot_f1` remains primary.",
+        "- Soft slot F1 and semantic equivalence remain diagnostic-only.",
+        "- This is not a model recovery, held-out recovery, checkpoint, adapter, production, or live-browser claim.",
+        "",
+        "## Counts",
+        "",
+        f"- Formal public sample counts before: `{safe_evidence['formal_public_sample_counts_before']}`",
+        f"- Preview counts: `{safe_evidence['preview_counts']}`",
+        f"- Preview split counts: `{safe_evidence['preview_split_counts']}`",
+        f"- Candidate seed rows: `{candidate['candidate_seed_rows']}`",
+        f"- Candidate SFT rows: `{candidate['candidate_sft_rows']}`",
+        f"- Candidate preview DPO pairs: `{candidate['candidate_preview_dpo_pairs']}`",
+        "",
+        "## Validation",
+        "",
+        f"- Public preview validation ok: `{validation['ok']}`",
+        f"- Validation counts: `{validation['counts']}`",
+        f"- Validation failures: `{validation['failures']}`",
+        "",
+        "## Recommended Next Step",
+        "",
+        (
+            "Use a later bounded OpenSpec phase to decide whether to formally merge the candidates. "
+            "Keep formal merge, A100 training, prediction, evaluator changes, and recovery claims separate."
+        ),
+    ]
+    markdown_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    return {"json": json_path, "markdown": markdown_path, "manifest": manifest_path}
+
+
 def write_family_stratified_generalization_report(
     evidence: dict[str, Any],
     output_dir: Path,

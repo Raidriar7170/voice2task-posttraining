@@ -1,0 +1,73 @@
+{
+  "counts": {
+    "dpo_pairs": 850,
+    "seed_rows": 98,
+    "sft_rows": 252
+  },
+  "dpo_rejection_counts": {
+    "blocked_payment_action_drift": 4,
+    "clarify_action_drift": 12,
+    "decomposed_search_slots": 2,
+    "extract_extra_particle_wording": 2,
+    "extract_generic_price_wording": 2,
+    "extract_listed_price_wording": 2,
+    "extract_query_slot": 10,
+    "extract_search_fallback": 10,
+    "form_confirmation_drift": 42,
+    "malformed_schema": 98,
+    "missing_confirmation": 66,
+    "missing_slot": 98,
+    "navigate_canonical_url_drift": 12,
+    "underspecified_request": 98,
+    "unsafe_allowance": 98,
+    "wrong_route": 98,
+    "wrong_slot": 98,
+    "wrong_task_type": 98
+  },
+  "files": {
+    "dpo": "reports/public-sample/form-fill-confirmation-marker-extension-candidate-integration-preview/public-sample-preview/dpo_public_sample.jsonl",
+    "manifest": "reports/public-sample/form-fill-confirmation-marker-extension-candidate-integration-preview/public-sample-preview/manifest_public_sample.json",
+    "seed": "reports/public-sample/form-fill-confirmation-marker-extension-candidate-integration-preview/public-sample-preview/seed_traces.jsonl",
+    "sft": "reports/public-sample/form-fill-confirmation-marker-extension-candidate-integration-preview/public-sample-preview/sft_public_sample.jsonl"
+  },
+  "generated_at": "2026-06-16T06:58:53.182379+00:00",
+  "manifest_id": "public-sample-20260616T065853Z",
+  "mode": "public_sample",
+  "public_safe": true,
+  "source_summary": {
+    "family_stratified_candidate_seed_rows": 63,
+    "family_stratified_candidate_sft_rows": 189,
+    "family_stratified_candidates_formal_public_sample": true,
+    "family_stratified_families": [
+      "blocked_payment",
+      "clarify",
+      "confirmation",
+      "extract",
+      "form_fill",
+      "navigation",
+      "search"
+    ],
+    "family_stratified_seed_split_counts": {
+      "dev": 21,
+      "test": 21,
+      "train": 21
+    },
+    "form_fill_remediation_candidate_seed_rows": 9,
+    "form_fill_remediation_candidate_sft_rows": 9,
+    "form_fill_remediation_candidates_formal_public_sample": true,
+    "form_fill_remediation_source_case_groups": [
+      "form-fill-clarify-boundary-protection",
+      "form-fill-confirmation-marker-preservation",
+      "form-fill-field-specificity-preservation"
+    ],
+    "seed_rows": 98,
+    "slot_value_candidate_seed_rows": 4,
+    "slot_value_candidates_formal_public_sample": true,
+    "source": "sanitized_public_seed_fixture"
+  },
+  "split_counts": {
+    "dev": 69,
+    "test": 69,
+    "train": 114
+  }
+}
