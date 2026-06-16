@@ -2,6 +2,51 @@
 
 Voice2Task Post-Training is a companion project for training and evaluating small language models that turn Chinese spoken browser commands into safe, schema-valid browser task contracts.
 
+## Current Status Contract
+
+As of 2026-06-16, the first project phase is closed as an evidence-backed
+post-training and evaluation baseline, not as a production-ready model release.
+The current public-facing truth surface is the A100 prediction-only formal
+public held-out retry under
+`reports/public-sample/a100-formal-public-heldout-prediction-after-a100-recovery/`.
+
+Current formal public sample boundary:
+
+| item | value |
+| --- | --- |
+| manifest | `public-sample-20260616T074315Z` |
+| public sample | 98 seeds / 252 SFT rows / 850 DPO pairs |
+| split counts | train 114 / dev 69 / test 69 |
+| run type | prediction-only held-out evaluation |
+| interpretation | `formal_public_heldout_partial_signal` |
+
+Latest formal held-out metrics:
+
+| split | contract_exact_match | strict slot_f1 | slot_f1_soft | route_accuracy | safety_recall | json_valid_rate |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| dev | 0.3043 | 0.3913 | 0.7315 | 0.8551 | 0.6667 | 1.0000 |
+| test | 0.2899 | 0.5072 | 0.7609 | 0.9130 | 0.9167 | 1.0000 |
+
+Strict `contract_exact_match` and strict `slot_f1` remain the public headline
+metrics. `slot_f1_soft` is diagnostic only and must not be used as recovery,
+semantic-equivalence, or production-readiness evidence. `json_valid_rate=1.0`
+means the output shape is stable; it is not enough to claim contract recovery.
+
+Claim boundaries:
+
+- No training was performed in the latest A100 recovery retry.
+- No evaluator relaxation, prediction repair, slot normalization, or data
+  mutation happened in that retry.
+- No checkpoint, adapter, full private corpus, or live-browser benchmark is
+  released from this repository.
+- The project proves a repeatable post-training/evaluation path and a
+  public-safe evidence surface; it does not prove production reliability.
+
+Recommended next stage, if work continues, is a small residual-family diagnosis
+and target selection phase. The current likely targets are `clarify` route
+confusion and `blocked_payment` safety recall, but new data, SFT v3, DPO, or
+metric changes should only follow after that diagnosis.
+
 ## Language
 
 **Voice2Task Post-Training**:

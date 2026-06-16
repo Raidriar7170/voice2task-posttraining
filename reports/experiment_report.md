@@ -1,5 +1,10 @@
 # Voice2Task Post-Training 实验报告
 
+> Superseded: 这份报告保留为历史实验说明。当前项目收束结论请以
+> `reports/final_status.md` 和
+> `reports/public-sample/a100-formal-public-heldout-prediction-after-a100-recovery/report.md`
+> 为准。
+
 ## 一句话结论
 
 当前最可信结论来自 formal public sample 的 prediction-only held-out 证据：7B LoRA 路径可以稳定输出 schema-valid contract JSON，但严格 full-contract exact match 仍然是 partial signal（dev 0.3043 / test 0.2899），不能宣称 held-out recovery、生产可用、checkpoint/adapter 发布或 live-browser benchmark 提升。
