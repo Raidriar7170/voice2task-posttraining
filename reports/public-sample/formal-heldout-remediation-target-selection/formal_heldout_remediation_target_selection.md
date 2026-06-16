@@ -1,4 +1,4 @@
-# Voice2Task formal held-out remediation target selection
+# Voice2Task current formal held-out remediation target selection
 
 This report selects the first bounded remediation target from the current formal public held-out residual-family diagnosis. It is not training, not new data generation, not a prediction rerun, not model recovery, and not evaluator relaxation.
 

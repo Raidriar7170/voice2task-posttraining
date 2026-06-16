@@ -32,7 +32,7 @@ def test_form_fill_boundary_field_specificity_inspection_groups_current_buckets(
     assert inspection["evidence_kind"] == "form_fill_boundary_field_specificity_inspection"
     assert inspection["diagnostic_kind"] == "formal_public_form_fill_boundary_field_specificity_inspection"
     assert inspection["source_residual_cluster_inspection"]["source_manifest_id"] == (
-        "public-sample-20260616T022151Z"
+        "public-sample-20260616T074315Z"
     )
     assert inspection["summary"]["form_fill_cluster_count"] == 5
     assert inspection["summary"]["form_fill_cluster_row_incidence_total"] == 49

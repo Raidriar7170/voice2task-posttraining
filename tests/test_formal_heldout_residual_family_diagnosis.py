@@ -13,7 +13,7 @@ from voice2task.leak_scan import scan_paths
 from voice2task.reports import write_formal_heldout_residual_family_report
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-FORMAL_DIR = REPO_ROOT / "reports" / "public-sample" / "a100-formal-public-heldout-prediction"
+FORMAL_DIR = REPO_ROOT / "reports" / "public-sample" / "a100-formal-public-heldout-prediction-after-a100-recovery"
 DIAGNOSIS_DIR = REPO_ROOT / "reports" / "public-sample" / "formal-heldout-residual-family-diagnosis"
 
 
@@ -39,7 +39,7 @@ def test_formal_heldout_residual_family_diagnosis_groups_current_residuals() -> 
     assert diagnosis["evidence_kind"] == "formal_heldout_residual_family_diagnosis"
     assert diagnosis["diagnostic_kind"] == "formal_public_heldout_residual_family_diagnosis"
     assert diagnosis["source_formal_heldout_evidence"]["dataset_manifest_id"] == (
-        "public-sample-20260616T022151Z"
+        "public-sample-20260616T074315Z"
     )
     assert diagnosis["source_formal_heldout_evidence"]["overall_interpretation"] == (
         "formal_public_heldout_partial_signal"
@@ -130,6 +130,9 @@ def test_committed_formal_heldout_residual_family_evidence_is_bounded_and_public
     diagnosis = read_json(DIAGNOSIS_DIR / "formal_heldout_residual_family_diagnosis.json")
 
     assert manifest["evidence_kind"] == "formal_heldout_residual_family_diagnosis"
+    assert manifest["source_formal_heldout_evidence"]["dataset_manifest_id"] == (
+        "public-sample-20260616T074315Z"
+    )
     assert manifest["summary"]["residual_row_count"] == 97
     assert manifest["summary"]["source_count_consistency"]["ok"] is True
     assert manifest["summary"]["soft_slot_f1_primary_metric"] is False

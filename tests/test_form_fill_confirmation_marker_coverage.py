@@ -71,7 +71,7 @@ def test_confirmation_marker_coverage_assessment_preserves_policy_and_legacy_sou
         ),
         "source_formal_heldout_evidence": {
             "base_model": "Qwen/Qwen2.5-7B-Instruct",
-            "dataset_manifest_id": "public-sample-20260616T022151Z",
+            "dataset_manifest_id": "public-sample-20260616T074315Z",
             "evidence_kind": "a100_formal_public_heldout_prediction",
             "overall_interpretation": "formal_public_heldout_partial_signal",
             "prediction_splits": ["dev", "test"],

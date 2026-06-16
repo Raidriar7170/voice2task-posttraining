@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Voice2Task 当前 formal held-out 残差诊断刷新</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #18202a;
+      background: #f6f8fb;
+      line-height: 1.6;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 40px 24px 56px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      line-height: 1.2;
+    }
+    h2 {
+      margin-top: 28px;
+      font-size: 18px;
+    }
+    .lede {
+      font-size: 17px;
+      color: #3c4856;
+      margin: 0 0 24px;
+    }
+    .panel {
+      background: #fff;
+      border: 1px solid #d9e1eb;
+      border-radius: 8px;
+      padding: 18px 20px;
+      margin: 18px 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border: 1px solid #d9e1eb;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #e7edf4;
+      text-align: left;
+      vertical-align: top;
+      font-size: 14px;
+    }
+    th {
+      background: #edf3f8;
+      font-weight: 650;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.92em;
+      background: #edf3f8;
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+    ul {
+      padding-left: 22px;
+    }
+    .warn {
+      border-left: 4px solid #a65700;
+      background: #fff8ee;
+    }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Voice2Task 当前 formal held-out 残差诊断刷新</h1>
+  <p class="lede">结论：残差诊断和 target-selection 已切换到最新 A100 recovery evidence；数字没有改善，但现在的证据边界是当前 manifest，而不是旧报告。</p>
+
+  <section class="panel">
+    <h2>当前状态</h2>
+    <p>OpenSpec change：<code>refresh-current-formal-heldout-residual-diagnosis</code>。本阶段是 diagnosis-only / evidence refresh，不训练、不重跑 prediction、不改数据、不改 evaluator。</p>
+  </section>
+
+  <h2>刷新内容</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Artifact</th>
+        <th>当前绑定</th>
+        <th>结果</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>formal-heldout-residual-family-diagnosis</code></td>
+        <td><code>public-sample-20260616T074315Z</code></td>
+        <td>97 residual rows；dev 48 / test 49；source consistency ok。</td>
+      </tr>
+      <tr>
+        <td><code>formal-heldout-residual-cluster-inspection</code></td>
+        <td><code>public-sample-20260616T074315Z</code></td>
+        <td>27 clusters；top cluster 仍是 <code>form_fill</code> / <code>normalized_command</code>。</td>
+      </tr>
+      <tr>
+        <td><code>formal-heldout-remediation-target-selection</code></td>
+        <td><code>public-sample-20260616T074315Z</code></td>
+        <td>仍选择 <code>form_fill</code>：29 residual rows / 49 residual fields。</td>
+      </tr>
+      <tr>
+        <td><code>form-fill-confirmation-marker-coverage</code></td>
+        <td>当前 residual 证据：<code>public-sample-20260616T074315Z</code>；legacy policy 仍保留旧来源</td>
+        <td>只刷新 coverage 的 source evidence 指针，不重写已 materialize 的候选样本血缘。</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>关键指标</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Split</th>
+        <th>contract_exact_match</th>
+        <th>strict slot_f1</th>
+        <th>slot_f1_soft</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>dev</td>
+        <td>0.3043</td>
+        <td>0.3913</td>
+        <td>0.7315</td>
+      </tr>
+      <tr>
+        <td>test</td>
+        <td>0.2899</td>
+        <td>0.5072</td>
+        <td>0.7609</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <section class="panel warn">
+    <h2>不要过度解读</h2>
+    <ul>
+      <li><code>slot_f1_soft</code> 仍然只是 diagnostic-only，不是主指标。</li>
+      <li>这不是 held-out recovery、model recovery、production readiness、adapter release 或 live-browser benchmark。</li>
+      <li>target selection 推荐后续另开 bounded proposal；它本身不是训练许可。</li>
+    </ul>
+  </section>
+
+  <h2>证据链接</h2>
+  <ul>
+    <li><code>reports/public-sample/formal-heldout-residual-family-diagnosis/formal_heldout_residual_family_diagnosis.md</code></li>
+    <li><code>reports/public-sample/formal-heldout-residual-cluster-inspection/formal_heldout_residual_cluster_inspection.md</code></li>
+    <li><code>reports/public-sample/formal-heldout-remediation-target-selection/formal_heldout_remediation_target_selection.md</code></li>
+    <li><code>reports/public-sample/form-fill-confirmation-marker-coverage/form_fill_confirmation_marker_coverage.md</code></li>
+    <li><code>reports/public-sample/a100-formal-public-heldout-prediction-after-a100-recovery/report.md</code></li>
+  </ul>
+
+  <h2>建议下一步</h2>
+  <p>如果继续推进，应单独评审是否进入 <code>remediate-form-fill-formal-heldout-residuals</code> 或重新调整目标选择策略。当前阶段只说明：在最新 manifest 上，最大的 bounded residual family 仍是 <code>form_fill</code>。</p>
+</main>
+</body>
+</html>

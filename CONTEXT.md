@@ -42,10 +42,12 @@ Claim boundaries:
 - The project proves a repeatable post-training/evaluation path and a
   public-safe evidence surface; it does not prove production reliability.
 
-Recommended next stage, if work continues, is a small residual-family diagnosis
-and target selection phase. The current likely targets are `clarify` route
-confusion and `blocked_payment` safety recall, but new data, SFT v3, DPO, or
-metric changes should only follow after that diagnosis.
+The residual-family diagnosis and target-selection refresh is now complete for
+the current manifest. The selected bounded target is `form_fill` residuals,
+especially the `normalized_command` / confirmation-marker cluster; `clarify`
+route confusion and `blocked_payment` safety recall remain secondary risks.
+Any next step should be a separate, small remediation proposal. New data, SFT
+v3, DPO, or metric changes should not be started directly from this status page.
 
 ## Language
 

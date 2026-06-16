@@ -62,16 +62,16 @@
 
 ## 推荐下一阶段
 
-如果项目继续推进，建议只开一个很小的新阶段：formal held-out residual-family diagnosis。
+formal held-out residual-family diagnosis 和 target selection 已经补完并归档到最新 manifest。
 
-目标是逐行聚合 dev/test residual，回答：
+当前诊断结论：
 
-- `clarify` route/task_type 错误是否是下一阶段最高优先级；
-- `blocked_payment` safety false negative 是否需要补安全策略或样本；
-- strict slot_f1 的低分分别来自 key mismatch、value wording、缺 slot 还是多 slot；
-- 是否真的需要 SFT v3，还是只需要更明确的标注/策略边界。
+- residual-family diagnosis 绑定 `public-sample-20260616T074315Z`，共有 97 strict residual rows；
+- residual-cluster inspection 的 top cluster 仍是 `form_fill` / `normalized_command`；
+- target selection 选择 `form_fill`，对应 29 residual rows / 49 residual fields；
+- confirmation-marker coverage 只刷新当前 residual evidence 指针，保留旧 policy / materialized candidate 的历史来源，避免循环血缘。
 
-在这个诊断完成前，不建议直接扩数据、重训、重跑 DPO、修改 evaluator，或把 `slot_f1_soft` 当作公开主指标。
+如果项目继续推进，建议只开一个很小的新阶段：围绕 `form_fill` 残差做 remediation proposal。不要直接扩数据、重训、重跑 DPO、修改 evaluator，或把 `slot_f1_soft` 当作公开主指标。
 
 ## 主要证据链接
 
@@ -79,9 +79,12 @@
 - Dev metrics: `reports/public-sample/a100-formal-public-heldout-prediction-after-a100-recovery/dev/metrics.md`
 - Test metrics: `reports/public-sample/a100-formal-public-heldout-prediction-after-a100-recovery/test/metrics.md`
 - Current manifest: `data/public-samples/manifest_public_sample.json`
+- Residual-family diagnosis: `reports/public-sample/formal-heldout-residual-family-diagnosis/formal_heldout_residual_family_diagnosis.md`
+- Residual-cluster inspection: `reports/public-sample/formal-heldout-residual-cluster-inspection/formal_heldout_residual_cluster_inspection.md`
+- Target selection: `reports/public-sample/formal-heldout-remediation-target-selection/formal_heldout_remediation_target_selection.md`
 - Context contract: `CONTEXT.md`
-- Human brief: `docs/human-briefs/2026-06-16-retry-formal-heldout-prediction-after-a100-recovery.html`
+- Human brief: `docs/human-briefs/2026-06-16-refresh-current-formal-heldout-residual-diagnosis.html`
 
 ## 当前交付状态
 
-可以作为阶段性交付收束：代码、public sample、OpenSpec archives、A100 prediction-only evidence、Human Brief、最终状态说明都已经对齐到同一套边界。下一步是否继续训练，不应从当前报告自动推出，而应由 residual-family diagnosis 决定。
+可以作为阶段性交付收束：代码、public sample、OpenSpec archives、A100 prediction-only evidence、residual diagnosis / target selection、Human Brief、最终状态说明都已经对齐到同一套边界。下一步是否继续训练，不应从当前报告自动推出，而应由单独的 `form_fill` remediation proposal 决定。

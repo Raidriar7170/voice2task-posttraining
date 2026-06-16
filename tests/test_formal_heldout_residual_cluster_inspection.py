@@ -33,7 +33,7 @@ def test_formal_heldout_residual_cluster_inspection_groups_current_clusters() ->
     assert inspection["evidence_kind"] == "formal_heldout_residual_cluster_inspection"
     assert inspection["diagnostic_kind"] == "formal_public_heldout_residual_cluster_inspection"
     assert inspection["source_residual_diagnosis"]["source_formal_heldout_evidence"]["dataset_manifest_id"] == (
-        "public-sample-20260616T022151Z"
+        "public-sample-20260616T074315Z"
     )
     assert inspection["summary"]["residual_row_count"] == 97
     assert inspection["summary"]["source_residual_field_count"] == 204
@@ -132,6 +132,9 @@ def test_committed_formal_heldout_residual_cluster_inspection_is_bounded_and_pub
     inspection = read_json(CLUSTER_DIR / "formal_heldout_residual_cluster_inspection.json")
 
     assert manifest["evidence_kind"] == "formal_heldout_residual_cluster_inspection"
+    assert manifest["source_residual_diagnosis"]["source_formal_heldout_evidence"]["dataset_manifest_id"] == (
+        "public-sample-20260616T074315Z"
+    )
     assert manifest["summary"]["cluster_count"] == 27
     assert manifest["summary"]["top_cluster_residual_rows"] == 27
     assert manifest["source_count_consistency"]["ok"] is True

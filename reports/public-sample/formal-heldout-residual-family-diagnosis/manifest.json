@@ -118,10 +118,10 @@
     "markdown": "reports/public-sample/formal-heldout-residual-family-diagnosis/formal_heldout_residual_family_diagnosis.md"
   },
   "evidence_kind": "formal_heldout_residual_family_diagnosis",
-  "generated_at": "2026-06-16T03:10:02.319354+00:00",
+  "generated_at": "2026-06-16T12:27:04.285505+00:00",
   "source_formal_heldout_evidence": {
     "base_model": "Qwen/Qwen2.5-7B-Instruct",
-    "dataset_manifest_id": "public-sample-20260616T022151Z",
+    "dataset_manifest_id": "public-sample-20260616T074315Z",
     "evidence_kind": "a100_formal_public_heldout_prediction",
     "overall_interpretation": "formal_public_heldout_partial_signal",
     "prediction_splits": [

@@ -1,4 +1,4 @@
-# Voice2Task formal held-out residual cluster inspection
+# Voice2Task current formal held-out residual cluster inspection
 
 This is an analysis-only residual cluster inspection derived from committed formal public held-out evidence. It is not a prediction run, not training, not data mutation, not held-out recovery, and not evaluator relaxation.
 
@@ -13,7 +13,7 @@ This is an analysis-only residual cluster inspection derived from committed form
 ## Summary
 
 - Source residual diagnosis kind: `formal_public_heldout_residual_family_diagnosis`
-- Source manifest id: `public-sample-20260616T022151Z`
+- Source manifest id: `public-sample-20260616T074315Z`
 - Source diagnosis artifact: `reports/public-sample/formal-heldout-residual-family-diagnosis/formal_heldout_residual_family_diagnosis.json`
 - Strict exact match: `{'dev': 0.30434782608695654, 'test': 0.2898550724637681}`
 - Strict slot F1: `{'dev': 0.391304347826087, 'test': 0.5072463768115942}`

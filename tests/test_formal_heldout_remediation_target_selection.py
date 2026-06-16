@@ -32,6 +32,9 @@ def test_formal_heldout_remediation_target_selection_ranks_current_residual_fami
     assert selection["summary"]["selected_residual_field_count"] == 49
     assert selection["summary"]["recommended_next_change"] == "remediate-form-fill-formal-heldout-residuals"
     assert selection["summary"]["soft_slot_f1_primary_metric"] is False
+    assert selection["source_residual_diagnosis"]["source_formal_heldout_evidence"]["dataset_manifest_id"] == (
+        "public-sample-20260616T074315Z"
+    )
     assert selection["summary"]["source_count_consistency"] == {
         "source_count_consistency_ok": True,
         "expected_residual_rows": 97,
@@ -98,6 +101,9 @@ def test_committed_formal_heldout_remediation_target_selection_is_bounded_and_pu
     selection = read_json(SELECTION_DIR / "formal_heldout_remediation_target_selection.json")
 
     assert manifest["evidence_kind"] == "formal_heldout_remediation_target_selection"
+    assert manifest["source_residual_diagnosis"]["source_formal_heldout_evidence"]["dataset_manifest_id"] == (
+        "public-sample-20260616T074315Z"
+    )
     assert manifest["summary"]["selected_target"] == "form_fill"
     assert manifest["summary"]["source_count_consistency"]["ok"] is True
     assert manifest["summary"]["soft_slot_f1_primary_metric"] is False
