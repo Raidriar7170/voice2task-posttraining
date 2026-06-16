@@ -3429,6 +3429,174 @@ def write_form_fill_remediation_materialization_report(
     return {"json": json_path, "markdown": markdown_path, "manifest": manifest_path, "sft": sft_path}
 
 
+def write_form_fill_confirmation_marker_extension_materialization_report(
+    materialization: dict[str, Any],
+    output_dir: Path,
+    sft_rows: list[dict[str, Any]],
+    title: str = "Voice2Task form-fill confirmation-marker extension materialized candidates",
+) -> dict[str, Path]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    json_path = output_dir / "form_fill_confirmation_marker_extension_materialization.json"
+    markdown_path = output_dir / "form_fill_confirmation_marker_extension_materialization.md"
+    manifest_path = output_dir / "manifest.json"
+    sft_path = output_dir / "sft_candidate_rows.jsonl"
+    safe_materialization = _sanitize_report_value(materialization)
+    safe_sft_rows = _sanitize_report_value(sft_rows)
+    scope = safe_materialization.get("execution_scope", {})
+    claims = safe_materialization.get("claims", {})
+    forbidden_scope_true = [
+        "a100_execution",
+        "dpo_pairs_modified",
+        "dpo_run",
+        "evaluator_metric_change",
+        "evaluator_relaxation",
+        "formal_public_sample_modified",
+        "prediction_repair",
+        "prediction_run",
+        "public_sample_modified",
+        "seed_traces_modified",
+        "sft_rows_modified",
+        "training_run",
+    ]
+    forbidden_claim_true = [
+        "adapter_release",
+        "checkpoint_release",
+        "held_out_generalization_recovered",
+        "held_out_recovery_claim",
+        "live_browser_benchmark_claim",
+        "model_recovery_claim",
+        "private_corpus_generalization_claim",
+        "production_readiness_claim",
+        "public_full_corpus_release_claim",
+        "semantic_equivalence_primary_metric",
+        "soft_slot_f1_primary_metric",
+    ]
+    bad_scope = [key for key in forbidden_scope_true if scope.get(key) is True]
+    bad_claims = [key for key in forbidden_claim_true if claims.get(key) is True]
+    if bad_scope or bad_claims:
+        raise ValueError(
+            "candidate-only report cannot claim unsupported scope or recovery signals: "
+            f"scope={bad_scope}, claims={bad_claims}"
+        )
+    write_json(json_path, safe_materialization)
+    write_jsonl(sft_path, safe_sft_rows)
+
+    manifest = {
+        "evidence_kind": safe_materialization["evidence_kind"],
+        "materialization_status": safe_materialization["materialization_status"],
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "source_extension_design": safe_materialization["source_extension_design"],
+        "summary": safe_materialization["summary"],
+        "metric_authority": safe_materialization["metric_authority"],
+        "execution_scope": safe_materialization["execution_scope"],
+        "claims": safe_materialization["claims"],
+        "artifact_policy": {
+            "candidate_data_only": True,
+            "formal_public_sample_files_modified": False,
+            "new_candidate_data_generated": True,
+            "formal_public_sample_modified": False,
+            "public_sample_modified": False,
+            "seed_traces_modified": False,
+            "sft_rows_modified": False,
+            "dpo_pairs_generated": False,
+            "training_run": False,
+            "prediction_run": False,
+            "dpo_run": False,
+            "a100_execution": False,
+            "raw_logs_copied_to_git": False,
+            "checkpoints_or_adapters_copied_to_git": False,
+            "private_overrides_copied_to_git": False,
+            "private_paths_omitted": True,
+            "host_details_omitted": True,
+            "ssh_details_omitted": True,
+            "prediction_repair_or_replacement": False,
+            "evaluator_metric_change": False,
+            "evaluator_relaxation": False,
+        },
+        "diagnostic_artifacts": {
+            "candidate_seed": safe_materialization["artifact_files"]["candidate_seed"],
+            "candidate_sft": _public_report_artifact_path(output_dir, "sft_candidate_rows.jsonl"),
+            "materialization": _public_report_artifact_path(
+                output_dir,
+                "form_fill_confirmation_marker_extension_materialization.json",
+            ),
+            "markdown": _public_report_artifact_path(
+                output_dir,
+                "form_fill_confirmation_marker_extension_materialization.md",
+            ),
+            "manifest": _public_report_artifact_path(output_dir, "manifest.json"),
+        },
+    }
+    write_json(manifest_path, manifest)
+
+    summary = safe_materialization["summary"]
+    lines = [
+        f"# {title}",
+        "",
+        (
+            "This is candidate data only: it materializes reviewed form-fill confirmation-marker extension "
+            "cases into standalone public-safe candidate seed and SFT rows. The rows are not merged into "
+            "seed_traces.jsonl, and they are not training, DPO, prediction, or A100 evidence."
+        ),
+        "",
+        "## Boundary",
+        "",
+        "- Candidate rows are not formal public sample rows yet.",
+        "- Formal public sample seed, SFT, DPO, and manifest files are not rewritten.",
+        "- No DPO pairs, SFT training, prediction run, A100 execution, or evaluator relaxation is performed.",
+        "- Strict `contract_exact_match` and strict `slot_f1` remain authoritative.",
+        "- `slot_f1_soft` is diagnostic-only and not a primary metric.",
+        "- Family-level candidate labels are public-safe placeholders, not recovered gold text.",
+        "- This is not a model recovery, held-out recovery, checkpoint, adapter, production, private-corpus, "
+        "public-full-corpus, or live-browser improvement claim.",
+        "",
+        "## Summary",
+        "",
+        f"- Candidate cases: `{summary['candidate_case_count']}`",
+        f"- Candidate seed rows: `{summary['candidate_seed_rows']}`",
+        f"- Candidate SFT rows: `{summary['candidate_sft_rows']}`",
+        f"- Derived field-label rows: `{summary['derived_field_label_rows']}`",
+        f"- Family-level candidate-label rows: `{summary['family_level_candidate_label_rows']}`",
+        f"- Formal public sample seed rows: `{summary['formal_public_sample_seed_rows']}`",
+        f"- Formal public sample SFT rows: `{summary['formal_public_sample_sft_rows']}`",
+        f"- Formal public sample DPO pairs: `{summary['formal_public_sample_dpo_pairs']}`",
+        f"- Formal public sample modified: `{summary['formal_public_sample_modified']}`",
+        f"- Seed traces modified: `{summary['seed_traces_modified']}`",
+        f"- Recommended next step: `{summary['recommended_next_step']}`",
+        "",
+        "## Candidate Cases",
+        "",
+    ]
+    for case in safe_materialization.get("candidate_cases", []):
+        lines.extend(
+            [
+                f"### `{case['source_case_id']}`",
+                "",
+                f"- Source family: `{case['source_family_id']}`",
+                f"- Source bucket: `{case['source_bucket']}`",
+                f"- Candidate seed: `{case['candidate_seed_id']}`",
+                f"- Candidate SFT row: `{case['candidate_sft_row_id']}`",
+                f"- Field-label derivation: `{case['field_label_derivation_status']}`",
+                f"- Field-label provenance: `{case['field_label_provenance']}`",
+                f"- Expected marker: `{case['expected_confirmation_marker']}`",
+                "",
+            ]
+        )
+
+    lines.extend(
+        [
+            "## Recommended Next Step",
+            "",
+            (
+                "Review this standalone candidate extension before any later formal public sample merge, DPO "
+                "construction, training probe, prediction run, or held-out claim."
+            ),
+        ]
+    )
+    markdown_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    return {"json": json_path, "markdown": markdown_path, "manifest": manifest_path, "sft": sft_path}
+
+
 def write_form_fill_remediation_candidate_integration_preview_report(
     evidence: dict[str, Any],
     output_dir: Path,

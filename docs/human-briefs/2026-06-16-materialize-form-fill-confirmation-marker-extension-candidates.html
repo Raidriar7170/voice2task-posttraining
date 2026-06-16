@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>form_fill 确认标记扩展候选集物化简报</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1f2937;
+      --muted: #5b6472;
+      --line: #d8dee8;
+      --ok: #0f766e;
+      --warn: #9a5b00;
+      --bg: #f7f8fb;
+      --panel: #ffffff;
+    }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+    }
+    h1 {
+      margin: 0 0 10px;
+      font-size: 28px;
+      line-height: 1.2;
+    }
+    h2 {
+      margin: 28px 0 10px;
+      font-size: 18px;
+    }
+    p {
+      margin: 8px 0;
+    }
+    .lead {
+      font-size: 17px;
+      color: var(--muted);
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      margin-top: 18px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+    }
+    .metric {
+      border-left: 4px solid var(--ok);
+      padding-left: 12px;
+    }
+    .metric strong {
+      display: block;
+      font-size: 22px;
+    }
+    ul {
+      margin: 8px 0 0;
+      padding-left: 20px;
+    }
+    code {
+      background: #eef2f7;
+      border-radius: 4px;
+      padding: 1px 4px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.92em;
+    }
+    .ok {
+      color: var(--ok);
+      font-weight: 700;
+    }
+    .pending {
+      color: var(--warn);
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>form_fill 确认标记扩展候选集物化简报</h1>
+    <p class="lead">结论：本阶段已把已评审的 12 个确认标记扩展设计用例物化为独立候选 seed/SFT 行；正式 public sample 未被修改。</p>
+
+    <section class="panel">
+      <h2>当前状态</h2>
+      <p><span class="ok">archived / candidate artifacts generated and locally validated</span>。本简报概括本阶段候选集物化结果，不替代 OpenSpec、测试输出或报告 JSON。</p>
+      <p><span class="ok">归档状态</span>：OpenSpec change 已归档为 <code>archive/2026-06-16-materialize-form-fill-confirmation-marker-extension-candidates</code>。</p>
+    </section>
+
+    <section class="panel">
+      <h2>本阶段变化</h2>
+      <div class="grid">
+        <div class="metric"><strong>12</strong>candidate seed rows</div>
+        <div class="metric"><strong>12</strong>candidate SFT rows</div>
+        <div class="metric"><strong>3</strong>derived field labels</div>
+        <div class="metric"><strong>9</strong>family-level candidate labels</div>
+      </div>
+      <ul>
+        <li>新增 CLI：<code>materialize-form-fill-confirmation-marker-extension-candidates</code>。</li>
+        <li>非可导出字段只使用公开安全的 family-level candidate label，并明确不是 recovered gold text。</li>
+        <li>所有候选 contract 均为 <code>form_fill</code> / <code>fill_form</code>，<code>confirmation_required=true</code>，<code>safety.reason=requires_confirmation</code>。</li>
+        <li>正式文件 <code>seed_traces.jsonl</code>、<code>sft_public_sample.jsonl</code>、<code>dpo_public_sample.jsonl</code>、<code>manifest_public_sample.json</code> 未被物化流程改写。</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>关键文件</h2>
+      <ul>
+        <li><code>tests/test_form_fill_confirmation_marker_extension_materialization.py</code></li>
+        <li><code>src/voice2task/dataset.py</code></li>
+        <li><code>src/voice2task/reports.py</code></li>
+        <li><code>src/voice2task/cli/data.py</code></li>
+        <li><code>data/public-samples/form_fill_confirmation_marker_extension_seed_candidates.jsonl</code></li>
+        <li><code>reports/public-sample/form-fill-confirmation-marker-extension-materialized-candidates/</code></li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>验证状态</h2>
+      <ul>
+        <li><span class="ok">RED confirmed</span>：focused test 首次失败，原因是 materializer、CLI command、committed artifacts 尚不存在。</li>
+        <li><span class="ok">GREEN</span>：<code>pytest tests/test_form_fill_confirmation_marker_extension_materialization.py</code>，8 passed。</li>
+        <li><span class="ok">Related quick tests</span>：4 个 form_fill/confirmation-marker 相关测试文件共 16 passed。</li>
+        <li><span class="ok">Full pytest</span>：354 passed。</li>
+        <li><span class="ok">Ruff</span>：all checks passed。</li>
+        <li><span class="ok">OpenSpec strict</span>：5 passed, 0 failed。</li>
+        <li><span class="ok">Public dataset validation</span>：ok=true，240 SFT rows / 742 DPO pairs。</li>
+        <li><span class="ok">DPO check</span>：742 pairs summarized successfully。</li>
+        <li><span class="ok">Leak scan</span>：new candidate seed/report artifacts, Human Brief, and OpenSpec change passed。</li>
+        <li><span class="ok">Reviewer pass</span>：Must Fix path guard and report-writer fail-closed check were addressed; no re-plan needed。</li>
+        <li><span class="ok">Archive</span>：OpenSpec change archived。</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>不要过度声称</h2>
+      <ul>
+        <li>strict <code>contract_exact_match</code>、strict <code>slot_f1</code> 与 contract evaluation ladder 仍是权威口径。</li>
+        <li><code>slot_f1_soft</code> 仅为 diagnostic-only。</li>
+        <li>本阶段没有 DPO、training、prediction、A100、prompt change、evaluator relaxation、held-out recovery、model recovery、checkpoint/adaptor release 或 live-browser benchmark improvement claim。</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>建议下一步</h2>
+      <p>先进行 Reviewer pass；若无 Must Fix，再由后续阶段决定是否做 preview/merge/eval，而不是在本阶段直接合入正式 public sample。</p>
+    </section>
+  </main>
+</body>
+</html>

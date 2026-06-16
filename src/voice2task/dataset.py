@@ -42,7 +42,17 @@ EXTRACT_PRICE_CANONICAL_NORMALIZED_COMMAND = "提取页面商品价格"
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 FORMAL_PUBLIC_SEED_PATH = REPO_ROOT / "data" / "public-samples" / "seed_traces.jsonl"
+FORMAL_PUBLIC_SFT_PATH = REPO_ROOT / "data" / "public-samples" / "sft_public_sample.jsonl"
+FORMAL_PUBLIC_DPO_PATH = REPO_ROOT / "data" / "public-samples" / "dpo_public_sample.jsonl"
 FORMAL_PUBLIC_MANIFEST_PATH = REPO_ROOT / "data" / "public-samples" / "manifest_public_sample.json"
+FORMAL_PUBLIC_SAMPLE_FILES = frozenset(
+    {
+        FORMAL_PUBLIC_SEED_PATH,
+        FORMAL_PUBLIC_SFT_PATH,
+        FORMAL_PUBLIC_DPO_PATH,
+        FORMAL_PUBLIC_MANIFEST_PATH,
+    }
+)
 _FORM_FILL_REMEDIATION_GROUP_IDS = (
     "form-fill-clarify-boundary-protection",
     "form-fill-confirmation-marker-preservation",
@@ -132,6 +142,28 @@ EXPECTED_FORM_FILL_REMEDIATION_CANDIDATE_IDS = frozenset(
         "candidate-form-fill-remediation-ff-field-appointment-time",
     }
 )
+_FORM_FILL_CONFIRMATION_MARKER_EXTENSION_FIELD_LABEL_DERIVED = "derived_from_committed_coverage_examples"
+_FORM_FILL_CONFIRMATION_MARKER_EXTENSION_FIELD_LABEL_NOT_DERIVABLE = (
+    "not_derivable_from_committed_coverage_policy_artifacts"
+)
+_FORM_FILL_CONFIRMATION_MARKER_EXTENSION_SOURCE_FAMILIES = (
+    "family-confirmation-dev-1",
+    "family-confirmation-dev-2",
+    "family-confirmation-dev-3",
+    "family-confirmation-test-1",
+    "family-confirmation-test-2",
+    "family-confirmation-test-3",
+    "family-form_fill-dev-1",
+    "family-form_fill-dev-2",
+    "family-form_fill-dev-3",
+    "family-form_fill-test-1",
+    "family-form_fill-test-2",
+    "family-form_fill-test-3",
+)
+EXPECTED_FORM_FILL_CONFIRMATION_MARKER_EXTENSION_CANDIDATE_IDS = frozenset(
+    f"candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-{family_id}"
+    for family_id in _FORM_FILL_CONFIRMATION_MARKER_EXTENSION_SOURCE_FAMILIES
+)
 FORM_FILL_REMEDIATION_DPO_REJECTION_CATEGORIES = (
     "form_confirmation_drift",
     "malformed_schema",
@@ -148,6 +180,16 @@ FORM_FILL_REMEDIATION_DPO_REJECTION_CATEGORIES = (
 def _now_id(prefix: str) -> str:
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     return f"{prefix}-{stamp}"
+
+
+def _reject_formal_public_sample_output_path(path: Path) -> None:
+    resolved = path.resolve()
+    protected = {protected_path.resolve() for protected_path in FORMAL_PUBLIC_SAMPLE_FILES}
+    if resolved in protected:
+        raise ValueError(
+            "candidate materialization must not overwrite formal public sample files: "
+            f"{path.as_posix()}"
+        )
 
 
 def _read_seed_rows(seed_path: Path) -> list[dict[str, Any]]:
@@ -1859,6 +1901,333 @@ def materialize_form_fill_remediation_candidates(
     from voice2task.reports import write_form_fill_remediation_materialization_report
 
     paths = write_form_fill_remediation_materialization_report(
+        materialization,
+        output_dir=output_dir,
+        sft_rows=[row.to_dict() for row in candidate_sft_rows],
+    )
+    return {"seed": seed_output_path, **paths}
+
+
+def _require_reviewed_confirmation_marker_extension_cases(
+    extension_design: dict[str, Any],
+) -> list[dict[str, Any]]:
+    if extension_design.get("evidence_kind") != "form_fill_confirmation_marker_coverage_extension_design":
+        raise ValueError("extension design must be form_fill_confirmation_marker_coverage_extension_design evidence")
+    if extension_design.get("design_kind") != "public_form_fill_confirmation_marker_coverage_extension":
+        raise ValueError("extension design must be public_form_fill_confirmation_marker_coverage_extension")
+
+    summary = extension_design.get("summary")
+    if not isinstance(summary, dict) or summary.get("proposed_case_count") != 12:
+        raise ValueError("confirmation-marker extension materialization expects exactly 12 proposed cases")
+    if summary.get("field_labels_derived_count") != 3 or summary.get("field_labels_not_derivable_count") != 9:
+        raise ValueError("confirmation-marker extension materialization expects 3 derived and 9 non-derivable cases")
+
+    source_count_consistency = extension_design.get("source_count_consistency")
+    if not isinstance(source_count_consistency, dict) or source_count_consistency.get("ok") is not True:
+        raise ValueError("confirmation-marker extension source counts must be consistent before materialization")
+
+    cases = extension_design.get("proposed_candidate_cases")
+    if not isinstance(cases, list) or len(cases) != 12:
+        raise ValueError("confirmation-marker extension design must contain exactly 12 proposed candidate cases")
+
+    by_family: dict[str, dict[str, Any]] = {}
+    for case in cases:
+        if not isinstance(case, dict):
+            raise ValueError("confirmation-marker extension candidate cases must be objects")
+        case_id = str(case.get("case_id"))
+        source_family_id = str(case.get("source_family_id"))
+        if not case_id.startswith("ff-confirm-marker-extension-"):
+            raise ValueError(f"unsupported confirmation-marker extension case_id: {case_id}")
+        if source_family_id in by_family:
+            raise ValueError(f"duplicate confirmation-marker extension source family: {source_family_id}")
+        if case.get("source_bucket") != "missing_confirmation_marker":
+            raise ValueError(f"confirmation-marker extension case {case_id} must stay in missing_confirmation_marker")
+        if case.get("expected_confirmation_marker") != "并确认":
+            raise ValueError(f"confirmation-marker extension case {case_id} must require 并确认")
+        if case.get("field_paths") != ["normalized_command"]:
+            raise ValueError(f"confirmation-marker extension case {case_id} must target normalized_command")
+        if case.get("materialization_status") != "not_materialized":
+            raise ValueError(f"confirmation-marker extension case {case_id} is already materialized")
+        if case.get("recommended_split_role") != "candidate_design_only":
+            raise ValueError(f"confirmation-marker extension case {case_id} must remain candidate design only")
+        if case.get("requires_later_openspec_materialization") is not True:
+            raise ValueError(f"confirmation-marker extension case {case_id} must require later materialization")
+        by_family[source_family_id] = case
+
+    expected_families = set(_FORM_FILL_CONFIRMATION_MARKER_EXTENSION_SOURCE_FAMILIES)
+    observed_families = set(by_family)
+    if observed_families != expected_families:
+        missing = ", ".join(sorted(expected_families - observed_families))
+        extra = ", ".join(sorted(observed_families - expected_families))
+        raise ValueError(
+            "confirmation-marker extension source families mismatch "
+            f"(missing: {missing or 'none'}; extra: {extra or 'none'})"
+        )
+
+    derived = sum(
+        case.get("field_label_derivation_status") == _FORM_FILL_CONFIRMATION_MARKER_EXTENSION_FIELD_LABEL_DERIVED
+        for case in by_family.values()
+    )
+    not_derivable = sum(
+        case.get("field_label_derivation_status")
+        == _FORM_FILL_CONFIRMATION_MARKER_EXTENSION_FIELD_LABEL_NOT_DERIVABLE
+        for case in by_family.values()
+    )
+    if derived != 3 or not_derivable != 9:
+        raise ValueError(
+            "confirmation-marker extension candidate cases must preserve 3 derived and 9 non-derivable rows"
+        )
+
+    return [by_family[family_id] for family_id in _FORM_FILL_CONFIRMATION_MARKER_EXTENSION_SOURCE_FAMILIES]
+
+
+def _confirmation_marker_extension_field_label(case: dict[str, Any]) -> tuple[str, str]:
+    derivation_status = str(case.get("field_label_derivation_status"))
+    if derivation_status == _FORM_FILL_CONFIRMATION_MARKER_EXTENSION_FIELD_LABEL_DERIVED:
+        field = str(case.get("derived_field_label", "")).strip()
+        if not field:
+            raise ValueError(f"derived confirmation-marker extension case {case.get('case_id')} is missing a field")
+        expected_pattern = case.get("expected_normalized_command_pattern")
+        if expected_pattern is not None and str(expected_pattern) != _canonical_form_fill_normalized_command(field):
+            raise ValueError(
+                "derived confirmation-marker extension case "
+                f"{case.get('case_id')} has incompatible normalized-command pattern"
+            )
+        return field, "derived_from_committed_public_artifacts"
+    if derivation_status == _FORM_FILL_CONFIRMATION_MARKER_EXTENSION_FIELD_LABEL_NOT_DERIVABLE:
+        source_family_id = str(case["source_family_id"])
+        return (
+            f"公开候选字段-{source_family_id}",
+            "public_safe_family_level_candidate_label_not_recovered_gold_text",
+        )
+    raise ValueError(
+        "unsupported confirmation-marker extension field_label_derivation_status: "
+        f"{case.get('field_label_derivation_status')}"
+    )
+
+
+def _confirmation_marker_extension_target_contract(field: str) -> dict[str, Any]:
+    return _contract(
+        task_type="form_fill",
+        route="fill_form",
+        safety_reason="requires_confirmation",
+        allow=True,
+        confirmation_required=True,
+        slots={"field": field},
+        normalized_command=_canonical_form_fill_normalized_command(field),
+    )
+
+
+def _confirmation_marker_extension_candidate_seed_rows(
+    extension_design: dict[str, Any],
+    source_design_ref: str,
+) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for case in _require_reviewed_confirmation_marker_extension_cases(extension_design):
+        field, field_label_provenance = _confirmation_marker_extension_field_label(case)
+        normalized_command = _canonical_form_fill_normalized_command(field)
+        case_id = str(case["case_id"])
+        row = {
+            "id": f"candidate-form-fill-confirmation-marker-extension-{case_id}",
+            "split": "train",
+            "input_text": normalized_command,
+            "target_contract": _confirmation_marker_extension_target_contract(field),
+            "augmentations": [],
+            "provenance": {
+                "source_mode": "form_fill_confirmation_marker_extension_candidate_seed",
+                "public_safe": True,
+                "candidate_status": "standalone_not_formal_public_sample",
+                "source_design": source_design_ref,
+                "source_design_evidence_kind": extension_design["evidence_kind"],
+                "source_case_id": case_id,
+                "source_family_id": str(case["source_family_id"]),
+                "source_bucket": str(case["source_bucket"]),
+                "source_manifest_id": str(case["source_manifest_id"]),
+                "source_family_incidence_count": int(case["source_family_incidence_count"]),
+                "field_paths": list(case["field_paths"]),
+                "expected_confirmation_marker": str(case["expected_confirmation_marker"]),
+                "field_label_derivation_status": str(case["field_label_derivation_status"]),
+                "field_label_provenance": field_label_provenance,
+                "field_label": field,
+            },
+        }
+        validate_public_record(row)
+        rows.append(row)
+
+    observed_ids = {row["id"] for row in rows}
+    if observed_ids != EXPECTED_FORM_FILL_CONFIRMATION_MARKER_EXTENSION_CANDIDATE_IDS:
+        expected = ", ".join(sorted(EXPECTED_FORM_FILL_CONFIRMATION_MARKER_EXTENSION_CANDIDATE_IDS))
+        observed = ", ".join(sorted(observed_ids))
+        raise ValueError(
+            "expected reviewed form-fill confirmation-marker extension candidate seed IDs "
+            f"[{expected}], observed [{observed}]"
+        )
+    if len(observed_ids) != len(rows):
+        raise ValueError("confirmation-marker extension candidate seed IDs must be unique")
+    return rows
+
+
+def _confirmation_marker_extension_candidate_sft_rows(seed_rows: list[dict[str, Any]]) -> list[SFTDatasetRow]:
+    rows: list[SFTDatasetRow] = []
+    for seed in seed_rows:
+        seed_provenance = seed["provenance"]
+        rows.append(
+            SFTDatasetRow(
+                id=seed["id"],
+                split=seed["split"],
+                input_text=seed["input_text"],
+                target_contract=seed["target_contract"],
+                provenance={
+                    "source_id": seed["id"],
+                    "source_mode": "form_fill_confirmation_marker_extension_candidate",
+                    "public_safe": True,
+                    "augmentation": "original",
+                    "candidate_status": seed_provenance["candidate_status"],
+                    "source_design": seed_provenance["source_design"],
+                    "source_design_evidence_kind": seed_provenance["source_design_evidence_kind"],
+                    "source_case_id": seed_provenance["source_case_id"],
+                    "source_family_id": seed_provenance["source_family_id"],
+                    "source_bucket": seed_provenance["source_bucket"],
+                    "source_manifest_id": seed_provenance["source_manifest_id"],
+                    "field_label_derivation_status": seed_provenance["field_label_derivation_status"],
+                    "field_label_provenance": seed_provenance["field_label_provenance"],
+                    "expected_confirmation_marker": seed_provenance["expected_confirmation_marker"],
+                },
+            )
+        )
+    return rows
+
+
+def _confirmation_marker_extension_materialization_summary(
+    *,
+    candidate_seed_rows: list[dict[str, Any]],
+    candidate_sft_rows: list[SFTDatasetRow],
+    formal_public_manifest: dict[str, Any],
+) -> dict[str, Any]:
+    formal_counts = formal_public_manifest["counts"]
+    derived_rows = sum(
+        row["provenance"]["field_label_derivation_status"]
+        == _FORM_FILL_CONFIRMATION_MARKER_EXTENSION_FIELD_LABEL_DERIVED
+        for row in candidate_seed_rows
+    )
+    family_level_rows = sum(
+        row["provenance"]["field_label_derivation_status"]
+        == _FORM_FILL_CONFIRMATION_MARKER_EXTENSION_FIELD_LABEL_NOT_DERIVABLE
+        for row in candidate_seed_rows
+    )
+    return {
+        "candidate_case_count": len(candidate_seed_rows),
+        "candidate_seed_rows": len(candidate_seed_rows),
+        "candidate_sft_rows": len(candidate_sft_rows),
+        "derived_field_label_rows": derived_rows,
+        "family_level_candidate_label_rows": family_level_rows,
+        "formal_public_sample_seed_rows": formal_counts["seed_rows"],
+        "formal_public_sample_sft_rows": formal_counts["sft_rows"],
+        "formal_public_sample_dpo_pairs": formal_counts["dpo_pairs"],
+        "formal_public_sample_modified": False,
+        "seed_traces_modified": False,
+        "recommended_next_step": "review_candidate_extension_before_any_formal_public_sample_merge",
+    }
+
+
+def materialize_form_fill_confirmation_marker_extension_candidates(
+    *,
+    extension_design_path: Path,
+    seed_output_path: Path,
+    output_dir: Path,
+) -> dict[str, Path]:
+    """Write standalone candidates from the reviewed confirmation-marker extension design."""
+
+    _reject_formal_public_sample_output_path(seed_output_path)
+    extension_design = read_json(extension_design_path)
+    formal_public_manifest = read_json(FORMAL_PUBLIC_MANIFEST_PATH)
+    source_design_ref = _safe_artifact_ref(extension_design_path)
+    candidate_seed_rows = _confirmation_marker_extension_candidate_seed_rows(
+        extension_design,
+        source_design_ref,
+    )
+    candidate_sft_rows = _confirmation_marker_extension_candidate_sft_rows(candidate_seed_rows)
+    for row in candidate_sft_rows:
+        validate_public_record(row.to_dict())
+
+    write_jsonl(seed_output_path, candidate_seed_rows)
+    materialization = {
+        "evidence_kind": "form_fill_confirmation_marker_extension_materialization",
+        "materialization_status": "candidate_dataset_materialized",
+        "source_extension_design": {
+            "path": source_design_ref,
+            "evidence_kind": extension_design["evidence_kind"],
+            "design_kind": extension_design["design_kind"],
+            "summary": extension_design["summary"],
+            "source_count_consistency": extension_design["source_count_consistency"],
+        },
+        "summary": _confirmation_marker_extension_materialization_summary(
+            candidate_seed_rows=candidate_seed_rows,
+            candidate_sft_rows=candidate_sft_rows,
+            formal_public_manifest=formal_public_manifest,
+        ),
+        "metric_authority": {
+            "contract_evaluation_ladder": "authoritative",
+            "contract_exact_match": "authoritative_strict_metric",
+            "slot_f1": "authoritative_strict_metric",
+            "slot_f1_soft": "diagnostic_only_not_primary",
+        },
+        "execution_scope": {
+            "local_public_sample_only": True,
+            "new_candidate_data_generated": True,
+            "formal_public_sample_modified": False,
+            "public_sample_modified": False,
+            "seed_traces_modified": False,
+            "sft_rows_modified": False,
+            "dpo_pairs_modified": False,
+            "training_run": False,
+            "prediction_run": False,
+            "dpo_run": False,
+            "a100_execution": False,
+            "evaluator_metric_change": False,
+            "evaluator_relaxation": False,
+            "prediction_repair": False,
+        },
+        "claims": {
+            "strict_contract_exact_match_primary_metric": True,
+            "strict_slot_f1_primary_metric": True,
+            "soft_slot_f1_primary_metric": False,
+            "semantic_equivalence_primary_metric": False,
+            "held_out_recovery_claim": False,
+            "held_out_generalization_recovered": False,
+            "model_recovery_claim": False,
+            "checkpoint_release": False,
+            "adapter_release": False,
+            "production_readiness_claim": False,
+            "private_corpus_generalization_claim": False,
+            "public_full_corpus_release_claim": False,
+            "live_browser_benchmark_claim": False,
+        },
+        "candidate_cases": [
+            {
+                "source_case_id": seed["provenance"]["source_case_id"],
+                "candidate_seed_id": seed["id"],
+                "candidate_sft_row_id": row.id,
+                "source_family_id": seed["provenance"]["source_family_id"],
+                "source_bucket": seed["provenance"]["source_bucket"],
+                "field_label_derivation_status": seed["provenance"]["field_label_derivation_status"],
+                "field_label_provenance": seed["provenance"]["field_label_provenance"],
+                "expected_confirmation_marker": seed["provenance"]["expected_confirmation_marker"],
+            }
+            for seed, row in zip(candidate_seed_rows, candidate_sft_rows, strict=True)
+        ],
+        "artifact_files": {
+            "candidate_seed": _safe_artifact_ref(seed_output_path),
+            "candidate_sft": "sft_candidate_rows.jsonl",
+            "materialization_json": "form_fill_confirmation_marker_extension_materialization.json",
+            "materialization_markdown": "form_fill_confirmation_marker_extension_materialization.md",
+            "manifest": "manifest.json",
+        },
+    }
+
+    from voice2task.reports import write_form_fill_confirmation_marker_extension_materialization_report
+
+    paths = write_form_fill_confirmation_marker_extension_materialization_report(
         materialization,
         output_dir=output_dir,
         sft_rows=[row.to_dict() for row in candidate_sft_rows],

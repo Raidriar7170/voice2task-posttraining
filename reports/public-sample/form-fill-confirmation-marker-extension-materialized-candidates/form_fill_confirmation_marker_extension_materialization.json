@@ -1,0 +1,216 @@
+{
+  "artifact_files": {
+    "candidate_seed": "data/public-samples/form_fill_confirmation_marker_extension_seed_candidates.jsonl",
+    "candidate_sft": "sft_candidate_rows.jsonl",
+    "manifest": "manifest.json",
+    "materialization_json": "form_fill_confirmation_marker_extension_materialization.json",
+    "materialization_markdown": "form_fill_confirmation_marker_extension_materialization.md"
+  },
+  "candidate_cases": [
+    {
+      "candidate_seed_id": "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-confirmation-dev-1",
+      "candidate_sft_row_id": "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-confirmation-dev-1",
+      "expected_confirmation_marker": "并确认",
+      "field_label_derivation_status": "not_derivable_from_committed_coverage_policy_artifacts",
+      "field_label_provenance": "public_safe_family_level_candidate_label_not_recovered_gold_text",
+      "source_bucket": "missing_confirmation_marker",
+      "source_case_id": "ff-confirm-marker-extension-family-confirmation-dev-1",
+      "source_family_id": "family-confirmation-dev-1"
+    },
+    {
+      "candidate_seed_id": "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-confirmation-dev-2",
+      "candidate_sft_row_id": "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-confirmation-dev-2",
+      "expected_confirmation_marker": "并确认",
+      "field_label_derivation_status": "not_derivable_from_committed_coverage_policy_artifacts",
+      "field_label_provenance": "public_safe_family_level_candidate_label_not_recovered_gold_text",
+      "source_bucket": "missing_confirmation_marker",
+      "source_case_id": "ff-confirm-marker-extension-family-confirmation-dev-2",
+      "source_family_id": "family-confirmation-dev-2"
+    },
+    {
+      "candidate_seed_id": "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-confirmation-dev-3",
+      "candidate_sft_row_id": "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-confirmation-dev-3",
+      "expected_confirmation_marker": "并确认",
+      "field_label_derivation_status": "not_derivable_from_committed_coverage_policy_artifacts",
+      "field_label_provenance": "public_safe_family_level_candidate_label_not_recovered_gold_text",
+      "source_bucket": "missing_confirmation_marker",
+      "source_case_id": "ff-confirm-marker-extension-family-confirmation-dev-3",
+      "source_family_id": "family-confirmation-dev-3"
+    },
+    {
+      "candidate_seed_id": "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-confirmation-test-1",
+      "candidate_sft_row_id": "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-confirmation-test-1",
+      "expected_confirmation_marker": "并确认",
+      "field_label_derivation_status": "not_derivable_from_committed_coverage_policy_artifacts",
+      "field_label_provenance": "public_safe_family_level_candidate_label_not_recovered_gold_text",
+      "source_bucket": "missing_confirmation_marker",
+      "source_case_id": "ff-confirm-marker-extension-family-confirmation-test-1",
+      "source_family_id": "family-confirmation-test-1"
+    },
+    {
+      "candidate_seed_id": "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-confirmation-test-2",
+      "candidate_sft_row_id": "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-confirmation-test-2",
+      "expected_confirmation_marker": "并确认",
+      "field_label_derivation_status": "not_derivable_from_committed_coverage_policy_artifacts",
+      "field_label_provenance": "public_safe_family_level_candidate_label_not_recovered_gold_text",
+      "source_bucket": "missing_confirmation_marker",
+      "source_case_id": "ff-confirm-marker-extension-family-confirmation-test-2",
+      "source_family_id": "family-confirmation-test-2"
+    },
+    {
+      "candidate_seed_id": "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-confirmation-test-3",
+      "candidate_sft_row_id": "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-confirmation-test-3",
+      "expected_confirmation_marker": "并确认",
+      "field_label_derivation_status": "not_derivable_from_committed_coverage_policy_artifacts",
+      "field_label_provenance": "public_safe_family_level_candidate_label_not_recovered_gold_text",
+      "source_bucket": "missing_confirmation_marker",
+      "source_case_id": "ff-confirm-marker-extension-family-confirmation-test-3",
+      "source_family_id": "family-confirmation-test-3"
+    },
+    {
+      "candidate_seed_id": "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-form_fill-dev-1",
+      "candidate_sft_row_id": "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-form_fill-dev-1",
+      "expected_confirmation_marker": "并确认",
+      "field_label_derivation_status": "derived_from_committed_coverage_examples",
+      "field_label_provenance": "derived_from_committed_public_artifacts",
+      "source_bucket": "missing_confirmation_marker",
+      "source_case_id": "ff-confirm-marker-extension-family-form_fill-dev-1",
+      "source_family_id": "family-form_fill-dev-1"
+    },
+    {
+      "candidate_seed_id": "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-form_fill-dev-2",
+      "candidate_sft_row_id": "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-form_fill-dev-2",
+      "expected_confirmation_marker": "并确认",
+      "field_label_derivation_status": "derived_from_committed_coverage_examples",
+      "field_label_provenance": "derived_from_committed_public_artifacts",
+      "source_bucket": "missing_confirmation_marker",
+      "source_case_id": "ff-confirm-marker-extension-family-form_fill-dev-2",
+      "source_family_id": "family-form_fill-dev-2"
+    },
+    {
+      "candidate_seed_id": "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-form_fill-dev-3",
+      "candidate_sft_row_id": "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-form_fill-dev-3",
+      "expected_confirmation_marker": "并确认",
+      "field_label_derivation_status": "derived_from_committed_coverage_examples",
+      "field_label_provenance": "derived_from_committed_public_artifacts",
+      "source_bucket": "missing_confirmation_marker",
+      "source_case_id": "ff-confirm-marker-extension-family-form_fill-dev-3",
+      "source_family_id": "family-form_fill-dev-3"
+    },
+    {
+      "candidate_seed_id": "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-form_fill-test-1",
+      "candidate_sft_row_id": "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-form_fill-test-1",
+      "expected_confirmation_marker": "并确认",
+      "field_label_derivation_status": "not_derivable_from_committed_coverage_policy_artifacts",
+      "field_label_provenance": "public_safe_family_level_candidate_label_not_recovered_gold_text",
+      "source_bucket": "missing_confirmation_marker",
+      "source_case_id": "ff-confirm-marker-extension-family-form_fill-test-1",
+      "source_family_id": "family-form_fill-test-1"
+    },
+    {
+      "candidate_seed_id": "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-form_fill-test-2",
+      "candidate_sft_row_id": "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-form_fill-test-2",
+      "expected_confirmation_marker": "并确认",
+      "field_label_derivation_status": "not_derivable_from_committed_coverage_policy_artifacts",
+      "field_label_provenance": "public_safe_family_level_candidate_label_not_recovered_gold_text",
+      "source_bucket": "missing_confirmation_marker",
+      "source_case_id": "ff-confirm-marker-extension-family-form_fill-test-2",
+      "source_family_id": "family-form_fill-test-2"
+    },
+    {
+      "candidate_seed_id": "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-form_fill-test-3",
+      "candidate_sft_row_id": "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-form_fill-test-3",
+      "expected_confirmation_marker": "并确认",
+      "field_label_derivation_status": "not_derivable_from_committed_coverage_policy_artifacts",
+      "field_label_provenance": "public_safe_family_level_candidate_label_not_recovered_gold_text",
+      "source_bucket": "missing_confirmation_marker",
+      "source_case_id": "ff-confirm-marker-extension-family-form_fill-test-3",
+      "source_family_id": "family-form_fill-test-3"
+    }
+  ],
+  "claims": {
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "held_out_generalization_recovered": false,
+    "held_out_recovery_claim": false,
+    "live_browser_benchmark_claim": false,
+    "model_recovery_claim": false,
+    "private_corpus_generalization_claim": false,
+    "production_readiness_claim": false,
+    "public_full_corpus_release_claim": false,
+    "semantic_equivalence_primary_metric": false,
+    "soft_slot_f1_primary_metric": false,
+    "strict_contract_exact_match_primary_metric": true,
+    "strict_slot_f1_primary_metric": true
+  },
+  "evidence_kind": "form_fill_confirmation_marker_extension_materialization",
+  "execution_scope": {
+    "a100_execution": false,
+    "dpo_pairs_modified": false,
+    "dpo_run": false,
+    "evaluator_metric_change": false,
+    "evaluator_relaxation": false,
+    "formal_public_sample_modified": false,
+    "local_public_sample_only": true,
+    "new_candidate_data_generated": true,
+    "prediction_repair": false,
+    "prediction_run": false,
+    "public_sample_modified": false,
+    "seed_traces_modified": false,
+    "sft_rows_modified": false,
+    "training_run": false
+  },
+  "materialization_status": "candidate_dataset_materialized",
+  "metric_authority": {
+    "contract_evaluation_ladder": "authoritative",
+    "contract_exact_match": "authoritative_strict_metric",
+    "slot_f1": "authoritative_strict_metric",
+    "slot_f1_soft": "diagnostic_only_not_primary"
+  },
+  "source_extension_design": {
+    "design_kind": "public_form_fill_confirmation_marker_coverage_extension",
+    "evidence_kind": "form_fill_confirmation_marker_coverage_extension_design",
+    "path": "reports/public-sample/form-fill-confirmation-marker-coverage-extension/form_fill_confirmation_marker_coverage_extension.json",
+    "source_count_consistency": {
+      "coverage_cluster_row_incidence_total": 27,
+      "coverage_policy_source_family_counts_match": true,
+      "coverage_residual_field_total": 27,
+      "incidence_total_matches_policy_cluster_rows": true,
+      "incidence_total_matches_policy_residual_fields": true,
+      "ok": true,
+      "policy_cluster_row_incidence_total": 27,
+      "policy_residual_field_total": 27,
+      "proposed_case_count": 12,
+      "proposed_case_count_matches_source_family_count": true,
+      "represented_source_family_count": 12,
+      "source_family_count": 12,
+      "source_family_incidence_total": 27
+    },
+    "summary": {
+      "design_decision": "extend_confirmation_marker_coverage_with_source_family_cases",
+      "field_labels_derived_count": 3,
+      "field_labels_not_derivable_count": 9,
+      "legacy_candidate_field_label_count": 3,
+      "legacy_confirmation_candidate_case_count": 3,
+      "proposed_case_count": 12,
+      "recommended_next_step": "materialize_bounded_confirmation_marker_extension_candidates_in_later_phase",
+      "represented_source_family_count": 12,
+      "represented_source_family_incidence_total": 27,
+      "source_family_count": 12,
+      "uncovered_source_family_count_after_design": 0
+    }
+  },
+  "summary": {
+    "candidate_case_count": 12,
+    "candidate_seed_rows": 12,
+    "candidate_sft_rows": 12,
+    "derived_field_label_rows": 3,
+    "family_level_candidate_label_rows": 9,
+    "formal_public_sample_dpo_pairs": 742,
+    "formal_public_sample_modified": false,
+    "formal_public_sample_seed_rows": 86,
+    "formal_public_sample_sft_rows": 240,
+    "recommended_next_step": "review_candidate_extension_before_any_formal_public_sample_merge",
+    "seed_traces_modified": false
+  }
+}
