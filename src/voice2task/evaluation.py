@@ -2202,6 +2202,208 @@ def inspect_formal_heldout_residual_clusters(
     }
 
 
+_FORM_FILL_TASK_FAMILY = "form_fill|fill_form|requires_confirmation|confirm:true|slots:field"
+
+
+def _form_fill_boundary_field_specificity_bucket(cluster: dict[str, Any]) -> tuple[str, str]:
+    field_path = str(cluster.get("field_path", "unknown"))
+    if field_path == "normalized_command":
+        return (
+            "missing_confirmation_marker",
+            "normalized_command omits or alters explicit confirmation wording such as 并确认",
+        )
+    if field_path == "slots":
+        return (
+            "field_specificity_or_alias_drift",
+            "slot field labels differ by specificity or alias while staying in form-fill shape",
+        )
+    if field_path in {"task_type", "route", "safety.reason"}:
+        return (
+            "route_intent_leakage",
+            "form-fill request is interpreted as a different intent or route boundary",
+        )
+    return (
+        "other_form_fill_boundary_residual",
+        "lower-ranked form-fill residual needing separate manual inspection",
+    )
+
+
+def inspect_form_fill_boundary_field_specificity(
+    *,
+    residual_cluster_inspection: dict[str, Any],
+) -> dict[str, Any]:
+    if residual_cluster_inspection.get("evidence_kind") != "formal_heldout_residual_cluster_inspection":
+        raise ValueError("residual cluster inspection must be formal_heldout_residual_cluster_inspection evidence")
+
+    source_evidence = (
+        residual_cluster_inspection.get("source_residual_diagnosis", {}).get("source_formal_heldout_evidence", {})
+    )
+    source_manifest_id = _sanitize_public_summary(str(source_evidence.get("dataset_manifest_id", "")))
+    clusters = [
+        cluster
+        for cluster in residual_cluster_inspection.get("residual_clusters", [])
+        if isinstance(cluster, dict) and cluster.get("task_family") == _FORM_FILL_TASK_FAMILY
+    ]
+    if not clusters:
+        raise ValueError("residual cluster inspection contains no form_fill clusters")
+
+    bucket_accumulator: dict[str, dict[str, Any]] = {}
+    for cluster in clusters:
+        bucket_name, interpretation = _form_fill_boundary_field_specificity_bucket(cluster)
+        bucket = bucket_accumulator.setdefault(
+            bucket_name,
+            {
+                "bucket": bucket_name,
+                "diagnostic_interpretation": interpretation,
+                "cluster_count": 0,
+                "cluster_row_incidence_total": 0,
+                "residual_field_total": 0,
+                "split_counts": {},
+                "field_paths": set(),
+                "categories": {},
+                "source_family_counts": {},
+                "representative_examples": [],
+                "recommended_action_candidate": "",
+            },
+        )
+        bucket["cluster_count"] += 1
+        bucket["cluster_row_incidence_total"] += int(cluster.get("residual_row_count", 0))
+        bucket["residual_field_total"] += int(cluster.get("residual_field_count", 0))
+        bucket["field_paths"].add(_sanitize_public_summary(str(cluster.get("field_path", "unknown"))))
+        category = _sanitize_public_summary(str(cluster.get("category", "unknown")))
+        bucket["categories"][category] = bucket["categories"].get(category, 0) + int(
+            cluster.get("residual_field_count", 0)
+        )
+        for split, count in cluster.get("residual_rows_by_split", {}).items():
+            split_name = _sanitize_public_summary(str(split))
+            bucket["split_counts"][split_name] = bucket["split_counts"].get(split_name, 0) + int(count)
+        for source_family, count in cluster.get("source_family_counts", {}).items():
+            family_id = _sanitize_id(str(source_family))
+            bucket["source_family_counts"][family_id] = bucket["source_family_counts"].get(family_id, 0) + int(
+                count
+            )
+        for example in cluster.get("representative_examples", []):
+            if len(bucket["representative_examples"]) >= 5 or not isinstance(example, dict):
+                continue
+            bucket["representative_examples"].append(_sanitize_public_value(example))
+
+    action_candidates = {
+        "missing_confirmation_marker": "define_form_fill_confirmation_marker_policy_before_data_or_training",
+        "field_specificity_or_alias_drift": "define_form_fill_field_specificity_policy_before_data_or_training",
+        "route_intent_leakage": "inspect_form_fill_clarify_boundary_before_data_or_training",
+        "other_form_fill_boundary_residual": "inspect_lower_ranked_form_fill_residual_before_data_or_training",
+    }
+    buckets: list[dict[str, Any]] = []
+    for bucket in bucket_accumulator.values():
+        bucket["field_paths"] = sorted(bucket["field_paths"])
+        bucket["categories"] = dict(sorted(bucket["categories"].items()))
+        bucket["split_counts"] = dict(sorted(bucket["split_counts"].items()))
+        bucket["source_family_counts"] = dict(sorted(bucket["source_family_counts"].items()))
+        bucket["recommended_action_candidate"] = action_candidates.get(
+            bucket["bucket"], "inspect_form_fill_bucket_before_data_or_training"
+        )
+        buckets.append(bucket)
+    buckets.sort(
+        key=lambda item: (
+            -int(item["cluster_row_incidence_total"]),
+            -int(item["residual_field_total"]),
+            str(item["bucket"]),
+        )
+    )
+
+    cluster_count = len(clusters)
+    bucketed_cluster_count = sum(int(bucket["cluster_count"]) for bucket in buckets)
+    residual_field_total = sum(int(cluster.get("residual_field_count", 0)) for cluster in clusters)
+    bucketed_field_total = sum(int(bucket["residual_field_total"]) for bucket in buckets)
+    cluster_row_total = sum(int(cluster.get("residual_row_count", 0)) for cluster in clusters)
+    bucketed_cluster_row_total = sum(int(bucket["cluster_row_incidence_total"]) for bucket in buckets)
+    source_count_consistency = {
+        "source_form_fill_cluster_count": cluster_count,
+        "bucketed_form_fill_cluster_count": bucketed_cluster_count,
+        "source_form_fill_cluster_row_incidence_total": cluster_row_total,
+        "bucketed_form_fill_cluster_row_incidence_total": bucketed_cluster_row_total,
+        "source_form_fill_residual_fields": residual_field_total,
+        "bucketed_form_fill_residual_fields": bucketed_field_total,
+        "ok": (
+            cluster_count == bucketed_cluster_count
+            and cluster_row_total == bucketed_cluster_row_total
+            and residual_field_total == bucketed_field_total
+        ),
+    }
+    if not source_count_consistency["ok"]:
+        raise ValueError("form-fill bucket counts do not match source clusters")
+
+    source_summary = residual_cluster_inspection.get("summary", {})
+    return {
+        "evidence_kind": "form_fill_boundary_field_specificity_inspection",
+        "diagnostic_kind": "formal_public_form_fill_boundary_field_specificity_inspection",
+        "source_residual_cluster_inspection": {
+            "evidence_kind": _sanitize_public_summary(str(residual_cluster_inspection.get("evidence_kind", ""))),
+            "diagnostic_kind": _sanitize_public_summary(
+                str(residual_cluster_inspection.get("diagnostic_kind", ""))
+            ),
+            "source_manifest_id": source_manifest_id,
+            "cluster_artifact": (
+                "reports/public-sample/formal-heldout-residual-cluster-inspection/"
+                "formal_heldout_residual_cluster_inspection.json"
+            ),
+        },
+        "summary": {
+            "strict_contract_exact_match": source_summary.get("strict_contract_exact_match", {}),
+            "strict_slot_f1": source_summary.get("strict_slot_f1", {}),
+            "soft_slot_f1": source_summary.get("soft_slot_f1", {}),
+            "soft_slot_f1_primary_metric": False,
+            "form_fill_cluster_count": cluster_count,
+            "form_fill_cluster_row_incidence_total": cluster_row_total,
+            "form_fill_residual_field_total": residual_field_total,
+            "bucket_count": len(buckets),
+            "top_bucket": buckets[0]["bucket"],
+            "recommended_next_step": (
+                "define_form_fill_confirmation_and_field_specificity_policy_before_data_or_training"
+            ),
+        },
+        "source_count_consistency": source_count_consistency,
+        "form_fill_buckets": buckets,
+        "unsupported_buckets": {
+            "harmless_strict_wording_mismatch": "not observed from current form-fill cluster-only evidence"
+        },
+        "execution_scope": {
+            "source_residual_cluster_inspection_read_as_input": True,
+            "raw_predictions_read": False,
+            "prediction_run": False,
+            "a100_job": False,
+            "training_run": False,
+            "sft_training_run": False,
+            "dpo_run": False,
+            "grpo_run": False,
+            "dataset_mutation": False,
+            "new_data_generated": False,
+            "gold_policy_change": False,
+            "prompt_change": False,
+            "evaluator_metric_change": False,
+            "evaluator_relaxation": False,
+            "semantic_equivalence_scoring": False,
+            "prediction_repair": False,
+            "prediction_replacement": False,
+            "prediction_repair_or_replacement": False,
+            "prediction_rescore": False,
+        },
+        "claims": {
+            "analysis_only": True,
+            "model_recovery_claim": False,
+            "held_out_recovery_claim": False,
+            "production_readiness_claim": False,
+            "private_corpus_generalization_claim": False,
+            "public_full_corpus_release_claim": False,
+            "live_browser_benchmark_claim": False,
+            "semantic_equivalence_primary_metric": False,
+            "soft_slot_f1_primary_metric": False,
+            "adapter_release_claim": False,
+            "checkpoint_release_claim": False,
+        },
+    }
+
+
 def select_formal_heldout_remediation_target(
     *,
     residual_diagnosis: dict[str, Any],

@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Voice2Task form-fill boundary inspection</title>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #172033; background: #f7f9fb; }
+    main { max-width: 1040px; margin: 0 auto; padding: 34px 20px 54px; }
+    h1 { margin: 0 0 10px; font-size: 29px; letter-spacing: 0; }
+    h2 { margin: 26px 0 10px; font-size: 18px; }
+    p, li { line-height: 1.68; }
+    a { color: #255aa8; }
+    code { padding: 2px 5px; border-radius: 4px; background: #e9eef5; }
+    table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #d7dfeb; }
+    th, td { padding: 10px 12px; border-bottom: 1px solid #e2e8f0; text-align: left; vertical-align: top; }
+    th { background: #ecf2f8; }
+    .summary { padding: 18px 20px; border: 1px solid #d7dfeb; border-radius: 8px; background: #fff; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin: 18px 0; }
+    .metric { padding: 15px 16px; border: 1px solid #d7dfeb; border-radius: 8px; background: #fff; }
+    .metric strong { display: block; font-size: 25px; margin-bottom: 4px; color: #0f5c64; }
+    .warn { padding: 13px 15px; border-left: 4px solid #b7791f; background: #fff8e8; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Voice2Task form-fill boundary inspection</h1>
+  <p class="summary">结论：本阶段只把 form-fill residual cluster 拆成诊断 bucket；当前 5 个 form-fill clusters 合计 49 个 cluster-row incidences / 49 个字段级 residual，最大 bucket 是 <code>missing_confirmation_marker</code>。这不是数据修复、训练、预测重跑或 held-out recovery。</p>
+
+  <h2>当前状态</h2>
+  <div class="grid">
+    <div class="metric"><strong>archived</strong>OpenSpec phase</div>
+    <div class="metric"><strong>5</strong>form-fill clusters</div>
+    <div class="metric"><strong>49</strong>cluster-row incidences</div>
+    <div class="metric"><strong>3</strong>diagnostic buckets</div>
+  </div>
+
+  <h2>本阶段做了什么</h2>
+  <ul>
+    <li>新增 deterministic inspection helper，从已提交的 residual-cluster report 派生 form-fill bucket。</li>
+    <li>新增 CLI：<code>voice2task-eval inspect-form-fill-boundary-field-specificity</code>。</li>
+    <li>生成 public-safe JSON、Markdown 和 manifest 到 <code>reports/public-sample/form-fill-boundary-field-specificity-inspection/</code>。</li>
+    <li>补充 focused tests，锁定 bucket counts、source consistency、claim boundaries 和 leak scan。</li>
+  </ul>
+
+  <h2>Bucket 摘要</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Bucket</th>
+        <th>Clusters</th>
+        <th>Incidences</th>
+        <th>Fields</th>
+        <th>解释边界</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>missing_confirmation_marker</code></td>
+        <td>1</td>
+        <td>27</td>
+        <td>27</td>
+        <td>normalized command 里显式确认语义被省略或改写，例如 gold 有“并确认”。</td>
+      </tr>
+      <tr>
+        <td><code>field_specificity_or_alias_drift</code></td>
+        <td>1</td>
+        <td>16</td>
+        <td>16</td>
+        <td>slot field 仍是 form-fill 形状，但字段粒度或别名不完全一致。</td>
+      </tr>
+      <tr>
+        <td><code>route_intent_leakage</code></td>
+        <td>3</td>
+        <td>6</td>
+        <td>6</td>
+        <td>少量样本被解释成 clarify/其他 intent 边界问题。</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>关键产物</h2>
+  <ul>
+    <li><a href="../../reports/public-sample/form-fill-boundary-field-specificity-inspection/form_fill_boundary_field_specificity_inspection.md">form-fill inspection Markdown</a></li>
+    <li><a href="../../reports/public-sample/form-fill-boundary-field-specificity-inspection/form_fill_boundary_field_specificity_inspection.json">form-fill inspection JSON</a></li>
+    <li><a href="../../reports/public-sample/form-fill-boundary-field-specificity-inspection/manifest.json">form-fill inspection manifest</a></li>
+    <li><a href="../../openspec/changes/inspect-form-fill-boundary-field-specificity/proposal.md">OpenSpec proposal</a></li>
+    <li><a href="../../openspec/changes/inspect-form-fill-boundary-field-specificity/tasks.md">OpenSpec tasks</a></li>
+  </ul>
+
+  <h2>验证状态</h2>
+  <ul>
+    <li><code>PYTHONPATH=src python3 -m pytest -q tests/test_form_fill_boundary_field_specificity_inspection.py</code>：3 passed。</li>
+    <li><code>PYTHONPATH=src python3 -m pytest -q tests/test_form_fill_boundary_field_specificity_inspection.py tests/test_formal_heldout_residual_cluster_inspection.py</code>：6 passed。</li>
+    <li><code>PYTHONPATH=src python3 -m pytest -q</code>：338 passed。</li>
+    <li><code>ruff check src/ scripts/ tests/</code>：All checks passed。</li>
+    <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：4 passed, 0 failed。</li>
+    <li><code>voice2task.leak_scan.scan_paths(...)</code>：ok，0 findings；扫描范围覆盖 form-fill inspection report、Human Brief 和 archived OpenSpec change。</li>
+    <li><code>git diff --check</code>：通过，无 whitespace errors。</li>
+  </ul>
+
+  <h2>边界与不要夸大的 claim</h2>
+  <div class="warn">
+    本阶段没有 prediction run、没有 A100 job、没有 SFT 训练、没有 DPO、没有 GRPO、没有新增数据、没有 prompt/gold policy/evaluator metric 变更，也没有模型恢复、生产可用或 private-corpus 泛化声明。<code>slot_f1_soft</code> 仍只是 internal diagnostic，strict <code>contract_exact_match</code> 仍是主证据边界。
+  </div>
+
+  <h2>项目阶段进度</h2>
+  <p>当前项目阶段目标在仓库中仍未显式定义。本阶段推进的是 evidence repository 的 form-fill residual 可解释性：把 top residual cluster 转成可审查的 bucket，为后续是否定义 form-fill confirmation/field-specificity policy 提供依据。</p>
+
+  <h2>推荐下一步</h2>
+  <p>归档后继续一个很小的新阶段：定义 form-fill confirmation marker 和 field-specificity 的标注/评价边界；只有该边界明确后，才考虑另开数据或训练 proposal。</p>
+</main>
+</body>
+</html>

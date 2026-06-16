@@ -2122,6 +2122,152 @@ def write_formal_heldout_residual_cluster_inspection_report(
     return {"json": json_path, "markdown": markdown_path, "manifest": manifest_path}
 
 
+def write_form_fill_boundary_field_specificity_report(
+    inspection: dict[str, Any],
+    output_dir: Path,
+    title: str = "Voice2Task form-fill boundary and field-specificity inspection",
+) -> dict[str, Path]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    json_path = output_dir / "form_fill_boundary_field_specificity_inspection.json"
+    markdown_path = output_dir / "form_fill_boundary_field_specificity_inspection.md"
+    manifest_path = output_dir / "manifest.json"
+    safe_inspection = _sanitize_report_value(inspection)
+    write_json(json_path, safe_inspection)
+
+    manifest = {
+        "evidence_kind": safe_inspection["evidence_kind"],
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "source_residual_cluster_inspection": safe_inspection["source_residual_cluster_inspection"],
+        "summary": safe_inspection["summary"],
+        "source_count_consistency": safe_inspection["source_count_consistency"],
+        "claims": safe_inspection["claims"],
+        "artifact_policy": {
+            "raw_predictions_copied_to_git": False,
+            "raw_logs_copied_to_git": False,
+            "checkpoints_or_adapters_copied_to_git": False,
+            "private_overrides_copied_to_git": False,
+            "private_paths_omitted": True,
+            "host_details_omitted": True,
+            "ssh_details_omitted": True,
+            "private_corpus_rows_omitted": True,
+            "prediction_run": False,
+            "a100_job": False,
+            "prediction_repair": False,
+            "prediction_replacement": False,
+            "prediction_repair_or_replacement": False,
+            "prediction_rescore": False,
+            "evaluator_metric_change": False,
+            "evaluator_relaxation": False,
+            "semantic_equivalence_primary_metric": False,
+            "semantic_equivalence_scoring": False,
+            "data_generation": False,
+            "dataset_mutation": False,
+            "training_run": False,
+            "sft_training_run": False,
+            "dpo_run": False,
+            "grpo_run": False,
+        },
+        "diagnostic_artifacts": {
+            "inspection": (
+                "reports/public-sample/form-fill-boundary-field-specificity-inspection/"
+                "form_fill_boundary_field_specificity_inspection.json"
+            ),
+            "markdown": (
+                "reports/public-sample/form-fill-boundary-field-specificity-inspection/"
+                "form_fill_boundary_field_specificity_inspection.md"
+            ),
+            "manifest": "reports/public-sample/form-fill-boundary-field-specificity-inspection/manifest.json",
+        },
+    }
+    write_json(manifest_path, manifest)
+
+    summary = safe_inspection["summary"]
+    source = safe_inspection["source_residual_cluster_inspection"]
+    lines = [
+        f"# {title}",
+        "",
+        (
+            "This is an analysis-only form-fill boundary and field-specificity inspection derived from "
+            "committed formal public held-out residual-cluster evidence. It is not a prediction run, "
+            "not training, not data mutation, not held-out recovery, and not evaluator relaxation."
+        ),
+        "",
+        "## Boundary",
+        "",
+        "- strict `contract_exact_match` remains primary.",
+        "- Strict `slot_f1` remains authoritative for slot scoring.",
+        "- `slot_f1_soft` remains internal diagnostic-only.",
+        "- Predictions are not repaired, replaced, rewritten, normalized, or re-scored.",
+        "- This report does not authorize data, training, prompt, or evaluator changes.",
+        "",
+        "## Summary",
+        "",
+        f"- Source manifest id: `{source['source_manifest_id']}`",
+        f"- Source cluster artifact: `{source['cluster_artifact']}`",
+        f"- Strict exact match: `{summary['strict_contract_exact_match']}`",
+        f"- Strict slot F1: `{summary['strict_slot_f1']}`",
+        f"- Soft slot F1: `{summary['soft_slot_f1']}`",
+        f"- Soft slot F1 primary metric: `{summary['soft_slot_f1_primary_metric']}`",
+        f"- Form-fill clusters: `{summary['form_fill_cluster_count']}`",
+        f"- Form-fill cluster-row incidence total: `{summary['form_fill_cluster_row_incidence_total']}`",
+        f"- Form-fill residual fields: `{summary['form_fill_residual_field_total']}`",
+        f"- Buckets: `{summary['bucket_count']}`",
+        f"- Top bucket: `{summary['top_bucket']}`",
+        f"- Source count consistency: `{safe_inspection['source_count_consistency']}`",
+        f"- Recommended next step: `{summary['recommended_next_step']}`",
+        "",
+        "## Buckets",
+        "",
+    ]
+    for bucket in safe_inspection.get("form_fill_buckets", []):
+        lines.extend(
+            [
+                f"### `{bucket['bucket']}`",
+                "",
+                f"- Diagnostic interpretation: {bucket['diagnostic_interpretation']}",
+                f"- Clusters: `{bucket['cluster_count']}`",
+                f"- Cluster-row incidence total: `{bucket['cluster_row_incidence_total']}`",
+                f"- Residual fields: `{bucket['residual_field_total']}`",
+                f"- Split counts: `{bucket['split_counts']}`",
+                f"- Field paths: `{bucket['field_paths']}`",
+                f"- Categories: `{bucket['categories']}`",
+                f"- Source family counts: `{bucket['source_family_counts']}`",
+                f"- Recommended action candidate: `{bucket['recommended_action_candidate']}`",
+                "",
+                "Representative examples:",
+                "",
+            ]
+        )
+        for example in bucket.get("representative_examples", []):
+            lines.append(
+                "- "
+                f"`{example['split']} / {example['row_id']} / {example['field_path']}`: "
+                f"gold {example['gold_value_summary']}; prediction {example['predicted_value_summary']}"
+            )
+        lines.append("")
+    lines.extend(
+        [
+            "## Unsupported Buckets",
+            "",
+        ]
+    )
+    for bucket_name, reason in safe_inspection.get("unsupported_buckets", {}).items():
+        lines.append(f"- `{bucket_name}`: {reason}")
+    lines.extend(
+        [
+            "",
+            "## Recommended Next Step",
+            "",
+            (
+                "Use this inspection to define a bounded form-fill confirmation and field-specificity policy "
+                "before any data, prompt, training, or evaluator change."
+            ),
+        ]
+    )
+    markdown_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    return {"json": json_path, "markdown": markdown_path, "manifest": manifest_path}
+
+
 def write_formal_heldout_remediation_target_selection_report(
     selection: dict[str, Any],
     output_dir: Path,

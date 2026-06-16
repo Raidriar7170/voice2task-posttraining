@@ -1,0 +1,84 @@
+{
+  "artifact_policy": {
+    "a100_job": false,
+    "checkpoints_or_adapters_copied_to_git": false,
+    "data_generation": false,
+    "dataset_mutation": false,
+    "dpo_run": false,
+    "evaluator_metric_change": false,
+    "evaluator_relaxation": false,
+    "grpo_run": false,
+    "host_details_omitted": true,
+    "prediction_repair": false,
+    "prediction_repair_or_replacement": false,
+    "prediction_replacement": false,
+    "prediction_rescore": false,
+    "prediction_run": false,
+    "private_corpus_rows_omitted": true,
+    "private_overrides_copied_to_git": false,
+    "private_paths_omitted": true,
+    "raw_logs_copied_to_git": false,
+    "raw_predictions_copied_to_git": false,
+    "semantic_equivalence_primary_metric": false,
+    "semantic_equivalence_scoring": false,
+    "sft_training_run": false,
+    "ssh_details_omitted": true,
+    "training_run": false
+  },
+  "claims": {
+    "adapter_release_claim": false,
+    "analysis_only": true,
+    "checkpoint_release_claim": false,
+    "held_out_recovery_claim": false,
+    "live_browser_benchmark_claim": false,
+    "model_recovery_claim": false,
+    "private_corpus_generalization_claim": false,
+    "production_readiness_claim": false,
+    "public_full_corpus_release_claim": false,
+    "semantic_equivalence_primary_metric": false,
+    "soft_slot_f1_primary_metric": false
+  },
+  "diagnostic_artifacts": {
+    "inspection": "reports/public-sample/form-fill-boundary-field-specificity-inspection/form_fill_boundary_field_specificity_inspection.json",
+    "manifest": "reports/public-sample/form-fill-boundary-field-specificity-inspection/manifest.json",
+    "markdown": "reports/public-sample/form-fill-boundary-field-specificity-inspection/form_fill_boundary_field_specificity_inspection.md"
+  },
+  "evidence_kind": "form_fill_boundary_field_specificity_inspection",
+  "generated_at": "2026-06-16T04:10:56.604462+00:00",
+  "source_count_consistency": {
+    "bucketed_form_fill_cluster_count": 5,
+    "bucketed_form_fill_cluster_row_incidence_total": 49,
+    "bucketed_form_fill_residual_fields": 49,
+    "ok": true,
+    "source_form_fill_cluster_count": 5,
+    "source_form_fill_cluster_row_incidence_total": 49,
+    "source_form_fill_residual_fields": 49
+  },
+  "source_residual_cluster_inspection": {
+    "cluster_artifact": "reports/public-sample/formal-heldout-residual-cluster-inspection/formal_heldout_residual_cluster_inspection.json",
+    "diagnostic_kind": "formal_public_heldout_residual_cluster_inspection",
+    "evidence_kind": "formal_heldout_residual_cluster_inspection",
+    "source_manifest_id": "public-sample-20260616T022151Z"
+  },
+  "summary": {
+    "bucket_count": 3,
+    "form_fill_cluster_count": 5,
+    "form_fill_cluster_row_incidence_total": 49,
+    "form_fill_residual_field_total": 49,
+    "recommended_next_step": "define_form_fill_confirmation_and_field_specificity_policy_before_data_or_training",
+    "soft_slot_f1": {
+      "dev": 0.7315387631291138,
+      "test": 0.7609315000619348
+    },
+    "soft_slot_f1_primary_metric": false,
+    "strict_contract_exact_match": {
+      "dev": 0.30434782608695654,
+      "test": 0.2898550724637681
+    },
+    "strict_slot_f1": {
+      "dev": 0.391304347826087,
+      "test": 0.5072463768115942
+    },
+    "top_bucket": "missing_confirmation_marker"
+  }
+}

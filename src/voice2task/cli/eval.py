@@ -19,6 +19,7 @@ from voice2task.evaluation import (
     diagnose_source_alignment,
     diagnose_targeted_slot_value_residuals,
     evaluate_predictions,
+    inspect_form_fill_boundary_field_specificity,
     inspect_formal_heldout_residual_clusters,
     load_predictions,
     load_sft_rows,
@@ -32,6 +33,7 @@ from voice2task.io import read_json, read_jsonl
 from voice2task.reports import (
     write_alignment_diagnostics_report,
     write_constrained_decoding_diagnosis_report,
+    write_form_fill_boundary_field_specificity_report,
     write_form_fill_remediation_case_design_report,
     write_form_fill_remediation_plan_report,
     write_formal_heldout_remediation_target_selection_report,
@@ -226,6 +228,14 @@ def build_parser() -> argparse.ArgumentParser:
     inspect_formal_clusters.add_argument(
         "--title",
         default="Voice2Task formal held-out residual cluster inspection",
+    )
+
+    inspect_form_fill = subcommands.add_parser("inspect-form-fill-boundary-field-specificity")
+    inspect_form_fill.add_argument("--residual-clusters", type=Path, required=True)
+    inspect_form_fill.add_argument("--output", type=Path, required=True)
+    inspect_form_fill.add_argument(
+        "--title",
+        default="Voice2Task form-fill boundary and field-specificity inspection",
     )
 
     form_fill_plan = subcommands.add_parser("diagnose-form-fill-remediation-plan")
@@ -451,6 +461,17 @@ def main(argv: list[str] | None = None) -> int:
             residual_diagnosis=read_json(args.residual_diagnosis),
         )
         paths = write_formal_heldout_residual_cluster_inspection_report(
+            inspection,
+            output_dir=args.output,
+            title=args.title,
+        )
+        print(json.dumps({"ok": True, "paths": {key: value.as_posix() for key, value in paths.items()}}, indent=2))
+        return 0
+    if args.command == "inspect-form-fill-boundary-field-specificity":
+        inspection = inspect_form_fill_boundary_field_specificity(
+            residual_cluster_inspection=read_json(args.residual_clusters),
+        )
+        paths = write_form_fill_boundary_field_specificity_report(
             inspection,
             output_dir=args.output,
             title=args.title,
