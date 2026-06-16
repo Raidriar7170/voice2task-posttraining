@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Opsx Auto Loop Closeout</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 32px; color: #17202a; line-height: 1.55; }
+    main { max-width: 980px; margin: 0 auto; }
+    h1 { font-size: 28px; margin-bottom: 8px; }
+    h2 { font-size: 18px; margin-top: 28px; border-bottom: 1px solid #d8dee4; padding-bottom: 6px; }
+    .status { display: inline-block; padding: 4px 10px; border-radius: 999px; background: #fff4ce; color: #663c00; font-weight: 650; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+    .card { border: 1px solid #d8dee4; border-radius: 8px; padding: 14px 16px; background: #f8fafc; }
+    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+    th, td { border: 1px solid #d8dee4; padding: 8px 10px; text-align: left; vertical-align: top; }
+    th { background: #f1f5f9; }
+    code { background: #eef2f7; padding: 1px 4px; border-radius: 4px; }
+    a { color: #0969da; }
+    ul { padding-left: 22px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Opsx auto loop closeout</h1>
+  <p><span class="status">blocked before publish / A100 retry</span></p>
+  <p><strong>一句话结论：</strong>本轮自动阶段完成并归档了 post-confirmation-marker-merge formal held-out prediction change；由于 A100 SSH 连接超时，证据以 fail-closed blocked 形式落盘，没有生成模型指标，也没有发布到远端。</p>
+
+  <h2>End condition</h2>
+  <p><code>End condition: hard_stop_2_secrets_accounts_publish_pr_force_or_private_infra - Push would publish new public evidence, and retrying prediction requires A100 remote access that timed out; user confirmation or external-state recovery is required.</code></p>
+  <p><code>Next action executed: no</code> - blocked by <code>hard_stop_2_secrets_accounts_publish_pr_force_or_private_infra</code>.</p>
+
+  <h2>完成的阶段</h2>
+  <ul>
+    <li>Applied and archived <code>run-formal-heldout-prediction-after-confirmation-marker-merge</code>.</li>
+    <li>Synced the delta requirement into <code>openspec/specs/contract-evaluation/spec.md</code>.</li>
+    <li>Generated blocked evidence under <code>reports/public-sample/a100-formal-public-heldout-prediction-after-confirmation-marker-merge/</code>.</li>
+    <li>Generated phase Human Brief: <a href="./2026-06-16-run-formal-heldout-prediction-after-confirmation-marker-merge.html">2026-06-16-run-formal-heldout-prediction-after-confirmation-marker-merge.html</a>.</li>
+    <li>Committed local integration as <code>acea58a</code>; push was skipped.</li>
+  </ul>
+
+  <h2>CONTEXT.md 目标矩阵</h2>
+  <table>
+    <thead><tr><th>目标</th><th>当前证据</th><th>状态</th><th>剩余缺口</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Chinese speech/ASR to safe schema-valid browser task contracts</td>
+        <td>Pipeline, schema, strict evaluator, public manifests, and prior formal held-out evidence exist.</td>
+        <td>部分关闭</td>
+        <td>当前 phase 因 A100 SSH timeout 未产生新 dev/test predictions。</td>
+      </tr>
+      <tr>
+        <td>Post-training companion repo, not browser runtime</td>
+        <td>OpenSpec archive and README boundaries keep runtime, private data, adapters, and production claims out of scope.</td>
+        <td>关闭</td>
+        <td>无当前缺口。</td>
+      </tr>
+      <tr>
+        <td>Contract evaluation ladder: schema, route, safety, confirmation, slots, execution smoke</td>
+        <td>Strict metrics remain authoritative; blocked evidence does not fabricate metrics.</td>
+        <td>部分关闭</td>
+        <td>需要 A100 恢复后重新跑 prediction-only 才能更新当前 manifest 的 observed metrics。</td>
+      </tr>
+      <tr>
+        <td>Public-safe samples and evidence instead of private corpus release</td>
+        <td>Leak scans pass; artifacts omit private paths, host details, adapters, checkpoints, raw logs, and private rows.</td>
+        <td>关闭</td>
+        <td>Push/publication 需要用户确认。</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>项目阶段进度</h2>
+  <div class="grid">
+    <div class="card"><strong>Current target</strong><br><code>not explicitly defined</code>; current practical target is evidence-first public sample evaluation.</div>
+    <div class="card"><strong>This loop advanced</strong><br>Locked the current manifest boundary and recorded fail-closed A100 unavailability.</div>
+    <div class="card"><strong>Remaining gap</strong><br>Need A100 connectivity before current-manifest dev/test observed metrics can be produced.</div>
+    <div class="card"><strong>Next bounded plan</strong><br>After remote access is restored, open or run a small prediction-only retry phase; otherwise keep status as blocked.</div>
+  </div>
+
+  <h2>验证命令</h2>
+  <ul>
+    <li><code>PYTHONPATH=src python -m pytest -q tests/test_formal_public_heldout_prediction.py</code> - 6 passed。</li>
+    <li><code>PYTHONPATH=src python -m pytest -q</code> - 376 passed。</li>
+    <li><code>ruff check .</code> - pass。</li>
+    <li><code>PYTHONPATH=src python -m voice2task.cli.data validate ... --public</code> - ok，252 SFT rows / 850 DPO pairs。</li>
+    <li><code>PYTHONPATH=src python -m voice2task.cli.data dpo-check --dpo data/public-samples/dpo_public_sample.jsonl</code> - ok，850 pairs。</li>
+    <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code> - 4 passed after archive。</li>
+    <li><code>voice2task-report leak-scan</code> - ok，0 findings。</li>
+    <li><code>git diff --check</code> - pass。</li>
+  </ul>
+
+  <h2>关键证据</h2>
+  <ul>
+    <li><a href="../../reports/public-sample/a100-formal-public-heldout-prediction-after-confirmation-marker-merge/report.md">Blocked evidence report</a></li>
+    <li><a href="../../reports/public-sample/a100-formal-public-heldout-prediction-after-confirmation-marker-merge/formal_public_heldout_prediction.json">Machine-readable evidence</a></li>
+    <li><a href="../../reports/public-sample/a100-formal-public-heldout-prediction-after-confirmation-marker-merge/post_archive_leak_scan_result.json">Post-archive leak scan</a></li>
+    <li><a href="../../openspec/changes/archive/2026-06-16-run-formal-heldout-prediction-after-confirmation-marker-merge/tasks.md">Archived OpenSpec tasks</a></li>
+  </ul>
+
+  <h2>不要过度声称</h2>
+  <ul>
+    <li>没有 SFT/DPO/GRPO 训练。</li>
+    <li>没有当前 manifest 的 dev/test model-quality metrics。</li>
+    <li>不能声称 held-out recovery、model recovery、production readiness、private-corpus generalization、live-browser benchmark improvement 或 adapter/checkpoint release。</li>
+  </ul>
+</main>
+</body>
+</html>

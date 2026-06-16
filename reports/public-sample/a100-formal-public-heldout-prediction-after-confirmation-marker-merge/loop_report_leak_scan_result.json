@@ -1,0 +1,9 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-16T11:41:05.190042+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "docs/human-briefs/2026-06-16-autonomous-loop-run-formal-heldout-prediction-after-confirmation-marker-merge.html"
+  ]
+}
