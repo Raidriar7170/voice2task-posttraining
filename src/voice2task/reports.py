@@ -2268,6 +2268,140 @@ def write_form_fill_boundary_field_specificity_report(
     return {"json": json_path, "markdown": markdown_path, "manifest": manifest_path}
 
 
+def write_form_fill_confirmation_field_policy_report(
+    policy: dict[str, Any],
+    output_dir: Path,
+    title: str = "Voice2Task form-fill confirmation and field-specificity policy",
+) -> dict[str, Path]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    json_path = output_dir / "form_fill_confirmation_field_policy.json"
+    markdown_path = output_dir / "form_fill_confirmation_field_policy.md"
+    manifest_path = output_dir / "manifest.json"
+    safe_policy = _sanitize_report_value(policy)
+    write_json(json_path, safe_policy)
+
+    manifest = {
+        "evidence_kind": safe_policy["evidence_kind"],
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "source_form_fill_inspection": safe_policy["source_form_fill_inspection"],
+        "summary": safe_policy["summary"],
+        "source_count_consistency": safe_policy["source_count_consistency"],
+        "metric_authority": safe_policy["metric_authority"],
+        "claims": safe_policy["claims"],
+        "artifact_policy": {
+            "raw_predictions_copied_to_git": False,
+            "raw_logs_copied_to_git": False,
+            "checkpoints_or_adapters_copied_to_git": False,
+            "private_overrides_copied_to_git": False,
+            "private_paths_omitted": True,
+            "host_details_omitted": True,
+            "ssh_details_omitted": True,
+            "private_corpus_rows_omitted": True,
+            "prediction_run": False,
+            "a100_job": False,
+            "prediction_repair": False,
+            "prediction_replacement": False,
+            "prediction_repair_or_replacement": False,
+            "prediction_rescore": False,
+            "evaluator_metric_change": False,
+            "evaluator_relaxation": False,
+            "soft_metric_promotion": False,
+            "semantic_equivalence_primary_metric": False,
+            "semantic_equivalence_scoring": False,
+            "data_generation": False,
+            "data_mutation": False,
+            "dataset_mutation": False,
+            "candidate_generation": False,
+            "gold_policy_change": False,
+            "prompt_change": False,
+            "training_run": False,
+            "sft_training_run": False,
+            "dpo_run": False,
+            "grpo_run": False,
+        },
+        "diagnostic_artifacts": {
+            "policy": (
+                "reports/public-sample/form-fill-confirmation-field-policy/"
+                "form_fill_confirmation_field_policy.json"
+            ),
+            "markdown": (
+                "reports/public-sample/form-fill-confirmation-field-policy/"
+                "form_fill_confirmation_field_policy.md"
+            ),
+            "manifest": "reports/public-sample/form-fill-confirmation-field-policy/manifest.json",
+        },
+    }
+    write_json(manifest_path, manifest)
+
+    summary = safe_policy["summary"]
+    source = safe_policy["source_form_fill_inspection"]
+    lines = [
+        f"# {title}",
+        "",
+        (
+            "This is a policy-only form-fill confirmation and field-specificity artifact derived from "
+            "the committed public form-fill inspection. It does not repair, replace, normalize, or "
+            "re-score predictions."
+        ),
+        "",
+        "## Boundary",
+        "",
+        "- strict `contract_exact_match` and strict `slot_f1` remain authoritative.",
+        "- `slot_f1_soft` remains diagnostic-only.",
+        "- The contract evaluation ladder remains authoritative.",
+        "- No prediction run, A100 job, dataset mutation, prompt change, or training occurred.",
+        "- Any data, prompt, gold policy, evaluator, prediction, checkpoint, adapter, or training change "
+        "requires a separate OpenSpec phase.",
+        "",
+        "## Summary",
+        "",
+        f"- Source manifest id: `{source['source_manifest_id']}`",
+        f"- Source inspection artifact: `{source['inspection_artifact']}`",
+        f"- Source bucket count: `{summary['source_bucket_count']}`",
+        f"- Policy sections: `{summary['policy_section_count']}`",
+        f"- cluster-row incidence total: `{summary['cluster_row_incidence_total']}`",
+        f"- Residual fields: `{summary['residual_field_total']}`",
+        f"- Strict exact match: `{summary['strict_contract_exact_match']}`",
+        f"- Strict slot F1: `{summary['strict_slot_f1']}`",
+        f"- Soft slot F1 diagnostic: `{summary['slot_f1_soft']}`",
+        f"- Soft slot F1 primary metric: `{summary['slot_f1_soft_primary_metric']}`",
+        f"- Source count consistency: `{safe_policy['source_count_consistency']}`",
+        f"- Recommended next step: `{summary['recommended_next_step']}`",
+        "",
+        "## Policy Sections",
+        "",
+    ]
+    for section in safe_policy.get("policy_sections", []):
+        evidence = section["source_evidence"]
+        lines.extend(
+            [
+                f"### {section['label']}",
+                "",
+                f"- Source bucket: `{section['source_bucket']}`",
+                f"- Policy statement: {section['policy_statement']}",
+                f"- Clusters: `{evidence['cluster_count']}`",
+                f"- cluster-row incidence total: `{evidence['cluster_row_incidence_total']}`",
+                f"- Residual fields: `{evidence['residual_field_total']}`",
+                f"- Split counts: `{evidence['split_counts']}`",
+                f"- Field paths: `{evidence['field_paths']}`",
+                f"- Source family counts: `{evidence['source_family_counts']}`",
+                f"- Candidate next action: `{section['candidate_next_action']}`",
+                f"- Separate OpenSpec required: `{section['requires_separate_openspec_change_before_execution']}`",
+                "",
+            ]
+        )
+
+    lines.extend(["## Unsupported Changes", ""])
+    for entry in safe_policy.get("unsupported_changes", []):
+        lines.append(f"- `{entry['change']}`: {entry['reason']}")
+    lines.extend(["", "## Candidate Next Actions", ""])
+    for action in safe_policy.get("candidate_next_actions", []):
+        lines.append(f"- `{action}`")
+
+    markdown_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    return {"json": json_path, "markdown": markdown_path, "manifest": manifest_path}
+
+
 def write_formal_heldout_remediation_target_selection_report(
     selection: dict[str, Any],
     output_dir: Path,

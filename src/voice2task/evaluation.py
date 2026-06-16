@@ -2404,6 +2404,210 @@ def inspect_form_fill_boundary_field_specificity(
     }
 
 
+def _policy_section_from_form_fill_bucket(
+    bucket: dict[str, Any],
+    *,
+    section: str,
+    label: str,
+    policy_statement: str,
+    candidate_next_action: str,
+) -> dict[str, Any]:
+    return {
+        "section": section,
+        "label": label,
+        "source_bucket": _sanitize_public_summary(str(bucket.get("bucket", ""))),
+        "policy_statement": policy_statement,
+        "source_evidence": {
+            "cluster_count": int(bucket.get("cluster_count", 0)),
+            "cluster_row_incidence_total": int(bucket.get("cluster_row_incidence_total", 0)),
+            "residual_field_total": int(bucket.get("residual_field_total", 0)),
+            "split_counts": _sanitize_public_value(bucket.get("split_counts", {})),
+            "field_paths": _sanitize_public_value(bucket.get("field_paths", [])),
+            "categories": _sanitize_public_value(bucket.get("categories", {})),
+            "source_family_counts": _sanitize_public_value(bucket.get("source_family_counts", {})),
+            "representative_examples": _sanitize_public_value(bucket.get("representative_examples", [])),
+        },
+        "candidate_next_action": candidate_next_action,
+        "requires_separate_openspec_change_before_execution": True,
+    }
+
+
+def define_form_fill_confirmation_field_policy(
+    form_fill_inspection: dict[str, Any],
+    *,
+    inspection_artifact: str | None = None,
+) -> dict[str, Any]:
+    if form_fill_inspection.get("evidence_kind") != "form_fill_boundary_field_specificity_inspection":
+        raise ValueError("form-fill inspection must be form_fill_boundary_field_specificity_inspection evidence")
+
+    source = form_fill_inspection.get("source_residual_cluster_inspection", {})
+    source_summary = form_fill_inspection.get("summary", {})
+    buckets = {
+        str(bucket.get("bucket")): bucket
+        for bucket in form_fill_inspection.get("form_fill_buckets", [])
+        if isinstance(bucket, dict)
+    }
+    required_buckets = (
+        "missing_confirmation_marker",
+        "field_specificity_or_alias_drift",
+        "route_intent_leakage",
+    )
+    missing_buckets = [bucket for bucket in required_buckets if bucket not in buckets]
+    if missing_buckets:
+        raise ValueError("form-fill inspection missing required bucket(s): " + ", ".join(missing_buckets))
+
+    policy_sections = [
+        _policy_section_from_form_fill_bucket(
+            buckets["missing_confirmation_marker"],
+            section="confirmation_markers",
+            label="Confirmation markers",
+            policy_statement=(
+                "Future form-fill remediation should preserve explicit user confirmation wording in "
+                "normalized_command when the source command asks to submit or confirm a filled form."
+            ),
+            candidate_next_action=(
+                "propose_bounded_confirmation_marker_data_or_prompt_remediation_after_policy_review"
+            ),
+        ),
+        _policy_section_from_form_fill_bucket(
+            buckets["field_specificity_or_alias_drift"],
+            section="field_specificity_or_alias_drift",
+            label="Field specificity or alias drift",
+            policy_statement=(
+                "Future remediation should decide field-label canonicalization and alias boundaries before "
+                "adding examples or changing prompt wording for slots."
+            ),
+            candidate_next_action=(
+                "propose_bounded_field_specificity_or_alias_policy_remediation_after_policy_review"
+            ),
+        ),
+        _policy_section_from_form_fill_bucket(
+            buckets["route_intent_leakage"],
+            section="route_intent_leakage",
+            label="Route or intent boundary leakage",
+            policy_statement=(
+                "Future remediation should keep form-fill route and intent boundaries separate from search, "
+                "clarification, and safety-stop behavior unless a later OpenSpec phase changes that contract."
+            ),
+            candidate_next_action="inspect_route_intent_boundary_before_any_remediation",
+        ),
+    ]
+
+    source_count_consistency = _sanitize_public_value(form_fill_inspection.get("source_count_consistency", {}))
+    if isinstance(source_count_consistency, dict) and not bool(source_count_consistency.get("ok", False)):
+        raise ValueError("form-fill inspection source count consistency is not ok")
+
+    unsupported_changes = [
+        {
+            "change": "evaluator_relaxation",
+            "reason": "strict contract_exact_match and strict slot_f1 remain authoritative",
+        },
+        {
+            "change": "soft_metric_promotion",
+            "reason": "slot_f1_soft remains diagnostic-only and is not promoted to a primary metric",
+        },
+        {
+            "change": "data_mutation",
+            "reason": "policy definition does not add, delete, rewrite, or regenerate dataset rows",
+        },
+        {
+            "change": "training_run",
+            "reason": "policy definition does not run SFT, DPO, GRPO, or any A100 job",
+        },
+        {
+            "change": "prediction_repair",
+            "reason": "policy definition does not repair, replace, normalize, or re-score predictions",
+        },
+        {
+            "change": "prompt_change",
+            "reason": "prompt or formatting changes require a separate approved OpenSpec phase",
+        },
+        {
+            "change": "gold_policy_mutation",
+            "reason": "gold contract policy changes require a separate approved OpenSpec phase",
+        },
+    ]
+
+    return {
+        "evidence_kind": "form_fill_confirmation_field_policy",
+        "policy_kind": "public_form_fill_confirmation_and_field_specificity_policy",
+        "source_form_fill_inspection": {
+            "evidence_kind": _sanitize_public_summary(str(form_fill_inspection.get("evidence_kind", ""))),
+            "diagnostic_kind": _sanitize_public_summary(str(form_fill_inspection.get("diagnostic_kind", ""))),
+            "source_manifest_id": _sanitize_public_summary(str(source.get("source_manifest_id", ""))),
+            "inspection_artifact": _sanitize_public_summary(
+                inspection_artifact
+                or (
+                    "reports/public-sample/form-fill-boundary-field-specificity-inspection/"
+                    "form_fill_boundary_field_specificity_inspection.json"
+                )
+            ),
+            "source_cluster_artifact": _sanitize_public_summary(str(source.get("cluster_artifact", ""))),
+        },
+        "summary": {
+            "strict_contract_exact_match": _sanitize_public_value(
+                source_summary.get("strict_contract_exact_match", {})
+            ),
+            "strict_slot_f1": _sanitize_public_value(source_summary.get("strict_slot_f1", {})),
+            "slot_f1_soft": _sanitize_public_value(source_summary.get("soft_slot_f1", {})),
+            "slot_f1_soft_primary_metric": False,
+            "source_bucket_count": int(source_summary.get("bucket_count", len(buckets))),
+            "policy_section_count": len(policy_sections),
+            "cluster_row_incidence_total": int(source_summary.get("form_fill_cluster_row_incidence_total", 0)),
+            "residual_field_total": int(source_summary.get("form_fill_residual_field_total", 0)),
+            "recommended_next_step": "open_separate_policy_remediation_phase_after_review",
+        },
+        "metric_authority": {
+            "contract_exact_match": "authoritative_strict_metric",
+            "slot_f1": "authoritative_strict_metric",
+            "slot_f1_soft": "diagnostic_only_not_primary",
+            "contract_evaluation_ladder": "authoritative",
+            "prediction_repair_or_rescore": False,
+        },
+        "source_count_consistency": source_count_consistency,
+        "policy_sections": policy_sections,
+        "unsupported_changes": unsupported_changes,
+        "candidate_next_actions": [
+            section["candidate_next_action"] for section in policy_sections
+        ],
+        "execution_scope": {
+            "form_fill_inspection_read_as_input": True,
+            "raw_predictions_read": False,
+            "prediction_run": False,
+            "a100_job": False,
+            "training_run": False,
+            "sft_training_run": False,
+            "dpo_run": False,
+            "grpo_run": False,
+            "dataset_mutation": False,
+            "candidate_generation": False,
+            "gold_policy_change": False,
+            "prompt_change": False,
+            "evaluator_metric_change": False,
+            "evaluator_relaxation": False,
+            "semantic_equivalence_scoring": False,
+            "prediction_repair": False,
+            "prediction_replacement": False,
+            "prediction_repair_or_replacement": False,
+            "prediction_rescore": False,
+        },
+        "claims": {
+            "analysis_only": True,
+            "policy_only": True,
+            "model_recovery_claim": False,
+            "held_out_recovery_claim": False,
+            "production_readiness_claim": False,
+            "private_corpus_generalization_claim": False,
+            "public_full_corpus_release_claim": False,
+            "live_browser_benchmark_claim": False,
+            "semantic_equivalence_primary_metric": False,
+            "soft_slot_f1_primary_metric": False,
+            "adapter_release_claim": False,
+            "checkpoint_release_claim": False,
+        },
+    }
+
+
 def select_formal_heldout_remediation_target(
     *,
     residual_diagnosis: dict[str, Any],

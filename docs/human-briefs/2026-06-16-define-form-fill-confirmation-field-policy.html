@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>define-form-fill-confirmation-field-policy Human Brief</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #18212f;
+      --muted: #5c6676;
+      --line: #d8dde6;
+      --panel: #f7f8fb;
+      --accent: #2864b4;
+      --ok: #197a4e;
+      --warn: #925f12;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: #ffffff;
+      line-height: 1.55;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+    }
+    header {
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 18px;
+      margin-bottom: 22px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      letter-spacing: 0;
+    }
+    h2 {
+      margin: 24px 0 10px;
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+    p {
+      margin: 8px 0;
+    }
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .status {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .pill {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 5px 9px;
+      background: var(--panel);
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .pill.ok {
+      color: var(--ok);
+      border-color: #b8d8c7;
+      background: #f0faf5;
+    }
+    .pill.warn {
+      color: var(--warn);
+      border-color: #e9d3a9;
+      background: #fff8ea;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 12px;
+      background: var(--panel);
+    }
+    .metric strong {
+      display: block;
+      font-size: 20px;
+      margin-bottom: 2px;
+    }
+    ul {
+      margin: 8px 0 0 20px;
+      padding: 0;
+    }
+    li {
+      margin: 5px 0;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.92em;
+      background: #f0f2f6;
+      border-radius: 4px;
+      padding: 1px 4px;
+    }
+    .callout {
+      border-left: 4px solid var(--accent);
+      background: #f4f8ff;
+      padding: 10px 12px;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>表单确认与字段粒度策略定义</h1>
+      <p><strong>一句话结论:</strong> 本阶段只把既有 form-fill 检查结果固化为 public-safe 策略工件, 不改数据, 不改提示词, 不训练, 不重打分。</p>
+      <div class="status">
+        <span class="pill ok">status: archived</span>
+        <span class="pill">change: define-form-fill-confirmation-field-policy</span>
+        <span class="pill">manifest: public-sample-20260616T022151Z</span>
+        <span class="pill warn">claim: policy-only</span>
+      </div>
+    </header>
+
+    <section>
+      <h2>本阶段改变了什么</h2>
+      <p>新增一个确定性策略生成路径, 从已提交的 form-fill boundary / field-specificity inspection 派生 3 个策略段落:</p>
+      <div class="grid">
+        <div class="metric"><strong>27</strong>confirmation markers 的 cluster-row incidence total</div>
+        <div class="metric"><strong>16</strong>field specificity or alias drift 的 cluster-row incidence total</div>
+        <div class="metric"><strong>6</strong>route or intent boundary leakage 的 cluster-row incidence total</div>
+      </div>
+      <ul>
+        <li>严格 <code>contract_exact_match</code> 与严格 <code>slot_f1</code> 仍是权威指标。</li>
+        <li><code>slot_f1_soft</code> 只保留为 diagnostic-only, 不升级为主指标。</li>
+        <li>保留 <code>cluster_row_incidence_total</code> 术语, 不把它说成唯一行数。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>关键文件</h2>
+      <ul>
+        <li><a href="../../reports/public-sample/form-fill-confirmation-field-policy/form_fill_confirmation_field_policy.json">policy JSON</a></li>
+        <li><a href="../../reports/public-sample/form-fill-confirmation-field-policy/form_fill_confirmation_field_policy.md">policy Markdown</a></li>
+        <li><a href="../../reports/public-sample/form-fill-confirmation-field-policy/manifest.json">policy manifest</a></li>
+        <li><a href="../../openspec/changes/archive/2026-06-16-define-form-fill-confirmation-field-policy/proposal.md">OpenSpec proposal</a></li>
+        <li><a href="../../openspec/changes/archive/2026-06-16-define-form-fill-confirmation-field-policy/specs/contract-evaluation/spec.md">OpenSpec spec delta</a></li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>验证记录</h2>
+      <ul>
+        <li><code>PYTHONPATH=src python3 -m pytest -q tests/test_form_fill_confirmation_field_policy.py tests/test_form_fill_boundary_field_specificity_inspection.py</code> - PASS: 7 passed。</li>
+        <li><code>PYTHONPATH=src python3 -m pytest -q</code> - PASS: 342 passed。</li>
+        <li><code>ruff check .</code> - PASS: All checks passed。</li>
+        <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code> - PASS: 5 passed, 0 failed。</li>
+        <li><code>voice2task.leak_scan.scan_paths(...)</code> - PASS: ok True; 扫描 policy artifacts, Human Brief, active OpenSpec change。</li>
+        <li><code>git diff --check</code> - PASS: no whitespace errors。</li>
+        <li>Dataset building 与 DPO pair checks 不适用: 本阶段不改数据和 DPO 生成逻辑。</li>
+        <li>Reviewer pass - PASS with fixes: 已修复 tasks/brief 状态不一致, 并补充 source provenance 与 committed JSON freshness check。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>剩余风险与不要夸大的结论</h2>
+      <div class="callout">
+        这不是 held-out recovery, model recovery, production readiness, live-browser benchmark improvement, checkpoint release, 或 adapter release。
+      </div>
+      <ul>
+        <li>策略只定义后续 remediation 边界, 没有修复任何预测输出。</li>
+        <li>任何数据改写, prompt 改动, evaluator 语义变化, 训练或重打分都需要新的 OpenSpec phase。</li>
+        <li>main thread 仍应完成更完整 validation, reviewer pass, 以及 archive 决策。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>项目阶段进度</h2>
+      <p>仓库当前没有显式 MVP/v1/v2 阶段定义。本阶段推进的是 evidence repository 的 form-fill residual policy 边界: 把上一阶段的 3 个 bucket 转成可复现、可审查、public-safe 的后续 remediation 约束。</p>
+      <p>剩余缺口仍是能力与证据层面的: 需要另开 OpenSpec phase 才能设计 confirmation marker 或 field specificity 的数据/prompt remediation, 并且任何训练或 held-out recovery claim 都必须由新的 prediction/eval 证据支持。</p>
+    </section>
+
+    <section>
+      <h2>推荐下一步</h2>
+      <p>当前 OpenSpec change 已归档。下一步另开一个小阶段选择是否先做 confirmation marker remediation 或 route intent boundary inspection。</p>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,377 @@
+{
+  "candidate_next_actions": [
+    "propose_bounded_confirmation_marker_data_or_prompt_remediation_after_policy_review",
+    "propose_bounded_field_specificity_or_alias_policy_remediation_after_policy_review",
+    "inspect_route_intent_boundary_before_any_remediation"
+  ],
+  "claims": {
+    "adapter_release_claim": false,
+    "analysis_only": true,
+    "checkpoint_release_claim": false,
+    "held_out_recovery_claim": false,
+    "live_browser_benchmark_claim": false,
+    "model_recovery_claim": false,
+    "policy_only": true,
+    "private_corpus_generalization_claim": false,
+    "production_readiness_claim": false,
+    "public_full_corpus_release_claim": false,
+    "semantic_equivalence_primary_metric": false,
+    "soft_slot_f1_primary_metric": false
+  },
+  "evidence_kind": "form_fill_confirmation_field_policy",
+  "execution_scope": {
+    "a100_job": false,
+    "candidate_generation": false,
+    "dataset_mutation": false,
+    "dpo_run": false,
+    "evaluator_metric_change": false,
+    "evaluator_relaxation": false,
+    "form_fill_inspection_read_as_input": true,
+    "gold_policy_change": false,
+    "grpo_run": false,
+    "prediction_repair": false,
+    "prediction_repair_or_replacement": false,
+    "prediction_replacement": false,
+    "prediction_rescore": false,
+    "prediction_run": false,
+    "prompt_change": false,
+    "raw_predictions_read": false,
+    "semantic_equivalence_scoring": false,
+    "sft_training_run": false,
+    "training_run": false
+  },
+  "metric_authority": {
+    "contract_evaluation_ladder": "authoritative",
+    "contract_exact_match": "authoritative_strict_metric",
+    "prediction_repair_or_rescore": false,
+    "slot_f1": "authoritative_strict_metric",
+    "slot_f1_soft": "diagnostic_only_not_primary"
+  },
+  "policy_kind": "public_form_fill_confirmation_and_field_specificity_policy",
+  "policy_sections": [
+    {
+      "candidate_next_action": "propose_bounded_confirmation_marker_data_or_prompt_remediation_after_policy_review",
+      "label": "Confirmation markers",
+      "policy_statement": "Future form-fill remediation should preserve explicit user confirmation wording in normalized_command when the source command asks to submit or confirm a filled form.",
+      "requires_separate_openspec_change_before_execution": true,
+      "section": "confirmation_markers",
+      "source_bucket": "missing_confirmation_marker",
+      "source_evidence": {
+        "categories": {
+          "normalized_command_strict_string_mismatch": 27
+        },
+        "cluster_count": 1,
+        "cluster_row_incidence_total": 27,
+        "field_paths": [
+          "normalized_command"
+        ],
+        "representative_examples": [
+          {
+            "category": "normalized_command_strict_string_mismatch",
+            "field_path": "normalized_command",
+            "gold_value_summary": "string(8): 填写手机号并确认",
+            "mismatch_category": "value_mismatch",
+            "predicted_value_summary": "string(5): 填写手机号",
+            "row_id": "family-form_fill-dev-1",
+            "source_family_id": "family-form_fill-dev-1",
+            "split": "dev"
+          },
+          {
+            "category": "normalized_command_strict_string_mismatch",
+            "field_path": "normalized_command",
+            "gold_value_summary": "string(8): 填写手机号并确认",
+            "mismatch_category": "value_mismatch",
+            "predicted_value_summary": "string(6): 填写手机号码",
+            "row_id": "family-form_fill-dev-1-aug-2",
+            "source_family_id": "family-form_fill-dev-1",
+            "split": "dev"
+          },
+          {
+            "category": "normalized_command_strict_string_mismatch",
+            "field_path": "normalized_command",
+            "gold_value_summary": "string(9): 填写收货地址并确认",
+            "mismatch_category": "value_mismatch",
+            "predicted_value_summary": "string(7): 填写地址到表单",
+            "row_id": "family-form_fill-dev-2-aug-1",
+            "source_family_id": "family-form_fill-dev-2",
+            "split": "dev"
+          },
+          {
+            "category": "normalized_command_strict_string_mismatch",
+            "field_path": "normalized_command",
+            "gold_value_summary": "string(9): 填写发票抬头并确认",
+            "mismatch_category": "value_mismatch",
+            "predicted_value_summary": "string(6): 填写发票抬头",
+            "row_id": "family-form_fill-dev-3",
+            "source_family_id": "family-form_fill-dev-3",
+            "split": "dev"
+          },
+          {
+            "category": "normalized_command_strict_string_mismatch",
+            "field_path": "normalized_command",
+            "gold_value_summary": "string(9): 填写发票抬头并确认",
+            "mismatch_category": "value_mismatch",
+            "predicted_value_summary": "string(6): 填写发票抬头",
+            "row_id": "family-form_fill-dev-3-aug-1",
+            "source_family_id": "family-form_fill-dev-3",
+            "split": "dev"
+          }
+        ],
+        "residual_field_total": 27,
+        "source_family_counts": {
+          "family-confirmation-dev-1": 1,
+          "family-confirmation-dev-2": 2,
+          "family-confirmation-dev-3": 2,
+          "family-confirmation-test-1": 2,
+          "family-confirmation-test-2": 2,
+          "family-confirmation-test-3": 3,
+          "family-form_fill-dev-1": 2,
+          "family-form_fill-dev-2": 1,
+          "family-form_fill-dev-3": 3,
+          "family-form_fill-test-1": 3,
+          "family-form_fill-test-2": 3,
+          "family-form_fill-test-3": 3
+        },
+        "split_counts": {
+          "dev": 11,
+          "test": 16
+        }
+      }
+    },
+    {
+      "candidate_next_action": "propose_bounded_field_specificity_or_alias_policy_remediation_after_policy_review",
+      "label": "Field specificity or alias drift",
+      "policy_statement": "Future remediation should decide field-label canonicalization and alias boundaries before adding examples or changing prompt wording for slots.",
+      "requires_separate_openspec_change_before_execution": true,
+      "section": "field_specificity_or_alias_drift",
+      "source_bucket": "field_specificity_or_alias_drift",
+      "source_evidence": {
+        "categories": {
+          "slot_strict_mismatch": 16
+        },
+        "cluster_count": 1,
+        "cluster_row_incidence_total": 16,
+        "field_paths": [
+          "slots"
+        ],
+        "representative_examples": [
+          {
+            "category": "slot_strict_mismatch",
+            "field_path": "slots",
+            "gold_value_summary": "object with keys: field",
+            "mismatch_category": "value_mismatch",
+            "predicted_value_summary": "object with keys: field",
+            "row_id": "family-form_fill-dev-2-aug-1",
+            "source_family_id": "family-form_fill-dev-2",
+            "split": "dev"
+          },
+          {
+            "category": "slot_strict_mismatch",
+            "field_path": "slots",
+            "gold_value_summary": "object with keys: field",
+            "mismatch_category": "value_mismatch",
+            "predicted_value_summary": "object with keys: field",
+            "row_id": "family-form_fill-dev-3",
+            "source_family_id": "family-form_fill-dev-3",
+            "split": "dev"
+          },
+          {
+            "category": "slot_strict_mismatch",
+            "field_path": "slots",
+            "gold_value_summary": "object with keys: field",
+            "mismatch_category": "value_mismatch",
+            "predicted_value_summary": "object with keys: field",
+            "row_id": "family-form_fill-dev-3-aug-1",
+            "source_family_id": "family-form_fill-dev-3",
+            "split": "dev"
+          },
+          {
+            "category": "slot_strict_mismatch",
+            "field_path": "slots",
+            "gold_value_summary": "object with keys: field",
+            "mismatch_category": "value_mismatch",
+            "predicted_value_summary": "object with keys: field",
+            "row_id": "family-form_fill-dev-3-aug-2",
+            "source_family_id": "family-form_fill-dev-3",
+            "split": "dev"
+          },
+          {
+            "category": "slot_strict_mismatch",
+            "field_path": "slots",
+            "gold_value_summary": "object with keys: field",
+            "mismatch_category": "value_mismatch",
+            "predicted_value_summary": "object with keys: field",
+            "row_id": "family-confirmation-dev-1-aug-1",
+            "source_family_id": "family-confirmation-dev-1",
+            "split": "dev"
+          }
+        ],
+        "residual_field_total": 16,
+        "source_family_counts": {
+          "family-confirmation-dev-1": 2,
+          "family-confirmation-dev-2": 1,
+          "family-confirmation-dev-3": 3,
+          "family-confirmation-test-3": 2,
+          "family-form_fill-dev-2": 1,
+          "family-form_fill-dev-3": 3,
+          "family-form_fill-test-1": 1,
+          "family-form_fill-test-2": 2,
+          "family-form_fill-test-3": 1
+        },
+        "split_counts": {
+          "dev": 10,
+          "test": 6
+        }
+      }
+    },
+    {
+      "candidate_next_action": "inspect_route_intent_boundary_before_any_remediation",
+      "label": "Route or intent boundary leakage",
+      "policy_statement": "Future remediation should keep form-fill route and intent boundaries separate from search, clarification, and safety-stop behavior unless a later OpenSpec phase changes that contract.",
+      "requires_separate_openspec_change_before_execution": true,
+      "section": "route_intent_leakage",
+      "source_bucket": "route_intent_leakage",
+      "source_evidence": {
+        "categories": {
+          "route_strict_mismatch": 2,
+          "safety_field_strict_mismatch": 2,
+          "task_type_strict_mismatch": 2
+        },
+        "cluster_count": 3,
+        "cluster_row_incidence_total": 6,
+        "field_paths": [
+          "route",
+          "safety.reason",
+          "task_type"
+        ],
+        "representative_examples": [
+          {
+            "category": "task_type_strict_mismatch",
+            "field_path": "task_type",
+            "gold_value_summary": "string(9): form_fill",
+            "mismatch_category": "value_mismatch",
+            "predicted_value_summary": "string(7): clarify",
+            "row_id": "family-confirmation-dev-1-aug-2",
+            "source_family_id": "family-confirmation-dev-1",
+            "split": "dev"
+          },
+          {
+            "category": "task_type_strict_mismatch",
+            "field_path": "task_type",
+            "gold_value_summary": "string(9): form_fill",
+            "mismatch_category": "value_mismatch",
+            "predicted_value_summary": "string(7): clarify",
+            "row_id": "family-form_fill-test-3-aug-2",
+            "source_family_id": "family-form_fill-test-3",
+            "split": "test"
+          },
+          {
+            "category": "route_strict_mismatch",
+            "field_path": "route",
+            "gold_value_summary": "string(9): fill_form",
+            "mismatch_category": "value_mismatch",
+            "predicted_value_summary": "string(7): clarify",
+            "row_id": "family-confirmation-dev-1-aug-2",
+            "source_family_id": "family-confirmation-dev-1",
+            "split": "dev"
+          },
+          {
+            "category": "route_strict_mismatch",
+            "field_path": "route",
+            "gold_value_summary": "string(9): fill_form",
+            "mismatch_category": "value_mismatch",
+            "predicted_value_summary": "string(7): clarify",
+            "row_id": "family-form_fill-test-3-aug-2",
+            "source_family_id": "family-form_fill-test-3",
+            "split": "test"
+          },
+          {
+            "category": "safety_field_strict_mismatch",
+            "field_path": "safety.reason",
+            "gold_value_summary": "string(21): requires_confirmation",
+            "mismatch_category": "value_mismatch",
+            "predicted_value_summary": "string(17): ambiguous_request",
+            "row_id": "family-confirmation-dev-1-aug-2",
+            "source_family_id": "family-confirmation-dev-1",
+            "split": "dev"
+          }
+        ],
+        "residual_field_total": 6,
+        "source_family_counts": {
+          "family-confirmation-dev-1": 3,
+          "family-form_fill-test-3": 3
+        },
+        "split_counts": {
+          "dev": 3,
+          "test": 3
+        }
+      }
+    }
+  ],
+  "source_count_consistency": {
+    "bucketed_form_fill_cluster_count": 5,
+    "bucketed_form_fill_cluster_row_incidence_total": 49,
+    "bucketed_form_fill_residual_fields": 49,
+    "ok": true,
+    "source_form_fill_cluster_count": 5,
+    "source_form_fill_cluster_row_incidence_total": 49,
+    "source_form_fill_residual_fields": 49
+  },
+  "source_form_fill_inspection": {
+    "diagnostic_kind": "formal_public_form_fill_boundary_field_specificity_inspection",
+    "evidence_kind": "form_fill_boundary_field_specificity_inspection",
+    "inspection_artifact": "reports/public-sample/form-fill-boundary-field-specificity-inspection/form_fill_boundary_field_specificity_inspection.json",
+    "source_cluster_artifact": "reports/public-sample/formal-heldout-residual-cluster-inspection/formal_heldout_residual_cluster_inspection.json",
+    "source_manifest_id": "public-sample-20260616T022151Z"
+  },
+  "summary": {
+    "cluster_row_incidence_total": 49,
+    "policy_section_count": 3,
+    "recommended_next_step": "open_separate_policy_remediation_phase_after_review",
+    "residual_field_total": 49,
+    "slot_f1_soft": {
+      "dev": 0.7315387631291138,
+      "test": 0.7609315000619348
+    },
+    "slot_f1_soft_primary_metric": false,
+    "source_bucket_count": 3,
+    "strict_contract_exact_match": {
+      "dev": 0.30434782608695654,
+      "test": 0.2898550724637681
+    },
+    "strict_slot_f1": {
+      "dev": 0.391304347826087,
+      "test": 0.5072463768115942
+    }
+  },
+  "unsupported_changes": [
+    {
+      "change": "evaluator_relaxation",
+      "reason": "strict contract_exact_match and strict slot_f1 remain authoritative"
+    },
+    {
+      "change": "soft_metric_promotion",
+      "reason": "slot_f1_soft remains diagnostic-only and is not promoted to a primary metric"
+    },
+    {
+      "change": "data_mutation",
+      "reason": "policy definition does not add, delete, rewrite, or regenerate dataset rows"
+    },
+    {
+      "change": "training_run",
+      "reason": "policy definition does not run SFT, DPO, GRPO, or any A100 job"
+    },
+    {
+      "change": "prediction_repair",
+      "reason": "policy definition does not repair, replace, normalize, or re-score predictions"
+    },
+    {
+      "change": "prompt_change",
+      "reason": "prompt or formatting changes require a separate approved OpenSpec phase"
+    },
+    {
+      "change": "gold_policy_mutation",
+      "reason": "gold contract policy changes require a separate approved OpenSpec phase"
+    }
+  ]
+}
