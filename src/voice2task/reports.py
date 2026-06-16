@@ -2538,6 +2538,131 @@ def write_form_fill_confirmation_marker_coverage_report(
     return {"json": json_path, "markdown": markdown_path, "manifest": manifest_path}
 
 
+def write_form_fill_confirmation_marker_coverage_extension_report(
+    extension: dict[str, Any],
+    output_dir: Path,
+    title: str = "Voice2Task form-fill confirmation-marker coverage extension design",
+) -> dict[str, Path]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    json_path = output_dir / "form_fill_confirmation_marker_coverage_extension.json"
+    markdown_path = output_dir / "form_fill_confirmation_marker_coverage_extension.md"
+    manifest_path = output_dir / "manifest.json"
+    safe_extension = _sanitize_report_value(extension)
+    write_json(json_path, safe_extension)
+
+    manifest = {
+        "evidence_kind": safe_extension["evidence_kind"],
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "source_artifacts": safe_extension["source_artifacts"],
+        "source_count_consistency": safe_extension["source_count_consistency"],
+        "source_manifest_id": safe_extension["source_manifest_id"],
+        "source_bucket": safe_extension["source_bucket"],
+        "summary": safe_extension["summary"],
+        "metric_authority": safe_extension["metric_authority"],
+        "claims": safe_extension["claims"],
+        "artifact_policy": {
+            "raw_predictions_copied_to_git": False,
+            "raw_logs_copied_to_git": False,
+            "checkpoints_or_adapters_copied_to_git": False,
+            "private_overrides_copied_to_git": False,
+            "private_paths_omitted": True,
+            "host_details_omitted": True,
+            "ssh_details_omitted": True,
+            "private_corpus_rows_omitted": True,
+            "new_candidate_rows_generated": False,
+            "data_mutation": False,
+            "dataset_mutation": False,
+            "public_sample_modified": False,
+            "seed_traces_modified": False,
+            "sft_rows_modified": False,
+            "dpo_pairs_modified": False,
+            "held_out_gold_labels_modified": False,
+            "prompt_change": False,
+            "gold_policy_change": False,
+            "training_run": False,
+            "checkpoints_or_adapters_modified": False,
+            "prediction_run": False,
+            "a100_job": False,
+            "evaluator_metric_change": False,
+            "evaluator_relaxation": False,
+            "prediction_repair": False,
+            "prediction_replacement": False,
+            "prediction_rescore": False,
+            "soft_metric_promotion": False,
+        },
+        "diagnostic_artifacts": {
+            "extension": (
+                "reports/public-sample/form-fill-confirmation-marker-coverage-extension/"
+                "form_fill_confirmation_marker_coverage_extension.json"
+            ),
+            "markdown": (
+                "reports/public-sample/form-fill-confirmation-marker-coverage-extension/"
+                "form_fill_confirmation_marker_coverage_extension.md"
+            ),
+            "manifest": (
+                "reports/public-sample/form-fill-confirmation-marker-coverage-extension/"
+                "manifest.json"
+            ),
+        },
+    }
+    write_json(manifest_path, manifest)
+
+    summary = safe_extension["summary"]
+    consistency = safe_extension["source_count_consistency"]
+    lines = [
+        f"# {title}",
+        "",
+        (
+            "This is a design-only coverage extension. It proposes source-family-level "
+            "confirmation-marker cases from committed public-safe artifacts; it does not materialize "
+            "candidate rows, mutate datasets, run predictions, train, repair predictions, or relax evaluation."
+        ),
+        "",
+        "## Boundary",
+        "",
+        "- strict `contract_exact_match` and strict `slot_f1` remain authoritative.",
+        "- `slot_f1_soft` remains diagnostic-only.",
+        "- Proposed cases are design descriptors, not seed/SFT/DPO rows.",
+        "- This report makes no held-out recovery claim.",
+        (
+            "- Any materialization, data, prompt, evaluator, prediction, checkpoint, adapter, or training "
+            "change requires a separate OpenSpec phase."
+        ),
+        "",
+        "## Summary",
+        "",
+        f"- Source manifest id: `{safe_extension['source_manifest_id']}`",
+        f"- Source bucket: `{safe_extension['source_bucket']}`",
+        f"- Source count consistency: `{consistency['ok']}`",
+        f"- Source families: `{summary['source_family_count']}`",
+        f"- Proposed cases: `{summary['proposed_case_count']}`",
+        f"- Represented source-family incidence total: `{summary['represented_source_family_incidence_total']}`",
+        f"- Legacy confirmation candidate cases: `{summary['legacy_confirmation_candidate_case_count']}`",
+        f"- Legacy represented field labels: `{summary['legacy_candidate_field_label_count']}`",
+        f"- Field labels derived from committed examples: `{summary['field_labels_derived_count']}`",
+        f"- Field labels not derivable: `{summary['field_labels_not_derivable_count']}`",
+        f"- Design decision: `{summary['design_decision']}`",
+        f"- Recommended next step: `{summary['recommended_next_step']}`",
+        "",
+        "## Proposed Candidate Cases",
+        "",
+    ]
+    for case in safe_extension.get("proposed_candidate_cases", []):
+        label = case.get("derived_field_label", "not derivable")
+        lines.append(
+            "- "
+            f"`{case['case_id']}`: family `{case['source_family_id']}`, "
+            f"incidences `{case['source_family_incidence_count']}`, "
+            f"field `{label}`, status `{case['field_label_derivation_status']}`"
+        )
+    lines.extend(["", "## Unsupported Changes", ""])
+    for entry in safe_extension.get("unsupported_changes", []):
+        lines.append(f"- `{entry['change']}`: {entry['reason']}")
+
+    markdown_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    return {"json": json_path, "markdown": markdown_path, "manifest": manifest_path}
+
+
 def write_formal_heldout_remediation_target_selection_report(
     selection: dict[str, Any],
     output_dir: Path,

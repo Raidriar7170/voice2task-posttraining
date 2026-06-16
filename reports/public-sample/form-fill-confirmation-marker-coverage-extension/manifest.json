@@ -1,0 +1,93 @@
+{
+  "artifact_policy": {
+    "a100_job": false,
+    "checkpoints_or_adapters_copied_to_git": false,
+    "checkpoints_or_adapters_modified": false,
+    "data_mutation": false,
+    "dataset_mutation": false,
+    "dpo_pairs_modified": false,
+    "evaluator_metric_change": false,
+    "evaluator_relaxation": false,
+    "gold_policy_change": false,
+    "held_out_gold_labels_modified": false,
+    "host_details_omitted": true,
+    "new_candidate_rows_generated": false,
+    "prediction_repair": false,
+    "prediction_replacement": false,
+    "prediction_rescore": false,
+    "prediction_run": false,
+    "private_corpus_rows_omitted": true,
+    "private_overrides_copied_to_git": false,
+    "private_paths_omitted": true,
+    "prompt_change": false,
+    "public_sample_modified": false,
+    "raw_logs_copied_to_git": false,
+    "raw_predictions_copied_to_git": false,
+    "seed_traces_modified": false,
+    "sft_rows_modified": false,
+    "soft_metric_promotion": false,
+    "ssh_details_omitted": true,
+    "training_run": false
+  },
+  "claims": {
+    "adapter_release_claim": false,
+    "checkpoint_release_claim": false,
+    "design_only": true,
+    "held_out_recovery_claim": false,
+    "live_browser_benchmark_claim": false,
+    "model_recovery_claim": false,
+    "private_corpus_generalization_claim": false,
+    "production_readiness_claim": false,
+    "public_full_corpus_release_claim": false,
+    "semantic_equivalence_primary_metric": false,
+    "soft_slot_f1_primary_metric": false
+  },
+  "diagnostic_artifacts": {
+    "extension": "reports/public-sample/form-fill-confirmation-marker-coverage-extension/form_fill_confirmation_marker_coverage_extension.json",
+    "manifest": "reports/public-sample/form-fill-confirmation-marker-coverage-extension/manifest.json",
+    "markdown": "reports/public-sample/form-fill-confirmation-marker-coverage-extension/form_fill_confirmation_marker_coverage_extension.md"
+  },
+  "evidence_kind": "form_fill_confirmation_marker_coverage_extension_design",
+  "generated_at": "2026-06-16T05:27:09.696945+00:00",
+  "metric_authority": {
+    "contract_evaluation_ladder": "authoritative",
+    "contract_exact_match": "authoritative_strict_metric",
+    "prediction_repair_or_rescore": false,
+    "slot_f1": "authoritative_strict_metric",
+    "slot_f1_soft": "diagnostic_only_not_primary"
+  },
+  "source_artifacts": {
+    "coverage": "reports/public-sample/form-fill-confirmation-marker-coverage/form_fill_confirmation_marker_coverage.json",
+    "policy": "reports/public-sample/form-fill-confirmation-field-policy/form_fill_confirmation_field_policy.json"
+  },
+  "source_bucket": "missing_confirmation_marker",
+  "source_count_consistency": {
+    "coverage_cluster_row_incidence_total": 27,
+    "coverage_policy_source_family_counts_match": true,
+    "coverage_residual_field_total": 27,
+    "incidence_total_matches_policy_cluster_rows": true,
+    "incidence_total_matches_policy_residual_fields": true,
+    "ok": true,
+    "policy_cluster_row_incidence_total": 27,
+    "policy_residual_field_total": 27,
+    "proposed_case_count": 12,
+    "proposed_case_count_matches_source_family_count": true,
+    "represented_source_family_count": 12,
+    "source_family_count": 12,
+    "source_family_incidence_total": 27
+  },
+  "source_manifest_id": "public-sample-20260616T022151Z",
+  "summary": {
+    "design_decision": "extend_confirmation_marker_coverage_with_source_family_cases",
+    "field_labels_derived_count": 3,
+    "field_labels_not_derivable_count": 9,
+    "legacy_candidate_field_label_count": 3,
+    "legacy_confirmation_candidate_case_count": 3,
+    "proposed_case_count": 12,
+    "recommended_next_step": "materialize_bounded_confirmation_marker_extension_candidates_in_later_phase",
+    "represented_source_family_count": 12,
+    "represented_source_family_incidence_total": 27,
+    "source_family_count": 12,
+    "uncovered_source_family_count_after_design": 0
+  }
+}

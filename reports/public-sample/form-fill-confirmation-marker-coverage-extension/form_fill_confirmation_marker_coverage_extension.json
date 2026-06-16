@@ -1,0 +1,336 @@
+{
+  "claims": {
+    "adapter_release_claim": false,
+    "checkpoint_release_claim": false,
+    "design_only": true,
+    "held_out_recovery_claim": false,
+    "live_browser_benchmark_claim": false,
+    "model_recovery_claim": false,
+    "private_corpus_generalization_claim": false,
+    "production_readiness_claim": false,
+    "public_full_corpus_release_claim": false,
+    "semantic_equivalence_primary_metric": false,
+    "soft_slot_f1_primary_metric": false
+  },
+  "design_kind": "public_form_fill_confirmation_marker_coverage_extension",
+  "evidence_kind": "form_fill_confirmation_marker_coverage_extension_design",
+  "execution_scope": {
+    "a100_job": false,
+    "checkpoints_or_adapters_modified": false,
+    "committed_public_artifacts_read": true,
+    "dataset_mutation": false,
+    "dpo_pairs_modified": false,
+    "evaluator_metric_change": false,
+    "evaluator_relaxation": false,
+    "gold_policy_change": false,
+    "held_out_gold_labels_modified": false,
+    "new_candidate_rows_generated": false,
+    "prediction_repair": false,
+    "prediction_replacement": false,
+    "prediction_rescore": false,
+    "prediction_run": false,
+    "prompt_change": false,
+    "public_sample_modified": false,
+    "raw_predictions_read": false,
+    "seed_traces_modified": false,
+    "sft_rows_modified": false,
+    "training_run": false
+  },
+  "legacy_context": {
+    "legacy_candidate_field_label_count": 3,
+    "legacy_confirmation_candidate_case_count": 3,
+    "legacy_represented_field_labels": [
+      "发票抬头",
+      "手机号",
+      "收货地址"
+    ]
+  },
+  "metric_authority": {
+    "contract_evaluation_ladder": "authoritative",
+    "contract_exact_match": "authoritative_strict_metric",
+    "prediction_repair_or_rescore": false,
+    "slot_f1": "authoritative_strict_metric",
+    "slot_f1_soft": "diagnostic_only_not_primary"
+  },
+  "proposed_candidate_cases": [
+    {
+      "case_id": "ff-confirm-marker-extension-family-confirmation-dev-1",
+      "expected_confirmation_marker": "并确认",
+      "field_label_derivation_status": "not_derivable_from_committed_coverage_policy_artifacts",
+      "field_paths": [
+        "normalized_command"
+      ],
+      "materialization_status": "not_materialized",
+      "recommended_split_role": "candidate_design_only",
+      "requires_later_openspec_materialization": true,
+      "source_bucket": "missing_confirmation_marker",
+      "source_family_id": "family-confirmation-dev-1",
+      "source_family_incidence_count": 1,
+      "source_manifest_id": "public-sample-20260616T022151Z"
+    },
+    {
+      "case_id": "ff-confirm-marker-extension-family-confirmation-dev-2",
+      "expected_confirmation_marker": "并确认",
+      "field_label_derivation_status": "not_derivable_from_committed_coverage_policy_artifacts",
+      "field_paths": [
+        "normalized_command"
+      ],
+      "materialization_status": "not_materialized",
+      "recommended_split_role": "candidate_design_only",
+      "requires_later_openspec_materialization": true,
+      "source_bucket": "missing_confirmation_marker",
+      "source_family_id": "family-confirmation-dev-2",
+      "source_family_incidence_count": 2,
+      "source_manifest_id": "public-sample-20260616T022151Z"
+    },
+    {
+      "case_id": "ff-confirm-marker-extension-family-confirmation-dev-3",
+      "expected_confirmation_marker": "并确认",
+      "field_label_derivation_status": "not_derivable_from_committed_coverage_policy_artifacts",
+      "field_paths": [
+        "normalized_command"
+      ],
+      "materialization_status": "not_materialized",
+      "recommended_split_role": "candidate_design_only",
+      "requires_later_openspec_materialization": true,
+      "source_bucket": "missing_confirmation_marker",
+      "source_family_id": "family-confirmation-dev-3",
+      "source_family_incidence_count": 2,
+      "source_manifest_id": "public-sample-20260616T022151Z"
+    },
+    {
+      "case_id": "ff-confirm-marker-extension-family-confirmation-test-1",
+      "expected_confirmation_marker": "并确认",
+      "field_label_derivation_status": "not_derivable_from_committed_coverage_policy_artifacts",
+      "field_paths": [
+        "normalized_command"
+      ],
+      "materialization_status": "not_materialized",
+      "recommended_split_role": "candidate_design_only",
+      "requires_later_openspec_materialization": true,
+      "source_bucket": "missing_confirmation_marker",
+      "source_family_id": "family-confirmation-test-1",
+      "source_family_incidence_count": 2,
+      "source_manifest_id": "public-sample-20260616T022151Z"
+    },
+    {
+      "case_id": "ff-confirm-marker-extension-family-confirmation-test-2",
+      "expected_confirmation_marker": "并确认",
+      "field_label_derivation_status": "not_derivable_from_committed_coverage_policy_artifacts",
+      "field_paths": [
+        "normalized_command"
+      ],
+      "materialization_status": "not_materialized",
+      "recommended_split_role": "candidate_design_only",
+      "requires_later_openspec_materialization": true,
+      "source_bucket": "missing_confirmation_marker",
+      "source_family_id": "family-confirmation-test-2",
+      "source_family_incidence_count": 2,
+      "source_manifest_id": "public-sample-20260616T022151Z"
+    },
+    {
+      "case_id": "ff-confirm-marker-extension-family-confirmation-test-3",
+      "expected_confirmation_marker": "并确认",
+      "field_label_derivation_status": "not_derivable_from_committed_coverage_policy_artifacts",
+      "field_paths": [
+        "normalized_command"
+      ],
+      "materialization_status": "not_materialized",
+      "recommended_split_role": "candidate_design_only",
+      "requires_later_openspec_materialization": true,
+      "source_bucket": "missing_confirmation_marker",
+      "source_family_id": "family-confirmation-test-3",
+      "source_family_incidence_count": 3,
+      "source_manifest_id": "public-sample-20260616T022151Z"
+    },
+    {
+      "case_id": "ff-confirm-marker-extension-family-form_fill-dev-1",
+      "derived_field_label": "手机号",
+      "expected_confirmation_marker": "并确认",
+      "expected_normalized_command_pattern": "填写手机号并确认",
+      "field_label_derivation_status": "derived_from_committed_coverage_examples",
+      "field_paths": [
+        "normalized_command"
+      ],
+      "materialization_status": "not_materialized",
+      "recommended_split_role": "candidate_design_only",
+      "requires_later_openspec_materialization": true,
+      "source_bucket": "missing_confirmation_marker",
+      "source_family_id": "family-form_fill-dev-1",
+      "source_family_incidence_count": 2,
+      "source_manifest_id": "public-sample-20260616T022151Z"
+    },
+    {
+      "case_id": "ff-confirm-marker-extension-family-form_fill-dev-2",
+      "derived_field_label": "收货地址",
+      "expected_confirmation_marker": "并确认",
+      "expected_normalized_command_pattern": "填写收货地址并确认",
+      "field_label_derivation_status": "derived_from_committed_coverage_examples",
+      "field_paths": [
+        "normalized_command"
+      ],
+      "materialization_status": "not_materialized",
+      "recommended_split_role": "candidate_design_only",
+      "requires_later_openspec_materialization": true,
+      "source_bucket": "missing_confirmation_marker",
+      "source_family_id": "family-form_fill-dev-2",
+      "source_family_incidence_count": 1,
+      "source_manifest_id": "public-sample-20260616T022151Z"
+    },
+    {
+      "case_id": "ff-confirm-marker-extension-family-form_fill-dev-3",
+      "derived_field_label": "发票抬头",
+      "expected_confirmation_marker": "并确认",
+      "expected_normalized_command_pattern": "填写发票抬头并确认",
+      "field_label_derivation_status": "derived_from_committed_coverage_examples",
+      "field_paths": [
+        "normalized_command"
+      ],
+      "materialization_status": "not_materialized",
+      "recommended_split_role": "candidate_design_only",
+      "requires_later_openspec_materialization": true,
+      "source_bucket": "missing_confirmation_marker",
+      "source_family_id": "family-form_fill-dev-3",
+      "source_family_incidence_count": 3,
+      "source_manifest_id": "public-sample-20260616T022151Z"
+    },
+    {
+      "case_id": "ff-confirm-marker-extension-family-form_fill-test-1",
+      "expected_confirmation_marker": "并确认",
+      "field_label_derivation_status": "not_derivable_from_committed_coverage_policy_artifacts",
+      "field_paths": [
+        "normalized_command"
+      ],
+      "materialization_status": "not_materialized",
+      "recommended_split_role": "candidate_design_only",
+      "requires_later_openspec_materialization": true,
+      "source_bucket": "missing_confirmation_marker",
+      "source_family_id": "family-form_fill-test-1",
+      "source_family_incidence_count": 3,
+      "source_manifest_id": "public-sample-20260616T022151Z"
+    },
+    {
+      "case_id": "ff-confirm-marker-extension-family-form_fill-test-2",
+      "expected_confirmation_marker": "并确认",
+      "field_label_derivation_status": "not_derivable_from_committed_coverage_policy_artifacts",
+      "field_paths": [
+        "normalized_command"
+      ],
+      "materialization_status": "not_materialized",
+      "recommended_split_role": "candidate_design_only",
+      "requires_later_openspec_materialization": true,
+      "source_bucket": "missing_confirmation_marker",
+      "source_family_id": "family-form_fill-test-2",
+      "source_family_incidence_count": 3,
+      "source_manifest_id": "public-sample-20260616T022151Z"
+    },
+    {
+      "case_id": "ff-confirm-marker-extension-family-form_fill-test-3",
+      "expected_confirmation_marker": "并确认",
+      "field_label_derivation_status": "not_derivable_from_committed_coverage_policy_artifacts",
+      "field_paths": [
+        "normalized_command"
+      ],
+      "materialization_status": "not_materialized",
+      "recommended_split_role": "candidate_design_only",
+      "requires_later_openspec_materialization": true,
+      "source_bucket": "missing_confirmation_marker",
+      "source_family_id": "family-form_fill-test-3",
+      "source_family_incidence_count": 3,
+      "source_manifest_id": "public-sample-20260616T022151Z"
+    }
+  ],
+  "represented_source_families": [
+    "family-confirmation-dev-1",
+    "family-confirmation-dev-2",
+    "family-confirmation-dev-3",
+    "family-confirmation-test-1",
+    "family-confirmation-test-2",
+    "family-confirmation-test-3",
+    "family-form_fill-dev-1",
+    "family-form_fill-dev-2",
+    "family-form_fill-dev-3",
+    "family-form_fill-test-1",
+    "family-form_fill-test-2",
+    "family-form_fill-test-3"
+  ],
+  "source_artifacts": {
+    "coverage": "reports/public-sample/form-fill-confirmation-marker-coverage/form_fill_confirmation_marker_coverage.json",
+    "policy": "reports/public-sample/form-fill-confirmation-field-policy/form_fill_confirmation_field_policy.json"
+  },
+  "source_bucket": "missing_confirmation_marker",
+  "source_count_consistency": {
+    "coverage_cluster_row_incidence_total": 27,
+    "coverage_policy_source_family_counts_match": true,
+    "coverage_residual_field_total": 27,
+    "incidence_total_matches_policy_cluster_rows": true,
+    "incidence_total_matches_policy_residual_fields": true,
+    "ok": true,
+    "policy_cluster_row_incidence_total": 27,
+    "policy_residual_field_total": 27,
+    "proposed_case_count": 12,
+    "proposed_case_count_matches_source_family_count": true,
+    "represented_source_family_count": 12,
+    "source_family_count": 12,
+    "source_family_incidence_total": 27
+  },
+  "source_family_counts": {
+    "family-confirmation-dev-1": 1,
+    "family-confirmation-dev-2": 2,
+    "family-confirmation-dev-3": 2,
+    "family-confirmation-test-1": 2,
+    "family-confirmation-test-2": 2,
+    "family-confirmation-test-3": 3,
+    "family-form_fill-dev-1": 2,
+    "family-form_fill-dev-2": 1,
+    "family-form_fill-dev-3": 3,
+    "family-form_fill-test-1": 3,
+    "family-form_fill-test-2": 3,
+    "family-form_fill-test-3": 3
+  },
+  "source_manifest_id": "public-sample-20260616T022151Z",
+  "summary": {
+    "design_decision": "extend_confirmation_marker_coverage_with_source_family_cases",
+    "field_labels_derived_count": 3,
+    "field_labels_not_derivable_count": 9,
+    "legacy_candidate_field_label_count": 3,
+    "legacy_confirmation_candidate_case_count": 3,
+    "proposed_case_count": 12,
+    "recommended_next_step": "materialize_bounded_confirmation_marker_extension_candidates_in_later_phase",
+    "represented_source_family_count": 12,
+    "represented_source_family_incidence_total": 27,
+    "source_family_count": 12,
+    "uncovered_source_family_count_after_design": 0
+  },
+  "uncovered_source_families_after_design": [],
+  "unsupported_changes": [
+    {
+      "change": "candidate_materialization",
+      "reason": "extension design does not create rows"
+    },
+    {
+      "change": "data_mutation",
+      "reason": "extension design does not mutate public samples or corpora"
+    },
+    {
+      "change": "prompt_change",
+      "reason": "prompt changes require a separate OpenSpec phase"
+    },
+    {
+      "change": "training_run",
+      "reason": "training requires a separate A100 phase and fresh evaluation"
+    },
+    {
+      "change": "evaluator_relaxation",
+      "reason": "strict contract metrics remain authoritative"
+    },
+    {
+      "change": "prediction_repair",
+      "reason": "predictions are not repaired, replaced, normalized, or re-scored"
+    },
+    {
+      "change": "held_out_recovery_claim",
+      "reason": "candidate design is not held-out recovery evidence"
+    }
+  ]
+}

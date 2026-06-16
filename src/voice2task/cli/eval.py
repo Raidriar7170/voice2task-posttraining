@@ -7,6 +7,7 @@ from pathlib import Path
 from voice2task.evaluation import (
     assess_form_fill_confirmation_marker_coverage,
     define_form_fill_confirmation_field_policy,
+    design_form_fill_confirmation_marker_coverage_extension,
     design_form_fill_remediation_cases,
     design_slot_value_generalization_cases,
     diagnose_alignment_mismatches,
@@ -37,6 +38,7 @@ from voice2task.reports import (
     write_constrained_decoding_diagnosis_report,
     write_form_fill_boundary_field_specificity_report,
     write_form_fill_confirmation_field_policy_report,
+    write_form_fill_confirmation_marker_coverage_extension_report,
     write_form_fill_confirmation_marker_coverage_report,
     write_form_fill_remediation_case_design_report,
     write_form_fill_remediation_plan_report,
@@ -260,6 +262,17 @@ def build_parser() -> argparse.ArgumentParser:
     assess_confirmation_coverage.add_argument(
         "--title",
         default="Voice2Task form-fill confirmation-marker coverage assessment",
+    )
+
+    design_confirmation_extension = subcommands.add_parser(
+        "design-form-fill-confirmation-marker-coverage-extension"
+    )
+    design_confirmation_extension.add_argument("--coverage", type=Path, required=True)
+    design_confirmation_extension.add_argument("--policy", type=Path, required=True)
+    design_confirmation_extension.add_argument("--output", type=Path, required=True)
+    design_confirmation_extension.add_argument(
+        "--title",
+        default="Voice2Task form-fill confirmation-marker coverage extension design",
     )
 
     form_fill_plan = subcommands.add_parser("diagnose-form-fill-remediation-plan")
@@ -528,6 +541,18 @@ def main(argv: list[str] | None = None) -> int:
         )
         paths = write_form_fill_confirmation_marker_coverage_report(
             coverage,
+            output_dir=args.output,
+            title=args.title,
+        )
+        print(json.dumps({"ok": True, "paths": {key: value.as_posix() for key, value in paths.items()}}, indent=2))
+        return 0
+    if args.command == "design-form-fill-confirmation-marker-coverage-extension":
+        extension = design_form_fill_confirmation_marker_coverage_extension(
+            coverage=read_json(args.coverage),
+            policy=read_json(args.policy),
+        )
+        paths = write_form_fill_confirmation_marker_coverage_extension_report(
+            extension,
             output_dir=args.output,
             title=args.title,
         )

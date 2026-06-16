@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>extend-form-fill-confirmation-marker-coverage Human Brief</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #18212f;
+      --muted: #5c6676;
+      --line: #d8dde6;
+      --panel: #f7f8fb;
+      --accent: #2864b4;
+      --ok: #197a4e;
+      --warn: #925f12;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: #fff;
+      line-height: 1.55;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+    }
+    header {
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 18px;
+      margin-bottom: 22px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      letter-spacing: 0;
+    }
+    h2 {
+      margin: 24px 0 10px;
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+    p {
+      margin: 8px 0;
+    }
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .status {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .pill {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 5px 9px;
+      background: var(--panel);
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .pill.ok {
+      color: var(--ok);
+      border-color: #b8d8c7;
+      background: #f0faf5;
+    }
+    .pill.warn {
+      color: var(--warn);
+      border-color: #e9d3a9;
+      background: #fff8ea;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 12px;
+      background: var(--panel);
+    }
+    .metric strong {
+      display: block;
+      font-size: 20px;
+      margin-bottom: 2px;
+    }
+    ul {
+      margin: 8px 0 0 20px;
+      padding: 0;
+    }
+    li {
+      margin: 5px 0;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.92em;
+      background: #f0f2f6;
+      border-radius: 4px;
+      padding: 1px 4px;
+    }
+    .callout {
+      border-left: 4px solid var(--accent);
+      background: #f4f8ff;
+      padding: 10px 12px;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>表单确认标记覆盖扩展设计</h1>
+      <p><strong>一句话结论:</strong> 本阶段把 confirmation-marker remediation 下一步收敛成 12 个 source-family 级 design cases, 但不生成候选数据, 不训练, 不声称恢复。</p>
+      <div class="status">
+        <span class="pill ok">status: archived</span>
+        <span class="pill">change: extend-form-fill-confirmation-marker-coverage</span>
+        <span class="pill">manifest: public-sample-20260616T022151Z</span>
+        <span class="pill warn">claim: design-only</span>
+      </div>
+    </header>
+
+    <section>
+      <h2>本阶段改变了什么</h2>
+      <p>新增一个确定性 extension design, 只读取已提交的 coverage / policy 工件, 为 12 个 confirmation-marker source families 各生成一个设计级候选 case。</p>
+      <div class="grid">
+        <div class="metric"><strong>12</strong>source-family-level design cases</div>
+        <div class="metric"><strong>27</strong>represented source-family incidences</div>
+        <div class="metric"><strong>3 / 9</strong>字段可派生 / 不可派生</div>
+      </div>
+      <ul>
+        <li>设计结论: <code>extend_confirmation_marker_coverage_with_source_family_cases</code>。</li>
+        <li>推荐下一步: <code>materialize_bounded_confirmation_marker_extension_candidates_in_later_phase</code>。</li>
+        <li>严格 <code>contract_exact_match</code> 与严格 <code>slot_f1</code> 仍是权威指标; <code>slot_f1_soft</code> 仍为 diagnostic-only。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>关键文件</h2>
+      <ul>
+        <li><a href="../../reports/public-sample/form-fill-confirmation-marker-coverage-extension/form_fill_confirmation_marker_coverage_extension.json">extension design JSON</a></li>
+        <li><a href="../../reports/public-sample/form-fill-confirmation-marker-coverage-extension/form_fill_confirmation_marker_coverage_extension.md">extension design Markdown</a></li>
+        <li><a href="../../reports/public-sample/form-fill-confirmation-marker-coverage-extension/manifest.json">extension design manifest</a></li>
+        <li><a href="../../openspec/changes/archive/2026-06-16-extend-form-fill-confirmation-marker-coverage/proposal.md">OpenSpec proposal</a></li>
+        <li><a href="../../openspec/changes/archive/2026-06-16-extend-form-fill-confirmation-marker-coverage/specs/contract-evaluation/spec.md">OpenSpec spec delta</a></li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>验证记录</h2>
+      <ul>
+        <li><code>PYTHONPATH=src python3 -m pytest -q tests/test_form_fill_confirmation_marker_coverage_extension.py</code> - PASS: 5 passed。</li>
+        <li><code>PYTHONPATH=src python3 -m pytest -q tests/test_form_fill_confirmation_marker_coverage_extension.py tests/test_form_fill_confirmation_marker_coverage.py tests/test_form_fill_confirmation_field_policy.py tests/test_form_fill_remediation_case_design.py tests/test_form_fill_remediation_plan.py</code> - PASS: 21 passed。</li>
+        <li><code>PYTHONPATH=src python3 -m pytest -q</code> - PASS: 351 passed。</li>
+        <li><code>ruff check .</code> - PASS: All checks passed。</li>
+        <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code> - PASS: 5 passed, 0 failed。</li>
+        <li><code>voice2task.leak_scan.scan_paths(...)</code> - PASS: ok True; 扫描 extension artifacts, Human Brief, active OpenSpec change。</li>
+        <li><code>git diff --check</code> - PASS: no whitespace errors。</li>
+        <li>Reviewer pass - PASS with fixes: 已更新 Human Brief stale validation record。</li>
+        <li>Dataset building 与 DPO pair checks 不适用: 本阶段不 materialize candidate rows, 不改 DPO artifacts。</li>
+        <li>本阶段没有 A100 job, prediction run, SFT/DPO/GRPO 训练, 或 evaluator relaxation。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>剩余风险与不要夸大的结论</h2>
+      <div class="callout">
+        这不是 held-out recovery, model recovery, production readiness, checkpoint release, adapter release, 或 live-browser benchmark improvement。
+      </div>
+      <ul>
+        <li>12 个 proposed cases 仍只是设计描述, 不是 seed/SFT/DPO rows。</li>
+        <li>9 个 source families 的字段 label 不能从 committed coverage / policy artifacts 派生, 因此没有编造字段名。</li>
+        <li>任何 materialization、public sample merge、prompt 修改、训练或重评估都必须另开 OpenSpec phase。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>项目阶段进度</h2>
+      <p><code>CONTEXT.md</code> 将项目目标限定为中文 spoken / ASR transcript 到 schema-valid browser task contract, 并要求 contract evaluation ladder。本阶段推进的是 form-fill confirmation marker 的 evidence ladder, 不改变项目目标。</p>
+    </section>
+
+    <section>
+      <h2>推荐下一步</h2>
+      <p>当前 phase 已归档。下一阶段可 materialize bounded confirmation-marker extension candidates; 在那之前不训练、不重打分、不声称恢复。</p>
+    </section>
+  </main>
+</body>
+</html>

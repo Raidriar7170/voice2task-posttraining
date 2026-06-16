@@ -2888,6 +2888,225 @@ def assess_form_fill_confirmation_marker_coverage(
     }
 
 
+def _derive_confirmation_field_labels(
+    representative_examples: list[dict[str, Any]],
+) -> dict[str, str]:
+    labels: dict[str, str] = {}
+    for example in representative_examples:
+        if not isinstance(example, dict):
+            continue
+        family_id = _sanitize_public_summary(str(example.get("source_family_id", "")))
+        summary = str(example.get("gold_value_summary", ""))
+        value = summary.split(":", 1)[1].strip() if ":" in summary else summary.strip()
+        if value.startswith("填写"):
+            value = value[len("填写") :]
+        if value.endswith("并确认"):
+            value = value[: -len("并确认")]
+        value = value.strip()
+        if family_id and value:
+            labels.setdefault(family_id, _sanitize_public_summary(value))
+    return labels
+
+
+def design_form_fill_confirmation_marker_coverage_extension(
+    *,
+    coverage: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    if coverage.get("evidence_kind") != "form_fill_confirmation_marker_coverage_assessment":
+        raise ValueError("coverage must be form_fill_confirmation_marker_coverage_assessment evidence")
+    if policy.get("evidence_kind") != "form_fill_confirmation_field_policy":
+        raise ValueError("policy must be form_fill_confirmation_field_policy evidence")
+
+    policy_sections = [section for section in policy.get("policy_sections", []) if isinstance(section, dict)]
+    confirmation_policy = next(
+        (
+            section
+            for section in policy_sections
+            if section.get("section") == "confirmation_markers"
+            and section.get("source_bucket") == "missing_confirmation_marker"
+        ),
+        None,
+    )
+    if confirmation_policy is None:
+        raise ValueError("policy missing confirmation_markers section for missing_confirmation_marker")
+
+    policy_evidence = confirmation_policy.get("source_evidence", {})
+    policy_family_counts = policy_evidence.get("source_family_counts", {})
+    if not isinstance(policy_family_counts, dict):
+        policy_family_counts = {}
+    coverage_family_counts = coverage.get("source_policy", {}).get("source_family_counts", {})
+    if not isinstance(coverage_family_counts, dict):
+        coverage_family_counts = {}
+
+    source_family_counts = {
+        _sanitize_public_summary(str(key)): int(value)
+        for key, value in policy_family_counts.items()
+    }
+    representative_examples = [
+        example
+        for example in policy_evidence.get("representative_examples", [])
+        if isinstance(example, dict)
+    ]
+    derived_labels = _derive_confirmation_field_labels(representative_examples)
+    source_manifest_id = _sanitize_public_summary(str(coverage.get("source_policy", {}).get("source_manifest_id", "")))
+    field_paths = _sanitize_public_value(policy_evidence.get("field_paths", []))
+
+    proposed_cases: list[dict[str, Any]] = []
+    represented_source_families: list[str] = []
+    for family_id in sorted(source_family_counts):
+        represented_source_families.append(family_id)
+        case: dict[str, Any] = {
+            "case_id": f"ff-confirm-marker-extension-{_sanitize_id(family_id)}",
+            "source_family_id": family_id,
+            "source_family_incidence_count": source_family_counts[family_id],
+            "source_manifest_id": source_manifest_id,
+            "source_bucket": "missing_confirmation_marker",
+            "field_paths": field_paths,
+            "expected_confirmation_marker": "并确认",
+            "materialization_status": "not_materialized",
+            "recommended_split_role": "candidate_design_only",
+            "requires_later_openspec_materialization": True,
+        }
+        if family_id in derived_labels:
+            case["derived_field_label"] = derived_labels[family_id]
+            case["field_label_derivation_status"] = "derived_from_committed_coverage_examples"
+            case["expected_normalized_command_pattern"] = f"填写{derived_labels[family_id]}并确认"
+        else:
+            case["field_label_derivation_status"] = "not_derivable_from_committed_coverage_policy_artifacts"
+        proposed_cases.append(case)
+
+    proposed_case_count = len(proposed_cases)
+    represented_source_family_count = len(represented_source_families)
+    source_family_incidence_total = sum(source_family_counts.values())
+    policy_cluster_rows = int(policy_evidence.get("cluster_row_incidence_total", 0))
+    policy_residual_fields = int(policy_evidence.get("residual_field_total", 0))
+    coverage_cluster_rows = int(coverage.get("source_policy", {}).get("cluster_row_incidence_total", 0))
+    coverage_residual_fields = int(coverage.get("source_policy", {}).get("residual_field_total", 0))
+    legacy_case_count = int(coverage.get("summary", {}).get("legacy_confirmation_candidate_case_count", 0))
+    legacy_field_count = int(coverage.get("summary", {}).get("legacy_candidate_field_label_count", 0))
+    derived_count = len(derived_labels)
+    not_derivable_count = proposed_case_count - derived_count
+
+    source_count_consistency = {
+        "ok": (
+            coverage_family_counts == policy_family_counts
+            and proposed_case_count == len(source_family_counts)
+            and source_family_incidence_total == policy_cluster_rows
+            and source_family_incidence_total == policy_residual_fields
+            and policy_cluster_rows == coverage_cluster_rows
+            and policy_residual_fields == coverage_residual_fields
+        ),
+        "coverage_policy_source_family_counts_match": coverage_family_counts == policy_family_counts,
+        "source_family_count": len(source_family_counts),
+        "proposed_case_count": proposed_case_count,
+        "represented_source_family_count": represented_source_family_count,
+        "source_family_incidence_total": source_family_incidence_total,
+        "policy_cluster_row_incidence_total": policy_cluster_rows,
+        "policy_residual_field_total": policy_residual_fields,
+        "coverage_cluster_row_incidence_total": coverage_cluster_rows,
+        "coverage_residual_field_total": coverage_residual_fields,
+        "proposed_case_count_matches_source_family_count": proposed_case_count == len(source_family_counts),
+        "incidence_total_matches_policy_cluster_rows": source_family_incidence_total == policy_cluster_rows,
+        "incidence_total_matches_policy_residual_fields": source_family_incidence_total == policy_residual_fields,
+    }
+
+    unsupported_changes = [
+        {"change": "candidate_materialization", "reason": "extension design does not create rows"},
+        {"change": "data_mutation", "reason": "extension design does not mutate public samples or corpora"},
+        {"change": "prompt_change", "reason": "prompt changes require a separate OpenSpec phase"},
+        {"change": "training_run", "reason": "training requires a separate A100 phase and fresh evaluation"},
+        {"change": "evaluator_relaxation", "reason": "strict contract metrics remain authoritative"},
+        {"change": "prediction_repair", "reason": "predictions are not repaired, replaced, normalized, or re-scored"},
+        {"change": "held_out_recovery_claim", "reason": "candidate design is not held-out recovery evidence"},
+    ]
+
+    return {
+        "evidence_kind": "form_fill_confirmation_marker_coverage_extension_design",
+        "design_kind": "public_form_fill_confirmation_marker_coverage_extension",
+        "source_artifacts": {
+            "coverage": (
+                "reports/public-sample/form-fill-confirmation-marker-coverage/"
+                "form_fill_confirmation_marker_coverage.json"
+            ),
+            "policy": (
+                "reports/public-sample/form-fill-confirmation-field-policy/"
+                "form_fill_confirmation_field_policy.json"
+            ),
+        },
+        "source_manifest_id": source_manifest_id,
+        "source_bucket": "missing_confirmation_marker",
+        "source_family_counts": _sanitize_public_value(source_family_counts),
+        "source_count_consistency": source_count_consistency,
+        "legacy_context": {
+            "legacy_confirmation_candidate_case_count": legacy_case_count,
+            "legacy_candidate_field_label_count": legacy_field_count,
+            "legacy_represented_field_labels": _sanitize_public_value(
+                coverage.get("existing_remediation", {}).get("represented_field_labels", [])
+            ),
+        },
+        "proposed_candidate_cases": proposed_cases,
+        "represented_source_families": represented_source_families,
+        "uncovered_source_families_after_design": [],
+        "summary": {
+            "design_decision": "extend_confirmation_marker_coverage_with_source_family_cases",
+            "source_family_count": len(source_family_counts),
+            "proposed_case_count": proposed_case_count,
+            "represented_source_family_count": represented_source_family_count,
+            "represented_source_family_incidence_total": source_family_incidence_total,
+            "uncovered_source_family_count_after_design": 0,
+            "legacy_confirmation_candidate_case_count": legacy_case_count,
+            "legacy_candidate_field_label_count": legacy_field_count,
+            "field_labels_derived_count": derived_count,
+            "field_labels_not_derivable_count": not_derivable_count,
+            "recommended_next_step": "materialize_bounded_confirmation_marker_extension_candidates_in_later_phase",
+        },
+        "metric_authority": {
+            "contract_exact_match": "authoritative_strict_metric",
+            "slot_f1": "authoritative_strict_metric",
+            "slot_f1_soft": "diagnostic_only_not_primary",
+            "contract_evaluation_ladder": "authoritative",
+            "prediction_repair_or_rescore": False,
+        },
+        "unsupported_changes": unsupported_changes,
+        "execution_scope": {
+            "committed_public_artifacts_read": True,
+            "raw_predictions_read": False,
+            "new_candidate_rows_generated": False,
+            "dataset_mutation": False,
+            "public_sample_modified": False,
+            "seed_traces_modified": False,
+            "sft_rows_modified": False,
+            "dpo_pairs_modified": False,
+            "held_out_gold_labels_modified": False,
+            "prompt_change": False,
+            "gold_policy_change": False,
+            "prediction_run": False,
+            "training_run": False,
+            "checkpoints_or_adapters_modified": False,
+            "a100_job": False,
+            "evaluator_metric_change": False,
+            "evaluator_relaxation": False,
+            "prediction_repair": False,
+            "prediction_replacement": False,
+            "prediction_rescore": False,
+        },
+        "claims": {
+            "design_only": True,
+            "model_recovery_claim": False,
+            "held_out_recovery_claim": False,
+            "production_readiness_claim": False,
+            "private_corpus_generalization_claim": False,
+            "public_full_corpus_release_claim": False,
+            "live_browser_benchmark_claim": False,
+            "adapter_release_claim": False,
+            "checkpoint_release_claim": False,
+            "soft_slot_f1_primary_metric": False,
+            "semantic_equivalence_primary_metric": False,
+        },
+    }
+
+
 def select_formal_heldout_remediation_target(
     *,
     residual_diagnosis: dict[str, Any],
