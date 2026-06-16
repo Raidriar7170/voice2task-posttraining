@@ -28,24 +28,24 @@
     "soft_slot_f1_primary_metric": false,
     "training_performed": false
   },
-  "dataset_manifest_id": "public-sample-20260615T111316Z",
+  "dataset_manifest_id": "public-sample-20260616T022151Z",
   "diagnostic_artifacts": {
-    "evidence": "reports/public-sample/a100-formal-public-heldout-prediction/formal_public_heldout_prediction.json",
-    "manifest": "reports/public-sample/a100-formal-public-heldout-prediction/manifest.json",
-    "report": "reports/public-sample/a100-formal-public-heldout-prediction/report.md"
+    "evidence": "a100-formal-public-heldout-prediction/formal_public_heldout_prediction.json",
+    "manifest": "a100-formal-public-heldout-prediction/manifest.json",
+    "report": "a100-formal-public-heldout-prediction/report.md"
   },
   "evidence_kind": "a100_formal_public_heldout_prediction",
   "formal_public_sample_counts": {
-    "dpo_pairs": 661,
-    "seed_rows": 77,
-    "sft_rows": 231
+    "dpo_pairs": 742,
+    "seed_rows": 86,
+    "sft_rows": 240
   },
   "formal_public_sample_split_counts": {
     "dev": 69,
     "test": 69,
-    "train": 93
+    "train": 102
   },
-  "generated_at": "2026-06-15T14:28:04.556233+00:00",
+  "generated_at": "2026-06-16T03:10:02.090764+00:00",
   "overall_interpretation": "formal_public_heldout_partial_signal",
   "prediction_splits": [
     "dev",
@@ -60,8 +60,8 @@
   "split_results": {
     "dev": {
       "artifact_paths": {
-        "metrics": "reports/public-sample/a100-formal-public-heldout-prediction/dev/metrics.json",
-        "prediction_metadata": "reports/public-sample/a100-formal-public-heldout-prediction/dev/prediction_metadata.json"
+        "metrics": "<private_path>",
+        "prediction_metadata": "<private_path>"
       },
       "confirmation_accuracy": 0.9855072463768116,
       "contract_exact_match": 0.30434782608695654,
@@ -88,8 +88,8 @@
     },
     "test": {
       "artifact_paths": {
-        "metrics": "reports/public-sample/a100-formal-public-heldout-prediction/test/metrics.json",
-        "prediction_metadata": "reports/public-sample/a100-formal-public-heldout-prediction/test/prediction_metadata.json"
+        "metrics": "<private_path>",
+        "prediction_metadata": "<private_path>"
       },
       "confirmation_accuracy": 0.9855072463768116,
       "contract_exact_match": 0.2898550724637681,

@@ -39,7 +39,7 @@ def test_formal_heldout_residual_family_diagnosis_groups_current_residuals() -> 
     assert diagnosis["evidence_kind"] == "formal_heldout_residual_family_diagnosis"
     assert diagnosis["diagnostic_kind"] == "formal_public_heldout_residual_family_diagnosis"
     assert diagnosis["source_formal_heldout_evidence"]["dataset_manifest_id"] == (
-        "public-sample-20260615T111316Z"
+        "public-sample-20260616T022151Z"
     )
     assert diagnosis["source_formal_heldout_evidence"]["overall_interpretation"] == (
         "formal_public_heldout_partial_signal"

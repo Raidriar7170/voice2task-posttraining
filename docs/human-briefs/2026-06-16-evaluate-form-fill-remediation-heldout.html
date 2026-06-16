@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Voice2Task post-form-fill held-out evidence</title>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #172033; background: #f6f8fb; }
+    main { max-width: 1000px; margin: 0 auto; padding: 32px 20px 48px; }
+    h1 { margin: 0 0 10px; font-size: 28px; }
+    h2 { margin: 24px 0 10px; font-size: 18px; }
+    p, li { line-height: 1.7; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; background: #fff; border: 1px solid #d7dfeb; }
+    th, td { padding: 10px 12px; border-bottom: 1px solid #d7dfeb; text-align: left; }
+    th { background: #eaf0f8; }
+    code { padding: 2px 5px; border-radius: 4px; background: #e9eef6; }
+    a { color: #2457a7; }
+    .summary { padding: 18px 20px; border: 1px solid #d7dfeb; border-radius: 8px; background: #fff; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+    .metric { padding: 14px 16px; border: 1px solid #d7dfeb; border-radius: 8px; background: #fff; }
+    .metric strong { display: block; font-size: 24px; margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Voice2Task post-form-fill held-out evidence</h1>
+  <p class="summary">结论：新 formal manifest 上的 prediction-only dev/test evidence 已刷新；JSON 仍 100% valid，但 strict full-contract exact match 仍是 dev 30.43% / test 28.99%，所以这不是 held-out recovery、不是模型发布，也不是生产可用声明。</p>
+
+  <h2>当前状态</h2>
+  <div class="grid">
+    <div class="metric"><strong>applying</strong>OpenSpec phase</div>
+    <div class="metric"><strong>86</strong>formal seed rows</div>
+    <div class="metric"><strong>240</strong>formal SFT rows</div>
+    <div class="metric"><strong>742</strong>formal DPO pairs</div>
+  </div>
+
+  <h2>本阶段做了什么</h2>
+  <ul>
+    <li>在 form-fill remediation candidates 合并后的 manifest <code>public-sample-20260616T022151Z</code> 上重跑 dev/test prediction-only held-out eval。</li>
+    <li>只导入 sanitized public evidence：predictions、metrics、schema diagnostics、alignment diagnostics、residual-family diagnosis、manifest 和报告。</li>
+    <li>保持严格边界：没有 SFT/DPO/GRPO 训练，没有 evaluator relaxation，没有 prediction repair/re-score，没有 checkpoint 或 adapter release。</li>
+    <li>运行中发现一次 private runtime override 指向旧 adapter；该错误产物已丢弃，仓库只保留修正 override 后重跑得到的 public-safe evidence。</li>
+  </ul>
+
+  <h2>核心指标</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>指标</th>
+        <th>Dev</th>
+        <th>Test</th>
+        <th>解释边界</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><code>json_valid_rate</code></td><td>100.00%</td><td>100.00%</td><td>结构输出稳定，但不等于任务完全正确。</td></tr>
+      <tr><td><code>contract_exact_match</code></td><td>30.43%</td><td>28.99%</td><td>主指标仍显示 held-out full-contract 行为只是 partial signal。</td></tr>
+      <tr><td><code>task_type_accuracy</code></td><td>85.51%</td><td>91.30%</td><td>route/task-type residual 仍需单独诊断。</td></tr>
+      <tr><td><code>route_accuracy</code></td><td>85.51%</td><td>91.30%</td><td>dev 上 clarify/边界类错误仍可见。</td></tr>
+      <tr><td><code>safety_recall</code></td><td>66.67%</td><td>91.67%</td><td>dev 上 blocked/payment 类漏判仍是风险。</td></tr>
+      <tr><td><code>slot_f1</code> strict</td><td>39.13%</td><td>50.72%</td><td>严格 slot exactness 仍不能包装成恢复。</td></tr>
+      <tr><td><code>slot_f1_soft</code></td><td>73.15%</td><td>76.09%</td><td>internal diagnostic only，不能替代 strict 主指标。</td></tr>
+    </tbody>
+  </table>
+
+  <h2>关键产物</h2>
+  <ul>
+    <li><a href="../../reports/public-sample/a100-formal-public-heldout-prediction/report.md">formal held-out prediction report</a></li>
+    <li><a href="../../reports/public-sample/a100-formal-public-heldout-prediction/formal_public_heldout_prediction.json">formal held-out prediction JSON</a></li>
+    <li><a href="../../reports/public-sample/a100-formal-public-heldout-prediction/dev/metrics.md">dev metrics</a> / <a href="../../reports/public-sample/a100-formal-public-heldout-prediction/test/metrics.md">test metrics</a></li>
+    <li><a href="../../reports/public-sample/formal-heldout-residual-family-diagnosis/formal_heldout_residual_family_diagnosis.md">residual-family diagnosis</a></li>
+    <li><a href="../../openspec/changes/evaluate-form-fill-remediation-heldout/proposal.md">OpenSpec proposal</a></li>
+  </ul>
+
+  <h2>残留问题</h2>
+  <ul>
+    <li>Residual row count 为 97；其中 normalized_command strict string mismatch 77、slot strict mismatch 76、route/task_type strict mismatch 各 16。</li>
+    <li>source count consistency 为 ok，dev/test residual rows 分别为 48/49，说明诊断没有把样本数算丢。</li>
+    <li>推荐下一步仍是先 inspect residual-family clusters，再决定是否新增数据、重训或改文档；不能直接跳到 DPO 或放宽 evaluator。</li>
+  </ul>
+
+  <h2>验证结果</h2>
+  <ul>
+    <li><code>PYTHONPATH=src python3 -m voice2task.cli.data validate --sft data/public-samples/sft_public_sample.jsonl --dpo data/public-samples/dpo_public_sample.jsonl --manifest data/public-samples/manifest_public_sample.json --public</code>：ok，240 SFT rows / 742 DPO pairs。</li>
+    <li><code>PYTHONPATH=src python3 -m pytest -q tests/test_formal_public_heldout_prediction.py tests/test_formal_heldout_residual_family_diagnosis.py</code>：7 passed。</li>
+    <li><code>PYTHONPATH=src python3 -m pytest -q</code>：332 passed。</li>
+    <li><code>ruff check src/ scripts/ tests/</code>：All checks passed。</li>
+    <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：5 passed, 0 failed。</li>
+    <li><code>voice2task.leak_scan.scan_paths(...)</code>：ok，0 findings；扫描范围覆盖 formal held-out reports、residual diagnosis、Human Brief 和 active OpenSpec change。</li>
+    <li><code>git diff --check</code>：通过，无 whitespace errors。</li>
+  </ul>
+
+  <h2>项目阶段进度</h2>
+  <p>当前项目阶段目标未在仓库中显式定义。README 将本项目定位为 public-sample evidence repository，而不是生产发布包；本阶段推进的是 evidence ladder 中的 current formal manifest held-out proof，把上一阶段的新 data boundary 和 prediction-only evidence 对齐。</p>
+
+  <h2>推荐下一步</h2>
+  <p>归档本阶段后，下一 bounded OpenSpec phase 应聚焦 residual-family cluster inspection，先解释 clarify/route、blocked safety recall、slot exactness 和 normalized_command mismatch 的分布，再决定是否进入数据补充或训练阶段。</p>
+</main>
+</body>
+</html>

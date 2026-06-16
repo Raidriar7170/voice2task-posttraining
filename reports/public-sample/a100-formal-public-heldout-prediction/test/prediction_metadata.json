@@ -1,6 +1,6 @@
 {
   "adapter_release_status": "not_released",
-  "base_model": "Qwen/Qwen2.5-7B-Instruct",
+  "base_model": "<private_base_model>",
   "command_summary": {
     "config": "<private_prediction_config>",
     "entrypoint": "voice2task-train sft-predict",
@@ -10,8 +10,8 @@
     "requires_cli_run_prediction": true,
     "requires_config_allow_private_prediction": true
   },
-  "created_at": "2026-06-15T12:07:51.024465+00:00",
-  "dataset_manifest_id": "public-sample-20260615T111316Z",
+  "created_at": "2026-06-16T03:07:16.832452+00:00",
+  "dataset_manifest_id": "public-sample-20260616T022151Z",
   "dataset_manifest_path": "data/public-samples/manifest_public_sample.json",
   "decoding_policy": {
     "do_sample": false,

@@ -4,7 +4,7 @@ Status: prediction-only current-manifest held-out evidence. This phase does not 
 
 ## Scope
 
-- Dataset manifest: `public-sample-20260615T111316Z`
+- Dataset manifest: `public-sample-20260616T022151Z`
 - Run status: `observed`
 - Source adapter runtime: `a100-merged-slot-value-heldout-eval`
 - Overall interpretation: `formal_public_heldout_partial_signal`

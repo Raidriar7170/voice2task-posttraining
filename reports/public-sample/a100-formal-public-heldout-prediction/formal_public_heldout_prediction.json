@@ -1,36 +1,36 @@
 {
   "artifact_paths_by_split": {
     "dev": {
-      "alignment_diagnostics": "reports/public-sample/a100-formal-public-heldout-prediction/dev/alignment_diagnostics.json",
-      "alignment_diagnostics_markdown": "reports/public-sample/a100-formal-public-heldout-prediction/dev/alignment_diagnostics.md",
-      "constrained_decoding_diagnosis": "reports/public-sample/a100-formal-public-heldout-prediction/dev/constrained_decoding_diagnosis.json",
-      "constrained_decoding_diagnosis_markdown": "reports/public-sample/a100-formal-public-heldout-prediction/dev/constrained_decoding_diagnosis.md",
-      "generation_trace": "reports/public-sample/a100-formal-public-heldout-prediction/dev/generation_trace.jsonl",
-      "gold": "reports/public-sample/a100-formal-public-heldout-prediction/dev/dev_gold.jsonl",
-      "metrics": "reports/public-sample/a100-formal-public-heldout-prediction/dev/metrics.json",
-      "metrics_markdown": "reports/public-sample/a100-formal-public-heldout-prediction/dev/metrics.md",
-      "prediction_metadata": "reports/public-sample/a100-formal-public-heldout-prediction/dev/prediction_metadata.json",
-      "predictions": "reports/public-sample/a100-formal-public-heldout-prediction/dev/predictions.jsonl",
-      "prompt_snapshot": "reports/public-sample/a100-formal-public-heldout-prediction/dev/prompt_snapshot.json",
-      "raw_decoded_summary": "reports/public-sample/a100-formal-public-heldout-prediction/dev/raw_decoded_summary.jsonl",
-      "schema_diagnostics": "reports/public-sample/a100-formal-public-heldout-prediction/dev/schema_diagnostics.json",
-      "schema_diagnostics_markdown": "reports/public-sample/a100-formal-public-heldout-prediction/dev/schema_diagnostics.md"
+      "alignment_diagnostics": "<private_path>",
+      "alignment_diagnostics_markdown": "<private_path>",
+      "constrained_decoding_diagnosis": "<private_path>",
+      "constrained_decoding_diagnosis_markdown": "<private_path>",
+      "generation_trace": "<private_path>",
+      "gold": "<private_path>",
+      "metrics": "<private_path>",
+      "metrics_markdown": "<private_path>",
+      "prediction_metadata": "<private_path>",
+      "predictions": "<private_path>",
+      "prompt_snapshot": "<private_path>",
+      "raw_decoded_summary": "<private_path>",
+      "schema_diagnostics": "<private_path>",
+      "schema_diagnostics_markdown": "<private_path>"
     },
     "test": {
-      "alignment_diagnostics": "reports/public-sample/a100-formal-public-heldout-prediction/test/alignment_diagnostics.json",
-      "alignment_diagnostics_markdown": "reports/public-sample/a100-formal-public-heldout-prediction/test/alignment_diagnostics.md",
-      "constrained_decoding_diagnosis": "reports/public-sample/a100-formal-public-heldout-prediction/test/constrained_decoding_diagnosis.json",
-      "constrained_decoding_diagnosis_markdown": "reports/public-sample/a100-formal-public-heldout-prediction/test/constrained_decoding_diagnosis.md",
-      "generation_trace": "reports/public-sample/a100-formal-public-heldout-prediction/test/generation_trace.jsonl",
-      "gold": "reports/public-sample/a100-formal-public-heldout-prediction/test/test_gold.jsonl",
-      "metrics": "reports/public-sample/a100-formal-public-heldout-prediction/test/metrics.json",
-      "metrics_markdown": "reports/public-sample/a100-formal-public-heldout-prediction/test/metrics.md",
-      "prediction_metadata": "reports/public-sample/a100-formal-public-heldout-prediction/test/prediction_metadata.json",
-      "predictions": "reports/public-sample/a100-formal-public-heldout-prediction/test/predictions.jsonl",
-      "prompt_snapshot": "reports/public-sample/a100-formal-public-heldout-prediction/test/prompt_snapshot.json",
-      "raw_decoded_summary": "reports/public-sample/a100-formal-public-heldout-prediction/test/raw_decoded_summary.jsonl",
-      "schema_diagnostics": "reports/public-sample/a100-formal-public-heldout-prediction/test/schema_diagnostics.json",
-      "schema_diagnostics_markdown": "reports/public-sample/a100-formal-public-heldout-prediction/test/schema_diagnostics.md"
+      "alignment_diagnostics": "<private_path>",
+      "alignment_diagnostics_markdown": "<private_path>",
+      "constrained_decoding_diagnosis": "<private_path>",
+      "constrained_decoding_diagnosis_markdown": "<private_path>",
+      "generation_trace": "<private_path>",
+      "gold": "<private_path>",
+      "metrics": "<private_path>",
+      "metrics_markdown": "<private_path>",
+      "prediction_metadata": "<private_path>",
+      "predictions": "<private_path>",
+      "prompt_snapshot": "<private_path>",
+      "raw_decoded_summary": "<private_path>",
+      "schema_diagnostics": "<private_path>",
+      "schema_diagnostics_markdown": "<private_path>"
     }
   },
   "artifact_policy": {
@@ -63,12 +63,12 @@
     "soft_slot_f1_primary_metric": false,
     "training_performed": false
   },
-  "dataset_manifest_id": "public-sample-20260615T111316Z",
+  "dataset_manifest_id": "public-sample-20260616T022151Z",
   "evidence_kind": "a100_formal_public_heldout_prediction",
   "formal_public_sample_counts": {
-    "dpo_pairs": 661,
-    "seed_rows": 77,
-    "sft_rows": 231
+    "dpo_pairs": 742,
+    "seed_rows": 86,
+    "sft_rows": 240
   },
   "formal_public_sample_source_summary": {
     "family_stratified_candidate_seed_rows": 63,
@@ -88,7 +88,15 @@
       "test": 21,
       "train": 21
     },
-    "seed_rows": 77,
+    "form_fill_remediation_candidate_seed_rows": 9,
+    "form_fill_remediation_candidate_sft_rows": 9,
+    "form_fill_remediation_candidates_formal_public_sample": true,
+    "form_fill_remediation_source_case_groups": [
+      "form-fill-clarify-boundary-protection",
+      "form-fill-confirmation-marker-preservation",
+      "form-fill-field-specificity-preservation"
+    ],
+    "seed_rows": 86,
     "slot_value_candidate_seed_rows": 4,
     "slot_value_candidates_formal_public_sample": true,
     "source": "sanitized_public_seed_fixture"
@@ -96,18 +104,26 @@
   "formal_public_sample_split_counts": {
     "dev": 69,
     "test": 69,
-    "train": 93
+    "train": 102
   },
-  "generated_at": "2026-06-15T14:28:04.556233+00:00",
+  "generated_at": "2026-06-16T03:10:02.090764+00:00",
   "leak_scan_result": {
     "findings": [],
-    "ok": true
+    "generated_at": "2026-06-16T03:10:01.942998+00:00",
+    "max_public_jsonl_rows": 5000,
+    "ok": true,
+    "scanned_paths": [
+      "<private_path>",
+      "<private_path>",
+      "configs/sft-a100-formal-public-heldout-dev-prediction.json",
+      "configs/sft-a100-formal-public-heldout-test-prediction.json"
+    ]
   },
   "overall_interpretation": "formal_public_heldout_partial_signal",
   "prediction_metadata_by_split": {
     "dev": {
       "adapter_release_status": "not_released",
-      "base_model": "Qwen/Qwen2.5-7B-Instruct",
+      "base_model": "<private_base_model>",
       "command_summary": {
         "config": "<private_prediction_config>",
         "entrypoint": "voice2task-train sft-predict",
@@ -117,8 +133,8 @@
         "requires_cli_run_prediction": true,
         "requires_config_allow_private_prediction": true
       },
-      "created_at": "2026-06-15T12:05:49.465365+00:00",
-      "dataset_manifest_id": "public-sample-20260615T111316Z",
+      "created_at": "2026-06-16T03:04:39.428566+00:00",
+      "dataset_manifest_id": "public-sample-20260616T022151Z",
       "dataset_manifest_path": "data/public-samples/manifest_public_sample.json",
       "decoding_policy": {
         "do_sample": false,
@@ -331,7 +347,7 @@
     },
     "test": {
       "adapter_release_status": "not_released",
-      "base_model": "Qwen/Qwen2.5-7B-Instruct",
+      "base_model": "<private_base_model>",
       "command_summary": {
         "config": "<private_prediction_config>",
         "entrypoint": "voice2task-train sft-predict",
@@ -341,8 +357,8 @@
         "requires_cli_run_prediction": true,
         "requires_config_allow_private_prediction": true
       },
-      "created_at": "2026-06-15T12:07:51.024465+00:00",
-      "dataset_manifest_id": "public-sample-20260615T111316Z",
+      "created_at": "2026-06-16T03:07:16.832452+00:00",
+      "dataset_manifest_id": "public-sample-20260616T022151Z",
       "dataset_manifest_path": "data/public-samples/manifest_public_sample.json",
       "decoding_policy": {
         "do_sample": false,
@@ -567,8 +583,8 @@
   "split_results": {
     "dev": {
       "artifact_paths": {
-        "metrics": "reports/public-sample/a100-formal-public-heldout-prediction/dev/metrics.json",
-        "prediction_metadata": "reports/public-sample/a100-formal-public-heldout-prediction/dev/prediction_metadata.json"
+        "metrics": "<private_path>",
+        "prediction_metadata": "<private_path>"
       },
       "confirmation_accuracy": 0.9855072463768116,
       "contract_exact_match": 0.30434782608695654,
@@ -595,8 +611,8 @@
     },
     "test": {
       "artifact_paths": {
-        "metrics": "reports/public-sample/a100-formal-public-heldout-prediction/test/metrics.json",
-        "prediction_metadata": "reports/public-sample/a100-formal-public-heldout-prediction/test/prediction_metadata.json"
+        "metrics": "<private_path>",
+        "prediction_metadata": "<private_path>"
       },
       "confirmation_accuracy": 0.9855072463768116,
       "contract_exact_match": 0.2898550724637681,

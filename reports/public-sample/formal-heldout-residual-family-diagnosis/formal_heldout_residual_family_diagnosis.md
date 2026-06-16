@@ -1,4 +1,4 @@
-# Voice2Task formal held-out residual family diagnosis
+# Voice2Task post-form-fill formal held-out residual family diagnosis
 
 This diagnosis groups the current formal public held-out dev/test strict residuals. It is not training, not a prediction rerun, not held-out recovery, and not evaluator relaxation.
 
@@ -12,7 +12,7 @@ This diagnosis groups the current formal public held-out dev/test strict residua
 
 ## Summary
 
-- Source evidence: `{'evidence_kind': 'a100_formal_public_heldout_prediction', 'dataset_manifest_id': 'public-sample-20260615T111316Z', 'base_model': 'Qwen/Qwen2.5-7B-Instruct', 'overall_interpretation': 'formal_public_heldout_partial_signal', 'prediction_splits': ['dev', 'test']}`
+- Source evidence: `{'evidence_kind': 'a100_formal_public_heldout_prediction', 'dataset_manifest_id': 'public-sample-20260616T022151Z', 'base_model': 'Qwen/Qwen2.5-7B-Instruct', 'overall_interpretation': 'formal_public_heldout_partial_signal', 'prediction_splits': ['dev', 'test']}`
 - Strict exact match: `{'dev': 0.30434782608695654, 'test': 0.2898550724637681}`
 - Strict slot F1: `{'dev': 0.391304347826087, 'test': 0.5072463768115942}`
 - Soft slot F1: `{'dev': 0.7315387631291138, 'test': 0.7609315000619348}`

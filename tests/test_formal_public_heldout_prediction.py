@@ -111,9 +111,9 @@ def test_committed_formal_public_heldout_prediction_evidence_is_observed_but_not
 
     assert evidence["evidence_kind"] == "a100_formal_public_heldout_prediction"
     assert evidence["run_status"] == "observed"
-    assert evidence["dataset_manifest_id"] == "public-sample-20260615T111316Z"
-    assert evidence["formal_public_sample_counts"] == {"dpo_pairs": 661, "seed_rows": 77, "sft_rows": 231}
-    assert evidence["formal_public_sample_split_counts"] == {"dev": 69, "test": 69, "train": 93}
+    assert evidence["dataset_manifest_id"] == "public-sample-20260616T022151Z"
+    assert evidence["formal_public_sample_counts"] == {"dpo_pairs": 742, "seed_rows": 86, "sft_rows": 240}
+    assert evidence["formal_public_sample_split_counts"] == {"dev": 69, "test": 69, "train": 102}
     assert evidence["training_status"] == "prediction_only_no_training"
     assert evidence["prediction_splits"] == ["dev", "test"]
     assert evidence["overall_interpretation"] == "formal_public_heldout_partial_signal"
@@ -122,9 +122,19 @@ def test_committed_formal_public_heldout_prediction_evidence_is_observed_but_not
     assert split_results["dev"]["prediction_count"] == 69
     assert split_results["dev"]["contract_exact_match"] == pytest.approx(0.30434782608695654)
     assert split_results["dev"]["json_valid_rate"] == 1.0
+    assert split_results["dev"]["task_type_accuracy"] == pytest.approx(0.855072463768116)
+    assert split_results["dev"]["route_accuracy"] == pytest.approx(0.855072463768116)
+    assert split_results["dev"]["slot_f1"] == pytest.approx(0.391304347826087)
+    assert split_results["dev"]["slot_f1_soft"] == pytest.approx(0.7315387631291138)
+    assert split_results["dev"]["safety_recall"] == pytest.approx(0.6666666666666666)
     assert split_results["test"]["prediction_count"] == 69
     assert split_results["test"]["contract_exact_match"] == pytest.approx(0.2898550724637681)
     assert split_results["test"]["json_valid_rate"] == 1.0
+    assert split_results["test"]["task_type_accuracy"] == pytest.approx(0.9130434782608695)
+    assert split_results["test"]["route_accuracy"] == pytest.approx(0.9130434782608695)
+    assert split_results["test"]["slot_f1"] == pytest.approx(0.5072463768115942)
+    assert split_results["test"]["slot_f1_soft"] == pytest.approx(0.7609315000619348)
+    assert split_results["test"]["safety_recall"] == pytest.approx(0.9166666666666666)
 
     claims = evidence["claims"]
     assert claims["prediction_only"] is True
