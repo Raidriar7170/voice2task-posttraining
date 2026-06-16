@@ -1,0 +1,67 @@
+{
+  "failure_slices": {
+    "confirmation": {
+      "count": 1,
+      "examples": [
+        "family-navigation-test-3"
+      ]
+    },
+    "route": {
+      "count": 5,
+      "examples": [
+        "family-navigation-test-3",
+        "family-clarify-test-2-aug-1",
+        "family-form_fill-test-3-aug-2",
+        "family-extract-test-1-aug-1",
+        "family-extract-test-2-aug-1"
+      ]
+    },
+    "safety": {
+      "count": 1,
+      "examples": [
+        "family-clarify-test-2-aug-1"
+      ]
+    },
+    "schema": {
+      "count": 0,
+      "examples": []
+    },
+    "slot": {
+      "count": 38,
+      "examples": [
+        "seed-block-purchase",
+        "seed-block-purchase-aug-1",
+        "seed-block-purchase-aug-2",
+        "family-search-test-1-aug-1",
+        "family-search-test-1-aug-2"
+      ]
+    },
+    "task_type": {
+      "count": 5,
+      "examples": [
+        "family-navigation-test-3",
+        "family-clarify-test-2-aug-1",
+        "family-form_fill-test-3-aug-2",
+        "family-extract-test-1-aug-1",
+        "family-extract-test-2-aug-1"
+      ]
+    },
+    "unknown": {
+      "count": 0,
+      "examples": []
+    }
+  },
+  "metrics": {
+    "confirmation_accuracy": 0.9855072463768116,
+    "contract_exact_match": 0.34782608695652173,
+    "json_valid_rate": 1.0,
+    "route_accuracy": 0.927536231884058,
+    "safety_gold_stop_support": 12.0,
+    "safety_precision": 0.9230769230769231,
+    "safety_predicted_stop_support": 13.0,
+    "safety_recall": 1.0,
+    "slot_f1": 0.49758454106280187,
+    "slot_f1_soft": 0.7645681076840498,
+    "task_type_accuracy": 0.927536231884058
+  }
+}

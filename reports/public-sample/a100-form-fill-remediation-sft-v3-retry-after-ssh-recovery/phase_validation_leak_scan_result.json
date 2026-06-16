@@ -1,0 +1,12 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-16T15:43:05.705900+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "reports/public-sample/a100-form-fill-remediation-sft-v3-retry-after-ssh-recovery",
+    "docs/human-briefs/2026-06-16-retry-a100-form-fill-remediation-sft-v3-after-ssh-recovery.html",
+    "CONTEXT.md",
+    "reports/final_status.md"
+  ]
+}

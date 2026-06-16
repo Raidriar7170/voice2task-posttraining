@@ -1,0 +1,12 @@
+{
+  "generated_at": "2026-06-16T15:38:00.360452+00:00",
+  "host_details_omitted": true,
+  "ok": true,
+  "private_paths_omitted": true,
+  "remote_command_scope": "training_prediction_only_no_process_interruption",
+  "selected_gpu": "gpu_index_3",
+  "selected_gpu_preflight": "idle_no_running_processes_at_launch",
+  "ssh_connectivity": "available_after_retry",
+  "ssh_details_omitted": true,
+  "write_root_policy": "approved_private_a100_root_under_user_namespace"
+}

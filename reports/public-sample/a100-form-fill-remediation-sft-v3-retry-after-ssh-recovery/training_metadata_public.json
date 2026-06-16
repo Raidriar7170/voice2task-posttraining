@@ -1,0 +1,23 @@
+{
+  "adapter_copied_to_git": false,
+  "adapter_produced": true,
+  "adapter_release_status": "not_released",
+  "base_model": "Qwen/Qwen2.5-7B-Instruct",
+  "checkpoint_copied_to_git": false,
+  "dataset_manifest_id": "public-sample-20260616T074315Z",
+  "form_fill_remediation_train_rows": 21,
+  "package_versions": {
+    "accelerate": "1.13.0",
+    "datasets": "5.0.0",
+    "peft": "0.18.1",
+    "python": "3.11.4",
+    "transformers": "5.5.0",
+    "trl": "1.5.1"
+  },
+  "private_override_copied_to_git": false,
+  "raw_log_copied_to_git": false,
+  "stack": "transformers+peft+trl+pretokenized_assistant_only_labels",
+  "training_rows_used": 114,
+  "training_split": "train",
+  "training_status": "training_completed"
+}

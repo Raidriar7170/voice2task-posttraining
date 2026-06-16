@@ -6,9 +6,12 @@ Voice2Task Post-Training is a companion project for training and evaluating smal
 
 As of 2026-06-16, the first project phase is closed as an evidence-backed
 post-training and evaluation baseline, not as a production-ready model release.
-The current public-facing truth surface is the A100 prediction-only formal
-public held-out retry under
-`reports/public-sample/a100-formal-public-heldout-prediction-after-a100-recovery/`.
+The public-facing truth surface has two current layers:
+
+1. the A100 prediction-only formal public held-out baseline under
+   `reports/public-sample/a100-formal-public-heldout-prediction-after-a100-recovery/`;
+2. the bounded SFT v3 retry after SSH recovery under
+   `reports/public-sample/a100-form-fill-remediation-sft-v3-retry-after-ssh-recovery/`.
 
 Current formal public sample boundary:
 
@@ -17,15 +20,24 @@ Current formal public sample boundary:
 | manifest | `public-sample-20260616T074315Z` |
 | public sample | 98 seeds / 252 SFT rows / 850 DPO pairs |
 | split counts | train 114 / dev 69 / test 69 |
-| run type | prediction-only held-out evaluation |
-| interpretation | `formal_public_heldout_partial_signal` |
+| baseline run type | prediction-only held-out evaluation |
+| baseline interpretation | `formal_public_heldout_partial_signal` |
+| latest bounded run type | private A100 SFT v3 on public train split + dev/test prediction |
+| latest bounded interpretation | `form_fill_sft_v3_partial_improvement_with_safety_regression_risk` |
 
-Latest formal held-out metrics:
+Prediction-only baseline formal held-out metrics:
 
 | split | contract_exact_match | strict slot_f1 | slot_f1_soft | route_accuracy | safety_recall | json_valid_rate |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | dev | 0.3043 | 0.3913 | 0.7315 | 0.8551 | 0.6667 | 1.0000 |
 | test | 0.2899 | 0.5072 | 0.7609 | 0.9130 | 0.9167 | 1.0000 |
+
+Latest bounded SFT v3 retry formal held-out metrics:
+
+| split | contract_exact_match | strict slot_f1 | slot_f1_soft | route_accuracy | safety_recall | json_valid_rate |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| dev | 0.4638 | 0.5652 | 0.8157 | 0.8696 | 0.5556 | 1.0000 |
+| test | 0.3478 | 0.4976 | 0.7646 | 0.9275 | 1.0000 | 1.0000 |
 
 Strict `contract_exact_match` and strict `slot_f1` remain the public headline
 metrics. `slot_f1_soft` is diagnostic only and must not be used as recovery,
@@ -34,13 +46,16 @@ means the output shape is stable; it is not enough to claim contract recovery.
 
 Claim boundaries:
 
-- No training was performed in the latest A100 recovery retry.
+- The latest bounded SFT v3 retry did train a private A100 adapter on the
+  current public train split (`114` rows, including `21` form-fill remediation /
+  confirmation-marker rows), but it is not released.
 - No evaluator relaxation, prediction repair, slot normalization, or data
-  mutation happened in that retry.
+  mutation happened in the latest retry.
 - No checkpoint, adapter, full private corpus, or live-browser benchmark is
   released from this repository.
 - The project proves a repeatable post-training/evaluation path and a
-  public-safe evidence surface; it does not prove production reliability.
+  public-safe evidence surface; it does not prove production reliability,
+  held-out recovery, or safety readiness.
 
 The residual-family diagnosis, target-selection refresh, and `form_fill` SFT v3
 readiness check are now complete for the current manifest. The selected bounded
@@ -53,14 +68,14 @@ confirmation-marker rows) and recommends a separate
 
 An initial `run-a100-form-fill-remediation-sft-v3` execution attempt was opened
 on 2026-06-16 but blocked before GPU inspection because the configured A100 SSH
-alias timed out. No A100 command executed, no GPU was selected, no private
-override was created, and no training or prediction ran. The blocked evidence is
-under `reports/public-sample/a100-form-fill-remediation-sft-v3/`. A retry is
-valid only after A100 SSH connectivity is available, and it must repeat fresh
-GPU preflight before launching training. DPO, evaluator changes, public
-checkpoint/adapter release, production-readiness claims, and live-browser
-benchmark claims remain out of scope unless a later OpenSpec change explicitly
-scopes them.
+alias timed out. After connectivity recovered, a separate retry performed fresh
+GPU preflight, trained the private SFT v3 adapter, and generated dev/test
+strict metrics. The retry is useful but incomplete: dev exact and strict
+slot_f1 improved substantially, test exact improved modestly, but dev
+`safety_recall` regressed from `0.6667` to `0.5556`. The recommended next
+bounded phase is therefore safety / `blocked_payment` regression diagnosis, not
+DPO, evaluator changes, public checkpoint/adapter release,
+production-readiness claims, or live-browser benchmark claims.
 
 ## Language
 

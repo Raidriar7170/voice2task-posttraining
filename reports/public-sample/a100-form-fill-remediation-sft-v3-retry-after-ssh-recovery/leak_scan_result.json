@@ -1,0 +1,9 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-16T15:48:28.002379+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "reports/public-sample/a100-form-fill-remediation-sft-v3-retry-after-ssh-recovery"
+  ]
+}

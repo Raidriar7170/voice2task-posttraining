@@ -1,0 +1,220 @@
+{
+  "artifact_policy": {
+    "checkpoints_or_adapters_copied_to_git": false,
+    "host_details_omitted": true,
+    "private_corpus_rows_omitted": true,
+    "private_overrides_copied_to_git": false,
+    "private_paths_omitted": true,
+    "raw_logs_copied_to_git": false,
+    "remote_caches_copied_to_git": false,
+    "ssh_details_omitted": true
+  },
+  "baseline_reference": {
+    "dataset_manifest_id": "public-sample-20260616T074315Z",
+    "evidence_dir": "reports/public-sample/a100-formal-public-heldout-prediction-after-a100-recovery",
+    "run_type": "prediction_only_prior_adapter_same_manifest"
+  },
+  "claims": {
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "data_changed": false,
+    "evaluator_relaxation": false,
+    "held_out_generalization_recovered": false,
+    "live_browser_benchmark_claim": false,
+    "model_recovery_claim": false,
+    "prediction_only_after_training": true,
+    "prediction_repair_or_replacement": false,
+    "prediction_repair_or_rescore": false,
+    "private_corpus_generalization_claim": false,
+    "production_readiness_claim": false,
+    "public_full_corpus_release_claim": false,
+    "safety_regression_risk_observed": true,
+    "semantic_equivalence_primary_metric": false,
+    "soft_slot_f1_primary_metric": false,
+    "training_performed": true
+  },
+  "comparison": {
+    "dev": {
+      "confirmation_accuracy": {
+        "after": 0.9710144927536232,
+        "before": 0.9855072463768116,
+        "delta": -0.01449275362318847
+      },
+      "contract_exact_match": {
+        "after": 0.463768115942029,
+        "before": 0.30434782608695654,
+        "delta": 0.15942028985507245
+      },
+      "route_accuracy": {
+        "after": 0.8695652173913043,
+        "before": 0.855072463768116,
+        "delta": 0.01449275362318836
+      },
+      "safety_recall": {
+        "after": 0.5555555555555556,
+        "before": 0.6666666666666666,
+        "delta": -0.11111111111111105
+      },
+      "slot_f1": {
+        "after": 0.5652173913043478,
+        "before": 0.391304347826087,
+        "delta": 0.1739130434782608
+      },
+      "slot_f1_soft": {
+        "after": 0.8157448486641034,
+        "before": 0.7315387631291138,
+        "delta": 0.08420608553498954
+      }
+    },
+    "test": {
+      "confirmation_accuracy": {
+        "after": 0.9855072463768116,
+        "before": 0.9855072463768116,
+        "delta": 0.0
+      },
+      "contract_exact_match": {
+        "after": 0.34782608695652173,
+        "before": 0.2898550724637681,
+        "delta": 0.0579710144927536
+      },
+      "route_accuracy": {
+        "after": 0.927536231884058,
+        "before": 0.9130434782608695,
+        "delta": 0.01449275362318847
+      },
+      "safety_recall": {
+        "after": 1.0,
+        "before": 0.9166666666666666,
+        "delta": 0.08333333333333337
+      },
+      "slot_f1": {
+        "after": 0.49758454106280187,
+        "before": 0.5072463768115942,
+        "delta": -0.009661835748792369
+      },
+      "slot_f1_soft": {
+        "after": 0.7645681076840498,
+        "before": 0.7609315000619348,
+        "delta": 0.00363660762211504
+      }
+    }
+  },
+  "dataset_manifest_id": "public-sample-20260616T074315Z",
+  "diagnostic_artifacts": {
+    "a100_preflight_status": "reports/public-sample/a100-form-fill-remediation-sft-v3-retry-after-ssh-recovery/a100_preflight_status.json",
+    "evidence": "reports/public-sample/a100-form-fill-remediation-sft-v3-retry-after-ssh-recovery/form_fill_remediation_sft_v3_retry.json",
+    "leak_scan": "reports/public-sample/a100-form-fill-remediation-sft-v3-retry-after-ssh-recovery/leak_scan_result.json",
+    "manifest": "reports/public-sample/a100-form-fill-remediation-sft-v3-retry-after-ssh-recovery/manifest.json",
+    "report": "reports/public-sample/a100-form-fill-remediation-sft-v3-retry-after-ssh-recovery/report.md",
+    "training_metadata_public": "reports/public-sample/a100-form-fill-remediation-sft-v3-retry-after-ssh-recovery/training_metadata_public.json"
+  },
+  "evidence_kind": "a100_form_fill_remediation_sft_v3_retry_after_ssh_recovery",
+  "formal_public_sample_counts": {
+    "dpo_pairs": 850,
+    "seed_rows": 98,
+    "sft_rows": 252
+  },
+  "formal_public_sample_split_counts": {
+    "dev": 69,
+    "test": 69,
+    "train": 114
+  },
+  "generated_at": "2026-06-16T15:38:00.361088+00:00",
+  "overall_interpretation": "form_fill_sft_v3_partial_improvement_with_safety_regression_risk",
+  "prediction_splits": [
+    "dev",
+    "test"
+  ],
+  "primary_evidence_splits": [
+    "dev",
+    "test"
+  ],
+  "run_status": "observed",
+  "split_results": {
+    "dev": {
+      "artifact_paths": {
+        "generation_trace": "reports/public-sample/a100-form-fill-remediation-sft-v3-retry-after-ssh-recovery/dev/generation_trace.jsonl",
+        "gold": "reports/public-sample/a100-form-fill-remediation-sft-v3-retry-after-ssh-recovery/dev/dev_gold.jsonl",
+        "metrics": "reports/public-sample/a100-form-fill-remediation-sft-v3-retry-after-ssh-recovery/dev/metrics.json",
+        "prediction_metadata": "reports/public-sample/a100-form-fill-remediation-sft-v3-retry-after-ssh-recovery/dev/prediction_metadata.json",
+        "predictions": "reports/public-sample/a100-form-fill-remediation-sft-v3-retry-after-ssh-recovery/dev/predictions.jsonl",
+        "prompt_snapshot": "reports/public-sample/a100-form-fill-remediation-sft-v3-retry-after-ssh-recovery/dev/prompt_snapshot.json",
+        "raw_decoded_summary": "reports/public-sample/a100-form-fill-remediation-sft-v3-retry-after-ssh-recovery/dev/raw_decoded_summary.jsonl"
+      },
+      "confirmation_accuracy": 0.9710144927536232,
+      "contract_exact_match": 0.463768115942029,
+      "failure_slice_counts": {
+        "confirmation": 2,
+        "route": 9,
+        "safety": 4,
+        "schema": 0,
+        "slot": 30,
+        "task_type": 9,
+        "unknown": 0
+      },
+      "json_valid_rate": 1.0,
+      "prediction_count": 69,
+      "prediction_split": "dev",
+      "route_accuracy": 0.8695652173913043,
+      "safety_precision": 1.0,
+      "safety_recall": 0.5555555555555556,
+      "slot_f1": 0.5652173913043478,
+      "slot_f1_soft": 0.8157448486641034,
+      "task_type_accuracy": 0.8695652173913043
+    },
+    "test": {
+      "artifact_paths": {
+        "generation_trace": "reports/public-sample/a100-form-fill-remediation-sft-v3-retry-after-ssh-recovery/test/generation_trace.jsonl",
+        "gold": "reports/public-sample/a100-form-fill-remediation-sft-v3-retry-after-ssh-recovery/test/test_gold.jsonl",
+        "metrics": "reports/public-sample/a100-form-fill-remediation-sft-v3-retry-after-ssh-recovery/test/metrics.json",
+        "prediction_metadata": "reports/public-sample/a100-form-fill-remediation-sft-v3-retry-after-ssh-recovery/test/prediction_metadata.json",
+        "predictions": "reports/public-sample/a100-form-fill-remediation-sft-v3-retry-after-ssh-recovery/test/predictions.jsonl",
+        "prompt_snapshot": "reports/public-sample/a100-form-fill-remediation-sft-v3-retry-after-ssh-recovery/test/prompt_snapshot.json",
+        "raw_decoded_summary": "reports/public-sample/a100-form-fill-remediation-sft-v3-retry-after-ssh-recovery/test/raw_decoded_summary.jsonl"
+      },
+      "confirmation_accuracy": 0.9855072463768116,
+      "contract_exact_match": 0.34782608695652173,
+      "failure_slice_counts": {
+        "confirmation": 1,
+        "route": 5,
+        "safety": 1,
+        "schema": 0,
+        "slot": 38,
+        "task_type": 5,
+        "unknown": 0
+      },
+      "json_valid_rate": 1.0,
+      "prediction_count": 69,
+      "prediction_split": "test",
+      "route_accuracy": 0.927536231884058,
+      "safety_precision": 0.9230769230769231,
+      "safety_recall": 1.0,
+      "slot_f1": 0.49758454106280187,
+      "slot_f1_soft": 0.7645681076840498,
+      "task_type_accuracy": 0.927536231884058
+    }
+  },
+  "training_metadata": {
+    "adapter_copied_to_git": false,
+    "adapter_produced": true,
+    "adapter_release_status": "not_released",
+    "base_model": "Qwen/Qwen2.5-7B-Instruct",
+    "checkpoint_copied_to_git": false,
+    "dataset_manifest_id": "public-sample-20260616T074315Z",
+    "form_fill_remediation_train_rows": 21,
+    "package_versions": {
+      "accelerate": "1.13.0",
+      "datasets": "5.0.0",
+      "peft": "0.18.1",
+      "python": "3.11.4",
+      "transformers": "5.5.0",
+      "trl": "1.5.1"
+    },
+    "private_override_copied_to_git": false,
+    "raw_log_copied_to_git": false,
+    "stack": "transformers+peft+trl+pretokenized_assistant_only_labels",
+    "training_rows_used": 114,
+    "training_split": "train",
+    "training_status": "training_completed"
+  }
+}

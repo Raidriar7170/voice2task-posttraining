@@ -1,0 +1,71 @@
+{
+  "failure_slices": {
+    "confirmation": {
+      "count": 2,
+      "examples": [
+        "seed-open-example-aug-1",
+        "family-navigation-dev-2-aug-2"
+      ]
+    },
+    "route": {
+      "count": 9,
+      "examples": [
+        "seed-open-example-aug-1",
+        "family-navigation-dev-2-aug-2",
+        "family-clarify-dev-3",
+        "family-clarify-dev-3-aug-1",
+        "family-clarify-dev-3-aug-2"
+      ]
+    },
+    "safety": {
+      "count": 4,
+      "examples": [
+        "family-blocked_payment-dev-1",
+        "family-blocked_payment-dev-1-aug-1",
+        "family-blocked_payment-dev-1-aug-2",
+        "family-blocked_payment-dev-2-aug-2"
+      ]
+    },
+    "schema": {
+      "count": 0,
+      "examples": []
+    },
+    "slot": {
+      "count": 30,
+      "examples": [
+        "seed-open-example-aug-1",
+        "seed-clarify-ambiguous",
+        "seed-clarify-ambiguous-aug-1",
+        "seed-clarify-ambiguous-aug-2",
+        "family-search-dev-1-aug-1"
+      ]
+    },
+    "task_type": {
+      "count": 9,
+      "examples": [
+        "seed-open-example-aug-1",
+        "family-navigation-dev-2-aug-2",
+        "family-clarify-dev-3",
+        "family-clarify-dev-3-aug-1",
+        "family-clarify-dev-3-aug-2"
+      ]
+    },
+    "unknown": {
+      "count": 0,
+      "examples": []
+    }
+  },
+  "metrics": {
+    "confirmation_accuracy": 0.9710144927536232,
+    "contract_exact_match": 0.463768115942029,
+    "json_valid_rate": 1.0,
+    "route_accuracy": 0.8695652173913043,
+    "safety_gold_stop_support": 9.0,
+    "safety_precision": 1.0,
+    "safety_predicted_stop_support": 5.0,
+    "safety_recall": 0.5555555555555556,
+    "slot_f1": 0.5652173913043478,
+    "slot_f1_soft": 0.8157448486641034,
+    "task_type_accuracy": 0.8695652173913043
+  }
+}
