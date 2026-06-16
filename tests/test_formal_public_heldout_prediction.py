@@ -35,7 +35,8 @@ def test_formal_public_heldout_prediction_configs_use_current_manifest_and_priva
             "<a100_project_root>/runs/a100-merged-slot-value-heldout-eval/adapter"
         )
         assert config["evidence_output_dir"] == (
-            f"<a100_project_root>/evidence/a100-formal-public-heldout-prediction/{split}"
+            "<a100_project_root>/evidence/"
+            f"a100-formal-public-heldout-prediction-after-confirmation-marker-merge/{split}"
         )
         assert "allow_heavy_training" not in config
         assert "adapter_output_dir" not in config
@@ -100,6 +101,92 @@ def test_formal_public_heldout_prediction_report_records_blocked_status_without_
     assert manifest["run_status"] == "blocked"
     assert "private_adapter_not_confirmed" in markdown
     assert scan_paths([paths["json"], paths["markdown"], paths["manifest"]]).ok is True
+
+
+def test_formal_public_heldout_prediction_report_records_boundary_changed_semantics(
+    tmp_path: Path,
+) -> None:
+    current_manifest = read_json(PUBLIC_SAMPLE_MANIFEST)
+    paths = write_formal_public_heldout_prediction_report(
+        public_manifest=current_manifest,
+        output_dir=tmp_path / "formal-public-heldout-after-confirmation-marker-merge",
+        run_status="blocked",
+        blocked_reason="idle_gpu_unavailable",
+        metrics_by_split={},
+        prediction_metadata_by_split={},
+        artifact_paths_by_split={},
+        leak_scan_result={"ok": True, "findings": []},
+        comparison_boundary={
+            "prior_dataset_manifest_id": "public-sample-20260616T022151Z",
+            "prior_evidence_dir": "reports/public-sample/a100-formal-public-heldout-prediction",
+            "direct_improvement_regression_comparison_valid": True,
+            "reason": "formal_public_sample_boundary_changed_after_confirmation_marker_extension_merge",
+        },
+    )
+
+    evidence = read_json(paths["json"])
+    manifest = read_json(paths["manifest"])
+    markdown = paths["markdown"].read_text(encoding="utf-8")
+
+    expected_boundary = {
+        "current_dataset_manifest_id": current_manifest["manifest_id"],
+        "prior_dataset_manifest_id": "public-sample-20260616T022151Z",
+        "prior_evidence_dir": "reports/public-sample/a100-formal-public-heldout-prediction",
+        "direct_improvement_regression_comparison_valid": False,
+        "reason": "formal_public_sample_boundary_changed_after_confirmation_marker_extension_merge",
+    }
+    assert evidence["comparison_boundary"] == expected_boundary
+    assert manifest["comparison_boundary"] == expected_boundary
+    assert current_manifest["manifest_id"] in markdown
+    assert "public-sample-20260616T022151Z" in markdown
+    assert "not a clean direct improvement/regression comparison" in markdown
+    assert scan_paths([paths["json"], paths["markdown"], paths["manifest"]]).ok is True
+
+
+def test_committed_post_confirmation_marker_merge_evidence_is_blocked_fail_closed() -> None:
+    evidence_dir = (
+        REPO_ROOT
+        / "reports"
+        / "public-sample"
+        / "a100-formal-public-heldout-prediction-after-confirmation-marker-merge"
+    )
+    evidence = read_json(evidence_dir / "formal_public_heldout_prediction.json")
+    manifest = read_json(evidence_dir / "manifest.json")
+    preflight = read_json(evidence_dir / "a100_preflight_status.json")
+    leak_scan = read_json(evidence_dir / "leak_scan_result.json")
+    phase_leak_scan = read_json(evidence_dir / "phase_validation_leak_scan_result.json")
+    final_phase_leak_scan = read_json(evidence_dir / "final_phase_leak_scan_result.json")
+    report = (evidence_dir / "report.md").read_text(encoding="utf-8")
+
+    assert evidence["run_status"] == "blocked"
+    assert evidence["blocked_reason"] == "a100_ssh_timeout_remote_dependency_unavailable"
+    assert evidence["dataset_manifest_id"] == "public-sample-20260616T074315Z"
+    assert evidence["formal_public_sample_counts"] == {"dpo_pairs": 850, "seed_rows": 98, "sft_rows": 252}
+    assert evidence["formal_public_sample_split_counts"] == {"dev": 69, "test": 69, "train": 114}
+    assert evidence["split_results"] == {}
+    assert evidence["prediction_metadata_by_split"] == {}
+    assert evidence["overall_interpretation"] == "formal_public_heldout_prediction_blocked"
+    assert evidence["claims"]["prediction_only"] is True
+    assert evidence["claims"]["training_performed"] is False
+    assert evidence["claims"]["held_out_generalization_recovered"] is False
+    assert evidence["claims"]["adapter_release"] is False
+    assert evidence["claims"]["production_readiness_claim"] is False
+    assert evidence["claims"]["prediction_repair_or_replacement"] is False
+    assert evidence["comparison_boundary"]["current_dataset_manifest_id"] == "public-sample-20260616T074315Z"
+    assert evidence["comparison_boundary"]["prior_dataset_manifest_id"] == "public-sample-20260616T022151Z"
+    assert evidence["comparison_boundary"]["direct_improvement_regression_comparison_valid"] is False
+    assert manifest["diagnostic_artifacts"]["a100_preflight_status"].endswith("a100_preflight_status.json")
+    assert manifest["diagnostic_artifacts"]["phase_validation_leak_scan"].endswith(
+        "phase_validation_leak_scan_result.json"
+    )
+    assert manifest["diagnostic_artifacts"]["final_phase_leak_scan"].endswith("final_phase_leak_scan_result.json")
+    assert preflight["status"] == "blocked"
+    assert preflight["artifact_policy"]["host_details_omitted"] is True
+    assert leak_scan["ok"] is True
+    assert phase_leak_scan["ok"] is True
+    assert final_phase_leak_scan["ok"] is True
+    assert "No model-quality metrics" in report
+    assert scan_paths([evidence_dir]).ok is True
 
 
 def test_committed_formal_public_heldout_prediction_evidence_is_observed_but_not_recovered() -> None:

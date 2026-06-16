@@ -1,0 +1,129 @@
+{
+  "artifact_paths_by_split": {},
+  "artifact_policy": {
+    "checkpoints_or_adapters_copied_to_git": false,
+    "host_details_omitted": true,
+    "private_corpus_rows_omitted": true,
+    "private_overrides_copied_to_git": false,
+    "private_paths_omitted": true,
+    "raw_logs_copied_to_git": false,
+    "remote_caches_copied_to_git": false,
+    "ssh_details_omitted": true
+  },
+  "base_model": "Qwen/Qwen2.5-7B-Instruct",
+  "blocked_reason": "a100_ssh_timeout_remote_dependency_unavailable",
+  "claims": {
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "data_changed": false,
+    "evaluator_relaxation": false,
+    "held_out_generalization_recovered": false,
+    "live_browser_benchmark_claim": false,
+    "model_recovery_claim": false,
+    "prediction_only": true,
+    "prediction_repair_or_replacement": false,
+    "prediction_repair_or_rescore": false,
+    "private_corpus_generalization_claim": false,
+    "production_readiness_claim": false,
+    "public_full_corpus_release_claim": false,
+    "semantic_equivalence_primary_metric": false,
+    "soft_slot_f1_primary_metric": false,
+    "training_performed": false
+  },
+  "comparison_boundary": {
+    "current_dataset_manifest_id": "public-sample-20260616T074315Z",
+    "direct_improvement_regression_comparison_valid": false,
+    "prior_dataset_manifest_id": "public-sample-20260616T022151Z",
+    "prior_evidence_dir": "reports/public-sample/a100-formal-public-heldout-prediction",
+    "reason": "formal_public_sample_boundary_changed_after_confirmation_marker_extension_merge"
+  },
+  "dataset_manifest_id": "public-sample-20260616T074315Z",
+  "evidence_kind": "a100_formal_public_heldout_prediction",
+  "formal_public_sample_counts": {
+    "dpo_pairs": 850,
+    "seed_rows": 98,
+    "sft_rows": 252
+  },
+  "formal_public_sample_source_summary": {
+    "family_stratified_candidate_seed_rows": 63,
+    "family_stratified_candidate_sft_rows": 189,
+    "family_stratified_candidates_formal_public_sample": true,
+    "family_stratified_families": [
+      "blocked_payment",
+      "clarify",
+      "confirmation",
+      "extract",
+      "form_fill",
+      "navigation",
+      "search"
+    ],
+    "family_stratified_seed_split_counts": {
+      "dev": 21,
+      "test": 21,
+      "train": 21
+    },
+    "form_fill_confirmation_marker_extension_candidate_seed_rows": 12,
+    "form_fill_confirmation_marker_extension_candidate_sft_rows": 12,
+    "form_fill_confirmation_marker_extension_candidates_formal_public_sample": true,
+    "form_fill_confirmation_marker_extension_seed_split_counts": {
+      "dev": 0,
+      "test": 0,
+      "train": 12
+    },
+    "form_fill_confirmation_marker_extension_source_family_ids": [
+      "family-confirmation-dev-1",
+      "family-confirmation-dev-2",
+      "family-confirmation-dev-3",
+      "family-confirmation-test-1",
+      "family-confirmation-test-2",
+      "family-confirmation-test-3",
+      "family-form_fill-dev-1",
+      "family-form_fill-dev-2",
+      "family-form_fill-dev-3",
+      "family-form_fill-test-1",
+      "family-form_fill-test-2",
+      "family-form_fill-test-3"
+    ],
+    "form_fill_remediation_candidate_seed_rows": 9,
+    "form_fill_remediation_candidate_sft_rows": 9,
+    "form_fill_remediation_candidates_formal_public_sample": true,
+    "form_fill_remediation_source_case_groups": [
+      "form-fill-clarify-boundary-protection",
+      "form-fill-confirmation-marker-preservation",
+      "form-fill-field-specificity-preservation"
+    ],
+    "seed_rows": 98,
+    "slot_value_candidate_seed_rows": 4,
+    "slot_value_candidates_formal_public_sample": true,
+    "source": "sanitized_public_seed_fixture"
+  },
+  "formal_public_sample_split_counts": {
+    "dev": 69,
+    "test": 69,
+    "train": 114
+  },
+  "generated_at": "2026-06-16T11:33:01.037913+00:00",
+  "leak_scan_result": {
+    "findings": [],
+    "generated_at": "2026-06-16T11:26:51.074561+00:00",
+    "max_public_jsonl_rows": 5000,
+    "ok": true,
+    "scanned_paths": [
+      "reports/public-sample/a100-formal-public-heldout-prediction-after-confirmation-marker-merge"
+    ]
+  },
+  "overall_interpretation": "formal_public_heldout_prediction_blocked",
+  "prediction_metadata_by_split": {},
+  "prediction_splits": [
+    "dev",
+    "test"
+  ],
+  "primary_evidence_splits": [
+    "dev",
+    "test"
+  ],
+  "run_status": "blocked",
+  "source_adapter_runtime": "a100-merged-slot-value-heldout-eval",
+  "split_results": {},
+  "training_status": "prediction_only_no_training"
+}

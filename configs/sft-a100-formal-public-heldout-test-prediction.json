@@ -3,7 +3,7 @@
   "allow_private_prediction": true,
   "base_model": "Qwen/Qwen2.5-7B-Instruct",
   "dataset_manifest_id": "public-sample-20260616T074315Z",
-  "evidence_output_dir": "<a100_project_root>/evidence/a100-formal-public-heldout-prediction/test",
+  "evidence_output_dir": "<a100_project_root>/evidence/a100-formal-public-heldout-prediction-after-confirmation-marker-merge/test",
   "formal_public_sample_heldout_prediction": true,
   "generalization_claim": false,
   "max_new_tokens": 256,

@@ -4883,6 +4883,7 @@ def write_formal_public_heldout_prediction_report(
     prediction_metadata_by_split: dict[str, dict[str, Any]] | None = None,
     artifact_paths_by_split: dict[str, dict[str, str]] | None = None,
     leak_scan_result: dict[str, Any] | None = None,
+    comparison_boundary: dict[str, Any] | None = None,
 ) -> dict[str, Path]:
     output_dir.mkdir(parents=True, exist_ok=True)
     json_path = output_dir / "formal_public_heldout_prediction.json"
@@ -4923,6 +4924,11 @@ def write_formal_public_heldout_prediction_report(
     )
     interpretation = _formal_public_observed_interpretation(split_results)
     heldout_recovered = interpretation == "formal_public_heldout_strict_exact_recovered"
+    normalized_comparison_boundary: dict[str, Any] = {}
+    if comparison_boundary:
+        normalized_comparison_boundary = dict(comparison_boundary)
+        normalized_comparison_boundary["current_dataset_manifest_id"] = public_manifest.get("manifest_id")
+        normalized_comparison_boundary["direct_improvement_regression_comparison_valid"] = False
     evidence = {
         "evidence_kind": "a100_formal_public_heldout_prediction",
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -4939,6 +4945,7 @@ def write_formal_public_heldout_prediction_report(
         "primary_evidence_splits": ["dev", "test"],
         "split_results": split_results,
         "overall_interpretation": interpretation,
+        "comparison_boundary": normalized_comparison_boundary,
         "artifact_paths_by_split": artifact_paths_by_split,
         "leak_scan_result": leak_scan_result or {},
         "claims": {
@@ -4987,12 +4994,20 @@ def write_formal_public_heldout_prediction_report(
         "primary_evidence_splits": safe_evidence["primary_evidence_splits"],
         "split_results": safe_evidence["split_results"],
         "overall_interpretation": safe_evidence["overall_interpretation"],
+        "comparison_boundary": safe_evidence["comparison_boundary"],
         "claims": safe_evidence["claims"],
         "artifact_policy": safe_evidence["artifact_policy"],
         "diagnostic_artifacts": {
             "evidence": _public_report_artifact_path(output_dir, "formal_public_heldout_prediction.json"),
             "manifest": _public_report_artifact_path(output_dir, "manifest.json"),
             "report": _public_report_artifact_path(output_dir, "report.md"),
+            "a100_preflight_status": _public_report_artifact_path(output_dir, "a100_preflight_status.json"),
+            "leak_scan": _public_report_artifact_path(output_dir, "leak_scan_result.json"),
+            "phase_validation_leak_scan": _public_report_artifact_path(
+                output_dir,
+                "phase_validation_leak_scan_result.json",
+            ),
+            "final_phase_leak_scan": _public_report_artifact_path(output_dir, "final_phase_leak_scan_result.json"),
         },
     }
     write_json(manifest_path, manifest)
@@ -5042,6 +5057,22 @@ def write_formal_public_heldout_prediction_report(
                 f"{result['slot_f1']:.4f} | {result['slot_f1_soft']:.4f} | "
                 f"{result['json_valid_rate']:.4f} | {result['residual_row_count']} |"
             )
+    if safe_evidence["comparison_boundary"]:
+        boundary = safe_evidence["comparison_boundary"]
+        lines.extend(
+            [
+                "",
+                "## Comparison Boundary",
+                "",
+                f"- Current dataset manifest: `{boundary.get('current_dataset_manifest_id')}`",
+                f"- Prior formal held-out manifest: `{boundary.get('prior_dataset_manifest_id')}`",
+                f"- Prior evidence: `{boundary.get('prior_evidence_dir')}`",
+                (
+                    "- Prior formal held-out metrics used a different public sample boundary and are not a "
+                    "clean direct improvement/regression comparison."
+                ),
+            ]
+        )
     lines.extend(
         [
             "",

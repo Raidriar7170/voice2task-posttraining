@@ -1,0 +1,21 @@
+{
+  "artifact_policy": {
+    "checkpoints_or_adapters_copied_to_git": false,
+    "host_details_omitted": true,
+    "private_overrides_copied_to_git": false,
+    "private_paths_omitted": true,
+    "raw_logs_copied_to_git": false,
+    "remote_caches_copied_to_git": false,
+    "ssh_details_omitted": true
+  },
+  "blocked_reason": "a100_ssh_timeout_remote_dependency_unavailable",
+  "checks": {
+    "gpu_occupancy": "not_available_because_remote_access_timed_out",
+    "private_adapter_availability": "not_available_because_remote_access_timed_out",
+    "ssh_alias_connectivity": "timeout"
+  },
+  "evidence_kind": "a100_formal_public_heldout_prediction_preflight",
+  "generated_at": "2026-06-16T11:26:25.654168+00:00",
+  "notes": "A100 prediction-only execution was not launched because the SSH alias did not respond before the connectivity timeout. This artifact intentionally records no model-quality metrics.",
+  "status": "blocked"
+}

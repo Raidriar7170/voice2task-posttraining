@@ -1,0 +1,13 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-16T11:37:26.032592+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "reports/public-sample/a100-formal-public-heldout-prediction-after-confirmation-marker-merge",
+    "docs/human-briefs/2026-06-16-run-formal-heldout-prediction-after-confirmation-marker-merge.html",
+    "openspec/changes/run-formal-heldout-prediction-after-confirmation-marker-merge",
+    "configs/sft-a100-formal-public-heldout-dev-prediction.json",
+    "configs/sft-a100-formal-public-heldout-test-prediction.json"
+  ]
+}
