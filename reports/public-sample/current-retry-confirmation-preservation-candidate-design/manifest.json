@@ -1,0 +1,93 @@
+{
+  "aggregates": {
+    "accepted_confirmation_required_counts": {
+      "False": 1,
+      "True": 1
+    },
+    "accepted_target_route_counts": {
+      "deny": 1,
+      "open_url": 1
+    },
+    "accepted_target_task_type_counts": {
+      "blocked": 1,
+      "navigate": 1
+    },
+    "candidate_counts_by_family": {
+      "public_navigation_non_confirmation_preservation": 1,
+      "unsafe_payment_confirmation_preservation": 1
+    },
+    "source_rows_by_family": {
+      "public_navigation_non_confirmation_preservation": 2,
+      "unsafe_payment_confirmation_preservation": 5
+    },
+    "source_rows_by_split": {
+      "dev": 5,
+      "test": 2
+    }
+  },
+  "artifact_policy": {
+    "a100_job": false,
+    "adapter_release": false,
+    "candidate_seed_rows_materialized": false,
+    "checkpoint_release": false,
+    "design_only": true,
+    "dpo_pairs_generated": false,
+    "evaluator_metric_change": false,
+    "formal_public_sample_modified": false,
+    "local_private_corpus_modified": false,
+    "manifest_rebuilt": false,
+    "prediction_repair": false,
+    "prediction_run": false,
+    "prompt_change": false,
+    "sft_rows_generated": false,
+    "training_run": false
+  },
+  "claims": {
+    "adapter_release": false,
+    "candidate_design_only": true,
+    "checkpoint_release": false,
+    "held_out_recovery_claim": false,
+    "live_browser_benchmark_claim": false,
+    "model_recovery_claim": false,
+    "private_corpus_generalization_claim": false,
+    "production_readiness_claim": false,
+    "safety_improvement_claim": false
+  },
+  "dataset_manifest_id": "public-sample-20260616T165835Z",
+  "diagnostic_artifacts": {
+    "design": "reports/public-sample/current-retry-confirmation-preservation-candidate-design/current_retry_confirmation_preservation_candidate_design.json",
+    "manifest": "reports/public-sample/current-retry-confirmation-preservation-candidate-design/manifest.json",
+    "markdown": "reports/public-sample/current-retry-confirmation-preservation-candidate-design/current_retry_confirmation_preservation_candidate_design.md"
+  },
+  "evidence_kind": "current_retry_confirmation_preservation_candidate_design",
+  "generated_at": "2026-06-17T04:19:41.754618+00:00",
+  "source_diagnosis": {
+    "dominant_tradeoff": "confirmation_regression_after_safety_recovery",
+    "evidence_kind": "current_train_split_sft_retry_tradeoff_diagnosis",
+    "overall_interpretation": "current_sft_retry_tradeoff_diagnosis_confirmation_regression_after_safety_recovery",
+    "path": "reports/public-sample/current-train-split-sft-retry-tradeoff-diagnosis/current_train_split_sft_retry_tradeoff_diagnosis.json",
+    "selection_consistency": {
+      "diagnosis_confirmation_regressed_count": 7,
+      "selected_source_count_matches_diagnosis_confirmation_regressions": true,
+      "selected_source_row_count": 7
+    },
+    "selection_method": "recomputed_from_public_baseline_retry_inputs_with_tradeoff_diagnosis_provenance"
+  },
+  "summary": {
+    "candidate_count": 2,
+    "candidate_seed_rows_materialized": false,
+    "dpo_pairs_generated": false,
+    "formal_public_sample_modified": false,
+    "recommended_next_step": "materialize_current_retry_confirmation_preservation_candidates_after_review",
+    "source_row_count": 7,
+    "source_row_ids": [
+      "family-blocked_payment-dev-1",
+      "family-blocked_payment-dev-1-aug-1",
+      "family-blocked_payment-dev-1-aug-2",
+      "family-blocked_payment-dev-2-aug-2",
+      "family-blocked_payment-dev-3",
+      "family-navigation-test-1",
+      "family-navigation-test-3-aug-1"
+    ]
+  }
+}

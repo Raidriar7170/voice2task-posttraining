@@ -6,15 +6,17 @@ Voice2Task Post-Training is a companion project for training and evaluating smal
 
 As of 2026-06-17, the first project phase is closed as an evidence-backed
 post-training and evaluation baseline, not as a production-ready model release.
-The public-facing truth surface has four current layers:
+The public-facing truth surface has five current layers:
 
-1. the current-train-split SFT retry trade-off diagnosis under
+1. the current-retry confirmation-preservation candidate design under
+   `reports/public-sample/current-retry-confirmation-preservation-candidate-design/`;
+2. the current-train-split SFT retry trade-off diagnosis under
    `reports/public-sample/current-train-split-sft-retry-tradeoff-diagnosis/`;
-2. the current-train-split SFT retry under
+3. the current-train-split SFT retry under
    `reports/public-sample/a100-current-train-split-sft-retry/`;
-3. the current-manifest SFT v3 prediction-only baseline under
+4. the current-manifest SFT v3 prediction-only baseline under
    `reports/public-sample/a100-current-manifest-sft-v3-prediction-baseline/`;
-4. the bounded SFT v3 retry after SSH recovery, now a prior-manifest model
+5. the bounded SFT v3 retry after SSH recovery, now a prior-manifest model
    source, under
    `reports/public-sample/a100-form-fill-remediation-sft-v3-retry-after-ssh-recovery/`.
 
@@ -30,6 +32,7 @@ Current formal public sample data boundary:
 | latest model interpretation | `current_train_split_sft_retry_partial_signal` |
 | latest diagnosis interpretation | `current_sft_retry_tradeoff_diagnosis_confirmation_regression_after_safety_recovery` |
 | latest diagnosis evidence | `reports/public-sample/current-train-split-sft-retry-tradeoff-diagnosis/` |
+| latest candidate-design evidence | `reports/public-sample/current-retry-confirmation-preservation-candidate-design/` |
 | prior SFT v3 retry manifest | `public-sample-20260616T074315Z` |
 | prior SFT v3 retry interpretation | `form_fill_sft_v3_partial_improvement_with_safety_regression_risk` |
 
@@ -170,6 +173,22 @@ mixed: dev has `2` exact recoveries and `4` exact regressions, while test has
 design `current-retry` confirmation-preservation candidates before any
 additional training, DPO, evaluator change, public release, or production
 claim.
+
+The current-retry confirmation-preservation candidate design is now complete
+under
+`reports/public-sample/current-retry-confirmation-preservation-candidate-design/`.
+It is design-only evidence: no seed rows, SFT rows, DPO pairs, manifest files,
+local/private corpora, prompts, evaluator metrics, predictions, checkpoints,
+or adapters were modified. It defines `2` candidate families covering `7`
+source rows: `unsafe_payment_confirmation_preservation` covers `5` dev
+`blocked_payment` rows where the accepted target remains `blocked/deny`,
+`safety.reason="unsafe_payment"`, and `confirmation_required=true`;
+`public_navigation_non_confirmation_preservation` covers `2` test navigation
+rows where the accepted target remains `navigate/open_url`,
+`safety.reason="public_readonly"`, and `confirmation_required=false`. The next
+bounded phase may materialize these reviewed candidate sketches into
+candidate-only public-safe rows, but no model-quality claim is allowed until a
+later strict held-out evaluation exists.
 
 ## Language
 

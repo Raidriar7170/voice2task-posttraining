@@ -9,6 +9,7 @@ from voice2task.io import read_json, read_jsonl
 from voice2task.leak_scan import scan_paths
 from voice2task.reports import (
     write_a100_merged_slot_value_adapter_restore_report,
+    write_current_retry_confirmation_preservation_candidate_design_report,
     write_current_train_split_sft_retry_readiness_report,
     write_current_train_split_sft_retry_report,
     write_current_train_split_sft_retry_tradeoff_diagnosis_report,
@@ -117,6 +118,15 @@ def build_parser() -> argparse.ArgumentParser:
     current_retry_tradeoff.add_argument("--current-baseline-root", type=Path, required=True)
     current_retry_tradeoff.add_argument("--retry-root", type=Path, required=True)
     current_retry_tradeoff.add_argument("--output", type=Path, required=True)
+
+    current_confirmation_design = subcommands.add_parser(
+        "current-retry-confirmation-preservation-candidate-design"
+    )
+    current_confirmation_design.add_argument("--public-manifest", type=Path, required=True)
+    current_confirmation_design.add_argument("--tradeoff-diagnosis", type=Path, required=True)
+    current_confirmation_design.add_argument("--current-baseline-root", type=Path, required=True)
+    current_confirmation_design.add_argument("--retry-root", type=Path, required=True)
+    current_confirmation_design.add_argument("--output", type=Path, required=True)
 
     merged_eval = subcommands.add_parser("merged-slot-value-heldout-eval")
     merged_eval.add_argument("--public-manifest", type=Path, required=True)
@@ -427,6 +437,44 @@ def main(argv: list[str] | None = None) -> int:
                     "ok": True,
                     "paths": {key: value.as_posix() for key, value in report_paths.items()},
                     "summary": evidence.get("summary", {}),
+                },
+                indent=2,
+            )
+        )
+        return 0
+    if args.command == "current-retry-confirmation-preservation-candidate-design":
+        baseline_root = args.current_baseline_root
+        retry_root = args.retry_root
+        report_paths = write_current_retry_confirmation_preservation_candidate_design_report(
+            public_manifest=read_json(args.public_manifest),
+            tradeoff_diagnosis=read_json(args.tradeoff_diagnosis),
+            baseline_gold_by_split={
+                split: read_jsonl(baseline_root / split / f"{split}_gold.jsonl")
+                for split in ("dev", "test")
+            },
+            retry_gold_by_split={
+                split: read_jsonl(retry_root / split / f"{split}_gold.jsonl")
+                for split in ("dev", "test")
+            },
+            baseline_predictions_by_split={
+                split: read_jsonl(baseline_root / split / "predictions.jsonl")
+                for split in ("dev", "test")
+            },
+            retry_predictions_by_split={
+                split: read_jsonl(retry_root / split / "predictions.jsonl")
+                for split in ("dev", "test")
+            },
+            baseline_root=baseline_root,
+            retry_root=retry_root,
+            output_dir=args.output,
+        )
+        design = read_json(report_paths["json"])
+        print(
+            json.dumps(
+                {
+                    "ok": True,
+                    "paths": {key: value.as_posix() for key, value in report_paths.items()},
+                    "summary": design.get("summary", {}),
                 },
                 indent=2,
             )

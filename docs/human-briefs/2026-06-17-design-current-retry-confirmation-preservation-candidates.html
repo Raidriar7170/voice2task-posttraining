@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Voice2Task Confirmation Preservation Candidate Design 简报</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 32px; line-height: 1.6; color: #17202a; }
+    main { max-width: 980px; margin: 0 auto; }
+    h1 { font-size: 28px; margin-bottom: 8px; }
+    h2 { font-size: 18px; margin-top: 28px; border-bottom: 1px solid #d8dee4; padding-bottom: 4px; }
+    code { background: #f6f8fa; padding: 2px 5px; border-radius: 4px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 12px; }
+    th, td { border: 1px solid #d8dee4; padding: 8px; text-align: left; }
+    .status { display: inline-block; padding: 4px 8px; border-radius: 6px; background: #eff6ff; color: #1d4ed8; font-weight: 600; }
+    .warn { color: #9a3412; font-weight: 600; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Voice2Task Confirmation Preservation Candidate Design 简报</h1>
+  <p><span class="status">design-only, no data/model change</span></p>
+  <p><strong>一句话结论：</strong>当前 retry 的 confirmation 回退已收束为 2 个可审阅 candidate families，下一步可以 materialize candidate-only rows，但本阶段不证明模型恢复。</p>
+
+  <h2>本阶段做了什么</h2>
+  <ul>
+    <li>读取 current retry trade-off diagnosis 和同 manifest 的 baseline/retry gold/predictions。</li>
+    <li>定位 baseline confirmation 正确、retry confirmation 错误的 source rows。</li>
+    <li>设计 accepted target sketches、rejected drift sketches 和 public-safe utterance templates。</li>
+    <li>更新 <code>CONTEXT.md</code> 和 <code>reports/final_status.md</code> 的当前事实面。</li>
+  </ul>
+
+  <h2>候选 family</h2>
+  <table>
+    <thead>
+      <tr><th>candidate family</th><th>source rows</th><th>accepted target sketch</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>unsafe_payment_confirmation_preservation</code></td>
+        <td>5 dev <code>blocked_payment</code> rows</td>
+        <td><code>blocked/deny</code>, <code>unsafe_payment</code>, <code>confirmation_required=true</code></td>
+      </tr>
+      <tr>
+        <td><code>public_navigation_non_confirmation_preservation</code></td>
+        <td>2 test navigation rows</td>
+        <td><code>navigate/open_url</code>, <code>public_readonly</code>, <code>confirmation_required=false</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>边界</h2>
+  <ul>
+    <li>没有写 public seed rows、SFT rows、DPO pairs 或 manifest。</li>
+    <li>没有训练、没有 prediction、没有改 prompt/evaluator、没有发布 adapter/checkpoint。</li>
+    <li>不能宣称 model recovery、safety improvement、production readiness 或 live-browser benchmark improvement。</li>
+  </ul>
+
+  <h2>关键文件</h2>
+  <ul>
+    <li><code>reports/public-sample/current-retry-confirmation-preservation-candidate-design/current_retry_confirmation_preservation_candidate_design.md</code></li>
+    <li><code>reports/public-sample/current-retry-confirmation-preservation-candidate-design/current_retry_confirmation_preservation_candidate_design.json</code></li>
+    <li><code>CONTEXT.md</code></li>
+    <li><code>reports/final_status.md</code></li>
+    <li><code>openspec/changes/archive/2026-06-17-design-current-retry-confirmation-preservation-candidates/</code></li>
+  </ul>
+
+  <h2>验证</h2>
+  <ul>
+    <li>Focused tests: <code>PYTHONPATH=src python3 -m pytest tests/test_current_train_split_sft_retry_readiness.py -q</code> → 11 passed.</li>
+    <li>Full tests: <code>PYTHONPATH=src python3 -m pytest -q</code> → 402 passed.</li>
+    <li>Lint: <code>ruff check src/ scripts/ tests/</code> → all checks passed.</li>
+    <li>OpenSpec: <code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code> → 4 passed after archive.</li>
+    <li>Leak scan: <code>reports/public-sample/current-retry-confirmation-preservation-candidate-design/leak_scan_result.json</code> → ok=true.</li>
+    <li>Whitespace: <code>git diff --check</code> → passed.</li>
+  </ul>
+
+  <h2>推荐下一步</h2>
+  <p>进入 bounded <code>materialize-current-retry-confirmation-preservation-candidates</code> phase，把这 2 个 reviewed families 转成 candidate-only public-safe rows；仍然先不训练。</p>
+</main>
+</body>
+</html>

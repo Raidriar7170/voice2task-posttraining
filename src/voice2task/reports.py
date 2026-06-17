@@ -6047,6 +6047,430 @@ def write_current_train_split_sft_retry_tradeoff_diagnosis_report(
     return {"json": json_path, "markdown": markdown_path, "manifest": manifest_path}
 
 
+def _confirmation_preservation_family(gold: dict[str, Any]) -> str | None:
+    safety = gold.get("safety")
+    safety_reason = safety.get("reason") if isinstance(safety, dict) else None
+    safety_allow = safety.get("allow") if isinstance(safety, dict) else None
+    if (
+        gold.get("task_type") == "blocked"
+        and gold.get("route") == "deny"
+        and safety_allow is False
+        and safety_reason == "unsafe_payment"
+        and gold.get("confirmation_required") is True
+    ):
+        return "unsafe_payment_confirmation_preservation"
+    if (
+        gold.get("task_type") == "navigate"
+        and gold.get("route") == "open_url"
+        and safety_allow is True
+        and safety_reason == "public_readonly"
+        and gold.get("confirmation_required") is False
+    ):
+        return "public_navigation_non_confirmation_preservation"
+    return None
+
+
+def _confirmation_candidate_target_sketch(candidate_family: str) -> dict[str, Any]:
+    if candidate_family == "unsafe_payment_confirmation_preservation":
+        return {
+            "task_type": "blocked",
+            "route": "deny",
+            "safety": {"allow": False, "reason": "unsafe_payment"},
+            "confirmation_required": True,
+            "slots": {"action": "<unsafe payment action>", "reason": "<payment control reason>"},
+        }
+    if candidate_family == "public_navigation_non_confirmation_preservation":
+        return {
+            "task_type": "navigate",
+            "route": "open_url",
+            "safety": {"allow": True, "reason": "public_readonly"},
+            "confirmation_required": False,
+            "slots": {"url": "<canonical public URL>"},
+        }
+    return {
+        "task_type": "<preserve gold task_type>",
+        "route": "<preserve gold route>",
+        "safety": "<preserve gold safety>",
+        "confirmation_required": "<preserve gold confirmation_required>",
+        "slots": "<preserve gold slots>",
+    }
+
+
+def _confirmation_candidate_rejected_drifts(candidate_family: str) -> list[dict[str, Any]]:
+    if candidate_family == "unsafe_payment_confirmation_preservation":
+        return [
+            {
+                "drift": "drops_confirmation_on_blocked_payment",
+                "task_type": "blocked",
+                "route": "deny",
+                "safety": {"allow": False, "reason": "unsafe_payment"},
+                "confirmation_required": False,
+            },
+            {
+                "drift": "allows_payment_as_form_fill",
+                "task_type": "form_fill",
+                "route": "fill_form",
+                "safety": {"allow": True, "reason": "requires_confirmation"},
+                "confirmation_required": True,
+            },
+        ]
+    if candidate_family == "public_navigation_non_confirmation_preservation":
+        return [
+            {
+                "drift": "clarifies_public_navigation",
+                "task_type": "clarify",
+                "route": "clarify",
+                "safety": {"allow": True, "reason": "ambiguous_request"},
+                "confirmation_required": True,
+            },
+            {
+                "drift": "changes_canonical_navigation_url",
+                "task_type": "navigate",
+                "route": "open_url",
+                "safety": {"allow": True, "reason": "public_readonly"},
+                "confirmation_required": False,
+                "slots": {"url": "<strict-wrong public URL>"},
+            },
+        ]
+    return [{"drift": "changes_confirmation_or_target_shape"}]
+
+
+def _confirmation_candidate_utterance_templates(candidate_family: str) -> list[str]:
+    if candidate_family == "unsafe_payment_confirmation_preservation":
+        return [
+            "帮我确认这笔退款，但不要替我执行付款操作",
+            "这笔订阅扣款需要我确认，先拦住不要自动处理",
+            "捐款操作需要用户确认，不能直接提交",
+        ]
+    if candidate_family == "public_navigation_non_confirmation_preservation":
+        return [
+            "打开公开课程页面",
+            "进入活动介绍页",
+        ]
+    return ["保持原始确认边界的公开安全指令"]
+
+
+def _collect_confirmation_regression_groups(
+    *,
+    public_manifest: dict[str, Any],
+    baseline_gold_by_split: dict[str, list[dict[str, Any]]],
+    retry_gold_by_split: dict[str, list[dict[str, Any]]],
+    baseline_predictions_by_split: dict[str, list[dict[str, Any]]],
+    retry_predictions_by_split: dict[str, list[dict[str, Any]]],
+) -> dict[str, list[dict[str, Any]]]:
+    split_counts = public_manifest.get("split_counts", {})
+    groups: dict[str, list[dict[str, Any]]] = {}
+    for split in ("dev", "test"):
+        baseline_gold = _rows_by_id(baseline_gold_by_split[split])
+        retry_gold = _rows_by_id(retry_gold_by_split[split])
+        baseline_predictions = _prediction_by_id(baseline_predictions_by_split[split])
+        retry_predictions = _prediction_by_id(retry_predictions_by_split[split])
+        row_ids = _validate_tradeoff_row_ids(
+            split=split,
+            expected_row_count=split_counts.get(split) if isinstance(split_counts.get(split), int) else None,
+            baseline_gold=baseline_gold,
+            retry_gold=retry_gold,
+            baseline_predictions=baseline_predictions,
+            retry_predictions=retry_predictions,
+        )
+        for row_id in row_ids:
+            gold = retry_gold[row_id].get("target_contract")
+            baseline_prediction = baseline_predictions.get(row_id)
+            retry_prediction = retry_predictions.get(row_id)
+            if not all(isinstance(item, dict) for item in (gold, baseline_prediction, retry_prediction)):
+                continue
+            baseline_correct = baseline_prediction.get("confirmation_required") == gold.get("confirmation_required")
+            retry_correct = retry_prediction.get("confirmation_required") == gold.get("confirmation_required")
+            if not baseline_correct or retry_correct:
+                continue
+            candidate_family = _confirmation_preservation_family(gold)
+            if candidate_family is None:
+                continue
+            groups.setdefault(candidate_family, []).append(
+                {
+                    "row_id": row_id,
+                    "split": split,
+                    "source_family": _public_row_family(row_id),
+                    "gold": _public_prediction_summary(gold),
+                    "baseline_prediction": _public_prediction_summary(baseline_prediction),
+                    "retry_prediction": _public_prediction_summary(retry_prediction),
+                    "selection_checks": {
+                        "baseline_confirmation_matched_gold": baseline_correct,
+                        "retry_confirmation_regressed": not retry_correct,
+                        "gold_confirmation_required": gold.get("confirmation_required"),
+                        "baseline_confirmation_required": baseline_prediction.get("confirmation_required"),
+                        "retry_confirmation_required": retry_prediction.get("confirmation_required"),
+                        "gold_route": gold.get("route"),
+                        "retry_route": retry_prediction.get("route"),
+                        "gold_task_type": gold.get("task_type"),
+                        "retry_task_type": retry_prediction.get("task_type"),
+                        "gold_safety_reason": (gold.get("safety") or {}).get("reason"),
+                        "retry_safety_reason": (retry_prediction.get("safety") or {}).get("reason"),
+                    },
+                }
+            )
+    return groups
+
+
+def _diagnosis_confirmation_regressed_count(tradeoff_diagnosis: dict[str, Any]) -> int:
+    split_summaries = tradeoff_diagnosis.get("split_summaries")
+    if not isinstance(split_summaries, dict):
+        raise ValueError("trade-off diagnosis is missing split_summaries")
+    count = 0
+    for split, summary in split_summaries.items():
+        if not isinstance(summary, dict):
+            raise ValueError(f"trade-off diagnosis split summary is invalid: {split}")
+        outcome_counts = summary.get("outcome_counts")
+        if not isinstance(outcome_counts, dict):
+            raise ValueError(f"trade-off diagnosis split summary is missing outcome_counts: {split}")
+        confirmation_counts = outcome_counts.get("confirmation")
+        if not isinstance(confirmation_counts, dict) or not isinstance(confirmation_counts.get("regressed"), int):
+            raise ValueError(f"trade-off diagnosis split summary is missing confirmation.regressed: {split}")
+        count += int(confirmation_counts["regressed"])
+    return count
+
+
+def write_current_retry_confirmation_preservation_candidate_design_report(
+    *,
+    public_manifest: dict[str, Any],
+    tradeoff_diagnosis: dict[str, Any],
+    baseline_gold_by_split: dict[str, list[dict[str, Any]]],
+    retry_gold_by_split: dict[str, list[dict[str, Any]]],
+    baseline_predictions_by_split: dict[str, list[dict[str, Any]]],
+    retry_predictions_by_split: dict[str, list[dict[str, Any]]],
+    baseline_root: Path,
+    retry_root: Path,
+    output_dir: Path,
+    title: str = "Voice2Task current retry confirmation preservation candidate design",
+) -> dict[str, Path]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    json_path = output_dir / "current_retry_confirmation_preservation_candidate_design.json"
+    markdown_path = output_dir / "current_retry_confirmation_preservation_candidate_design.md"
+    manifest_path = output_dir / "manifest.json"
+
+    manifest_id = str(public_manifest.get("manifest_id", "unknown"))
+    diagnosis_manifest_id = str(tradeoff_diagnosis.get("dataset_manifest_id", "unknown"))
+    if diagnosis_manifest_id != manifest_id:
+        raise ValueError(f"trade-off diagnosis manifest mismatch: {diagnosis_manifest_id!r} != {manifest_id!r}")
+
+    groups = _collect_confirmation_regression_groups(
+        public_manifest=public_manifest,
+        baseline_gold_by_split=baseline_gold_by_split,
+        retry_gold_by_split=retry_gold_by_split,
+        baseline_predictions_by_split=baseline_predictions_by_split,
+        retry_predictions_by_split=retry_predictions_by_split,
+    )
+    diagnosis_confirmation_regressed_count = _diagnosis_confirmation_regressed_count(tradeoff_diagnosis)
+    candidates: list[dict[str, Any]] = []
+    source_row_ids: list[str] = []
+    source_rows_by_family: Counter[str] = Counter()
+    source_rows_by_split: Counter[str] = Counter()
+    accepted_task_types: Counter[str] = Counter()
+    accepted_routes: Counter[str] = Counter()
+    accepted_confirmation: Counter[str] = Counter()
+
+    for candidate_family in sorted(groups):
+        rows = sorted(groups[candidate_family], key=lambda item: str(item["row_id"]))
+        row_ids = [str(row["row_id"]) for row in rows]
+        source_row_ids.extend(row_ids)
+        source_rows_by_family[candidate_family] += len(rows)
+        source_rows_by_split.update(str(row["split"]) for row in rows)
+        target = _confirmation_candidate_target_sketch(candidate_family)
+        accepted_task_types[str(target["task_type"])] += 1
+        accepted_routes[str(target["route"])] += 1
+        accepted_confirmation[str(target["confirmation_required"])] += 1
+        candidates.append(
+            {
+                "candidate_id": f"current-retry-{candidate_family.replace('_', '-')}",
+                "candidate_family": candidate_family,
+                "source_row_ids": row_ids,
+                "source_row_count": len(rows),
+                "source_splits": dict(Counter(str(row["split"]) for row in rows)),
+                "source_task_families": dict(Counter(str(row["source_family"]) for row in rows)),
+                "accepted_target_contract_sketch": target,
+                "rejected_drift_sketches": _confirmation_candidate_rejected_drifts(candidate_family),
+                "suggested_public_utterance_templates": _confirmation_candidate_utterance_templates(candidate_family),
+                "examples": rows[:8],
+                "intended_later_action": "review_before_seed_materialization",
+            }
+        )
+
+    if len(source_row_ids) != diagnosis_confirmation_regressed_count:
+        raise ValueError(
+            "candidate source rows do not match trade-off diagnosis confirmation regression count: "
+            f"{len(source_row_ids)} != {diagnosis_confirmation_regressed_count}"
+        )
+
+    design = {
+        "evidence_kind": "current_retry_confirmation_preservation_candidate_design",
+        "design_mode": "public_safe_design_only_no_materialization",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "dataset_manifest_id": manifest_id,
+        "source_diagnosis": {
+            "evidence_kind": tradeoff_diagnosis.get("evidence_kind"),
+            "overall_interpretation": tradeoff_diagnosis.get("summary", {}).get("overall_interpretation"),
+            "dominant_tradeoff": tradeoff_diagnosis.get("summary", {}).get("dominant_tradeoff"),
+            "selection_method": (
+                "recomputed_from_public_baseline_retry_inputs_with_tradeoff_diagnosis_provenance"
+            ),
+            "selection_consistency": {
+                "diagnosis_confirmation_regressed_count": diagnosis_confirmation_regressed_count,
+                "selected_source_row_count": len(source_row_ids),
+                "selected_source_count_matches_diagnosis_confirmation_regressions": True,
+            },
+            "path": (
+                "reports/public-sample/current-train-split-sft-retry-tradeoff-diagnosis/"
+                "current_train_split_sft_retry_tradeoff_diagnosis.json"
+            ),
+        },
+        "source_evidence": {
+            "current_baseline": _public_report_artifact_path(baseline_root, "formal_public_heldout_prediction.json"),
+            "current_retry": _public_report_artifact_path(retry_root, "current_train_split_sft_retry.json"),
+        },
+        "summary": {
+            "candidate_count": len(candidates),
+            "source_row_count": len(source_row_ids),
+            "source_row_ids": sorted(source_row_ids),
+            "recommended_next_step": "materialize_current_retry_confirmation_preservation_candidates_after_review",
+            "formal_public_sample_modified": False,
+            "candidate_seed_rows_materialized": False,
+            "dpo_pairs_generated": False,
+        },
+        "aggregates": {
+            "candidate_counts_by_family": {candidate["candidate_family"]: 1 for candidate in candidates},
+            "source_rows_by_family": dict(source_rows_by_family),
+            "source_rows_by_split": dict(source_rows_by_split),
+            "accepted_target_task_type_counts": dict(accepted_task_types),
+            "accepted_target_route_counts": dict(accepted_routes),
+            "accepted_confirmation_required_counts": dict(accepted_confirmation),
+        },
+        "candidates": candidates,
+        "execution_scope": {
+            "design_only": True,
+            "formal_public_sample_modified": False,
+            "local_private_corpus_modified": False,
+            "candidate_seed_rows_materialized": False,
+            "sft_rows_generated": False,
+            "dpo_pairs_generated": False,
+            "manifest_rebuilt": False,
+            "training_run": False,
+            "prediction_run": False,
+            "a100_job": False,
+            "prompt_change": False,
+            "evaluator_metric_change": False,
+            "prediction_repair": False,
+            "adapter_release": False,
+            "checkpoint_release": False,
+        },
+        "claims": {
+            "candidate_design_only": True,
+            "model_recovery_claim": False,
+            "held_out_recovery_claim": False,
+            "safety_improvement_claim": False,
+            "production_readiness_claim": False,
+            "private_corpus_generalization_claim": False,
+            "live_browser_benchmark_claim": False,
+            "adapter_release": False,
+            "checkpoint_release": False,
+        },
+    }
+    safe_design = _sanitize_report_value(design)
+    write_json(json_path, safe_design)
+
+    manifest = {
+        "evidence_kind": safe_design["evidence_kind"],
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "dataset_manifest_id": manifest_id,
+        "source_diagnosis": safe_design["source_diagnosis"],
+        "summary": safe_design["summary"],
+        "aggregates": safe_design["aggregates"],
+        "claims": safe_design["claims"],
+        "artifact_policy": safe_design["execution_scope"],
+        "diagnostic_artifacts": {
+            "design": (
+                "reports/public-sample/current-retry-confirmation-preservation-candidate-design/"
+                "current_retry_confirmation_preservation_candidate_design.json"
+            ),
+            "markdown": (
+                "reports/public-sample/current-retry-confirmation-preservation-candidate-design/"
+                "current_retry_confirmation_preservation_candidate_design.md"
+            ),
+            "manifest": (
+                "reports/public-sample/current-retry-confirmation-preservation-candidate-design/manifest.json"
+            ),
+        },
+    }
+    write_json(manifest_path, manifest)
+
+    lines = [
+        f"# {title}",
+        "",
+        (
+            "This is a design-only candidate report derived from committed current SFT retry trade-off "
+            "diagnosis evidence. It does not materialize seed rows, generate DPO pairs, train, generate "
+            "predictions, repair predictions, or change evaluator metrics."
+        ),
+        "",
+        "## Boundary",
+        "",
+        "- Formal public sample modified: `False`.",
+        "- Candidate seed rows materialized: `False`.",
+        "- DPO pairs generated: `False`.",
+        "- No SFT, DPO, GRPO, A100 job, prompt change, evaluator relaxation, or semantic scoring is performed.",
+        "- This is not a model recovery, safety improvement, production-readiness, or live-browser benchmark claim.",
+        "",
+        "## Summary",
+        "",
+        f"- Dataset manifest: `{manifest_id}`",
+        f"- Candidate count: `{safe_design['summary']['candidate_count']}`",
+        f"- Source row count: `{safe_design['summary']['source_row_count']}`",
+        f"- Source rows: `{safe_design['summary']['source_row_ids']}`",
+        f"- Recommended next step: `{safe_design['summary']['recommended_next_step']}`",
+        f"- Selection method: `{safe_design['source_diagnosis']['selection_method']}`",
+        f"- Selection consistency: `{safe_design['source_diagnosis']['selection_consistency']}`",
+        "",
+        "## Aggregates",
+        "",
+        f"- Candidate counts by family: `{safe_design['aggregates']['candidate_counts_by_family']}`",
+        f"- Source rows by family: `{safe_design['aggregates']['source_rows_by_family']}`",
+        f"- Source rows by split: `{safe_design['aggregates']['source_rows_by_split']}`",
+        f"- Accepted target task types: `{safe_design['aggregates']['accepted_target_task_type_counts']}`",
+        f"- Accepted target routes: `{safe_design['aggregates']['accepted_target_route_counts']}`",
+        f"- Accepted confirmation values: `{safe_design['aggregates']['accepted_confirmation_required_counts']}`",
+        "",
+        "## Candidates",
+        "",
+    ]
+    for candidate in safe_design.get("candidates", []):
+        lines.extend(
+            [
+                f"### `{candidate['candidate_id']}`",
+                "",
+                f"- Candidate family: `{candidate['candidate_family']}`",
+                f"- Source rows: `{candidate['source_row_ids']}`",
+                f"- Source splits: `{candidate['source_splits']}`",
+                f"- Source task families: `{candidate['source_task_families']}`",
+                f"- Accepted target contract: `{candidate['accepted_target_contract_sketch']}`",
+                f"- Rejected drift sketches: `{candidate['rejected_drift_sketches']}`",
+                f"- Suggested public utterance templates: `{candidate['suggested_public_utterance_templates']}`",
+                f"- Intended later action: `{candidate['intended_later_action']}`",
+                "",
+            ]
+        )
+    lines.extend(
+        [
+            "## Recommended Next Step",
+            "",
+            (
+                "Use this design as reviewable input for a later bounded materialization phase. Do not treat "
+                "these candidate records as committed seed rows or model-quality evidence."
+            ),
+        ]
+    )
+    markdown_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    return {"json": json_path, "markdown": markdown_path, "manifest": manifest_path}
+
+
 def write_slot_value_candidate_sft_probe_report(
     *,
     candidate_manifest: dict[str, Any],

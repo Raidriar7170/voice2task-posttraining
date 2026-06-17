@@ -36,6 +36,12 @@ RETRY_EVIDENCE_DIR = REPO_ROOT / "reports" / "public-sample" / "a100-current-tra
 TRADEOFF_DIAGNOSIS_DIR = (
     REPO_ROOT / "reports" / "public-sample" / "current-train-split-sft-retry-tradeoff-diagnosis"
 )
+CONFIRMATION_DESIGN_DIR = (
+    REPO_ROOT
+    / "reports"
+    / "public-sample"
+    / "current-retry-confirmation-preservation-candidate-design"
+)
 
 
 def _current_manifest() -> dict[str, Any]:
@@ -497,3 +503,137 @@ def test_committed_current_train_split_retry_tradeoff_diagnosis_preserves_bounda
     )
     assert "diagnosis-only" in report
     assert scan_paths([TRADEOFF_DIAGNOSIS_DIR]).ok is True
+
+
+def test_current_retry_confirmation_preservation_candidate_design_cli_writes_design_only_evidence(
+    tmp_path: Path,
+    capsys: Any,
+) -> None:
+    output_dir = tmp_path / "confirmation-preservation-candidate-design"
+
+    assert (
+        report_cli.main(
+            [
+                "current-retry-confirmation-preservation-candidate-design",
+                "--public-manifest",
+                PUBLIC_SAMPLE_MANIFEST.as_posix(),
+                "--tradeoff-diagnosis",
+                (
+                    TRADEOFF_DIAGNOSIS_DIR
+                    / "current_train_split_sft_retry_tradeoff_diagnosis.json"
+                ).as_posix(),
+                "--current-baseline-root",
+                CURRENT_BASELINE_DIR.as_posix(),
+                "--retry-root",
+                RETRY_EVIDENCE_DIR.as_posix(),
+                "--output",
+                output_dir.as_posix(),
+            ]
+        )
+        == 0
+    )
+
+    payload = json.loads(capsys.readouterr().out)
+    design = read_json(output_dir / "current_retry_confirmation_preservation_candidate_design.json")
+    manifest = read_json(output_dir / "manifest.json")
+    markdown = (output_dir / "current_retry_confirmation_preservation_candidate_design.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert payload["ok"] is True
+    assert design["evidence_kind"] == "current_retry_confirmation_preservation_candidate_design"
+    assert design["dataset_manifest_id"] == _current_manifest()["manifest_id"]
+    assert design["summary"]["candidate_count"] == 2
+    assert design["summary"]["source_row_count"] == 7
+    assert design["source_diagnosis"]["selection_method"] == (
+        "recomputed_from_public_baseline_retry_inputs_with_tradeoff_diagnosis_provenance"
+    )
+    assert design["source_diagnosis"]["selection_consistency"] == {
+        "diagnosis_confirmation_regressed_count": 7,
+        "selected_source_row_count": 7,
+        "selected_source_count_matches_diagnosis_confirmation_regressions": True,
+    }
+    assert design["summary"]["recommended_next_step"] == (
+        "materialize_current_retry_confirmation_preservation_candidates_after_review"
+    )
+    candidates = {candidate["candidate_family"]: candidate for candidate in design["candidates"]}
+    assert set(candidates) == {
+        "public_navigation_non_confirmation_preservation",
+        "unsafe_payment_confirmation_preservation",
+    }
+    assert candidates["unsafe_payment_confirmation_preservation"]["source_row_count"] == 5
+    assert candidates["public_navigation_non_confirmation_preservation"]["source_row_count"] == 2
+    unsafe_examples = candidates["unsafe_payment_confirmation_preservation"]["examples"]
+    navigation_examples = candidates["public_navigation_non_confirmation_preservation"]["examples"]
+    assert {example["selection_checks"]["gold_safety_reason"] for example in unsafe_examples} == {
+        "unsafe_payment"
+    }
+    assert {example["selection_checks"]["retry_safety_reason"] for example in unsafe_examples} == {
+        "unsafe_payment"
+    }
+    assert {example["selection_checks"]["gold_route"] for example in navigation_examples} == {"open_url"}
+    assert {example["selection_checks"]["gold_safety_reason"] for example in navigation_examples} == {
+        "public_readonly"
+    }
+    assert all(
+        example["selection_checks"]["baseline_confirmation_matched_gold"]
+        and example["selection_checks"]["retry_confirmation_regressed"]
+        for candidate in candidates.values()
+        for example in candidate["examples"]
+    )
+    unsafe_target = candidates["unsafe_payment_confirmation_preservation"]["accepted_target_contract_sketch"]
+    navigation_target = candidates["public_navigation_non_confirmation_preservation"]["accepted_target_contract_sketch"]
+    assert unsafe_target["task_type"] == "blocked"
+    assert unsafe_target["route"] == "deny"
+    assert unsafe_target["safety"] == {"allow": False, "reason": "unsafe_payment"}
+    assert unsafe_target["confirmation_required"] is True
+    assert navigation_target["task_type"] == "navigate"
+    assert navigation_target["route"] == "open_url"
+    assert navigation_target["safety"] == {"allow": True, "reason": "public_readonly"}
+    assert navigation_target["confirmation_required"] is False
+    assert design["execution_scope"]["design_only"] is True
+    assert design["execution_scope"]["formal_public_sample_modified"] is False
+    assert design["execution_scope"]["candidate_seed_rows_materialized"] is False
+    assert design["execution_scope"]["training_run"] is False
+    assert design["execution_scope"]["prediction_run"] is False
+    assert design["claims"]["candidate_design_only"] is True
+    assert design["claims"]["model_recovery_claim"] is False
+    assert manifest["artifact_policy"]["design_only"] is True
+    assert manifest["artifact_policy"]["candidate_seed_rows_materialized"] is False
+    assert "design-only" in markdown
+    assert "confirmation" in markdown
+    assert scan_paths([output_dir]).ok is True
+
+
+def test_committed_current_retry_confirmation_preservation_candidate_design_preserves_boundaries() -> None:
+    design = read_json(CONFIRMATION_DESIGN_DIR / "current_retry_confirmation_preservation_candidate_design.json")
+    manifest = read_json(CONFIRMATION_DESIGN_DIR / "manifest.json")
+    report = (
+        CONFIRMATION_DESIGN_DIR / "current_retry_confirmation_preservation_candidate_design.md"
+    ).read_text(encoding="utf-8")
+
+    assert design["evidence_kind"] == "current_retry_confirmation_preservation_candidate_design"
+    assert design["dataset_manifest_id"] == _current_manifest()["manifest_id"]
+    assert design["summary"]["candidate_count"] == 2
+    assert design["summary"]["source_row_count"] == 7
+    assert design["source_diagnosis"]["selection_consistency"] == {
+        "diagnosis_confirmation_regressed_count": 7,
+        "selected_source_row_count": 7,
+        "selected_source_count_matches_diagnosis_confirmation_regressions": True,
+    }
+    assert design["aggregates"]["candidate_counts_by_family"] == {
+        "public_navigation_non_confirmation_preservation": 1,
+        "unsafe_payment_confirmation_preservation": 1,
+    }
+    assert design["aggregates"]["source_rows_by_family"] == {
+        "public_navigation_non_confirmation_preservation": 2,
+        "unsafe_payment_confirmation_preservation": 5,
+    }
+    assert design["claims"]["model_recovery_claim"] is False
+    assert design["claims"]["held_out_recovery_claim"] is False
+    assert design["claims"]["production_readiness_claim"] is False
+    assert design["claims"]["adapter_release"] is False
+    assert design["claims"]["checkpoint_release"] is False
+    assert manifest["artifact_policy"]["formal_public_sample_modified"] is False
+    assert "Candidate seed rows materialized: `False`" in report
+    assert scan_paths([CONFIRMATION_DESIGN_DIR]).ok is True
