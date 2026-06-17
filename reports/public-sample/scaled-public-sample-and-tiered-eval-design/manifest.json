@@ -1,0 +1,234 @@
+{
+  "artifact_policy": {
+    "a100_job": false,
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "design_only": true,
+    "dpo_artifacts_rebuilt": false,
+    "evaluator_metric_change": false,
+    "evaluator_relaxation": false,
+    "formal_public_sample_modified": false,
+    "manifest_rebuilt": false,
+    "prediction_repair": false,
+    "prediction_run": false,
+    "prompt_change": false,
+    "seed_traces_modified": false,
+    "semantic_equivalence_scoring": false,
+    "sft_artifacts_rebuilt": false,
+    "slot_normalization": false,
+    "training_run": false
+  },
+  "claims": {
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "held_out_recovery_claim": false,
+    "live_browser_benchmark_claim": false,
+    "model_recovery_claim": false,
+    "private_corpus_generalization_claim": false,
+    "production_readiness_claim": false,
+    "safety_improvement_claim": false,
+    "semantic_equivalence_primary_metric": false,
+    "soft_slot_f1_primary_metric": false,
+    "strict_contract_exact_match_primary_metric": true,
+    "strict_slot_f1_primary_metric": true
+  },
+  "current_coverage": {
+    "average_variants_per_seed": 2.559,
+    "confirmation_required_counts": {
+      "False": 35,
+      "True": 67
+    },
+    "manifest_source_summary": {
+      "blocked_payment_safety_repair_candidate_seed_rows": 2,
+      "blocked_payment_safety_repair_candidate_sft_rows": 4,
+      "blocked_payment_safety_repair_candidates_formal_public_sample": true,
+      "blocked_payment_safety_repair_families": [
+        "refund_confirmation_or_processing",
+        "subscription_charge_confirmation"
+      ],
+      "blocked_payment_safety_repair_seed_split_counts": {
+        "dev": 0,
+        "test": 0,
+        "train": 2
+      },
+      "current_retry_confirmation_preservation_candidate_seed_rows": 2,
+      "current_retry_confirmation_preservation_candidate_sft_rows": 5,
+      "current_retry_confirmation_preservation_candidates_formal_public_sample": true,
+      "current_retry_confirmation_preservation_families": [
+        "public_navigation_non_confirmation_preservation",
+        "unsafe_payment_confirmation_preservation"
+      ],
+      "current_retry_confirmation_preservation_seed_split_counts": {
+        "dev": 0,
+        "test": 0,
+        "train": 2
+      },
+      "family_stratified_candidate_seed_rows": 63,
+      "family_stratified_candidate_sft_rows": 189,
+      "family_stratified_candidates_formal_public_sample": true,
+      "family_stratified_families": [
+        "blocked_payment",
+        "clarify",
+        "confirmation",
+        "extract",
+        "form_fill",
+        "navigation",
+        "search"
+      ],
+      "family_stratified_seed_split_counts": {
+        "dev": 21,
+        "test": 21,
+        "train": 21
+      },
+      "form_fill_confirmation_marker_extension_candidate_seed_rows": 12,
+      "form_fill_confirmation_marker_extension_candidate_sft_rows": 12,
+      "form_fill_confirmation_marker_extension_candidates_formal_public_sample": true,
+      "form_fill_confirmation_marker_extension_seed_split_counts": {
+        "dev": 0,
+        "test": 0,
+        "train": 12
+      },
+      "form_fill_confirmation_marker_extension_source_family_ids": [
+        "family-confirmation-dev-1",
+        "family-confirmation-dev-2",
+        "family-confirmation-dev-3",
+        "family-confirmation-test-1",
+        "family-confirmation-test-2",
+        "family-confirmation-test-3",
+        "family-form_fill-dev-1",
+        "family-form_fill-dev-2",
+        "family-form_fill-dev-3",
+        "family-form_fill-test-1",
+        "family-form_fill-test-2",
+        "family-form_fill-test-3"
+      ],
+      "form_fill_remediation_candidate_seed_rows": 9,
+      "form_fill_remediation_candidate_sft_rows": 9,
+      "form_fill_remediation_candidates_formal_public_sample": true,
+      "form_fill_remediation_source_case_groups": [
+        "form-fill-clarify-boundary-protection",
+        "form-fill-confirmation-marker-preservation",
+        "form-fill-field-specificity-preservation"
+      ],
+      "seed_rows": 102,
+      "slot_value_candidate_seed_rows": 4,
+      "slot_value_candidates_formal_public_sample": true,
+      "source": "sanitized_public_seed_fixture"
+    },
+    "route_counts": {
+      "clarify": 12,
+      "deny": 15,
+      "extract_page": 10,
+      "fill_form": 42,
+      "open_url": 13,
+      "search_web": 10
+    },
+    "safety_reason_counts": {
+      "ambiguous_request": 12,
+      "public_readonly": 33,
+      "requires_confirmation": 42,
+      "unsafe_payment": 15
+    },
+    "seed_split_counts": {
+      "dev": 23,
+      "test": 23,
+      "train": 56
+    },
+    "task_type_counts": {
+      "blocked": 15,
+      "clarify": 12,
+      "extract": 10,
+      "form_fill": 42,
+      "navigate": 13,
+      "search": 10
+    }
+  },
+  "dataset_manifest_id": "public-sample-20260617T045941Z",
+  "diagnostic_artifacts": {
+    "design": "reports/public-sample/scaled-public-sample-and-tiered-eval-design/scaled_public_sample_and_tiered_eval_design.json",
+    "manifest": "reports/public-sample/scaled-public-sample-and-tiered-eval-design/manifest.json",
+    "markdown": "reports/public-sample/scaled-public-sample-and-tiered-eval-design/scaled_public_sample_and_tiered_eval_design.md"
+  },
+  "evidence_kind": "scaled_public_sample_and_tiered_eval_design",
+  "generated_at": "2026-06-17T09:35:29.187584+00:00",
+  "latest_model_evidence": {
+    "base_model": "Qwen/Qwen2.5-7B-Instruct",
+    "claims": {
+      "adapter_release": false,
+      "checkpoint_release": false,
+      "evaluator_relaxation": false,
+      "held_out_generalization_recovered": false,
+      "live_browser_benchmark_claim": false,
+      "model_recovery_claim": false,
+      "prediction_repair_or_replacement": false,
+      "private_corpus_generalization_claim": false,
+      "production_readiness_claim": false,
+      "safety_improvement_claim": false,
+      "semantic_equivalence_primary_metric": false,
+      "soft_slot_f1_primary_metric": false,
+      "training_performed": true
+    },
+    "formal_public_sample_counts": {
+      "dpo_pairs": 881,
+      "seed_rows": 102,
+      "sft_rows": 261
+    },
+    "overall_interpretation": "current_train_split_sft_retry_no_strict_exact_recovery",
+    "split_metrics": {
+      "dev": {
+        "confirmation_accuracy": 0.927536231884058,
+        "confirmation_failure_count": 5,
+        "contract_exact_match": 0.43478260869565216,
+        "route_accuracy": 0.8840579710144928,
+        "route_failure_count": 8,
+        "safety_failure_count": 0,
+        "safety_recall": 1.0,
+        "slot_f1": 0.5579710144927537,
+        "slot_f1_soft": 0.8332347431726314,
+        "slot_failure_count": 31,
+        "task_type_accuracy": 0.8840579710144928
+      },
+      "test": {
+        "confirmation_accuracy": 0.9855072463768116,
+        "confirmation_failure_count": 1,
+        "contract_exact_match": 0.37681159420289856,
+        "route_accuracy": 0.927536231884058,
+        "route_failure_count": 5,
+        "safety_failure_count": 1,
+        "safety_recall": 1.0,
+        "slot_f1": 0.5458937198067634,
+        "slot_f1_soft": 0.7949706841735827,
+        "slot_failure_count": 34,
+        "task_type_accuracy": 0.927536231884058
+      }
+    }
+  },
+  "metric_authority": {
+    "contract_exact_match_primary_metric": true,
+    "semantic_equivalence_primary_metric": false,
+    "slot_f1_soft_primary_metric": false,
+    "strict_slot_f1_primary_metric": true,
+    "tiered_eval_is_diagnostic": true
+  },
+  "summary": {
+    "current_dpo_pairs": 881,
+    "current_seed_rows": 102,
+    "current_seed_split_counts": {
+      "dev": 23,
+      "test": 23,
+      "train": 56
+    },
+    "current_sft_rows": 261,
+    "current_sft_split_counts": {
+      "dev": 69,
+      "test": 69,
+      "train": 123
+    },
+    "current_train_rows": 123,
+    "design_interpretation": "scale_data_and_diagnose_by_tier_before_another_training_retry",
+    "recommended_next_step": "materialize_scaled_public_sample_candidates_after_review",
+    "target_core_bucket_seed_rows_total": 220,
+    "target_overlay_seed_rows_total": 20,
+    "target_seed_milestone": 240
+  }
+}

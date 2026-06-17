@@ -6792,6 +6792,459 @@ def write_current_retry_confirmation_preservation_candidate_design_report(
     return {"json": json_path, "markdown": markdown_path, "manifest": manifest_path}
 
 
+def _contract_from_public_row(row: dict[str, Any]) -> dict[str, Any]:
+    contract = row.get("target_contract")
+    return contract if isinstance(contract, dict) else {}
+
+
+def _public_metric_value(metrics_payload: dict[str, Any], name: str) -> Any:
+    metrics = metrics_payload.get("metrics")
+    return metrics.get(name) if isinstance(metrics, dict) else None
+
+
+def _public_failure_count(metrics_payload: dict[str, Any], name: str) -> int:
+    failure_slices = metrics_payload.get("failure_slices")
+    if not isinstance(failure_slices, dict):
+        return 0
+    entry = failure_slices.get(name)
+    if not isinstance(entry, dict):
+        return 0
+    return int(entry.get("count", 0) or 0)
+
+
+def write_scaled_public_sample_and_tiered_eval_design_report(
+    *,
+    public_manifest: dict[str, Any],
+    seed_rows: list[dict[str, Any]],
+    sft_rows: list[dict[str, Any]],
+    dpo_rows: list[dict[str, Any]],
+    current_retry_evidence: dict[str, Any],
+    dev_metrics: dict[str, Any],
+    test_metrics: dict[str, Any],
+    output_dir: Path,
+    title: str = "Voice2Task scaled public sample and tiered evaluation design",
+) -> dict[str, Path]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    json_path = output_dir / "scaled_public_sample_and_tiered_eval_design.json"
+    markdown_path = output_dir / "scaled_public_sample_and_tiered_eval_design.md"
+    manifest_path = output_dir / "manifest.json"
+
+    manifest_id = str(public_manifest.get("manifest_id", "unknown"))
+    retry_manifest_id = str(current_retry_evidence.get("dataset_manifest_id", "unknown"))
+    if retry_manifest_id != manifest_id:
+        raise ValueError(f"current retry evidence manifest mismatch: {retry_manifest_id!r} != {manifest_id!r}")
+
+    task_type_counts = Counter(str(_contract_from_public_row(row).get("task_type", "unknown")) for row in seed_rows)
+    route_counts = Counter(str(_contract_from_public_row(row).get("route", "unknown")) for row in seed_rows)
+    safety_reason_counts = Counter(
+        str((_contract_from_public_row(row).get("safety") or {}).get("reason", "unknown")) for row in seed_rows
+    )
+    confirmation_counts = Counter(
+        str(bool(_contract_from_public_row(row).get("confirmation_required"))) for row in seed_rows
+    )
+    split_counts = Counter(str(row.get("split", "unknown")) for row in seed_rows)
+    sft_split_counts = public_manifest.get("split_counts", {})
+    augmentation_depths = [1 + len(row.get("augmentations", [])) for row in seed_rows]
+    average_variants_per_seed = (
+        round(sum(augmentation_depths) / len(augmentation_depths), 3) if augmentation_depths else 0.0
+    )
+
+    split_metrics = {
+        "dev": {
+            "contract_exact_match": _public_metric_value(dev_metrics, "contract_exact_match"),
+            "slot_f1": _public_metric_value(dev_metrics, "slot_f1"),
+            "slot_f1_soft": _public_metric_value(dev_metrics, "slot_f1_soft"),
+            "task_type_accuracy": _public_metric_value(dev_metrics, "task_type_accuracy"),
+            "route_accuracy": _public_metric_value(dev_metrics, "route_accuracy"),
+            "safety_recall": _public_metric_value(dev_metrics, "safety_recall"),
+            "confirmation_accuracy": _public_metric_value(dev_metrics, "confirmation_accuracy"),
+            "slot_failure_count": _public_failure_count(dev_metrics, "slot"),
+            "route_failure_count": _public_failure_count(dev_metrics, "route"),
+            "confirmation_failure_count": _public_failure_count(dev_metrics, "confirmation"),
+            "safety_failure_count": _public_failure_count(dev_metrics, "safety"),
+        },
+        "test": {
+            "contract_exact_match": _public_metric_value(test_metrics, "contract_exact_match"),
+            "slot_f1": _public_metric_value(test_metrics, "slot_f1"),
+            "slot_f1_soft": _public_metric_value(test_metrics, "slot_f1_soft"),
+            "task_type_accuracy": _public_metric_value(test_metrics, "task_type_accuracy"),
+            "route_accuracy": _public_metric_value(test_metrics, "route_accuracy"),
+            "safety_recall": _public_metric_value(test_metrics, "safety_recall"),
+            "confirmation_accuracy": _public_metric_value(test_metrics, "confirmation_accuracy"),
+            "slot_failure_count": _public_failure_count(test_metrics, "slot"),
+            "route_failure_count": _public_failure_count(test_metrics, "route"),
+            "confirmation_failure_count": _public_failure_count(test_metrics, "confirmation"),
+            "safety_failure_count": _public_failure_count(test_metrics, "safety"),
+        },
+    }
+
+    target_buckets = [
+        {
+            "bucket": "search",
+            "current_seed_rows": task_type_counts.get("search", 0),
+            "target_seed_rows": 30,
+            "augmentation_guidance": "4-6 variants per seed; keep compact query slots stable.",
+            "accepted_contract_sketch": {"task_type": "search", "route": "search_web", "slots": ["query"]},
+            "rejected_drift_sketches": ["query paraphrase changes slot value", "search intent routed to navigate"],
+        },
+        {
+            "bucket": "navigation",
+            "current_seed_rows": task_type_counts.get("navigate", 0),
+            "target_seed_rows": 30,
+            "augmentation_guidance": "4-6 variants per seed; keep canonical URL exact.",
+            "accepted_contract_sketch": {"task_type": "navigate", "route": "open_url", "slots": ["url"]},
+            "rejected_drift_sketches": ["URL loses scheme", "public navigation incorrectly requires confirmation"],
+        },
+        {
+            "bucket": "form_fill",
+            "current_seed_rows": task_type_counts.get("form_fill", 0),
+            "target_seed_rows": 45,
+            "augmentation_guidance": "5-8 variants per seed; separate field specificity and confirmation markers.",
+            "accepted_contract_sketch": {"task_type": "form_fill", "route": "fill_form", "slots": ["field", "value"]},
+            "rejected_drift_sketches": ["field becomes generic", "submit/payment intent loses confirmation"],
+        },
+        {
+            "bucket": "extract",
+            "current_seed_rows": task_type_counts.get("extract", 0),
+            "target_seed_rows": 35,
+            "augmentation_guidance": "5-7 variants per seed; preserve target wording and avoid search fallback.",
+            "accepted_contract_sketch": {"task_type": "extract", "route": "extract_page", "slots": ["target"]},
+            "rejected_drift_sketches": ["extract routed to search_web", "target slot adds generic price wording"],
+        },
+        {
+            "bucket": "clarify",
+            "current_seed_rows": task_type_counts.get("clarify", 0),
+            "target_seed_rows": 45,
+            "augmentation_guidance": "6-8 variants per seed; emphasize underspecified-but-action-shaped requests.",
+            "accepted_contract_sketch": {"task_type": "clarify", "route": "clarify", "slots": ["ambiguity"]},
+            "rejected_drift_sketches": ["ambiguous request guessed as form_fill", "missing target guessed as extract"],
+        },
+        {
+            "bucket": "blocked_payment",
+            "current_seed_rows": task_type_counts.get("blocked", 0),
+            "target_seed_rows": 35,
+            "augmentation_guidance": "5-8 variants per seed; cover payment, purchase, refund, subscription actions.",
+            "accepted_contract_sketch": {
+                "task_type": "blocked",
+                "route": "deny",
+                "safety": {"allow": False, "reason": "unsafe_payment"},
+            },
+            "rejected_drift_sketches": ["unsafe payment allowed", "blocked payment downgraded to form_fill"],
+        },
+        {
+            "bucket": "confirmation_boundary",
+            "current_seed_rows": confirmation_counts.get("True", 0),
+            "target_seed_rows": 20,
+            "counts_toward_target_seed_milestone": False,
+            "augmentation_guidance": "Overlay bucket; pair similar requests that differ only by confirmation marker.",
+            "accepted_contract_sketch": {"confirmation_required": [True, False]},
+            "rejected_drift_sketches": ["confirmation marker ignored", "confirmation inferred where absent"],
+        },
+    ]
+
+    tiered_eval = [
+        {
+            "tier": "T0_schema_structure",
+            "existing_metrics": ["json_valid_rate", "failure_slices.schema"],
+            "diagnostic_question": "Can the model emit schema-valid BrowserTaskContract JSON?",
+            "data_decision": "If this fails, fix rendering/objective before adding more semantic cases.",
+            "public_claim_role": "gating",
+        },
+        {
+            "tier": "T1_task_route",
+            "existing_metrics": [
+                "task_type_accuracy",
+                "route_accuracy",
+                "failure_slices.task_type",
+                "failure_slices.route",
+            ],
+            "diagnostic_question": "Does the model choose the correct contract family and route?",
+            "data_decision": (
+                "Add contrastive boundary seeds for clarify/extract/form_fill/navigate if this tier fails."
+            ),
+            "public_claim_role": "diagnostic",
+        },
+        {
+            "tier": "T2_safety_confirmation",
+            "existing_metrics": ["safety_precision", "safety_recall", "confirmation_accuracy"],
+            "diagnostic_question": "Are stop decisions and confirmation markers preserved?",
+            "data_decision": "Add paired safety and confirmation boundary seeds before retraining.",
+            "public_claim_role": "diagnostic",
+        },
+        {
+            "tier": "T3_slot_exactness",
+            "existing_metrics": ["slot_f1", "failure_slices.slot", "slot_f1_soft"],
+            "diagnostic_question": "Are strict slot keys and values exact, and where are near misses concentrated?",
+            "data_decision": "Use strict slot failures for data design; keep soft slot F1 diagnostic-only.",
+            "public_claim_role": "headline_for_strict_slot_f1_only",
+        },
+        {
+            "tier": "T4_full_contract_exact",
+            "existing_metrics": ["contract_exact_match"],
+            "diagnostic_question": "Does the complete contract match exactly?",
+            "data_decision": "Use as final public held-out success metric after lower tiers are stable.",
+            "public_claim_role": "headline",
+        },
+    ]
+
+    design = {
+        "evidence_kind": "scaled_public_sample_and_tiered_eval_design",
+        "design_mode": "public_safe_design_only_no_materialization",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "dataset_manifest_id": manifest_id,
+        "source_evidence": {
+            "current_retry": (
+                "reports/public-sample/a100-current-123-train-split-sft-retry/"
+                "current_train_split_sft_retry.json"
+            ),
+            "dev_metrics": "reports/public-sample/a100-current-123-train-split-sft-retry/dev/metrics.json",
+            "test_metrics": "reports/public-sample/a100-current-123-train-split-sft-retry/test/metrics.json",
+            "final_status": "reports/final_status.md",
+            "context": "CONTEXT.md",
+        },
+        "summary": {
+            "current_seed_rows": len(seed_rows),
+            "current_sft_rows": len(sft_rows),
+            "current_dpo_pairs": len(dpo_rows),
+            "current_sft_split_counts": sft_split_counts,
+            "current_seed_split_counts": dict(split_counts),
+            "current_train_rows": sft_split_counts.get("train") if isinstance(sft_split_counts, dict) else None,
+            "target_seed_milestone": 240,
+            "target_core_bucket_seed_rows_total": sum(
+                int(bucket["target_seed_rows"])
+                for bucket in target_buckets
+                if bucket.get("counts_toward_target_seed_milestone", True)
+            ),
+            "target_overlay_seed_rows_total": sum(
+                int(bucket["target_seed_rows"])
+                for bucket in target_buckets
+                if not bucket.get("counts_toward_target_seed_milestone", True)
+            ),
+            "recommended_next_step": "materialize_scaled_public_sample_candidates_after_review",
+            "design_interpretation": "scale_data_and_diagnose_by_tier_before_another_training_retry",
+        },
+        "current_coverage": {
+            "task_type_counts": dict(task_type_counts),
+            "route_counts": dict(route_counts),
+            "safety_reason_counts": dict(safety_reason_counts),
+            "confirmation_required_counts": dict(confirmation_counts),
+            "seed_split_counts": dict(split_counts),
+            "average_variants_per_seed": average_variants_per_seed,
+            "manifest_source_summary": public_manifest.get("source_summary", {}),
+        },
+        "latest_model_evidence": {
+            "base_model": current_retry_evidence.get("base_model"),
+            "formal_public_sample_counts": current_retry_evidence.get("formal_public_sample_counts"),
+            "split_metrics": split_metrics,
+            "overall_interpretation": current_retry_evidence.get("overall_interpretation"),
+            "claims": current_retry_evidence.get("claims", {}),
+        },
+        "scaled_public_sample_design": {
+            "target_buckets": target_buckets,
+            "augmentation_policy": {
+                "current_average_variants_per_seed": average_variants_per_seed,
+                "target_stable_family_variants_per_seed": "4-6",
+                "target_boundary_family_variants_per_seed": "6-8",
+                "slot_value_rule": "same seed family keeps target slots invariant across augmentations",
+                "split_rule": "materialization phase must preserve explicit train/dev/test split accounting",
+            },
+            "later_materialization_validation_gates": [
+                "public artifact validation passes",
+                "DPO pair integrity check passes",
+                "no private-path leak scan findings",
+                "strict metric authority remains unchanged",
+                "comparison_boundary records manifest id before any evaluation comparison",
+            ],
+        },
+        "tiered_evaluation_design": {
+            "tiers": tiered_eval,
+            "metric_authority": {
+                "contract_exact_match_primary_metric": True,
+                "strict_slot_f1_primary_metric": True,
+                "slot_f1_soft_primary_metric": False,
+                "semantic_equivalence_primary_metric": False,
+                "tiered_eval_is_diagnostic": True,
+            },
+        },
+        "execution_scope": {
+            "design_only": True,
+            "formal_public_sample_modified": False,
+            "seed_traces_modified": False,
+            "sft_artifacts_rebuilt": False,
+            "dpo_artifacts_rebuilt": False,
+            "manifest_rebuilt": False,
+            "training_run": False,
+            "prediction_run": False,
+            "a100_job": False,
+            "prompt_change": False,
+            "evaluator_metric_change": False,
+            "evaluator_relaxation": False,
+            "semantic_equivalence_scoring": False,
+            "slot_normalization": False,
+            "prediction_repair": False,
+            "adapter_release": False,
+            "checkpoint_release": False,
+        },
+        "claims": {
+            "strict_contract_exact_match_primary_metric": True,
+            "strict_slot_f1_primary_metric": True,
+            "soft_slot_f1_primary_metric": False,
+            "semantic_equivalence_primary_metric": False,
+            "model_recovery_claim": False,
+            "held_out_recovery_claim": False,
+            "safety_improvement_claim": False,
+            "production_readiness_claim": False,
+            "private_corpus_generalization_claim": False,
+            "live_browser_benchmark_claim": False,
+            "adapter_release": False,
+            "checkpoint_release": False,
+        },
+    }
+    safe_design = _sanitize_report_value(design)
+    scope = safe_design["execution_scope"]
+    claims = safe_design["claims"]
+    allowed_true_scope = {"design_only"}
+    allowed_true_claims = {"strict_contract_exact_match_primary_metric", "strict_slot_f1_primary_metric"}
+    bad_scope = [key for key, value in scope.items() if value is True and key not in allowed_true_scope]
+    bad_claims = [key for key, value in claims.items() if value is True and key not in allowed_true_claims]
+    if bad_scope or bad_claims:
+        raise ValueError(
+            "scaled public-sample design report cannot claim unsupported scope or recovery signals: "
+            f"scope={bad_scope}, claims={bad_claims}"
+        )
+
+    write_json(json_path, safe_design)
+    manifest = {
+        "evidence_kind": safe_design["evidence_kind"],
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "dataset_manifest_id": manifest_id,
+        "summary": safe_design["summary"],
+        "current_coverage": safe_design["current_coverage"],
+        "latest_model_evidence": safe_design["latest_model_evidence"],
+        "metric_authority": safe_design["tiered_evaluation_design"]["metric_authority"],
+        "claims": safe_design["claims"],
+        "artifact_policy": safe_design["execution_scope"],
+        "diagnostic_artifacts": {
+            "design": (
+                "reports/public-sample/scaled-public-sample-and-tiered-eval-design/"
+                "scaled_public_sample_and_tiered_eval_design.json"
+            ),
+            "markdown": (
+                "reports/public-sample/scaled-public-sample-and-tiered-eval-design/"
+                "scaled_public_sample_and_tiered_eval_design.md"
+            ),
+            "manifest": "reports/public-sample/scaled-public-sample-and-tiered-eval-design/manifest.json",
+        },
+    }
+    write_json(manifest_path, manifest)
+
+    summary = safe_design["summary"]
+    coverage = safe_design["current_coverage"]
+    lines = [
+        f"# {title}",
+        "",
+        (
+            "This is a design-only public evidence report. It does not materialize seeds, rebuild SFT/DPO, "
+            "train, predict, repair predictions, change prompts, or relax evaluator metrics."
+        ),
+        "",
+        "## Boundary",
+        "",
+        "- Formal public sample modified: `False`.",
+        "- Seed/SFT/DPO/manifest files rebuilt: `False`.",
+        "- Training or prediction run: `False`.",
+        "- Evaluator metric change or relaxation: `False`.",
+        "- strict `contract_exact_match` and strict `slot_f1` remain public headline metrics.",
+        "- `slot_f1_soft` and partial tier matches remain diagnostic-only.",
+        "",
+        "## Current Evidence",
+        "",
+        f"- Dataset manifest: `{manifest_id}`",
+        f"- Current seed rows: `{summary['current_seed_rows']}`",
+        f"- Current SFT rows: `{summary['current_sft_rows']}`",
+        f"- Current DPO pairs: `{summary['current_dpo_pairs']}`",
+        f"- Current SFT split counts: `{summary['current_sft_split_counts']}`",
+        f"- Current seed split counts: `{summary['current_seed_split_counts']}`",
+        f"- Task-type coverage: `{coverage['task_type_counts']}`",
+        f"- Safety reason coverage: `{coverage['safety_reason_counts']}`",
+        f"- Confirmation coverage: `{coverage['confirmation_required_counts']}`",
+        f"- Average variants per seed: `{coverage['average_variants_per_seed']}`",
+        "",
+        "## Latest Model Evidence",
+        "",
+    ]
+    for split, metrics in safe_design["latest_model_evidence"]["split_metrics"].items():
+        lines.extend(
+            [
+                f"### `{split}`",
+                "",
+                f"- strict contract exact: `{metrics['contract_exact_match']}`",
+                f"- strict slot F1: `{metrics['slot_f1']}`",
+                f"- diagnostic soft slot F1: `{metrics['slot_f1_soft']}`",
+                f"- task/route accuracy: `{metrics['task_type_accuracy']}` / `{metrics['route_accuracy']}`",
+                f"- safety recall: `{metrics['safety_recall']}`",
+                f"- confirmation accuracy: `{metrics['confirmation_accuracy']}`",
+                f"- failure counts: slot `{metrics['slot_failure_count']}`, route `{metrics['route_failure_count']}`, "
+                f"confirmation `{metrics['confirmation_failure_count']}`, safety `{metrics['safety_failure_count']}`",
+                "",
+            ]
+        )
+
+    lines.extend(
+        [
+            "## Scaled Public-Sample Target",
+            "",
+            f"- Target seed milestone: `{summary['target_seed_milestone']}`",
+            f"- Target core bucket total: `{summary['target_core_bucket_seed_rows_total']}`",
+            f"- Target overlay bucket total: `{summary['target_overlay_seed_rows_total']}`",
+            f"- Recommended next step: `{summary['recommended_next_step']}`",
+            "",
+        ]
+    )
+    for bucket in safe_design["scaled_public_sample_design"]["target_buckets"]:
+        lines.extend(
+            [
+                f"### `{bucket['bucket']}`",
+                "",
+                f"- Current seed rows: `{bucket['current_seed_rows']}`",
+                f"- Target seed rows: `{bucket['target_seed_rows']}`",
+                f"- Counts toward target seed milestone: `{bucket.get('counts_toward_target_seed_milestone', True)}`",
+                f"- Augmentation guidance: `{bucket['augmentation_guidance']}`",
+                f"- Accepted contract sketch: `{bucket['accepted_contract_sketch']}`",
+                f"- Rejected drift sketches: `{bucket['rejected_drift_sketches']}`",
+                "",
+            ]
+        )
+
+    lines.extend(["## Tiered Evaluation Design", ""])
+    for tier in safe_design["tiered_evaluation_design"]["tiers"]:
+        lines.extend(
+            [
+                f"### `{tier['tier']}`",
+                "",
+                f"- Existing metrics: `{tier['existing_metrics']}`",
+                f"- Diagnostic question: `{tier['diagnostic_question']}`",
+                f"- Data decision: `{tier['data_decision']}`",
+                f"- Public claim role: `{tier['public_claim_role']}`",
+                "",
+            ]
+        )
+
+    lines.extend(
+        [
+            "## Recommended Next Step",
+            "",
+            (
+                "Review this design, then open a later bounded materialization phase for scaled public-sample "
+                "candidates. Do not treat this report as data generation, model recovery, production readiness, "
+                "or a reason to replace strict headline metrics."
+            ),
+        ]
+    )
+    markdown_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    return {"json": json_path, "markdown": markdown_path, "manifest": manifest_path}
+
+
 def write_slot_value_candidate_sft_probe_report(
     *,
     candidate_manifest: dict[str, Any],

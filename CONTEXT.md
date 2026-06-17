@@ -6,24 +6,26 @@ Voice2Task Post-Training is a companion project for training and evaluating smal
 
 As of 2026-06-17, the first project phase is closed as an evidence-backed
 post-training and evaluation baseline, not as a production-ready model release.
-The public-facing truth surface has eight current layers:
+The public-facing truth surface has nine current layers:
 
-1. the current-123-row train-split SFT retry model evidence under
+1. the scaled public-sample and tiered-evaluation design evidence under
+   `reports/public-sample/scaled-public-sample-and-tiered-eval-design/`;
+2. the current-123-row train-split SFT retry model evidence under
    `reports/public-sample/a100-current-123-train-split-sft-retry/`;
-2. the current-123-row train-split SFT retry readiness evidence under
+3. the current-123-row train-split SFT retry readiness evidence under
    `reports/public-sample/current-123-train-split-sft-retry-readiness/`;
-3. the current-retry confirmation-preservation materialization and public merge
+4. the current-retry confirmation-preservation materialization and public merge
    under
    `reports/public-sample/current-retry-confirmation-preservation-public-sample-merge/`;
-4. the current-retry confirmation-preservation candidate design under
+5. the current-retry confirmation-preservation candidate design under
    `reports/public-sample/current-retry-confirmation-preservation-candidate-design/`;
-5. the current-train-split SFT retry trade-off diagnosis under
+6. the current-train-split SFT retry trade-off diagnosis under
    `reports/public-sample/current-train-split-sft-retry-tradeoff-diagnosis/`;
-6. the prior current-train-split SFT retry under
+7. the prior current-train-split SFT retry under
    `reports/public-sample/a100-current-train-split-sft-retry/`;
-7. the current-manifest SFT v3 prediction-only baseline under
+8. the current-manifest SFT v3 prediction-only baseline under
    `reports/public-sample/a100-current-manifest-sft-v3-prediction-baseline/`;
-8. the bounded SFT v3 retry after SSH recovery, now a prior-manifest model
+9. the bounded SFT v3 retry after SSH recovery, now a prior-manifest model
    source, under
    `reports/public-sample/a100-form-fill-remediation-sft-v3-retry-after-ssh-recovery/`.
 
@@ -38,6 +40,8 @@ Current formal public sample data boundary:
 | latest model run type | private SFT retry on the current 123-row train split, then dev/test strict eval |
 | latest model interpretation | `current_train_split_sft_retry_no_strict_exact_recovery` |
 | latest model evidence | `reports/public-sample/a100-current-123-train-split-sft-retry/` |
+| latest strategic-design evidence | `reports/public-sample/scaled-public-sample-and-tiered-eval-design/` |
+| latest strategic-design interpretation | `scale_data_and_diagnose_by_tier_before_another_training_retry` |
 | latest diagnosis interpretation | `current_sft_retry_tradeoff_diagnosis_confirmation_regression_after_safety_recovery` |
 | latest diagnosis evidence | `reports/public-sample/current-train-split-sft-retry-tradeoff-diagnosis/` |
 | latest candidate-design evidence | `reports/public-sample/current-retry-confirmation-preservation-candidate-design/` |
@@ -65,6 +69,17 @@ Strict `contract_exact_match` and strict `slot_f1` remain the public headline
 metrics. `slot_f1_soft` is diagnostic only and must not be used as recovery,
 semantic-equivalence, or production-readiness evidence. `json_valid_rate=1.0`
 means the output shape is stable; it is not enough to claim contract recovery.
+
+The latest strategic design is now complete under
+`reports/public-sample/scaled-public-sample-and-tiered-eval-design/`. It is a
+design-only pivot after the current-123 retry: it records the current 102-seed /
+261-SFT / 881-DPO boundary, the current 123 train rows, a review target of 240
+seeds, family-balance guidance, augmentation-depth guidance, and a diagnostic
+tiered-evaluation ladder. It does not materialize seeds, rebuild SFT/DPO rows,
+train, predict, change prompts, normalize slots, repair predictions, relax
+evaluator metrics, or claim model recovery. The recommended next bounded phase,
+if the project continues, is reviewed materialization of scaled public-sample
+candidates, not another blind SFT retry.
 
 Claim boundaries:
 

@@ -1,0 +1,15 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-17T09:41:22.991890+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "CONTEXT.md",
+    "reports/final_status.md",
+    "reports/public-sample/scaled-public-sample-and-tiered-eval-design",
+    "docs/human-briefs/2026-06-17-design-scaled-public-sample-and-tiered-eval.html",
+    "data/public-samples",
+    "openspec/changes/archive/2026-06-17-design-scaled-public-sample-and-tiered-eval",
+    "openspec/specs"
+  ]
+}

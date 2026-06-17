@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Voice2Task 扩样本与分层评估设计简报</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.55; margin: 32px; color: #202124; }
+    main { max-width: 980px; margin: 0 auto; }
+    h1 { font-size: 28px; margin-bottom: 8px; }
+    h2 { font-size: 18px; margin-top: 28px; border-bottom: 1px solid #ddd; padding-bottom: 6px; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; }
+    th { background: #f6f8fa; }
+    code { background: #f6f8fa; padding: 1px 4px; border-radius: 4px; }
+    .claim { padding: 12px 14px; background: #eef6ff; border-left: 4px solid #2563eb; }
+    .warn { padding: 12px 14px; background: #fff7ed; border-left: 4px solid #f97316; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Voice2Task 扩样本与分层评估设计简报</h1>
+  <p class="claim">结论：当前模型已经稳定输出 schema-valid JSON，但 strict exact 仍未恢复；下一步应先设计并审阅更均衡的 240-seed public sample 与分层诊断，而不是继续盲目 SFT。</p>
+
+  <h2>当前状态</h2>
+  <table>
+    <tr><th>项目</th><th>状态</th></tr>
+    <tr><td>OpenSpec change</td><td><code>design-scaled-public-sample-and-tiered-eval</code></td></tr>
+    <tr><td>阶段类型</td><td>design-only；不改数据、不训练、不预测、不放松 evaluator</td></tr>
+    <tr><td>当前 manifest</td><td><code>public-sample-20260617T045941Z</code></td></tr>
+    <tr><td>当前 public sample</td><td>102 seeds / 261 SFT rows / 881 DPO pairs；train/dev/test = 123 / 69 / 69</td></tr>
+    <tr><td>当前 seed split</td><td>train/dev/test = 56 / 23 / 23；SFT split 和 seed split 是不同口径</td></tr>
+    <tr><td>设计目标</td><td>240 seed milestone = 220 core family targets + 20 confirmation-boundary overlay</td></tr>
+    <tr><td>最新模型证据</td><td><code>reports/public-sample/a100-current-123-train-split-sft-retry/</code></td></tr>
+    <tr><td>本阶段证据</td><td><code>reports/public-sample/scaled-public-sample-and-tiered-eval-design/</code></td></tr>
+  </table>
+
+  <h2>本阶段做了什么</h2>
+  <ul>
+    <li>新增可重现的设计报告生成路径：CLI 从当前 public sample 和 current-123 retry metrics 生成 JSON / Markdown / manifest。</li>
+    <li>固化 240-seed milestone 作为下一步目标，而不是已完成数据。</li>
+    <li>记录 family 目标分布、augmentation depth、accepted contract sketches、rejected drift sketches。</li>
+    <li>定义五层诊断：schema、task/route、safety/confirmation、strict slot、full-contract exact。</li>
+    <li>更新 <code>CONTEXT.md</code> 和 <code>reports/final_status.md</code>，把下一阶段方向从窄修窄训收束为先扩数据设计和分层诊断。</li>
+  </ul>
+
+  <h2>关键指标</h2>
+  <table>
+    <tr><th>Split</th><th>contract_exact_match</th><th>strict slot_f1</th><th>route_accuracy</th><th>safety_recall</th><th>json_valid_rate</th></tr>
+    <tr><td>dev</td><td>0.4348</td><td>0.5580</td><td>0.8841</td><td>1.0000</td><td>1.0000</td></tr>
+    <tr><td>test</td><td>0.3768</td><td>0.5459</td><td>0.9275</td><td>1.0000</td><td>1.0000</td></tr>
+  </table>
+  <p class="warn">不要把 <code>slot_f1_soft</code> 当作主指标。公开 headline 仍然是 <code>contract_exact_match</code> 和 strict <code>slot_f1</code>。</p>
+
+  <h2>验证结果</h2>
+  <ul>
+    <li><code>PYTHONPATH=src python3 -m pytest tests/test_scaled_public_sample_and_tiered_eval_design.py -q</code>：1 passed</li>
+    <li><code>PYTHONPATH=src python3 -m pytest -q</code>：407 passed</li>
+    <li><code>ruff check src/ scripts/ tests/</code>：All checks passed</li>
+    <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：5 passed</li>
+    <li><code>voice2task.cli.data validate ... --public</code>：ok true，261 SFT rows / 881 DPO pairs</li>
+    <li><code>voice2task.cli.data dpo-check ...</code>：881 total pairs</li>
+  </ul>
+
+  <h2>剩余风险</h2>
+  <ul>
+    <li>本阶段没有生成新 seed，也没有证明 240 seeds 会带来 strict recovery。</li>
+    <li>当前 exact 仍低，说明模型不是生产可用状态。</li>
+    <li>分层评估是诊断工具，不是替代 strict metrics 的新成功标准。</li>
+  </ul>
+
+  <h2>推荐下一步</h2>
+  <p>如果继续推进，应开一个后续 bounded materialization phase，按本阶段设计审阅并生成 scaled public-sample candidates；通过 public validation / DPO check / leak scan 后，再考虑 paired-adapter training。</p>
+</main>
+</body>
+</html>

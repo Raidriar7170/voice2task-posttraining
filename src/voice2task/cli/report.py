@@ -18,6 +18,7 @@ from voice2task.reports import (
     write_merged_slot_value_heldout_eval_report,
     write_runtime_label_provenance_check_evidence_pack,
     write_runtime_label_provenance_prep_evidence_pack,
+    write_scaled_public_sample_and_tiered_eval_design_report,
     write_sft_label_provenance_evidence_pack,
     write_slot_value_candidate_sft_probe_report,
 )
@@ -127,6 +128,16 @@ def build_parser() -> argparse.ArgumentParser:
     current_confirmation_design.add_argument("--current-baseline-root", type=Path, required=True)
     current_confirmation_design.add_argument("--retry-root", type=Path, required=True)
     current_confirmation_design.add_argument("--output", type=Path, required=True)
+
+    scaled_design = subcommands.add_parser("scaled-public-sample-and-tiered-eval-design")
+    scaled_design.add_argument("--public-manifest", type=Path, required=True)
+    scaled_design.add_argument("--seed", type=Path, required=True)
+    scaled_design.add_argument("--sft", type=Path, required=True)
+    scaled_design.add_argument("--dpo", type=Path, required=True)
+    scaled_design.add_argument("--current-retry-evidence", type=Path, required=True)
+    scaled_design.add_argument("--dev-metrics", type=Path, required=True)
+    scaled_design.add_argument("--test-metrics", type=Path, required=True)
+    scaled_design.add_argument("--output", type=Path, required=True)
 
     merged_eval = subcommands.add_parser("merged-slot-value-heldout-eval")
     merged_eval.add_argument("--public-manifest", type=Path, required=True)
@@ -466,6 +477,29 @@ def main(argv: list[str] | None = None) -> int:
             },
             baseline_root=baseline_root,
             retry_root=retry_root,
+            output_dir=args.output,
+        )
+        design = read_json(report_paths["json"])
+        print(
+            json.dumps(
+                {
+                    "ok": True,
+                    "paths": {key: value.as_posix() for key, value in report_paths.items()},
+                    "summary": design.get("summary", {}),
+                },
+                indent=2,
+            )
+        )
+        return 0
+    if args.command == "scaled-public-sample-and-tiered-eval-design":
+        report_paths = write_scaled_public_sample_and_tiered_eval_design_report(
+            public_manifest=read_json(args.public_manifest),
+            seed_rows=read_jsonl(args.seed),
+            sft_rows=read_jsonl(args.sft),
+            dpo_rows=read_jsonl(args.dpo),
+            current_retry_evidence=read_json(args.current_retry_evidence),
+            dev_metrics=read_json(args.dev_metrics),
+            test_metrics=read_json(args.test_metrics),
             output_dir=args.output,
         )
         design = read_json(report_paths["json"])
