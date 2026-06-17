@@ -1,0 +1,45 @@
+{
+  "artifact_policy": {
+    "checkpoints_or_adapters_copied_to_git": false,
+    "host_details_omitted": true,
+    "private_corpus_rows_omitted": true,
+    "private_overrides_copied_to_git": false,
+    "private_paths_omitted": true,
+    "raw_logs_copied_to_git": false,
+    "remote_caches_copied_to_git": false,
+    "ssh_details_omitted": true
+  },
+  "checks": {
+    "approved_remote_write_root": "confirmed_under_approved_private_a100_root",
+    "gpu_occupancy": "safe_idle_gpu_selected_without_interrupting_other_processes",
+    "prediction_execution": "dev_test_prediction_only_completed",
+    "private_adapter_availability": "confirmed_without_copying_adapter_to_git",
+    "private_override_status": "created_on_a100_private_root_not_copied_to_git",
+    "ssh_alias_connectivity": "reachable"
+  },
+  "execution_scope": {
+    "a100_execution": true,
+    "data_mutation": false,
+    "dev_predictions_generated": true,
+    "evaluator_change": false,
+    "metrics_generated": true,
+    "prediction_repair_or_replacement": false,
+    "prediction_run": true,
+    "prompt_change": false,
+    "test_predictions_generated": true,
+    "training_run": false
+  },
+  "generated_at": "2026-06-17T17:12:14.218210+00:00",
+  "public_artifacts": {
+    "evidence_dir": "reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery",
+    "formal_prediction_evidence": "reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/formal_public_heldout_prediction.json",
+    "manifest": "reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/manifest.json",
+    "report": "reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/report.md"
+  },
+  "selected_gpu_policy": {
+    "explicit_cuda_visible_devices_used": true,
+    "occupancy_checked_before_launch": true,
+    "other_users_processes_interrupted": false
+  },
+  "status": "observed"
+}

@@ -333,6 +333,84 @@ def test_committed_scaled_public_sample_current_123_adapter_prediction_is_blocke
     assert scan_paths([evidence_dir]).ok is True
 
 
+def test_committed_scaled_public_sample_current_123_adapter_prediction_after_a100_recovery_is_observed() -> None:
+    evidence_dir = (
+        REPO_ROOT
+        / "reports"
+        / "public-sample"
+        / "a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery"
+    )
+    evidence = read_json(evidence_dir / "formal_public_heldout_prediction.json")
+    manifest = read_json(evidence_dir / "manifest.json")
+    preflight = read_json(evidence_dir / "a100_preflight_status.json")
+    leak_scan = read_json(evidence_dir / "leak_scan_result.json")
+    phase_leak_scan = read_json(evidence_dir / "phase_validation_leak_scan_result.json")
+    final_phase_leak_scan = read_json(evidence_dir / "final_phase_leak_scan_result.json")
+    report = (evidence_dir / "report.md").read_text(encoding="utf-8")
+
+    assert evidence["run_status"] == "observed"
+    assert evidence["dataset_manifest_id"] == SCALED_PUBLIC_SAMPLE_MANIFEST_ID
+    assert evidence["source_adapter_runtime"] == "a100-current-train-split-sft-retry"
+    assert evidence["formal_public_sample_counts"] == {"seed_rows": 240, "sft_rows": 675, "dpo_pairs": 2046}
+    assert evidence["formal_public_sample_split_counts"] == {"train": 261, "dev": 207, "test": 207}
+    assert evidence["overall_interpretation"] == "formal_public_heldout_partial_signal"
+
+    dev = evidence["split_results"]["dev"]
+    test = evidence["split_results"]["test"]
+    assert dev["prediction_count"] == 207
+    assert test["prediction_count"] == 207
+    assert dev["contract_exact_match"] == pytest.approx(0.2463768115942029)
+    assert dev["slot_f1"] == pytest.approx(0.28743961352657005)
+    assert dev["slot_f1_soft"] == pytest.approx(0.6372298122661537)
+    assert dev["route_accuracy"] == pytest.approx(0.961352657004831)
+    assert dev["safety_recall"] == pytest.approx(1.0)
+    assert dev["json_valid_rate"] == pytest.approx(1.0)
+    assert test["contract_exact_match"] == pytest.approx(0.2028985507246377)
+    assert test["slot_f1"] == pytest.approx(0.2592592592592593)
+    assert test["slot_f1_soft"] == pytest.approx(0.6107811374904073)
+    assert test["route_accuracy"] == pytest.approx(0.9758454106280193)
+    assert test["safety_recall"] == pytest.approx(1.0)
+    assert test["json_valid_rate"] == pytest.approx(1.0)
+
+    boundary = evidence["comparison_boundary"]
+    assert boundary["current_dataset_manifest_id"] == SCALED_PUBLIC_SAMPLE_MANIFEST_ID
+    assert boundary["target_dataset_manifest_id"] == SCALED_PUBLIC_SAMPLE_MANIFEST_ID
+    assert boundary["prior_dataset_manifest_id"] == PRE_SCALED_PUBLIC_SAMPLE_MANIFEST_ID
+    assert boundary["source_adapter_dataset_manifest_id"] == PRE_SCALED_PUBLIC_SAMPLE_MANIFEST_ID
+    assert boundary["source_adapter_runtime"] == "a100-current-train-split-sft-retry"
+    assert boundary["prior_evidence_dir"] == "reports/public-sample/a100-current-123-train-split-sft-retry"
+    assert boundary["runtime_recovery_retry"] is True
+    assert boundary["direct_improvement_regression_comparison_valid"] is False
+
+    claims = evidence["claims"]
+    assert claims["prediction_only"] is True
+    assert claims["training_performed"] is False
+    assert claims["held_out_generalization_recovered"] is False
+    assert claims["model_recovery_claim"] is False
+    assert claims["adapter_release"] is False
+    assert claims["checkpoint_release"] is False
+    assert claims["production_readiness_claim"] is False
+    assert claims["prediction_repair_or_replacement"] is False
+    assert claims["soft_slot_f1_primary_metric"] is False
+
+    assert manifest["run_status"] == "observed"
+    assert manifest["overall_interpretation"] == evidence["overall_interpretation"]
+    assert preflight["status"] == "observed"
+    assert preflight["execution_scope"]["prediction_run"] is True
+    assert preflight["execution_scope"]["training_run"] is False
+    assert preflight["execution_scope"]["metrics_generated"] is True
+    assert preflight["selected_gpu_policy"]["explicit_cuda_visible_devices_used"] is True
+    assert preflight["artifact_policy"]["private_paths_omitted"] is True
+    assert preflight["artifact_policy"]["host_details_omitted"] is True
+    assert leak_scan["ok"] is True
+    assert phase_leak_scan["ok"] is True
+    assert final_phase_leak_scan["ok"] is True
+    assert "runtime-recovery prediction-only retry" in report
+    assert "not a training change" in report
+    assert "model-recovery claim" in report
+    assert scan_paths([evidence_dir]).ok is True
+
+
 def test_committed_current_manifest_sft_v3_prediction_baseline_is_observed_without_recovery_claim() -> None:
     evidence_dir = (
         REPO_ROOT

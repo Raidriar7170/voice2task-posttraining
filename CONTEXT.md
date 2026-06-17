@@ -4,35 +4,38 @@ Voice2Task Post-Training is a companion project for training and evaluating smal
 
 ## Current Status Contract
 
-As of 2026-06-17, the first project phase is closed as an evidence-backed
+As of 2026-06-18, the first project phase is closed as an evidence-backed
 post-training and evaluation baseline, not as a production-ready model release.
-The public-facing truth surface has twelve current layers:
+The public-facing truth surface has thirteen current layers:
 
-1. the scaled-manifest current-123 adapter prediction baseline blocked evidence
+1. the scaled-manifest current-123 adapter prediction baseline recovery retry
+   evidence under
+   `reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/`;
+2. the prior scaled-manifest current-123 adapter prediction baseline blocked evidence
    under
    `reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline/`;
-2. the scaled public-sample formal merge evidence under
+3. the scaled public-sample formal merge evidence under
    `reports/public-sample/scaled-public-sample-merge/`;
-3. the standalone scaled public-sample candidate materialization evidence under
+4. the standalone scaled public-sample candidate materialization evidence under
    `reports/public-sample/scaled-public-sample-candidate-materialization/`;
-4. the scaled public-sample and tiered-evaluation design evidence under
+5. the scaled public-sample and tiered-evaluation design evidence under
    `reports/public-sample/scaled-public-sample-and-tiered-eval-design/`;
-5. the current-123-row train-split SFT retry model evidence under
+6. the current-123-row train-split SFT retry model evidence under
    `reports/public-sample/a100-current-123-train-split-sft-retry/`;
-6. the current-123-row train-split SFT retry readiness evidence under
+7. the current-123-row train-split SFT retry readiness evidence under
    `reports/public-sample/current-123-train-split-sft-retry-readiness/`;
-7. the current-retry confirmation-preservation materialization and public merge
+8. the current-retry confirmation-preservation materialization and public merge
    under
    `reports/public-sample/current-retry-confirmation-preservation-public-sample-merge/`;
-8. the current-retry confirmation-preservation candidate design under
+9. the current-retry confirmation-preservation candidate design under
    `reports/public-sample/current-retry-confirmation-preservation-candidate-design/`;
-9. the current-train-split SFT retry trade-off diagnosis under
+10. the current-train-split SFT retry trade-off diagnosis under
    `reports/public-sample/current-train-split-sft-retry-tradeoff-diagnosis/`;
-10. the prior current-train-split SFT retry under
+11. the prior current-train-split SFT retry under
    `reports/public-sample/a100-current-train-split-sft-retry/`;
-11. the current-manifest SFT v3 prediction-only baseline under
+12. the current-manifest SFT v3 prediction-only baseline under
    `reports/public-sample/a100-current-manifest-sft-v3-prediction-baseline/`;
-12. the bounded SFT v3 retry after SSH recovery, now a prior-manifest model
+13. the bounded SFT v3 retry after SSH recovery, now a prior-manifest model
    source, under
    `reports/public-sample/a100-form-fill-remediation-sft-v3-retry-after-ssh-recovery/`.
 
@@ -43,12 +46,13 @@ Current formal public sample data boundary:
 | manifest | `public-sample-20260617T152259Z` |
 | public sample | 240 seeds / 675 SFT rows / 2046 DPO pairs |
 | split counts | train 261 / dev 207 / test 207 |
-| latest evaluated manifest | `public-sample-20260617T045941Z` |
-| latest model run type | private SFT retry on the current 123-row train split, then dev/test strict eval |
-| latest model interpretation | `current_train_split_sft_retry_no_strict_exact_recovery` |
-| latest model evidence | `reports/public-sample/a100-current-123-train-split-sft-retry/` |
-| latest scaled-manifest prediction baseline | blocked before A100 prediction because the configured SSH alias timed out |
-| latest scaled-manifest baseline evidence | `reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline/` |
+| latest evaluated manifest | `public-sample-20260617T152259Z` |
+| latest model run type | prediction-only retry on the scaled dev/test split using the existing `a100-current-train-split-sft-retry` private adapter |
+| latest model interpretation | `formal_public_heldout_partial_signal` |
+| latest model evidence | `reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/` |
+| latest scaled-manifest prediction baseline | observed after A100 recovery; strict exact remains partial and lower than the prior-boundary adapter evidence |
+| latest scaled-manifest baseline evidence | `reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/` |
+| prior scaled-manifest blocked baseline evidence | `reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline/` |
 | latest scaled merge evidence | `reports/public-sample/scaled-public-sample-merge/` |
 | latest standalone scaled candidate evidence | `reports/public-sample/scaled-public-sample-candidate-materialization/` |
 | latest standalone scaled candidate data | 138 candidate seeds / 414 candidate SFT rows / no DPO pairs |
@@ -62,28 +66,21 @@ Current formal public sample data boundary:
 | prior SFT v3 retry manifest | `public-sample-20260616T074315Z` |
 | prior SFT v3 retry interpretation | `form_fill_sft_v3_partial_improvement_with_safety_regression_risk` |
 
-The metric table below is the latest model evidence, bound to
-`public-sample-20260617T045941Z`. It trained one private adapter on that
-123-row train split, including the merged form-fill, blocked-payment, and
-current-retry confirmation-preservation rows, then performed dev/test
-prediction-only strict evaluation with the existing evaluator. The latest model
-evidence did not repair predictions, normalize slots, change prompts, relax
-metrics, or publish a checkpoint/adapter.
+The metric table below is the latest observed model evidence, bound to
+`public-sample-20260617T152259Z`. It is a prediction-only A100 recovery retry
+using the existing private `a100-current-train-split-sft-retry` adapter trained
+on `public-sample-20260617T045941Z`. It did not train, repair predictions,
+normalize slots, change prompts, relax metrics, or publish a checkpoint/adapter.
+Because the source adapter and target evaluation manifest differ, this is a
+new-boundary baseline and not a clean improvement/regression comparison against
+the prior current-123 metrics.
 
-The formal public sample boundary has since advanced to
-`public-sample-20260617T152259Z` through the scaled public-sample formal merge.
-That data-only merge promoted `138` reviewed candidate seeds into the formal
-sample and rebuilt the public sample to `240` seeds / `675` SFT rows / `2046`
-DPO pairs with split counts `train=261`, `dev=207`, and `test=207`. Old metrics
-bound to `public-sample-20260617T045941Z` are not directly comparable to future
-metrics on this new boundary.
-
-Current-train-split SFT retry formal held-out metrics:
+Scaled-manifest current-123 adapter prediction-only metrics:
 
 | split | contract_exact_match | strict slot_f1 | slot_f1_soft | route_accuracy | safety_recall | json_valid_rate |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| dev | 0.4348 | 0.5580 | 0.8332 | 0.8841 | 1.0000 | 1.0000 |
-| test | 0.3768 | 0.5459 | 0.7950 | 0.9275 | 1.0000 | 1.0000 |
+| dev | 0.2464 | 0.2874 | 0.6372 | 0.9614 | 1.0000 | 1.0000 |
+| test | 0.2029 | 0.2593 | 0.6108 | 0.9758 | 1.0000 | 1.0000 |
 
 Strict `contract_exact_match` and strict `slot_f1` remain the public headline
 metrics. `slot_f1_soft` is diagnostic only and must not be used as recovery,
@@ -121,16 +118,25 @@ checkpoints/adapters, or claim model recovery. Its main effect is a new formal
 manifest boundary; model evidence must be regenerated in a later explicit phase
 before any quality claim is made.
 
-The first scaled-manifest prediction-only baseline attempt is now blocked under
+The first scaled-manifest prediction-only baseline attempt remains as historical
+blocked evidence under
 `reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline/`.
 It targeted `public-sample-20260617T152259Z` with the existing private
 `a100-current-train-split-sft-retry` adapter whose source training boundary was
 `public-sample-20260617T045941Z`, but stopped before private prediction because
 the configured A100 SSH alias timed out. No private override was created, no GPU
 job was launched, no dev/test predictions were written, and no strict metrics
-were generated. The current scaled boundary therefore still has no observed
-model-quality metrics; the latest observed model metrics remain the
-`public-sample-20260617T045941Z` current-123 retry metrics above.
+were generated from that blocked attempt.
+
+After A100 connectivity recovered, the bounded recovery retry completed under
+`reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/`.
+It generated dev/test predictions and strict metrics on the scaled 207-row
+held-out splits without training. The result is `formal_public_heldout_partial_signal`,
+not strict recovery: dev/test exact are `0.2464` / `0.2029`, strict slot F1 are
+`0.2874` / `0.2593`, and JSON validity remains `1.0000`. The sharp exact/slot
+drop indicates that the prior adapter does not transfer cleanly to the scaled
+boundary; the next bounded phase should diagnose residual families on this
+manifest before any paired SFT retry.
 
 Claim boundaries:
 

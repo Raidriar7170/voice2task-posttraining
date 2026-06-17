@@ -1,0 +1,134 @@
+{
+  "artifact_policy": {
+    "checkpoints_or_adapters_copied_to_git": false,
+    "host_details_omitted": true,
+    "private_corpus_rows_omitted": true,
+    "private_overrides_copied_to_git": false,
+    "private_paths_omitted": true,
+    "raw_logs_copied_to_git": false,
+    "remote_caches_copied_to_git": false,
+    "ssh_details_omitted": true
+  },
+  "blocked_reason": null,
+  "claims": {
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "data_changed": false,
+    "evaluator_relaxation": false,
+    "held_out_generalization_recovered": false,
+    "live_browser_benchmark_claim": false,
+    "model_recovery_claim": false,
+    "prediction_only": true,
+    "prediction_repair_or_replacement": false,
+    "prediction_repair_or_rescore": false,
+    "private_corpus_generalization_claim": false,
+    "production_readiness_claim": false,
+    "public_full_corpus_release_claim": false,
+    "semantic_equivalence_primary_metric": false,
+    "soft_slot_f1_primary_metric": false,
+    "training_performed": false
+  },
+  "comparison_boundary": {
+    "current_dataset_manifest_id": "public-sample-20260617T152259Z",
+    "direct_improvement_regression_comparison_valid": false,
+    "prior_dataset_manifest_id": "public-sample-20260617T045941Z",
+    "prior_evidence_dir": "reports/public-sample/a100-current-123-train-split-sft-retry",
+    "reason": "scaled_public_sample_boundary_changed_after_current_123_training_manifest",
+    "runtime_recovery_retry": true,
+    "source_adapter_dataset_manifest_id": "public-sample-20260617T045941Z",
+    "source_adapter_runtime": "a100-current-train-split-sft-retry",
+    "target_dataset_manifest_id": "public-sample-20260617T152259Z"
+  },
+  "dataset_manifest_id": "public-sample-20260617T152259Z",
+  "diagnostic_artifacts": {
+    "a100_preflight_status": "reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/a100_preflight_status.json",
+    "evidence": "reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/formal_public_heldout_prediction.json",
+    "final_phase_leak_scan": "reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/final_phase_leak_scan_result.json",
+    "leak_scan": "reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/leak_scan_result.json",
+    "manifest": "reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/manifest.json",
+    "phase_validation_leak_scan": "reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/phase_validation_leak_scan_result.json",
+    "report": "reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/report.md"
+  },
+  "evidence_kind": "a100_formal_public_heldout_prediction",
+  "formal_public_sample_counts": {
+    "dpo_pairs": 2046,
+    "seed_rows": 240,
+    "sft_rows": 675
+  },
+  "formal_public_sample_split_counts": {
+    "dev": 207,
+    "test": 207,
+    "train": 261
+  },
+  "generated_at": "2026-06-17T17:12:14.215210+00:00",
+  "overall_interpretation": "formal_public_heldout_partial_signal",
+  "prediction_splits": [
+    "dev",
+    "test"
+  ],
+  "primary_evidence_splits": [
+    "dev",
+    "test"
+  ],
+  "run_status": "observed",
+  "source_adapter_runtime": "a100-current-train-split-sft-retry",
+  "split_results": {
+    "dev": {
+      "artifact_paths": {
+        "metrics": "reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/dev/metrics.json",
+        "prediction_metadata": "reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/dev/prediction_metadata.json"
+      },
+      "confirmation_accuracy": 0.9758454106280193,
+      "contract_exact_match": 0.2463768115942029,
+      "failure_slice_counts": {
+        "confirmation": 5,
+        "route": 8,
+        "safety": 0,
+        "schema": 0,
+        "slot": 148,
+        "task_type": 8,
+        "unknown": 0
+      },
+      "json_valid_rate": 1.0,
+      "prediction_count": 207,
+      "prediction_split": "dev",
+      "residual_row_count": 156,
+      "route_accuracy": 0.961352657004831,
+      "safety_precision": 1.0,
+      "safety_recall": 1.0,
+      "schema_invalid_prediction_count": 0,
+      "slot_f1": 0.28743961352657005,
+      "slot_f1_soft": 0.6372298122661537,
+      "task_type_accuracy": 0.961352657004831
+    },
+    "test": {
+      "artifact_paths": {
+        "metrics": "reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/test/metrics.json",
+        "prediction_metadata": "reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/test/prediction_metadata.json"
+      },
+      "confirmation_accuracy": 0.9951690821256038,
+      "contract_exact_match": 0.2028985507246377,
+      "failure_slice_counts": {
+        "confirmation": 1,
+        "route": 5,
+        "safety": 1,
+        "schema": 0,
+        "slot": 156,
+        "task_type": 5,
+        "unknown": 0
+      },
+      "json_valid_rate": 1.0,
+      "prediction_count": 207,
+      "prediction_split": "test",
+      "residual_row_count": 165,
+      "route_accuracy": 0.9758454106280193,
+      "safety_precision": 0.9705882352941176,
+      "safety_recall": 1.0,
+      "schema_invalid_prediction_count": 0,
+      "slot_f1": 0.2592592592592593,
+      "slot_f1_soft": 0.6107811374904073,
+      "task_type_accuracy": 0.9758454106280193
+    }
+  },
+  "training_status": "prediction_only_no_training"
+}

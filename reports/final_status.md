@@ -1,6 +1,6 @@
 # Voice2Task 最终状态说明
 
-更新日期：2026-06-17
+更新日期：2026-06-18
 
 ## 一句话结论
 
@@ -11,10 +11,12 @@
 | 项目 | 值 |
 | --- | --- |
 | Latest data evidence pack | `reports/public-sample/scaled-public-sample-merge/` |
-| Latest scaled-manifest prediction baseline evidence pack | `reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline/` |
+| Latest scaled-manifest prediction baseline evidence pack | `reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/` |
+| Prior blocked scaled-manifest baseline evidence pack | `reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline/` |
 | Latest standalone scaled candidate evidence pack | `reports/public-sample/scaled-public-sample-candidate-materialization/` |
 | Latest readiness evidence pack | `reports/public-sample/current-123-train-split-sft-retry-readiness/` |
-| Latest model evidence pack | `reports/public-sample/a100-current-123-train-split-sft-retry/` |
+| Latest model evidence pack | `reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/` |
+| Prior current-123 model evidence pack | `reports/public-sample/a100-current-123-train-split-sft-retry/` |
 | Latest strategic-design evidence pack | `reports/public-sample/scaled-public-sample-and-tiered-eval-design/` |
 | Latest candidate-design evidence pack | `reports/public-sample/current-retry-confirmation-preservation-candidate-design/` |
 | Latest diagnosis evidence pack | `reports/public-sample/current-train-split-sft-retry-tradeoff-diagnosis/` |
@@ -22,45 +24,49 @@
 | Current data manifest | `public-sample-20260617T152259Z` |
 | Current public sample | 240 seeds / 675 SFT rows / 2046 DPO pairs |
 | Current split | train 261 / dev 207 / test 207 |
-| Latest evaluated manifest | `public-sample-20260617T045941Z` |
-| Latest evaluated public sample | 102 seeds / 261 SFT rows / 881 DPO pairs |
-| Latest run type | private SFT retry on the current 123-row train split, then dev/test strict eval |
-| Latest interpretation | `current_train_split_sft_retry_no_strict_exact_recovery` |
+| Latest evaluated manifest | `public-sample-20260617T152259Z` |
+| Latest evaluated public sample | 240 seeds / 675 SFT rows / 2046 DPO pairs |
+| Latest run type | prediction-only retry on the scaled dev/test split using the existing `a100-current-train-split-sft-retry` private adapter |
+| Latest interpretation | `formal_public_heldout_partial_signal` |
 | Latest strategic-design interpretation | `scale_data_and_diagnose_by_tier_before_another_training_retry` |
 | Latest diagnosis interpretation | `current_sft_retry_tradeoff_diagnosis_confirmation_regression_after_safety_recovery` |
 | Prior SFT v3 retry evidence | `reports/public-sample/a100-form-fill-remediation-sft-v3-retry-after-ssh-recovery/` |
 
-最新模型证据绑定 `public-sample-20260617T045941Z`。它在 A100 上训练了一个新的 private adapter，使用当时的 123-row train split，然后做 dev/test prediction-only strict evaluation。没有修 prediction、没有 normalize slot、没有改 prompt、没有放松 evaluator。adapter、checkpoint、raw log、private override 和远端缓存都没有发布。随后 formal public sample 已通过 scaled merge 更新到 `public-sample-20260617T152259Z`；旧 manifest 上的模型指标不能和新 boundary 的未来指标直接比较。
+最新模型证据绑定 `public-sample-20260617T152259Z`。它是 A100 恢复后的 prediction-only retry：使用已有的 private `a100-current-train-split-sft-retry` adapter，在 scaled dev/test split 上生成预测并用 strict evaluator 评估。没有训练、没有修 prediction、没有 normalize slot、没有改 prompt、没有放松 evaluator。adapter、checkpoint、raw log、private override 和远端缓存都没有发布。
 
-随后尝试了 scaled manifest 上的 prediction-only baseline：
+注意比较边界：这个 adapter 的训练来源是 `public-sample-20260617T045941Z`，而本次评估目标是 `public-sample-20260617T152259Z`。因此这份结果是新 scaled boundary 下的 baseline，不是和旧 current-123 指标的 clean improvement/regression comparison。
+
+此前第一次 scaled-manifest prediction-only baseline 尝试仍作为 historical blocked evidence 保留：
 
 - evidence: `reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline/report.md`
+- status: blocked before A100 prediction because the configured SSH alias timed out
+
+A100 恢复后已完成 observed retry：
+
+- evidence: `reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/report.md`
 - target manifest: `public-sample-20260617T152259Z`
 - source adapter runtime: `a100-current-train-split-sft-retry`
 - source adapter manifest: `public-sample-20260617T045941Z`
-- status: blocked before A100 prediction because the configured SSH alias timed out
-- no private override created, no GPU job launched, no dev/test predictions written, no metrics generated
+- status: observed, prediction-only, no training
 
-因此，新 scaled boundary 目前仍没有 observed model-quality metrics。最新可引用的模型效果仍是下方绑定 `public-sample-20260617T045941Z` 的 current-123 retry 指标。
-
-## Formal Public Held-Out 指标（绑定 `public-sample-20260617T045941Z`）
+## Formal Public Held-Out 指标（绑定 `public-sample-20260617T152259Z`）
 
 | 指标 | Dev | Test |
 | --- | ---: | ---: |
-| rows | 69 | 69 |
+| rows | 207 | 207 |
 | json_valid_rate | 1.0000 | 1.0000 |
-| task_type_accuracy | 0.8841 | 0.9275 |
-| route_accuracy | 0.8841 | 0.9275 |
-| safety_precision | 1.0000 | 0.9231 |
+| task_type_accuracy | 0.9614 | 0.9758 |
+| route_accuracy | 0.9614 | 0.9758 |
+| safety_precision | 1.0000 | 0.9706 |
 | safety_recall | 1.0000 | 1.0000 |
-| confirmation_accuracy | 0.9275 | 0.9855 |
-| slot_f1 (strict) | 0.5580 | 0.5459 |
-| slot_f1_soft (diagnostic only) | 0.8332 | 0.7950 |
-| contract_exact_match | 0.4348 | 0.3768 |
+| confirmation_accuracy | 0.9758 | 0.9952 |
+| slot_f1 (strict) | 0.2874 | 0.2593 |
+| slot_f1_soft (diagnostic only) | 0.6372 | 0.6108 |
+| contract_exact_match | 0.2464 | 0.2029 |
 
 主指标是 `contract_exact_match` 和 strict `slot_f1`。`slot_f1_soft` 只能说明 slot value 存在表述相近但 exact 不一致的现象，不能替代 strict 指标。
 
-本轮 123-row retry 是当前 manifest 下的第一份 paired-adapter model evidence。与上一轮 118-row evidence 只能做 manifest-boundary-aware context comparison，不能当作 clean improvement/regression。当前结论是 no strict exact recovery：dev/test exact 分别是 `0.4348` / `0.3768`，schema 稳定、安全 recall 为 `1.0000`，但 full-contract exact 仍未恢复。
+本轮 scaled-manifest retry 是当前 manifest 下的第一份 observed prediction-only model evidence。它不是 paired training evidence，因为 source adapter 仍来自旧的 `public-sample-20260617T045941Z` train split。当前结论是 no strict recovery / partial signal：dev/test exact 分别是 `0.2464` / `0.2029`，schema、route 和 safety recall 稳定，但 strict slot F1 和 full-contract exact 明显偏低。
 
 随后完成的 trade-off diagnosis 进一步确认：dev safety recovered `4` rows / safety regressed `0` rows，但 confirmation regressed `5` dev rows 和 `2` test rows；dev exact 是 `2` recovered / `4` regressed，test exact 是 `7` recovered / `3` regressed。当前 dominant trade-off 是 `confirmation_regression_after_safety_recovery`，下一阶段应先设计 confirmation-preservation candidates，而不是直接继续训练或调整 evaluator。
 
@@ -259,26 +265,24 @@ artifacts；仍然不能从 candidate design 本身宣称 safety improvement 或
 - 导入 public-safe metrics / predictions / sidecars / manifest / report；
 - 未发布 adapter、checkpoint、raw log、private override、远端缓存或私有路径。
 
-当前结果不是 strict recovery：dev/test exact 为 `0.4348` / `0.3768`，
-strict slot F1 为 `0.5580` / `0.5459`，safety recall 均为 `1.0000`。
-当时的下一步是 bounded residual / trade-off diagnosis；该诊断和后续
-confirmation-preservation design / materialization 已经完成。scaled public-sample
-standalone candidates 和 formal merge 也已经完成。当前最新下一步应是一个后续
-bounded prediction-only 或 readiness phase，明确绑定新的
-`public-sample-20260617T152259Z` boundary；不应直接继续训练、改 evaluator、引入
-DPO 或宣称模型恢复。
+当前 scaled-boundary 结果不是 strict recovery：dev/test exact 为 `0.2464` /
+`0.2029`，strict slot F1 为 `0.2874` / `0.2593`，safety recall 均为 `1.0000`。
+当前最新下一步应是 bounded residual-family / tiered diagnosis，明确定位 scaled
+manifest 上 exact 和 slot 下跌来自哪些 family / field，再决定是否需要 paired
+SFT retry；不应直接继续训练、改 evaluator、引入 DPO 或宣称模型恢复。
 
 ## 主要证据链接
 
-- Latest evidence report: `reports/public-sample/a100-current-123-train-split-sft-retry/report.md`
+- Latest evidence report: `reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/report.md`
+- Prior current-123 adapter evidence report: `reports/public-sample/a100-current-123-train-split-sft-retry/report.md`
 - Latest scaled public-sample merge: `reports/public-sample/scaled-public-sample-merge/scaled_public_sample_public_sample_merge.md`
 - Latest scaled candidate materialization: `reports/public-sample/scaled-public-sample-candidate-materialization/scaled_public_sample_candidate_materialization.md`
 - Latest scaled candidate seed file: `data/public-samples/scaled_public_sample_seed_candidates.jsonl`
 - Latest scaled public-sample / tiered-eval design: `reports/public-sample/scaled-public-sample-and-tiered-eval-design/scaled_public_sample_and_tiered_eval_design.md`
 - Latest confirmation-preservation candidate design: `reports/public-sample/current-retry-confirmation-preservation-candidate-design/current_retry_confirmation_preservation_candidate_design.md`
 - Latest trade-off diagnosis: `reports/public-sample/current-train-split-sft-retry-tradeoff-diagnosis/current_train_split_sft_retry_tradeoff_diagnosis.md`
-- Latest Dev metrics: `reports/public-sample/a100-current-123-train-split-sft-retry/dev/metrics.md`
-- Latest Test metrics: `reports/public-sample/a100-current-123-train-split-sft-retry/test/metrics.md`
+- Latest Dev metrics: `reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/dev/metrics.md`
+- Latest Test metrics: `reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/test/metrics.md`
 - Current-manifest prediction-only baseline: `reports/public-sample/a100-current-manifest-sft-v3-prediction-baseline/report.md`
 - Prior SFT v3 retry after SSH recovery: `reports/public-sample/a100-form-fill-remediation-sft-v3-retry-after-ssh-recovery/report.md`
 - Baseline evidence report: `reports/public-sample/a100-formal-public-heldout-prediction-after-a100-recovery/report.md`
@@ -317,4 +321,4 @@ DPO 或宣称模型恢复。
 
 ## 当前交付状态
 
-可以作为阶段性交付收束：代码、public sample、OpenSpec archives、A100 prediction-only baseline、residual diagnosis / target selection、SFT v3 readiness、SFT v3 blocked preflight evidence、SFT v3 retry evidence、SFT v3 safety regression diagnosis、blocked-payment repair candidate design、blocked-payment repair materialization、current-manifest SFT v3 prediction-only baseline、current-train-split SFT retry readiness、current-train-split SFT retry、current-train-split retry trade-off diagnosis、current-retry confirmation-preservation candidate design、current-retry confirmation-preservation materialization、scaled public-sample / tiered-eval design、scaled public-sample candidate materialization、scaled public-sample formal merge、Human Brief、最终状态说明都已经对齐到明确边界。下一步如果继续，应先开 bounded prediction-only/readiness phase 绑定新 manifest boundary，再考虑 paired-adapter training；不应直接继续训练、改 evaluator、引入 DPO 或宣称模型恢复。
+可以作为阶段性交付收束：代码、public sample、OpenSpec archives、A100 prediction-only baseline、residual diagnosis / target selection、SFT v3 readiness、SFT v3 blocked preflight evidence、SFT v3 retry evidence、SFT v3 safety regression diagnosis、blocked-payment repair candidate design、blocked-payment repair materialization、current-manifest SFT v3 prediction-only baseline、current-train-split SFT retry readiness、current-train-split SFT retry、current-train-split retry trade-off diagnosis、current-retry confirmation-preservation candidate design、current-retry confirmation-preservation materialization、scaled public-sample / tiered-eval design、scaled public-sample candidate materialization、scaled public-sample formal merge、A100 recovery prediction-only retry、Human Brief、最终状态说明都已经对齐到明确边界。下一步如果继续，应先开 bounded scaled-manifest residual-family / tiered diagnosis，再考虑 paired-adapter training；不应直接继续训练、改 evaluator、引入 DPO 或宣称模型恢复。

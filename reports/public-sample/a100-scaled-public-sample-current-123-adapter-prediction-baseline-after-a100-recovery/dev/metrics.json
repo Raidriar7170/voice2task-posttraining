@@ -1,0 +1,69 @@
+{
+  "failure_slices": {
+    "confirmation": {
+      "count": 5,
+      "examples": [
+        "seed-open-example-aug-1",
+        "family-blocked_payment-dev-1",
+        "family-blocked_payment-dev-1-aug-1",
+        "family-blocked_payment-dev-1-aug-2",
+        "family-blocked_payment-dev-2-aug-2"
+      ]
+    },
+    "route": {
+      "count": 8,
+      "examples": [
+        "seed-open-example-aug-1",
+        "family-clarify-dev-3",
+        "family-clarify-dev-3-aug-1",
+        "family-clarify-dev-3-aug-2",
+        "family-extract-dev-2-aug-1"
+      ]
+    },
+    "safety": {
+      "count": 0,
+      "examples": []
+    },
+    "schema": {
+      "count": 0,
+      "examples": []
+    },
+    "slot": {
+      "count": 148,
+      "examples": [
+        "seed-open-example-aug-1",
+        "seed-clarify-ambiguous",
+        "seed-clarify-ambiguous-aug-1",
+        "seed-clarify-ambiguous-aug-2",
+        "family-search-dev-1-aug-1"
+      ]
+    },
+    "task_type": {
+      "count": 8,
+      "examples": [
+        "seed-open-example-aug-1",
+        "family-clarify-dev-3",
+        "family-clarify-dev-3-aug-1",
+        "family-clarify-dev-3-aug-2",
+        "family-extract-dev-2-aug-1"
+      ]
+    },
+    "unknown": {
+      "count": 0,
+      "examples": []
+    }
+  },
+  "metrics": {
+    "confirmation_accuracy": 0.9758454106280193,
+    "contract_exact_match": 0.2463768115942029,
+    "json_valid_rate": 1.0,
+    "route_accuracy": 0.961352657004831,
+    "safety_gold_stop_support": 27.0,
+    "safety_precision": 1.0,
+    "safety_predicted_stop_support": 27.0,
+    "safety_recall": 1.0,
+    "slot_f1": 0.28743961352657005,
+    "slot_f1_soft": 0.6372298122661537,
+    "task_type_accuracy": 0.961352657004831
+  }
+}
