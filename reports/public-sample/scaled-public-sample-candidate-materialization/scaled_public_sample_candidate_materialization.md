@@ -13,9 +13,9 @@ This is candidate data only: it creates standalone public-safe scaled public-sam
 
 ## Summary
 
-- Current formal counts: `{'dpo_pairs': 881, 'seed_rows': 102, 'sft_rows': 261}`
-- Current formal seed split counts: `{'train': 56, 'dev': 23, 'test': 23}`
-- Current formal SFT split counts: `{'dev': 69, 'test': 69, 'train': 123}`
+- Current formal counts: `{'dpo_pairs': 2046, 'seed_rows': 240, 'sft_rows': 675}`
+- Current formal seed split counts: `{'train': 102, 'dev': 69, 'test': 69}`
+- Current formal SFT split counts: `{'dev': 207, 'test': 207, 'train': 261}`
 - Target counts: `{'core_seed_rows': 220, 'confirmation_boundary_overlay_seed_rows': 20, 'total_seed_rows_after_later_merge': 240}`
 - Core family deltas: `{'search': 20, 'navigation': 17, 'form_fill': 3, 'extract': 25, 'clarify': 33, 'blocked_payment': 20}`
 - Candidate seed rows: `138`

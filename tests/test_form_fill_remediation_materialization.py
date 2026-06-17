@@ -24,7 +24,7 @@ PUBLIC_SAMPLE_PATHS = [
 ]
 COMMITTED_CANDIDATE_SEED = REPO_ROOT / "data" / "public-samples" / "form_fill_remediation_seed_candidates.jsonl"
 COMMITTED_REPORT_DIR = REPO_ROOT / "reports" / "public-sample" / "form-fill-remediation-materialized-candidates"
-CURRENT_FORMAL_COUNTS = {"dpo_pairs": 881, "seed_rows": 102, "sft_rows": 261}
+CURRENT_FORMAL_COUNTS = {"dpo_pairs": 2046, "seed_rows": 240, "sft_rows": 675}
 
 
 def _sha256_by_path(paths: list[Path]) -> dict[Path, str]:

@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from public_sample_fixtures import PRE_SCALED_PUBLIC_SAMPLE_MANIFEST_ID, write_pre_scaled_public_sample_fixture
 
 from voice2task.cli import report as report_cli
 from voice2task.io import read_json, read_jsonl
@@ -20,19 +21,21 @@ def test_scaled_public_sample_and_tiered_eval_design_cli_is_public_safe_and_non_
     capsys: Any,
 ) -> None:
     output_dir = tmp_path / "scaled-public-sample-and-tiered-eval-design"
+    manifest_path = write_pre_scaled_public_sample_fixture(tmp_path)
+    public_dir = manifest_path.parent
 
     assert (
         report_cli.main(
             [
                 "scaled-public-sample-and-tiered-eval-design",
                 "--public-manifest",
-                PUBLIC_SAMPLE_MANIFEST.as_posix(),
+                manifest_path.as_posix(),
                 "--seed",
-                (PUBLIC_SAMPLE_DIR / "seed_traces.jsonl").as_posix(),
+                (public_dir / "seed_traces.jsonl").as_posix(),
                 "--sft",
-                (PUBLIC_SAMPLE_DIR / "sft_public_sample.jsonl").as_posix(),
+                (public_dir / "sft_public_sample.jsonl").as_posix(),
                 "--dpo",
-                (PUBLIC_SAMPLE_DIR / "dpo_public_sample.jsonl").as_posix(),
+                (public_dir / "dpo_public_sample.jsonl").as_posix(),
                 "--current-retry-evidence",
                 (CURRENT_123_RETRY_DIR / "current_train_split_sft_retry.json").as_posix(),
                 "--dev-metrics",
@@ -53,7 +56,7 @@ def test_scaled_public_sample_and_tiered_eval_design_cli_is_public_safe_and_non_
 
     assert payload["ok"] is True
     assert design["evidence_kind"] == "scaled_public_sample_and_tiered_eval_design"
-    assert design["dataset_manifest_id"] == "public-sample-20260617T045941Z"
+    assert design["dataset_manifest_id"] == PRE_SCALED_PUBLIC_SAMPLE_MANIFEST_ID
     assert design["summary"]["current_seed_rows"] == 102
     assert design["summary"]["current_sft_rows"] == 261
     assert design["summary"]["current_dpo_pairs"] == 881
@@ -104,13 +107,15 @@ def test_scaled_public_sample_and_tiered_eval_design_cli_is_public_safe_and_non_
 def test_scaled_public_sample_design_rejects_mismatched_model_evidence_manifest(tmp_path: Path) -> None:
     current_retry = read_json(CURRENT_123_RETRY_DIR / "current_train_split_sft_retry.json")
     current_retry["dataset_manifest_id"] = "public-sample-stale"
+    manifest_path = write_pre_scaled_public_sample_fixture(tmp_path)
+    public_dir = manifest_path.parent
 
     with pytest.raises(ValueError, match="current retry evidence manifest mismatch"):
         write_scaled_public_sample_and_tiered_eval_design_report(
-            public_manifest=read_json(PUBLIC_SAMPLE_MANIFEST),
-            seed_rows=read_jsonl(PUBLIC_SAMPLE_DIR / "seed_traces.jsonl"),
-            sft_rows=read_jsonl(PUBLIC_SAMPLE_DIR / "sft_public_sample.jsonl"),
-            dpo_rows=read_jsonl(PUBLIC_SAMPLE_DIR / "dpo_public_sample.jsonl"),
+            public_manifest=read_json(manifest_path),
+            seed_rows=read_jsonl(public_dir / "seed_traces.jsonl"),
+            sft_rows=read_jsonl(public_dir / "sft_public_sample.jsonl"),
+            dpo_rows=read_jsonl(public_dir / "dpo_public_sample.jsonl"),
             current_retry_evidence=current_retry,
             dev_metrics=read_json(CURRENT_123_RETRY_DIR / "dev" / "metrics.json"),
             test_metrics=read_json(CURRENT_123_RETRY_DIR / "test" / "metrics.json"),

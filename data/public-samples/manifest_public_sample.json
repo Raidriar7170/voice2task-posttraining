@@ -1,28 +1,28 @@
 {
   "counts": {
-    "dpo_pairs": 881,
-    "seed_rows": 102,
-    "sft_rows": 261
+    "dpo_pairs": 2046,
+    "seed_rows": 240,
+    "sft_rows": 675
   },
   "dpo_rejection_counts": {
     "blocked_payment_action_drift": 5,
-    "clarify_action_drift": 12,
+    "clarify_action_drift": 45,
     "decomposed_search_slots": 2,
     "extract_extra_particle_wording": 2,
     "extract_generic_price_wording": 2,
     "extract_listed_price_wording": 2,
-    "extract_query_slot": 10,
-    "extract_search_fallback": 10,
-    "form_confirmation_drift": 42,
-    "malformed_schema": 102,
-    "missing_confirmation": 67,
-    "missing_slot": 102,
-    "navigate_canonical_url_drift": 13,
-    "underspecified_request": 102,
-    "unsafe_allowance": 102,
-    "wrong_route": 102,
-    "wrong_slot": 102,
-    "wrong_task_type": 102
+    "extract_query_slot": 35,
+    "extract_search_fallback": 35,
+    "form_confirmation_drift": 65,
+    "malformed_schema": 240,
+    "missing_confirmation": 143,
+    "missing_slot": 240,
+    "navigate_canonical_url_drift": 30,
+    "underspecified_request": 240,
+    "unsafe_allowance": 240,
+    "wrong_route": 240,
+    "wrong_slot": 240,
+    "wrong_task_type": 240
   },
   "files": {
     "dpo": "data/public-samples/dpo_public_sample.jsonl",
@@ -30,8 +30,8 @@
     "seed": "data/public-samples/seed_traces.jsonl",
     "sft": "data/public-samples/sft_public_sample.jsonl"
   },
-  "generated_at": "2026-06-17T04:59:41.339142+00:00",
-  "manifest_id": "public-sample-20260617T045941Z",
+  "generated_at": "2026-06-17T15:22:59.102844+00:00",
+  "manifest_id": "public-sample-20260617T152259Z",
   "mode": "public_sample",
   "public_safe": true,
   "source_summary": {
@@ -47,6 +47,8 @@
       "test": 0,
       "train": 2
     },
+    "comparison_boundary_changed": true,
+    "comparison_boundary_warning": "formal public sample boundary changed; old metrics are not directly comparable",
     "current_retry_confirmation_preservation_candidate_seed_rows": 2,
     "current_retry_confirmation_preservation_candidate_sft_rows": 5,
     "current_retry_confirmation_preservation_candidates_formal_public_sample": true,
@@ -106,14 +108,35 @@
       "form-fill-confirmation-marker-preservation",
       "form-fill-field-specificity-preservation"
     ],
-    "seed_rows": 102,
+    "scaled_public_sample_candidate_group_counts": {
+      "confirmation_boundary_overlay": 20,
+      "core_family_delta": 118
+    },
+    "scaled_public_sample_candidate_seed_rows": 138,
+    "scaled_public_sample_candidate_sft_rows": 414,
+    "scaled_public_sample_candidates_formal_public_sample": true,
+    "scaled_public_sample_family_counts": {
+      "blocked_payment": 20,
+      "clarify": 33,
+      "confirmation_boundary": 20,
+      "extract": 25,
+      "form_fill": 3,
+      "navigation": 17,
+      "search": 20
+    },
+    "scaled_public_sample_seed_split_counts": {
+      "dev": 46,
+      "test": 46,
+      "train": 46
+    },
+    "seed_rows": 240,
     "slot_value_candidate_seed_rows": 4,
     "slot_value_candidates_formal_public_sample": true,
     "source": "sanitized_public_seed_fixture"
   },
   "split_counts": {
-    "dev": 69,
-    "test": 69,
-    "train": 123
+    "dev": 207,
+    "test": 207,
+    "train": 261
   }
 }

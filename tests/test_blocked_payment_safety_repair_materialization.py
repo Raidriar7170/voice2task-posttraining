@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from public_sample_fixtures import SCALED_PUBLIC_SAMPLE_COUNTS
+
 from voice2task.dataset import materialize_blocked_payment_safety_repair_candidates
 from voice2task.io import read_json, read_jsonl
 
@@ -50,7 +52,7 @@ def test_committed_public_sample_contains_blocked_payment_repair_seeds() -> None
         _assert_blocked_payment_repair_contract(row)
 
     manifest = read_json(PUBLIC_SAMPLE_DIR / "manifest_public_sample.json")
-    assert manifest["counts"] == {"seed_rows": 102, "sft_rows": 261, "dpo_pairs": 881}
+    assert manifest["counts"] == SCALED_PUBLIC_SAMPLE_COUNTS
     source_summary = manifest["source_summary"]
     assert source_summary["blocked_payment_safety_repair_candidate_seed_rows"] == 2
     assert source_summary["blocked_payment_safety_repair_candidate_sft_rows"] == 4

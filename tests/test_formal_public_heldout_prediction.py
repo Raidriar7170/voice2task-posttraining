@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 import pytest
+from public_sample_fixtures import PRE_SCALED_PUBLIC_SAMPLE_MANIFEST_ID, write_pre_scaled_public_sample_fixture
 
 from voice2task.io import read_json
 from voice2task.leak_scan import scan_paths
@@ -24,7 +25,8 @@ def test_formal_public_heldout_prediction_configs_use_current_manifest_and_priva
         config = read_json(config_path)
         serialized = json.dumps(config, ensure_ascii=False, sort_keys=True)
 
-        assert config["dataset_manifest_id"] == current_manifest["manifest_id"]
+        assert config["dataset_manifest_id"] == PRE_SCALED_PUBLIC_SAMPLE_MANIFEST_ID
+        assert config["dataset_manifest_id"] != current_manifest["manifest_id"]
         assert config["prediction_split"] == split
         assert config["allow_private_prediction"] is True
         assert config["generalization_claim"] is False
@@ -49,17 +51,18 @@ def test_formal_public_heldout_prediction_configs_use_current_manifest_and_priva
 def test_formal_public_heldout_prediction_fixture_checks_current_dev_test_row_selection(
     tmp_path: Path,
 ) -> None:
+    manifest_path = write_pre_scaled_public_sample_fixture(tmp_path)
     expected_counts = {"dev": 69, "test": 69}
     for split, expected_count in expected_counts.items():
         metadata = run_sft_prediction_export(
             config_path=CONFIG_DIR / f"sft-a100-formal-public-heldout-{split}-prediction.json",
-            manifest_path=PUBLIC_SAMPLE_MANIFEST,
+            manifest_path=manifest_path,
             output_path=tmp_path / split / "predictions.jsonl",
             dry_run=False,
             fixture_mode=True,
         )
 
-        assert metadata["dataset_manifest_id"] == read_json(PUBLIC_SAMPLE_MANIFEST)["manifest_id"]
+        assert metadata["dataset_manifest_id"] == PRE_SCALED_PUBLIC_SAMPLE_MANIFEST_ID
         assert metadata["prediction_split"] == split
         assert metadata["prediction_status"] == "fixture_predictions_written"
         assert metadata["prediction_source_kind"] == "public_sample_contract_fixture"

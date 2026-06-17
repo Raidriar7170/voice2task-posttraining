@@ -3,6 +3,12 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from public_sample_fixtures import (
+    PRE_SCALED_PUBLIC_SAMPLE_COUNTS,
+    PRE_SCALED_PUBLIC_SAMPLE_MANIFEST_ID,
+    PRE_SCALED_PUBLIC_SAMPLE_SPLITS,
+    write_pre_scaled_public_sample_fixture,
+)
 
 from voice2task.cli import report as report_cli
 from voice2task.io import read_json, read_jsonl
@@ -71,7 +77,8 @@ def test_current_train_split_retry_configs_are_public_safe_templates() -> None:
     )
 
     assert train_config["current_train_split_sft_retry"] is True
-    assert train_config["dataset_manifest_id"] == current_manifest["manifest_id"]
+    assert train_config["dataset_manifest_id"] == PRE_SCALED_PUBLIC_SAMPLE_MANIFEST_ID
+    assert train_config["dataset_manifest_id"] != current_manifest["manifest_id"]
     assert train_config["dataset_split"] == "train"
     assert train_config["allow_heavy_training"] is True
     assert train_config["private_override_required"] is True
@@ -85,7 +92,8 @@ def test_current_train_split_retry_configs_are_public_safe_templates() -> None:
 
     for split, config in {"dev": dev_config, "test": test_config}.items():
         assert config["current_train_split_sft_retry_prediction"] is True
-        assert config["dataset_manifest_id"] == current_manifest["manifest_id"]
+        assert config["dataset_manifest_id"] == PRE_SCALED_PUBLIC_SAMPLE_MANIFEST_ID
+        assert config["dataset_manifest_id"] != current_manifest["manifest_id"]
         assert config["prediction_split"] == split
         assert config["allow_private_prediction"] is True
         assert config["private_override_required"] is True
@@ -101,14 +109,15 @@ def test_current_train_split_retry_configs_are_public_safe_templates() -> None:
 
 
 def test_current_train_split_retry_dry_run_selects_repair_rows(tmp_path: Path) -> None:
-    current_manifest = _current_manifest()
-    metadata = run_sft(SFT_RETRY_CONFIG, PUBLIC_SAMPLE_MANIFEST, tmp_path / "retry-dry-run", dry_run=True)
+    manifest_path = write_pre_scaled_public_sample_fixture(tmp_path)
+    manifest = read_json(manifest_path)
+    metadata = run_sft(SFT_RETRY_CONFIG, manifest_path, tmp_path / "retry-dry-run", dry_run=True)
 
     assert metadata["dry_run"] is True
     assert metadata["training_status"] == "dry_run"
-    assert metadata["dataset_manifest_id"] == current_manifest["manifest_id"]
+    assert metadata["dataset_manifest_id"] == PRE_SCALED_PUBLIC_SAMPLE_MANIFEST_ID
     assert metadata["training_split"] == "train"
-    assert metadata["training_rows_used"] == current_manifest["split_counts"]["train"] == 123
+    assert metadata["training_rows_used"] == manifest["split_counts"]["train"] == 123
     assert metadata["training_rows_before_source_filter"] == 123
     assert metadata["heavy_training_gate"]["will_run_heavy_training"] is False
 
@@ -123,7 +132,8 @@ def test_current_train_split_retry_readiness_cli_writes_public_safe_non_claiming
     tmp_path: Path,
     capsys: Any,
 ) -> None:
-    dry_run = run_sft(SFT_RETRY_CONFIG, PUBLIC_SAMPLE_MANIFEST, tmp_path / "retry-dry-run", dry_run=True)
+    manifest_path = write_pre_scaled_public_sample_fixture(tmp_path)
+    dry_run = run_sft(SFT_RETRY_CONFIG, manifest_path, tmp_path / "retry-dry-run", dry_run=True)
     output_dir = tmp_path / "readiness"
 
     assert (
@@ -133,7 +143,7 @@ def test_current_train_split_retry_readiness_cli_writes_public_safe_non_claiming
                 "--dry-run-metadata",
                 dry_run["metadata_path"],
                 "--public-manifest",
-                PUBLIC_SAMPLE_MANIFEST.as_posix(),
+                manifest_path.as_posix(),
                 "--current-baseline-evidence",
                 CURRENT_BASELINE_EVIDENCE.as_posix(),
                 "--public-merge-evidence",
@@ -158,12 +168,12 @@ def test_current_train_split_retry_readiness_cli_writes_public_safe_non_claiming
 
     assert payload["ok"] is True
     assert evidence["evidence_kind"] == "current_train_split_sft_retry_readiness"
-    assert evidence["summary"]["dataset_manifest_id"] == _current_manifest()["manifest_id"]
+    assert evidence["summary"]["dataset_manifest_id"] == PRE_SCALED_PUBLIC_SAMPLE_MANIFEST_ID
     assert evidence["summary"]["training_rows_used"] == 123
     assert evidence["summary"]["form_fill_repair_train_rows"] == 21
     assert evidence["summary"]["blocked_payment_repair_train_rows"] == 4
     assert evidence["summary"]["current_retry_confirmation_preservation_train_rows"] == 5
-    assert evidence["summary"]["public_merge_manifest_id"] == _current_manifest()["manifest_id"]
+    assert evidence["summary"]["public_merge_manifest_id"] == PRE_SCALED_PUBLIC_SAMPLE_MANIFEST_ID
     assert evidence["summary"]["public_merge_counts_match_current_manifest"] is True
     assert evidence["summary"]["prediction_config_interpretation"] == (
         "requires_paired_target_manifest_adapter_before_prediction"
@@ -220,7 +230,7 @@ def _metrics_payload(
 
 def _prediction_metadata(split: str, count: int = 69) -> dict[str, Any]:
     return {
-        "dataset_manifest_id": _current_manifest()["manifest_id"],
+        "dataset_manifest_id": PRE_SCALED_PUBLIC_SAMPLE_MANIFEST_ID,
         "prediction_split": split,
         "prediction_count": count,
         "prediction_status": "private_adapter_predictions_written",
@@ -233,10 +243,11 @@ def test_current_train_split_retry_cli_writes_training_retry_evidence_without_re
     capsys: Any,
 ) -> None:
     output_dir = tmp_path / "retry-evidence"
+    manifest_path = write_pre_scaled_public_sample_fixture(tmp_path)
     training_metadata = _write_json(
         tmp_path / "adapter_metadata.json",
         {
-            "dataset_manifest_id": _current_manifest()["manifest_id"],
+            "dataset_manifest_id": PRE_SCALED_PUBLIC_SAMPLE_MANIFEST_ID,
             "training_status": "training_completed",
             "training_rows_used": 123,
             "adapter_path": "/mnt/data/minghongsun/private/adapter",
@@ -268,7 +279,7 @@ def test_current_train_split_retry_cli_writes_training_retry_evidence_without_re
                 "--training-metadata",
                 training_metadata.as_posix(),
                 "--public-manifest",
-                PUBLIC_SAMPLE_MANIFEST.as_posix(),
+                manifest_path.as_posix(),
                 "--current-baseline-evidence",
                 CURRENT_BASELINE_EVIDENCE.as_posix(),
                 "--dev-metrics",
@@ -295,7 +306,7 @@ def test_current_train_split_retry_cli_writes_training_retry_evidence_without_re
     assert payload["ok"] is True
     assert evidence["evidence_kind"] == "a100_current_train_split_sft_retry"
     assert evidence["run_status"] == "observed"
-    assert evidence["dataset_manifest_id"] == _current_manifest()["manifest_id"]
+    assert evidence["dataset_manifest_id"] == PRE_SCALED_PUBLIC_SAMPLE_MANIFEST_ID
     assert evidence["training_status"] == "training_completed"
     assert evidence["training_rows_used"] == 123
     assert evidence["execution_scope"]["training_run"] is True
@@ -409,18 +420,9 @@ def test_committed_current_123_train_split_retry_evidence_records_no_strict_reco
 
     assert evidence["evidence_kind"] == "a100_current_train_split_sft_retry"
     assert evidence["run_status"] == "observed"
-    assert evidence["dataset_manifest_id"] == _current_manifest()["manifest_id"]
-    assert evidence["dataset_manifest_id"] == "public-sample-20260617T045941Z"
-    assert evidence["formal_public_sample_counts"] == {
-        "seed_rows": 102,
-        "sft_rows": 261,
-        "dpo_pairs": 881,
-    }
-    assert evidence["formal_public_sample_split_counts"] == {
-        "train": 123,
-        "dev": 69,
-        "test": 69,
-    }
+    assert evidence["dataset_manifest_id"] == PRE_SCALED_PUBLIC_SAMPLE_MANIFEST_ID
+    assert evidence["formal_public_sample_counts"] == PRE_SCALED_PUBLIC_SAMPLE_COUNTS
+    assert evidence["formal_public_sample_split_counts"] == PRE_SCALED_PUBLIC_SAMPLE_SPLITS
     assert evidence["training_status"] == "training_completed"
     assert evidence["training_rows_used"] == 123
     assert evidence["overall_interpretation"] == "current_train_split_sft_retry_no_strict_exact_recovery"

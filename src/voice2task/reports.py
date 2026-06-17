@@ -4873,6 +4873,150 @@ def write_scaled_public_sample_candidate_materialization_report(
     return {"json": json_path, "markdown": markdown_path, "manifest": manifest_path, "sft": sft_path}
 
 
+def write_scaled_public_sample_public_sample_merge_report(
+    evidence: dict[str, Any],
+    output_dir: Path,
+    title: str = "Voice2Task scaled public-sample merge",
+) -> dict[str, Path]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    json_path = output_dir / "scaled_public_sample_public_sample_merge.json"
+    markdown_path = output_dir / "scaled_public_sample_public_sample_merge.md"
+    manifest_path = output_dir / "manifest.json"
+    safe_evidence = _sanitize_report_value(evidence)
+    scope = safe_evidence.get("execution_scope", {})
+    claims = safe_evidence.get("claims", {})
+    allowed_true_scope = {
+        "dpo_artifacts_rebuilt",
+        "formal_public_sample_modified",
+        "manifest_rebuilt",
+        "seed_traces_modified",
+        "sft_artifacts_rebuilt",
+    }
+    allowed_true_claims = {"strict_contract_exact_match_primary_metric", "strict_slot_f1_primary_metric"}
+    bad_scope = [key for key, value in scope.items() if value is True and key not in allowed_true_scope]
+    bad_claims = [key for key, value in claims.items() if value is True and key not in allowed_true_claims]
+    if bad_scope or bad_claims:
+        raise ValueError(
+            "scaled public-sample merge report cannot claim unsupported scope or recovery signals: "
+            f"scope={bad_scope}, claims={bad_claims}"
+        )
+    write_json(json_path, safe_evidence)
+
+    manifest = {
+        "evidence_kind": safe_evidence["evidence_kind"],
+        "merge_status": safe_evidence["merge_status"],
+        "generated_at": safe_evidence["generated_at"],
+        "pre_merge_public_sample_counts": safe_evidence["pre_merge_public_sample_counts"],
+        "pre_merge_public_sample_split_counts": safe_evidence["pre_merge_public_sample_split_counts"],
+        "formal_public_sample_counts": safe_evidence["formal_public_sample_counts"],
+        "formal_public_sample_split_counts": safe_evidence["formal_public_sample_split_counts"],
+        "candidate_source": safe_evidence["candidate_source"],
+        "comparison_boundary": safe_evidence["comparison_boundary"],
+        "validation": safe_evidence["validation"],
+        "metric_authority": safe_evidence["metric_authority"],
+        "execution_scope": safe_evidence["execution_scope"],
+        "claims": safe_evidence["claims"],
+        "artifact_policy": {
+            "public_sample_modified": True,
+            "candidate_rows_promoted_to_formal_sample": True,
+            "sft_artifacts_rebuilt": True,
+            "dpo_artifacts_rebuilt": True,
+            "manifest_rebuilt": True,
+            "training_run": False,
+            "prediction_run": False,
+            "a100_execution": False,
+            "prompt_change": False,
+            "slot_normalization": False,
+            "evaluator_metric_change": False,
+            "evaluator_relaxation": False,
+            "raw_logs_copied_to_git": False,
+            "checkpoints_or_adapters_copied_to_git": False,
+            "private_overrides_copied_to_git": False,
+            "private_paths_omitted": True,
+            "host_details_omitted": True,
+            "ssh_details_omitted": True,
+            "prediction_repair_or_replacement": False,
+        },
+        "diagnostic_artifacts": {
+            "merge": _public_report_artifact_path(
+                output_dir,
+                "scaled_public_sample_public_sample_merge.json",
+            ),
+            "markdown": _public_report_artifact_path(
+                output_dir,
+                "scaled_public_sample_public_sample_merge.md",
+            ),
+            "manifest": _public_report_artifact_path(output_dir, "manifest.json"),
+        },
+    }
+    write_json(manifest_path, manifest)
+
+    counts = safe_evidence["formal_public_sample_counts"]
+    pre_counts = safe_evidence["pre_merge_public_sample_counts"]
+    splits = safe_evidence["formal_public_sample_split_counts"]
+    candidate = safe_evidence["candidate_source"]
+    comparison = safe_evidence["comparison_boundary"]
+    validation = safe_evidence["validation"]
+    lines = [
+        f"# {title}",
+        "",
+        (
+            "This report records a formal public-sample data merge. It does not prove held-out recovery, "
+            "model quality, safety improvement, adapter release, checkpoint release, production readiness, "
+            "public full-corpus release, or live-browser improvement."
+        ),
+        "",
+        "## Boundary",
+        "",
+        "- Formal public sample seed, SFT, DPO, and manifest files were rebuilt.",
+        (
+            "- No SFT/DPO/GRPO training, prediction run, A100 execution, prompt change, "
+            "slot normalization, or evaluator relaxation was performed."
+        ),
+        "- strict `contract_exact_match` and strict `slot_f1` remain authoritative for later evaluation.",
+        "- `slot_f1_soft` and semantic equivalence remain diagnostic-only.",
+        "- The formal public sample boundary changed; old metrics are not directly comparable.",
+        "",
+        "## Counts",
+        "",
+        f"- Pre-merge counts: `{pre_counts}`",
+        f"- Post-merge seed rows: `{counts['seed_rows']}`",
+        f"- Post-merge SFT rows: `{counts['sft_rows']}`",
+        f"- Post-merge DPO pairs: `{counts['dpo_pairs']}`",
+        f"- Post-merge SFT split counts: `{splits}`",
+        "",
+        "## Candidate Source",
+        "",
+        f"- Candidate seed rows: `{candidate['candidate_seed_rows']}`",
+        f"- Candidate SFT rows: `{candidate['candidate_sft_rows']}`",
+        f"- Candidate DPO pair delta: `{candidate['candidate_dpo_pairs']}`",
+        f"- Candidate seed split counts: `{candidate['seed_split_counts']}`",
+        f"- Candidate group counts: `{candidate['candidate_group_counts']}`",
+        f"- Candidate family counts: `{candidate['family_counts']}`",
+        "",
+        "## Comparison Boundary",
+        "",
+        f"- Changed: `{comparison['changed']}`",
+        f"- Previous manifest: `{comparison['previous_manifest_id']}`",
+        f"- New manifest: `{comparison['new_manifest_id']}`",
+        f"- Old metrics directly comparable: `{comparison['old_metrics_directly_comparable']}`",
+        "",
+        "## Validation",
+        "",
+        f"- Dataset validation ok: `{validation['ok']}`",
+        f"- Validation failures: `{validation['failures']}`",
+        "",
+        "## Recommended Next Step",
+        "",
+        (
+            "Run any model prediction or training work only in a later bounded phase that explicitly names "
+            "this new manifest boundary."
+        ),
+    ]
+    markdown_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    return {"json": json_path, "markdown": markdown_path, "manifest": manifest_path}
+
+
 def write_family_stratified_public_sample_merge_report(
     evidence: dict[str, Any],
     output_dir: Path,

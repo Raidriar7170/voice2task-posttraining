@@ -1,0 +1,18 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-17T15:40:50.621444+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "CONTEXT.md",
+    "reports/final_status.md",
+    "data/public-samples",
+    "reports/public-sample/scaled-public-sample-candidate-materialization",
+    "reports/public-sample/scaled-public-sample-merge",
+    "docs/human-briefs/2026-06-17-merge-scaled-public-sample-candidates.html",
+    "openspec/changes/archive/2026-06-17-merge-scaled-public-sample-candidates",
+    "openspec/specs",
+    "tests/public_sample_fixtures.py",
+    "tests/test_scaled_public_sample_public_sample_merge.py"
+  ]
+}

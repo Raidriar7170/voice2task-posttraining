@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from public_sample_fixtures import SCALED_PUBLIC_SAMPLE_COUNTS, SCALED_PUBLIC_SAMPLE_SPLITS
+
 from voice2task.dataset import materialize_current_retry_confirmation_preservation_candidates
 from voice2task.io import read_json, read_jsonl
 
@@ -68,8 +70,8 @@ def test_committed_public_sample_contains_current_retry_confirmation_preservatio
         _assert_confirmation_preservation_contract(row)
 
     manifest = read_json(PUBLIC_SAMPLE_DIR / "manifest_public_sample.json")
-    assert manifest["counts"] == {"seed_rows": 102, "sft_rows": 261, "dpo_pairs": 881}
-    assert manifest["split_counts"] == {"train": 123, "dev": 69, "test": 69}
+    assert manifest["counts"] == SCALED_PUBLIC_SAMPLE_COUNTS
+    assert manifest["split_counts"] == SCALED_PUBLIC_SAMPLE_SPLITS
     source_summary = manifest["source_summary"]
     assert source_summary["current_retry_confirmation_preservation_candidate_seed_rows"] == 2
     assert source_summary["current_retry_confirmation_preservation_candidate_sft_rows"] == 5

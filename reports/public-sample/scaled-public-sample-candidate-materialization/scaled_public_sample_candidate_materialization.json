@@ -41,7 +41,7 @@
     "slot_normalization": false,
     "training_run": false
   },
-  "generated_at": "2026-06-17T14:04:35.133870+00:00",
+  "generated_at": "2026-06-17T15:22:58.937304+00:00",
   "materialization_status": "candidate_dataset_materialized",
   "summary": {
     "augmentation_depth": {
@@ -79,19 +79,19 @@
       "search": 20
     },
     "current_formal_public_sample_counts": {
-      "dpo_pairs": 881,
-      "seed_rows": 102,
-      "sft_rows": 261
+      "dpo_pairs": 2046,
+      "seed_rows": 240,
+      "sft_rows": 675
     },
     "current_formal_public_sample_seed_split_counts": {
-      "dev": 23,
-      "test": 23,
-      "train": 56
-    },
-    "current_formal_public_sample_sft_split_counts": {
       "dev": 69,
       "test": 69,
-      "train": 123
+      "train": 102
+    },
+    "current_formal_public_sample_sft_split_counts": {
+      "dev": 207,
+      "test": 207,
+      "train": 261
     },
     "formal_public_sample_modified": false,
     "overlay_candidate_counts": {

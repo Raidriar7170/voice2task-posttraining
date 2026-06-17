@@ -6,28 +6,30 @@ Voice2Task Post-Training is a companion project for training and evaluating smal
 
 As of 2026-06-17, the first project phase is closed as an evidence-backed
 post-training and evaluation baseline, not as a production-ready model release.
-The public-facing truth surface has ten current layers:
+The public-facing truth surface has eleven current layers:
 
-1. the standalone scaled public-sample candidate materialization evidence under
+1. the scaled public-sample formal merge evidence under
+   `reports/public-sample/scaled-public-sample-merge/`;
+2. the standalone scaled public-sample candidate materialization evidence under
    `reports/public-sample/scaled-public-sample-candidate-materialization/`;
-2. the scaled public-sample and tiered-evaluation design evidence under
+3. the scaled public-sample and tiered-evaluation design evidence under
    `reports/public-sample/scaled-public-sample-and-tiered-eval-design/`;
-3. the current-123-row train-split SFT retry model evidence under
+4. the current-123-row train-split SFT retry model evidence under
    `reports/public-sample/a100-current-123-train-split-sft-retry/`;
-4. the current-123-row train-split SFT retry readiness evidence under
+5. the current-123-row train-split SFT retry readiness evidence under
    `reports/public-sample/current-123-train-split-sft-retry-readiness/`;
-5. the current-retry confirmation-preservation materialization and public merge
+6. the current-retry confirmation-preservation materialization and public merge
    under
    `reports/public-sample/current-retry-confirmation-preservation-public-sample-merge/`;
-6. the current-retry confirmation-preservation candidate design under
+7. the current-retry confirmation-preservation candidate design under
    `reports/public-sample/current-retry-confirmation-preservation-candidate-design/`;
-7. the current-train-split SFT retry trade-off diagnosis under
+8. the current-train-split SFT retry trade-off diagnosis under
    `reports/public-sample/current-train-split-sft-retry-tradeoff-diagnosis/`;
-8. the prior current-train-split SFT retry under
+9. the prior current-train-split SFT retry under
    `reports/public-sample/a100-current-train-split-sft-retry/`;
-9. the current-manifest SFT v3 prediction-only baseline under
+10. the current-manifest SFT v3 prediction-only baseline under
    `reports/public-sample/a100-current-manifest-sft-v3-prediction-baseline/`;
-10. the bounded SFT v3 retry after SSH recovery, now a prior-manifest model
+11. the bounded SFT v3 retry after SSH recovery, now a prior-manifest model
    source, under
    `reports/public-sample/a100-form-fill-remediation-sft-v3-retry-after-ssh-recovery/`.
 
@@ -35,13 +37,14 @@ Current formal public sample data boundary:
 
 | item | value |
 | --- | --- |
-| manifest | `public-sample-20260617T045941Z` |
-| public sample | 102 seeds / 261 SFT rows / 881 DPO pairs |
-| split counts | train 123 / dev 69 / test 69 |
+| manifest | `public-sample-20260617T152259Z` |
+| public sample | 240 seeds / 675 SFT rows / 2046 DPO pairs |
+| split counts | train 261 / dev 207 / test 207 |
 | latest evaluated manifest | `public-sample-20260617T045941Z` |
 | latest model run type | private SFT retry on the current 123-row train split, then dev/test strict eval |
 | latest model interpretation | `current_train_split_sft_retry_no_strict_exact_recovery` |
 | latest model evidence | `reports/public-sample/a100-current-123-train-split-sft-retry/` |
+| latest scaled merge evidence | `reports/public-sample/scaled-public-sample-merge/` |
 | latest standalone scaled candidate evidence | `reports/public-sample/scaled-public-sample-candidate-materialization/` |
 | latest standalone scaled candidate data | 138 candidate seeds / 414 candidate SFT rows / no DPO pairs |
 | latest strategic-design evidence | `reports/public-sample/scaled-public-sample-and-tiered-eval-design/` |
@@ -61,6 +64,14 @@ current-retry confirmation-preservation rows, then performed dev/test
 prediction-only strict evaluation with the existing evaluator. The latest model
 evidence did not repair predictions, normalize slots, change prompts, relax
 metrics, or publish a checkpoint/adapter.
+
+The formal public sample boundary has since advanced to
+`public-sample-20260617T152259Z` through the scaled public-sample formal merge.
+That data-only merge promoted `138` reviewed candidate seeds into the formal
+sample and rebuilt the public sample to `240` seeds / `675` SFT rows / `2046`
+DPO pairs with split counts `train=261`, `dev=207`, and `test=207`. Old metrics
+bound to `public-sample-20260617T045941Z` are not directly comparable to future
+metrics on this new boundary.
 
 Current-train-split SFT retry formal held-out metrics:
 
@@ -93,10 +104,17 @@ candidate rows: `118` core-family candidates (`search=20`, `navigation=17`,
 confirmation-boundary overlay candidates. This phase does not merge the formal
 public sample, rebuild formal SFT/DPO artifacts, generate DPO pairs, train,
 predict, change prompts, change evaluator metrics, normalize slots, repair
-predictions, release checkpoints/adapters, or claim model recovery. The current
-formal public sample boundary remains `public-sample-20260617T045941Z` with
-`102` seeds / `261` SFT rows / `881` DPO pairs until a later explicit formal
-merge phase creates a new manifest boundary.
+predictions, release checkpoints/adapters, or claim model recovery.
+
+The scaled public-sample formal merge is now complete under
+`reports/public-sample/scaled-public-sample-merge/`. It promoted those `138`
+reviewed candidate seeds into the formal public sample, preserved their
+train/dev/test split labels, and rebuilt seed/SFT/DPO/manifest artifacts. This
+phase still did not train, predict, run on A100, change prompts, change
+evaluator metrics, normalize slots, repair predictions, release
+checkpoints/adapters, or claim model recovery. Its main effect is a new formal
+manifest boundary; model evidence must be regenerated in a later explicit phase
+before any quality claim is made.
 
 Claim boundaries:
 

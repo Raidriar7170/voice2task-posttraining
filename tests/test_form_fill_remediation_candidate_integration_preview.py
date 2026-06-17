@@ -25,10 +25,10 @@ COMMITTED_REPORT_DIR = (
     REPO_ROOT / "reports" / "public-sample" / "form-fill-remediation-candidate-integration-preview"
 )
 FORM_FILL_CANDIDATE_IDS = {row["id"] for row in read_jsonl(FORM_FILL_CANDIDATE_SEED)}
-CURRENT_FORMAL_COUNTS = {"dpo_pairs": 881, "seed_rows": 102, "sft_rows": 261}
-PREVIEW_BASELINE_WITH_EXTENSION_COUNTS = {"dpo_pairs": 800, "seed_rows": 93, "sft_rows": 252}
-EXPECTED_PREVIEW_COUNTS = {"dpo_pairs": 881, "seed_rows": 102, "sft_rows": 261}
-EXPECTED_PREVIEW_SPLITS = {"dev": 69, "test": 69, "train": 123}
+CURRENT_FORMAL_COUNTS = {"dpo_pairs": 2046, "seed_rows": 240, "sft_rows": 675}
+PREVIEW_BASELINE_WITH_EXTENSION_COUNTS = {"dpo_pairs": 1965, "seed_rows": 231, "sft_rows": 666}
+EXPECTED_PREVIEW_COUNTS = {"dpo_pairs": 2046, "seed_rows": 240, "sft_rows": 675}
+EXPECTED_PREVIEW_SPLITS = {"dev": 207, "test": 207, "train": 261}
 HISTORICAL_PRE_EXTENSION_FORMAL_COUNTS = {"dpo_pairs": 661, "seed_rows": 77, "sft_rows": 231}
 HISTORICAL_FORM_FILL_PREVIEW_COUNTS = {"dpo_pairs": 742, "seed_rows": 86, "sft_rows": 240}
 

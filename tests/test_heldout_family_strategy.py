@@ -38,7 +38,7 @@ def test_heldout_family_strategy_diagnostic_separates_tiny_subset_from_dataset_c
     assert diagnosis["source_manifest"]["manifest_id"] == current_manifest["manifest_id"]
     assert diagnosis["summary"]["heldout_contract_exact_match"] == {"dev": 0.0, "test": 0.0}
     assert diagnosis["summary"]["tiny_training_subset_family_count"] == 1
-    assert diagnosis["summary"]["heldout_residual_family_count"] == 46
+    assert diagnosis["summary"]["heldout_residual_family_count"] == 138
     assert diagnosis["summary"]["broad_data_scaling_recommended"] is False
     assert diagnosis["strategy_recommendation"]["primary"] == (
         "targeted_family_coverage_probe_before_broad_scaling"
@@ -55,7 +55,7 @@ def test_heldout_family_strategy_diagnostic_separates_tiny_subset_from_dataset_c
         "seed-form-email",
         "seed-open-example",
     }.issubset(residuals)
-    assert residuals["seed-open-example"]["train_analog_row_count"] == 17
+    assert residuals["seed-open-example"]["train_analog_row_count"] == 35
     assert residuals["seed-open-example"]["tiny_subset_row_count"] == 0
     assert residuals["seed-open-example"]["train_analog_family_id"] == (
         "candidate-current-retry-public-navigation-non-confirmation-preservation"

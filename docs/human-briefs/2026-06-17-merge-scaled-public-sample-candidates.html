@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Voice2Task 扩样本候选集合并简报</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.55; margin: 32px; color: #202124; }
+    main { max-width: 980px; margin: 0 auto; }
+    h1 { font-size: 28px; margin-bottom: 8px; }
+    h2 { font-size: 18px; margin-top: 28px; border-bottom: 1px solid #ddd; padding-bottom: 6px; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; }
+    th { background: #f6f8fa; }
+    code { background: #f6f8fa; padding: 1px 4px; border-radius: 4px; }
+    .claim { padding: 12px 14px; background: #eef6ff; border-left: 4px solid #2563eb; }
+    .warn { padding: 12px 14px; background: #fff7ed; border-left: 4px solid #f97316; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Voice2Task 扩样本候选集合并简报</h1>
+  <p class="claim">结论：已把 138 条 reviewed scaled candidates 正式合入 formal public sample，生成新的 manifest boundary：240 seeds / 675 SFT rows / 2046 DPO pairs。</p>
+
+  <h2>当前状态</h2>
+  <table>
+    <tr><th>项目</th><th>状态</th></tr>
+    <tr><td>OpenSpec change</td><td><code>merge-scaled-public-sample-candidates</code></td></tr>
+    <tr><td>阶段类型</td><td>formal data merge；不训练、不预测、不改 prompt/evaluator、不做 A100</td></tr>
+    <tr><td>Previous manifest</td><td><code>public-sample-20260617T045941Z</code>，102 seeds / 261 SFT / 881 DPO</td></tr>
+    <tr><td>New manifest</td><td><code>public-sample-20260617T152259Z</code>，240 seeds / 675 SFT / 2046 DPO</td></tr>
+    <tr><td>New split counts</td><td>train 261 / dev 207 / test 207</td></tr>
+    <tr><td>Merge evidence</td><td><code>reports/public-sample/scaled-public-sample-merge/</code></td></tr>
+  </table>
+
+  <h2>本阶段做了什么</h2>
+  <ul>
+    <li>将 <code>data/public-samples/scaled_public_sample_seed_candidates.jsonl</code> 中 138 条 reviewed candidates promoted 为 formal public sample seeds。</li>
+    <li>保留候选集原始 train/dev/test split labels：46 / 46 / 46。</li>
+    <li>重建 <code>seed_traces.jsonl</code>、<code>sft_public_sample.jsonl</code>、<code>dpo_public_sample.jsonl</code>、<code>manifest_public_sample.json</code>。</li>
+    <li>生成 merge JSON、Markdown 和 manifest evidence。</li>
+    <li>更新 <code>CONTEXT.md</code>、<code>reports/final_status.md</code> 和 OpenSpec dataset spec。</li>
+  </ul>
+
+  <h2>关键文件</h2>
+  <ul>
+    <li><code>src/voice2task/dataset.py</code>：scaled formal promotion、validation、manifest summary、merge evidence。</li>
+    <li><code>src/voice2task/cli/data.py</code>：新增 <code>merge-scaled-public-sample-candidates</code>。</li>
+    <li><code>src/voice2task/reports.py</code>：新增 fail-closed merge report writer。</li>
+    <li><code>tests/test_scaled_public_sample_public_sample_merge.py</code>：counts、provenance、duplicate rejection、CLI/evidence、claim-boundary tests。</li>
+  </ul>
+
+  <h2>验证结果</h2>
+  <ul>
+    <li><code>PYTHONPATH=src pytest tests/test_scaled_public_sample_candidate_materialization.py tests/test_scaled_public_sample_public_sample_merge.py -q</code>：13 passed。</li>
+    <li>Formal dataset validation、full pytest、ruff、DPO check、OpenSpec strict validation、leak scan、<code>git diff --check</code> 需要以最终命令输出为准。</li>
+  </ul>
+
+  <h2>剩余风险</h2>
+  <ul>
+    <li>这是 data-boundary merge，不是模型效果证据。</li>
+    <li>旧 manifest <code>public-sample-20260617T045941Z</code> 上的 dev/test metrics 不能和新 manifest future metrics 直接比较。</li>
+    <li>新 boundary 下还没有 prediction-only eval，也没有新的 paired-adapter training evidence。</li>
+  </ul>
+
+  <h2>推荐下一步</h2>
+  <p>如继续推进，应先开 bounded prediction-only/readiness phase，明确绑定 <code>public-sample-20260617T152259Z</code>，再决定是否训练。</p>
+
+  <p class="warn">不要把本阶段表述为 held-out recovery、model quality improvement、safety improvement、checkpoint/adapter release、production readiness 或 live-browser benchmark improvement。</p>
+</main>
+</body>
+</html>

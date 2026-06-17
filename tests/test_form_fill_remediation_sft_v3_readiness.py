@@ -2,6 +2,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from public_sample_fixtures import PRE_SCALED_PUBLIC_SAMPLE_MANIFEST_ID, write_pre_scaled_public_sample_fixture
+
 from voice2task.cli import report as report_cli
 from voice2task.io import read_json
 from voice2task.leak_scan import scan_paths
@@ -49,7 +51,8 @@ def test_form_fill_sft_v3_configs_are_current_public_safe_templates() -> None:
     )
 
     assert train_config["form_fill_remediation_sft_v3"] is True
-    assert train_config["dataset_manifest_id"] == current_manifest["manifest_id"]
+    assert train_config["dataset_manifest_id"] == PRE_SCALED_PUBLIC_SAMPLE_MANIFEST_ID
+    assert train_config["dataset_manifest_id"] != current_manifest["manifest_id"]
     assert train_config["public_sample_manifest"] == "data/public-samples/manifest_public_sample.json"
     assert train_config["dataset_split"] == "train"
     assert train_config["allow_heavy_training"] is True
@@ -63,7 +66,8 @@ def test_form_fill_sft_v3_configs_are_current_public_safe_templates() -> None:
 
     for split, config in {"dev": dev_config, "test": test_config}.items():
         assert config["form_fill_remediation_sft_v3_prediction"] is True
-        assert config["dataset_manifest_id"] == current_manifest["manifest_id"]
+        assert config["dataset_manifest_id"] == PRE_SCALED_PUBLIC_SAMPLE_MANIFEST_ID
+        assert config["dataset_manifest_id"] != current_manifest["manifest_id"]
         assert config["prediction_split"] == split
         assert config["allow_private_prediction"] is True
         assert config["generalization_claim"] is False
@@ -80,15 +84,16 @@ def test_form_fill_sft_v3_configs_are_current_public_safe_templates() -> None:
 def test_form_fill_sft_v3_dry_run_selects_current_train_split_and_merged_form_fill_rows(
     tmp_path: Path,
 ) -> None:
-    current_manifest = read_json(PUBLIC_SAMPLE_MANIFEST)
-    metadata = run_sft(SFT_V3_CONFIG, PUBLIC_SAMPLE_MANIFEST, tmp_path / "sft-v3-dry-run", dry_run=True)
+    manifest_path = write_pre_scaled_public_sample_fixture(tmp_path)
+    manifest = read_json(manifest_path)
+    metadata = run_sft(SFT_V3_CONFIG, manifest_path, tmp_path / "sft-v3-dry-run", dry_run=True)
 
     assert metadata["dry_run"] is True
     assert metadata["training_status"] == "dry_run"
-    assert metadata["dataset_manifest_id"] == current_manifest["manifest_id"]
+    assert metadata["dataset_manifest_id"] == PRE_SCALED_PUBLIC_SAMPLE_MANIFEST_ID
     assert metadata["training_split"] == "train"
     assert metadata["training_row_limit"] is None
-    assert metadata["training_rows_used"] == current_manifest["split_counts"]["train"] == 123
+    assert metadata["training_rows_used"] == manifest["split_counts"]["train"] == 123
     assert metadata["training_rows_before_source_filter"] == 123
     assert metadata["heavy_training_gate"]["will_run_heavy_training"] is False
 
@@ -101,7 +106,8 @@ def test_form_fill_sft_v3_readiness_report_cli_writes_public_safe_non_claiming_e
     tmp_path: Path,
     capsys: Any,
 ) -> None:
-    dry_run = run_sft(SFT_V3_CONFIG, PUBLIC_SAMPLE_MANIFEST, tmp_path / "sft-v3-dry-run", dry_run=True)
+    manifest_path = write_pre_scaled_public_sample_fixture(tmp_path)
+    dry_run = run_sft(SFT_V3_CONFIG, manifest_path, tmp_path / "sft-v3-dry-run", dry_run=True)
     output_dir = tmp_path / "readiness"
 
     assert (
@@ -111,7 +117,7 @@ def test_form_fill_sft_v3_readiness_report_cli_writes_public_safe_non_claiming_e
                 "--dry-run-metadata",
                 dry_run["metadata_path"],
                 "--public-manifest",
-                PUBLIC_SAMPLE_MANIFEST.as_posix(),
+                manifest_path.as_posix(),
                 "--baseline-evidence",
                 BASELINE_EVIDENCE.as_posix(),
                 "--target-selection",
@@ -138,7 +144,7 @@ def test_form_fill_sft_v3_readiness_report_cli_writes_public_safe_non_claiming_e
 
     assert payload["ok"] is True
     assert evidence["evidence_kind"] == "form_fill_remediation_sft_v3_readiness"
-    assert evidence["summary"]["dataset_manifest_id"] == read_json(PUBLIC_SAMPLE_MANIFEST)["manifest_id"]
+    assert evidence["summary"]["dataset_manifest_id"] == PRE_SCALED_PUBLIC_SAMPLE_MANIFEST_ID
     assert evidence["summary"]["training_rows_used"] == 123
     assert evidence["summary"]["form_fill_remediation_train_rows"] == 21
     assert evidence["summary"]["readiness_status"] == "ready_for_bounded_a100_sft_v3_phase"

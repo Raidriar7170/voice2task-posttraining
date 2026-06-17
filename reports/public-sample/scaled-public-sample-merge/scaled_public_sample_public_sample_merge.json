@@ -1,0 +1,283 @@
+{
+  "artifact_files": {
+    "dpo": "data/public-samples/dpo_public_sample.jsonl",
+    "manifest": "data/public-samples/manifest_public_sample.json",
+    "merge_json": "scaled_public_sample_public_sample_merge.json",
+    "merge_manifest": "manifest.json",
+    "merge_markdown": "scaled_public_sample_public_sample_merge.md",
+    "seed": "data/public-samples/seed_traces.jsonl",
+    "sft": "data/public-samples/sft_public_sample.jsonl"
+  },
+  "candidate_source": {
+    "candidate_dpo_pairs": 1165,
+    "candidate_group_counts": {
+      "confirmation_boundary_overlay": 20,
+      "core_family_delta": 118
+    },
+    "candidate_seed": "data/public-samples/scaled_public_sample_seed_candidates.jsonl",
+    "candidate_seed_rows": 138,
+    "candidate_sft_rows": 414,
+    "candidate_source_mode": "scaled_public_sample_candidate_seed",
+    "dpo_rejection_deltas": {
+      "blocked_payment_action_drift": 0,
+      "clarify_action_drift": 33,
+      "decomposed_search_slots": 0,
+      "extract_extra_particle_wording": 0,
+      "extract_generic_price_wording": 0,
+      "extract_listed_price_wording": 0,
+      "extract_query_slot": 25,
+      "extract_search_fallback": 25,
+      "form_confirmation_drift": 23,
+      "malformed_schema": 138,
+      "missing_confirmation": 76,
+      "missing_slot": 138,
+      "navigate_canonical_url_drift": 17,
+      "underspecified_request": 138,
+      "unsafe_allowance": 138,
+      "wrong_route": 138,
+      "wrong_slot": 138,
+      "wrong_task_type": 138
+    },
+    "family_counts": {
+      "blocked_payment": 20,
+      "clarify": 33,
+      "confirmation_boundary": 20,
+      "extract": 25,
+      "form_fill": 3,
+      "navigation": 17,
+      "search": 20
+    },
+    "formal_source_mode": "scaled_public_sample_formal_public_seed",
+    "seed_split_counts": {
+      "dev": 46,
+      "test": 46,
+      "train": 46
+    }
+  },
+  "claims": {
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "held_out_generalization_recovered": false,
+    "held_out_recovery_claim": false,
+    "live_browser_benchmark_claim": false,
+    "model_quality_claim": false,
+    "model_recovery_claim": false,
+    "private_corpus_generalization_claim": false,
+    "production_readiness_claim": false,
+    "public_full_corpus_release_claim": false,
+    "safety_improvement_claim": false,
+    "semantic_equivalence_primary_metric": false,
+    "soft_slot_f1_primary_metric": false,
+    "strict_contract_exact_match_primary_metric": true,
+    "strict_slot_f1_primary_metric": true
+  },
+  "comparison_boundary": {
+    "changed": true,
+    "new_manifest_id": "public-sample-20260617T152259Z",
+    "old_metrics_directly_comparable": false,
+    "previous_manifest_id": "public-sample-20260617T045941Z",
+    "warning": "formal public sample boundary changed; old metrics are not directly comparable"
+  },
+  "evidence_kind": "scaled_public_sample_public_sample_merge",
+  "execution_scope": {
+    "a100_execution": false,
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "dpo_artifacts_rebuilt": true,
+    "dpo_run": false,
+    "evaluator_metric_change": false,
+    "evaluator_relaxation": false,
+    "formal_public_sample_modified": true,
+    "grpo_run": false,
+    "live_browser_benchmark": false,
+    "manifest_rebuilt": true,
+    "prediction_repair": false,
+    "prediction_replacement": false,
+    "prediction_run": false,
+    "private_corpus_publication": false,
+    "prompt_change": false,
+    "seed_traces_modified": true,
+    "semantic_equivalence_scoring": false,
+    "sft_artifacts_rebuilt": true,
+    "sft_run": false,
+    "slot_normalization": false,
+    "training_run": false
+  },
+  "formal_public_sample_counts": {
+    "dpo_pairs": 2046,
+    "seed_rows": 240,
+    "sft_rows": 675
+  },
+  "formal_public_sample_dpo_rejection_counts": {
+    "blocked_payment_action_drift": 5,
+    "clarify_action_drift": 45,
+    "decomposed_search_slots": 2,
+    "extract_extra_particle_wording": 2,
+    "extract_generic_price_wording": 2,
+    "extract_listed_price_wording": 2,
+    "extract_query_slot": 35,
+    "extract_search_fallback": 35,
+    "form_confirmation_drift": 65,
+    "malformed_schema": 240,
+    "missing_confirmation": 143,
+    "missing_slot": 240,
+    "navigate_canonical_url_drift": 30,
+    "underspecified_request": 240,
+    "unsafe_allowance": 240,
+    "wrong_route": 240,
+    "wrong_slot": 240,
+    "wrong_task_type": 240
+  },
+  "formal_public_sample_split_counts": {
+    "dev": 207,
+    "test": 207,
+    "train": 261
+  },
+  "generated_at": "2026-06-17T15:22:59.199531+00:00",
+  "merge_status": "formal_public_sample_rebuilt",
+  "metric_authority": {
+    "contract_evaluation_ladder": "authoritative",
+    "contract_exact_match": "authoritative_strict_metric",
+    "slot_f1": "authoritative_strict_metric",
+    "slot_f1_soft": "diagnostic_only_not_primary"
+  },
+  "pre_merge_public_sample_counts": {
+    "dpo_pairs": 881,
+    "seed_rows": 102,
+    "sft_rows": 261
+  },
+  "pre_merge_public_sample_dpo_rejection_counts": {
+    "blocked_payment_action_drift": 5,
+    "clarify_action_drift": 12,
+    "decomposed_search_slots": 2,
+    "extract_extra_particle_wording": 2,
+    "extract_generic_price_wording": 2,
+    "extract_listed_price_wording": 2,
+    "extract_query_slot": 10,
+    "extract_search_fallback": 10,
+    "form_confirmation_drift": 42,
+    "malformed_schema": 102,
+    "missing_confirmation": 67,
+    "missing_slot": 102,
+    "navigate_canonical_url_drift": 13,
+    "underspecified_request": 102,
+    "unsafe_allowance": 102,
+    "wrong_route": 102,
+    "wrong_slot": 102,
+    "wrong_task_type": 102
+  },
+  "pre_merge_public_sample_split_counts": {
+    "dev": 69,
+    "test": 69,
+    "train": 123
+  },
+  "recommended_next_step": "open_a_separate_prediction_only_eval_phase_on_the_new_manifest_boundary",
+  "source_summary": {
+    "blocked_payment_safety_repair_candidate_seed_rows": 2,
+    "blocked_payment_safety_repair_candidate_sft_rows": 4,
+    "blocked_payment_safety_repair_candidates_formal_public_sample": true,
+    "blocked_payment_safety_repair_families": [
+      "refund_confirmation_or_processing",
+      "subscription_charge_confirmation"
+    ],
+    "blocked_payment_safety_repair_seed_split_counts": {
+      "dev": 0,
+      "test": 0,
+      "train": 2
+    },
+    "comparison_boundary_changed": true,
+    "comparison_boundary_warning": "formal public sample boundary changed; old metrics are not directly comparable",
+    "current_retry_confirmation_preservation_candidate_seed_rows": 2,
+    "current_retry_confirmation_preservation_candidate_sft_rows": 5,
+    "current_retry_confirmation_preservation_candidates_formal_public_sample": true,
+    "current_retry_confirmation_preservation_families": [
+      "public_navigation_non_confirmation_preservation",
+      "unsafe_payment_confirmation_preservation"
+    ],
+    "current_retry_confirmation_preservation_seed_split_counts": {
+      "dev": 0,
+      "test": 0,
+      "train": 2
+    },
+    "family_stratified_candidate_seed_rows": 63,
+    "family_stratified_candidate_sft_rows": 189,
+    "family_stratified_candidates_formal_public_sample": true,
+    "family_stratified_families": [
+      "blocked_payment",
+      "clarify",
+      "confirmation",
+      "extract",
+      "form_fill",
+      "navigation",
+      "search"
+    ],
+    "family_stratified_seed_split_counts": {
+      "dev": 21,
+      "test": 21,
+      "train": 21
+    },
+    "form_fill_confirmation_marker_extension_candidate_seed_rows": 12,
+    "form_fill_confirmation_marker_extension_candidate_sft_rows": 12,
+    "form_fill_confirmation_marker_extension_candidates_formal_public_sample": true,
+    "form_fill_confirmation_marker_extension_seed_split_counts": {
+      "dev": 0,
+      "test": 0,
+      "train": 12
+    },
+    "form_fill_confirmation_marker_extension_source_family_ids": [
+      "family-confirmation-dev-1",
+      "family-confirmation-dev-2",
+      "family-confirmation-dev-3",
+      "family-confirmation-test-1",
+      "family-confirmation-test-2",
+      "family-confirmation-test-3",
+      "family-form_fill-dev-1",
+      "family-form_fill-dev-2",
+      "family-form_fill-dev-3",
+      "family-form_fill-test-1",
+      "family-form_fill-test-2",
+      "family-form_fill-test-3"
+    ],
+    "form_fill_remediation_candidate_seed_rows": 9,
+    "form_fill_remediation_candidate_sft_rows": 9,
+    "form_fill_remediation_candidates_formal_public_sample": true,
+    "form_fill_remediation_source_case_groups": [
+      "form-fill-clarify-boundary-protection",
+      "form-fill-confirmation-marker-preservation",
+      "form-fill-field-specificity-preservation"
+    ],
+    "scaled_public_sample_candidate_group_counts": {
+      "confirmation_boundary_overlay": 20,
+      "core_family_delta": 118
+    },
+    "scaled_public_sample_candidate_seed_rows": 138,
+    "scaled_public_sample_candidate_sft_rows": 414,
+    "scaled_public_sample_candidates_formal_public_sample": true,
+    "scaled_public_sample_family_counts": {
+      "blocked_payment": 20,
+      "clarify": 33,
+      "confirmation_boundary": 20,
+      "extract": 25,
+      "form_fill": 3,
+      "navigation": 17,
+      "search": 20
+    },
+    "scaled_public_sample_seed_split_counts": {
+      "dev": 46,
+      "test": 46,
+      "train": 46
+    },
+    "seed_rows": 240,
+    "slot_value_candidate_seed_rows": 4,
+    "slot_value_candidates_formal_public_sample": true,
+    "source": "sanitized_public_seed_fixture"
+  },
+  "validation": {
+    "counts": {
+      "dpo_pairs": 2046,
+      "sft_rows": 675
+    },
+    "failures": [],
+    "ok": true
+  }
+}

@@ -1,0 +1,159 @@
+{
+  "artifact_policy": {
+    "a100_execution": false,
+    "candidate_rows_promoted_to_formal_sample": true,
+    "checkpoints_or_adapters_copied_to_git": false,
+    "dpo_artifacts_rebuilt": true,
+    "evaluator_metric_change": false,
+    "evaluator_relaxation": false,
+    "host_details_omitted": true,
+    "manifest_rebuilt": true,
+    "prediction_repair_or_replacement": false,
+    "prediction_run": false,
+    "private_overrides_copied_to_git": false,
+    "private_paths_omitted": true,
+    "prompt_change": false,
+    "public_sample_modified": true,
+    "raw_logs_copied_to_git": false,
+    "sft_artifacts_rebuilt": true,
+    "slot_normalization": false,
+    "ssh_details_omitted": true,
+    "training_run": false
+  },
+  "candidate_source": {
+    "candidate_dpo_pairs": 1165,
+    "candidate_group_counts": {
+      "confirmation_boundary_overlay": 20,
+      "core_family_delta": 118
+    },
+    "candidate_seed": "data/public-samples/scaled_public_sample_seed_candidates.jsonl",
+    "candidate_seed_rows": 138,
+    "candidate_sft_rows": 414,
+    "candidate_source_mode": "scaled_public_sample_candidate_seed",
+    "dpo_rejection_deltas": {
+      "blocked_payment_action_drift": 0,
+      "clarify_action_drift": 33,
+      "decomposed_search_slots": 0,
+      "extract_extra_particle_wording": 0,
+      "extract_generic_price_wording": 0,
+      "extract_listed_price_wording": 0,
+      "extract_query_slot": 25,
+      "extract_search_fallback": 25,
+      "form_confirmation_drift": 23,
+      "malformed_schema": 138,
+      "missing_confirmation": 76,
+      "missing_slot": 138,
+      "navigate_canonical_url_drift": 17,
+      "underspecified_request": 138,
+      "unsafe_allowance": 138,
+      "wrong_route": 138,
+      "wrong_slot": 138,
+      "wrong_task_type": 138
+    },
+    "family_counts": {
+      "blocked_payment": 20,
+      "clarify": 33,
+      "confirmation_boundary": 20,
+      "extract": 25,
+      "form_fill": 3,
+      "navigation": 17,
+      "search": 20
+    },
+    "formal_source_mode": "scaled_public_sample_formal_public_seed",
+    "seed_split_counts": {
+      "dev": 46,
+      "test": 46,
+      "train": 46
+    }
+  },
+  "claims": {
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "held_out_generalization_recovered": false,
+    "held_out_recovery_claim": false,
+    "live_browser_benchmark_claim": false,
+    "model_quality_claim": false,
+    "model_recovery_claim": false,
+    "private_corpus_generalization_claim": false,
+    "production_readiness_claim": false,
+    "public_full_corpus_release_claim": false,
+    "safety_improvement_claim": false,
+    "semantic_equivalence_primary_metric": false,
+    "soft_slot_f1_primary_metric": false,
+    "strict_contract_exact_match_primary_metric": true,
+    "strict_slot_f1_primary_metric": true
+  },
+  "comparison_boundary": {
+    "changed": true,
+    "new_manifest_id": "public-sample-20260617T152259Z",
+    "old_metrics_directly_comparable": false,
+    "previous_manifest_id": "public-sample-20260617T045941Z",
+    "warning": "formal public sample boundary changed; old metrics are not directly comparable"
+  },
+  "diagnostic_artifacts": {
+    "manifest": "reports/public-sample/scaled-public-sample-merge/manifest.json",
+    "markdown": "reports/public-sample/scaled-public-sample-merge/scaled_public_sample_public_sample_merge.md",
+    "merge": "reports/public-sample/scaled-public-sample-merge/scaled_public_sample_public_sample_merge.json"
+  },
+  "evidence_kind": "scaled_public_sample_public_sample_merge",
+  "execution_scope": {
+    "a100_execution": false,
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "dpo_artifacts_rebuilt": true,
+    "dpo_run": false,
+    "evaluator_metric_change": false,
+    "evaluator_relaxation": false,
+    "formal_public_sample_modified": true,
+    "grpo_run": false,
+    "live_browser_benchmark": false,
+    "manifest_rebuilt": true,
+    "prediction_repair": false,
+    "prediction_replacement": false,
+    "prediction_run": false,
+    "private_corpus_publication": false,
+    "prompt_change": false,
+    "seed_traces_modified": true,
+    "semantic_equivalence_scoring": false,
+    "sft_artifacts_rebuilt": true,
+    "sft_run": false,
+    "slot_normalization": false,
+    "training_run": false
+  },
+  "formal_public_sample_counts": {
+    "dpo_pairs": 2046,
+    "seed_rows": 240,
+    "sft_rows": 675
+  },
+  "formal_public_sample_split_counts": {
+    "dev": 207,
+    "test": 207,
+    "train": 261
+  },
+  "generated_at": "2026-06-17T15:22:59.199531+00:00",
+  "merge_status": "formal_public_sample_rebuilt",
+  "metric_authority": {
+    "contract_evaluation_ladder": "authoritative",
+    "contract_exact_match": "authoritative_strict_metric",
+    "slot_f1": "authoritative_strict_metric",
+    "slot_f1_soft": "diagnostic_only_not_primary"
+  },
+  "pre_merge_public_sample_counts": {
+    "dpo_pairs": 881,
+    "seed_rows": 102,
+    "sft_rows": 261
+  },
+  "pre_merge_public_sample_split_counts": {
+    "dev": 69,
+    "test": 69,
+    "train": 123
+  },
+  "validation": {
+    "counts": {
+      "dpo_pairs": 2046,
+      "sft_rows": 675
+    },
+    "failures": [],
+    "ok": true
+  }
+}
