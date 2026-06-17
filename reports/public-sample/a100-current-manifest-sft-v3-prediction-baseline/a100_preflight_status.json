@@ -1,0 +1,20 @@
+{
+  "a100_ssh_status": "ok",
+  "adapter_status": "available",
+  "artifact_policy": {
+    "checkpoints_or_adapters_copied_to_git": false,
+    "host_details_omitted": true,
+    "private_overrides_copied_to_git": false,
+    "private_paths_omitted": true,
+    "raw_logs_copied_to_git": false,
+    "ssh_details_omitted": true
+  },
+  "dataset_manifest_id": "public-sample-20260616T165835Z",
+  "generated_at": "2026-06-17T02:16:01.731065+00:00",
+  "gpu_status": "idle_gpu_available",
+  "notes": "Fresh A100 preflight selected an idle GPU and verified that the private SFT v3 adapter was available. Private paths, host details, GPU UUIDs, process IDs, and logs are omitted from committed evidence.",
+  "selected_gpu_index": "3",
+  "selected_gpu_memory_used_mb_at_preflight": 7,
+  "source_adapter_runtime": "a100-form-fill-remediation-sft-v3",
+  "status": "ok"
+}

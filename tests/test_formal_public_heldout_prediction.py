@@ -143,6 +143,29 @@ def test_formal_public_heldout_prediction_report_records_boundary_changed_semant
     assert scan_paths([paths["json"], paths["markdown"], paths["manifest"]]).ok is True
 
 
+def test_formal_public_heldout_prediction_report_records_source_adapter_runtime(
+    tmp_path: Path,
+) -> None:
+    paths = write_formal_public_heldout_prediction_report(
+        public_manifest=read_json(PUBLIC_SAMPLE_MANIFEST),
+        output_dir=tmp_path / "current-manifest-sft-v3-baseline",
+        run_status="blocked",
+        blocked_reason="private_adapter_not_confirmed",
+        source_adapter_runtime="a100-form-fill-remediation-sft-v3",
+        leak_scan_result={"ok": True, "findings": []},
+    )
+
+    evidence = read_json(paths["json"])
+    manifest = read_json(paths["manifest"])
+    markdown = paths["markdown"].read_text(encoding="utf-8")
+
+    assert evidence["source_adapter_runtime"] == "a100-form-fill-remediation-sft-v3"
+    assert manifest["source_adapter_runtime"] == "a100-form-fill-remediation-sft-v3"
+    assert "a100-form-fill-remediation-sft-v3" in markdown
+    assert "a100-merged-slot-value-heldout-eval" not in markdown
+    assert scan_paths([paths["json"], paths["markdown"], paths["manifest"]]).ok is True
+
+
 def test_committed_post_confirmation_marker_merge_evidence_is_blocked_fail_closed() -> None:
     evidence_dir = (
         REPO_ROOT
@@ -186,6 +209,61 @@ def test_committed_post_confirmation_marker_merge_evidence_is_blocked_fail_close
     assert phase_leak_scan["ok"] is True
     assert final_phase_leak_scan["ok"] is True
     assert "No model-quality metrics" in report
+    assert scan_paths([evidence_dir]).ok is True
+
+
+def test_committed_current_manifest_sft_v3_prediction_baseline_is_observed_without_recovery_claim() -> None:
+    evidence_dir = (
+        REPO_ROOT
+        / "reports"
+        / "public-sample"
+        / "a100-current-manifest-sft-v3-prediction-baseline"
+    )
+    evidence = read_json(evidence_dir / "formal_public_heldout_prediction.json")
+    manifest = read_json(evidence_dir / "manifest.json")
+    preflight = read_json(evidence_dir / "a100_preflight_status.json")
+    leak_scan = read_json(evidence_dir / "leak_scan_result.json")
+    report = (evidence_dir / "report.md").read_text(encoding="utf-8")
+
+    assert evidence["run_status"] == "observed"
+    assert evidence["dataset_manifest_id"] == "public-sample-20260616T165835Z"
+    assert evidence["source_adapter_runtime"] == "a100-form-fill-remediation-sft-v3"
+    assert evidence["formal_public_sample_counts"] == {"seed_rows": 100, "sft_rows": 256, "dpo_pairs": 864}
+    assert evidence["formal_public_sample_split_counts"] == {"train": 118, "dev": 69, "test": 69}
+    assert evidence["overall_interpretation"] == "formal_public_heldout_partial_signal"
+
+    dev = evidence["split_results"]["dev"]
+    test = evidence["split_results"]["test"]
+    assert dev["prediction_count"] == 69
+    assert test["prediction_count"] == 69
+    assert dev["contract_exact_match"] == pytest.approx(0.463768115942029)
+    assert dev["slot_f1"] == pytest.approx(0.5652173913043478)
+    assert dev["safety_recall"] == pytest.approx(0.5555555555555556)
+    assert test["contract_exact_match"] == pytest.approx(0.34782608695652173)
+    assert test["slot_f1"] == pytest.approx(0.49758454106280187)
+    assert test["safety_recall"] == pytest.approx(1.0)
+
+    boundary = evidence["comparison_boundary"]
+    assert boundary["current_dataset_manifest_id"] == "public-sample-20260616T165835Z"
+    assert boundary["prior_dataset_manifest_id"] == "public-sample-20260616T074315Z"
+    assert boundary["direct_improvement_regression_comparison_valid"] is False
+
+    claims = evidence["claims"]
+    assert claims["prediction_only"] is True
+    assert claims["training_performed"] is False
+    assert claims["held_out_generalization_recovered"] is False
+    assert claims["model_recovery_claim"] is False
+    assert claims["adapter_release"] is False
+    assert claims["checkpoint_release"] is False
+    assert claims["soft_slot_f1_primary_metric"] is False
+
+    assert manifest["source_adapter_runtime"] == "a100-form-fill-remediation-sft-v3"
+    assert preflight["status"] == "ok"
+    assert preflight["artifact_policy"]["private_paths_omitted"] is True
+    assert leak_scan["ok"] is True
+    assert leak_scan["findings"] == []
+    assert "public-sample-20260616T165835Z" in report
+    assert "not a clean direct improvement/regression comparison" in report
     assert scan_paths([evidence_dir]).ok is True
 
 

@@ -1,0 +1,132 @@
+{
+  "artifact_policy": {
+    "checkpoints_or_adapters_copied_to_git": false,
+    "host_details_omitted": true,
+    "private_corpus_rows_omitted": true,
+    "private_overrides_copied_to_git": false,
+    "private_paths_omitted": true,
+    "raw_logs_copied_to_git": false,
+    "remote_caches_copied_to_git": false,
+    "ssh_details_omitted": true
+  },
+  "blocked_reason": null,
+  "claims": {
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "data_changed": false,
+    "evaluator_relaxation": false,
+    "held_out_generalization_recovered": false,
+    "live_browser_benchmark_claim": false,
+    "model_recovery_claim": false,
+    "prediction_only": true,
+    "prediction_repair_or_replacement": false,
+    "prediction_repair_or_rescore": false,
+    "private_corpus_generalization_claim": false,
+    "production_readiness_claim": false,
+    "public_full_corpus_release_claim": false,
+    "semantic_equivalence_primary_metric": false,
+    "soft_slot_f1_primary_metric": false,
+    "training_performed": false
+  },
+  "comparison_boundary": {
+    "comparison_note": "The blocked-payment repair materialization added train-only rows; dev/test row counts remain 69 each, so unchanged metrics are expected but must still be bound to the current manifest.",
+    "current_dataset_manifest_id": "public-sample-20260616T165835Z",
+    "direct_improvement_regression_comparison_valid": false,
+    "prior_blocked_evidence_dir": "reports/public-sample/a100-form-fill-remediation-sft-v3",
+    "prior_dataset_manifest_id": "public-sample-20260616T074315Z",
+    "prior_evidence_dir": "reports/public-sample/a100-form-fill-remediation-sft-v3-retry-after-ssh-recovery",
+    "reason": "formal_public_sample_boundary_changed_after_blocked_payment_safety_repair_merge"
+  },
+  "dataset_manifest_id": "public-sample-20260616T165835Z",
+  "diagnostic_artifacts": {
+    "a100_preflight_status": "reports/public-sample/a100-current-manifest-sft-v3-prediction-baseline/a100_preflight_status.json",
+    "evidence": "reports/public-sample/a100-current-manifest-sft-v3-prediction-baseline/formal_public_heldout_prediction.json",
+    "final_phase_leak_scan": "reports/public-sample/a100-current-manifest-sft-v3-prediction-baseline/final_phase_leak_scan_result.json",
+    "leak_scan": "reports/public-sample/a100-current-manifest-sft-v3-prediction-baseline/leak_scan_result.json",
+    "manifest": "reports/public-sample/a100-current-manifest-sft-v3-prediction-baseline/manifest.json",
+    "phase_validation_leak_scan": "reports/public-sample/a100-current-manifest-sft-v3-prediction-baseline/phase_validation_leak_scan_result.json",
+    "report": "reports/public-sample/a100-current-manifest-sft-v3-prediction-baseline/report.md"
+  },
+  "evidence_kind": "a100_formal_public_heldout_prediction",
+  "formal_public_sample_counts": {
+    "dpo_pairs": 864,
+    "seed_rows": 100,
+    "sft_rows": 256
+  },
+  "formal_public_sample_split_counts": {
+    "dev": 69,
+    "test": 69,
+    "train": 118
+  },
+  "generated_at": "2026-06-17T02:16:01.731713+00:00",
+  "overall_interpretation": "formal_public_heldout_partial_signal",
+  "prediction_splits": [
+    "dev",
+    "test"
+  ],
+  "primary_evidence_splits": [
+    "dev",
+    "test"
+  ],
+  "run_status": "observed",
+  "source_adapter_runtime": "a100-form-fill-remediation-sft-v3",
+  "split_results": {
+    "dev": {
+      "artifact_paths": {
+        "metrics": "reports/public-sample/a100-current-manifest-sft-v3-prediction-baseline/dev/metrics.json",
+        "prediction_metadata": "reports/public-sample/a100-current-manifest-sft-v3-prediction-baseline/dev/prediction_metadata.json"
+      },
+      "confirmation_accuracy": 0.9710144927536232,
+      "contract_exact_match": 0.463768115942029,
+      "failure_slice_counts": {
+        "confirmation": 2,
+        "route": 9,
+        "safety": 4,
+        "schema": 0,
+        "slot": 30,
+        "task_type": 9,
+        "unknown": 0
+      },
+      "json_valid_rate": 1.0,
+      "prediction_count": 69,
+      "prediction_split": "dev",
+      "residual_row_count": 37,
+      "route_accuracy": 0.8695652173913043,
+      "safety_precision": 1.0,
+      "safety_recall": 0.5555555555555556,
+      "schema_invalid_prediction_count": 0,
+      "slot_f1": 0.5652173913043478,
+      "slot_f1_soft": 0.8157448486641034,
+      "task_type_accuracy": 0.8695652173913043
+    },
+    "test": {
+      "artifact_paths": {
+        "metrics": "reports/public-sample/a100-current-manifest-sft-v3-prediction-baseline/test/metrics.json",
+        "prediction_metadata": "reports/public-sample/a100-current-manifest-sft-v3-prediction-baseline/test/prediction_metadata.json"
+      },
+      "confirmation_accuracy": 0.9855072463768116,
+      "contract_exact_match": 0.34782608695652173,
+      "failure_slice_counts": {
+        "confirmation": 1,
+        "route": 5,
+        "safety": 1,
+        "schema": 0,
+        "slot": 38,
+        "task_type": 5,
+        "unknown": 0
+      },
+      "json_valid_rate": 1.0,
+      "prediction_count": 69,
+      "prediction_split": "test",
+      "residual_row_count": 45,
+      "route_accuracy": 0.927536231884058,
+      "safety_precision": 0.9230769230769231,
+      "safety_recall": 1.0,
+      "schema_invalid_prediction_count": 0,
+      "slot_f1": 0.49758454106280187,
+      "slot_f1_soft": 0.7645681076840498,
+      "task_type_accuracy": 0.927536231884058
+    }
+  },
+  "training_status": "prediction_only_no_training"
+}

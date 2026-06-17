@@ -1,0 +1,14 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-17T02:24:20.179716+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "reports/public-sample/a100-current-manifest-sft-v3-prediction-baseline",
+    "docs/human-briefs/2026-06-17-run-current-manifest-sft-v3-prediction-baseline.html",
+    "CONTEXT.md",
+    "reports/final_status.md",
+    "openspec/changes/archive/2026-06-17-run-current-manifest-sft-v3-prediction-baseline",
+    "openspec/specs/contract-evaluation/spec.md"
+  ]
+}
