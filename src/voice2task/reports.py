@@ -5087,6 +5087,257 @@ def write_form_fill_remediation_sft_v3_readiness_report(
     return {"json": json_path, "markdown": markdown_path, "manifest": manifest_path}
 
 
+def write_current_train_split_sft_retry_readiness_report(
+    *,
+    public_manifest: dict[str, Any],
+    current_baseline_evidence: dict[str, Any],
+    public_merge_evidence: dict[str, Any],
+    dry_run_metadata: dict[str, Any],
+    sft_config: dict[str, Any],
+    dev_prediction_config: dict[str, Any],
+    test_prediction_config: dict[str, Any],
+    output_dir: Path,
+    dry_run_metadata_path: Path,
+    public_manifest_path: Path,
+    current_baseline_evidence_path: Path,
+    public_merge_evidence_path: Path,
+    sft_config_path: Path,
+    dev_prediction_config_path: Path,
+    test_prediction_config_path: Path,
+    title: str = "Voice2Task current train split SFT retry readiness",
+) -> dict[str, Path]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    json_path = output_dir / "current_train_split_sft_retry_readiness.json"
+    markdown_path = output_dir / "current_train_split_sft_retry_readiness.md"
+    manifest_path = output_dir / "manifest.json"
+
+    safe_manifest = _sanitize_report_value(public_manifest)
+    safe_baseline = _sanitize_report_value(current_baseline_evidence)
+    safe_merge = _sanitize_report_value(public_merge_evidence)
+    safe_dry_run = _sanitize_report_value(dry_run_metadata)
+    safe_sft_config = _sanitize_report_value(sft_config)
+    safe_dev_config = _sanitize_report_value(dev_prediction_config)
+    safe_test_config = _sanitize_report_value(test_prediction_config)
+
+    for name, value in {
+        "public manifest": safe_manifest,
+        "current baseline evidence": safe_baseline,
+        "public merge evidence": safe_merge,
+        "dry-run metadata": safe_dry_run,
+        "SFT config": safe_sft_config,
+        "dev prediction config": safe_dev_config,
+        "test prediction config": safe_test_config,
+    }.items():
+        if not isinstance(value, dict):
+            raise AssertionError(f"{name} must be a mapping")
+
+    source_summary = safe_manifest.get("source_summary", {})
+    if not isinstance(source_summary, dict):
+        source_summary = {}
+    split_counts = safe_manifest.get("split_counts", {})
+    if not isinstance(split_counts, dict):
+        split_counts = {}
+    merge_summary = safe_merge.get("summary", {})
+    if not isinstance(merge_summary, dict):
+        merge_summary = {}
+
+    manifest_id = str(safe_manifest.get("manifest_id", "unknown"))
+    train_split_rows = int(split_counts.get("train", 0))
+    training_rows_used = int(safe_dry_run.get("training_rows_used", 0))
+    form_fill_repair_rows = int(source_summary.get("form_fill_remediation_candidate_sft_rows", 0)) + int(
+        source_summary.get("form_fill_confirmation_marker_extension_candidate_sft_rows", 0)
+    )
+    blocked_payment_repair_rows = int(source_summary.get("blocked_payment_safety_repair_candidate_sft_rows", 0))
+    baseline_manifest_id = str(safe_baseline.get("dataset_manifest_id", "unknown"))
+    baseline_interpretation = str(safe_baseline.get("overall_interpretation", "unknown"))
+    retry_runtime = str(safe_sft_config.get("reference_runtime", "unknown"))
+    dev_runtime = str(safe_dev_config.get("source_adapter_runtime", "unknown"))
+    test_runtime = str(safe_test_config.get("source_adapter_runtime", "unknown"))
+    config_manifest_id = str(safe_sft_config.get("dataset_manifest_id", "unknown"))
+    dry_run_manifest_id = str(safe_dry_run.get("dataset_manifest_id", "unknown"))
+    previous_runtime = "a100-form-fill-remediation-sft-v3"
+    runtime_is_distinct = retry_runtime not in {"unknown", previous_runtime}
+    dry_run_ok = (
+        dry_run_manifest_id == manifest_id
+        and config_manifest_id == manifest_id
+        and str(safe_dry_run.get("training_split")) == "train"
+        and training_rows_used == train_split_rows
+        and form_fill_repair_rows == 21
+        and blocked_payment_repair_rows == 4
+        and runtime_is_distinct
+        and dev_runtime == retry_runtime
+        and test_runtime == retry_runtime
+    )
+    readiness_status = (
+        "ready_for_bounded_a100_sft_retry_phase" if dry_run_ok else "blocked_readiness_metadata_mismatch"
+    )
+    current_metrics = _public_metric_summary(safe_baseline)
+    summary = {
+        "dataset_manifest_id": manifest_id,
+        "current_baseline_dataset_manifest_id": baseline_manifest_id,
+        "current_baseline_interpretation": baseline_interpretation,
+        "formal_public_sample_counts": safe_manifest.get("counts", {}),
+        "formal_public_sample_split_counts": split_counts,
+        "training_rows_used": training_rows_used,
+        "train_split_rows": train_split_rows,
+        "form_fill_repair_train_rows": form_fill_repair_rows,
+        "blocked_payment_repair_train_rows": blocked_payment_repair_rows,
+        "public_merge_manifest_id": merge_summary.get("dataset_manifest_id", manifest_id),
+        "future_retry_runtime": retry_runtime,
+        "previous_sft_v3_runtime": previous_runtime,
+        "readiness_status": readiness_status,
+        "recommended_next_change": "run-a100-current-train-split-sft-retry",
+        "recommended_next_step": "open_bounded_run-a100-current-train-split-sft-retry_before_training_execution",
+    }
+    execution_scope = {
+        "readiness_only": True,
+        "training_run": False,
+        "prediction_run": False,
+        "dataset_mutation": False,
+        "dpo_run": False,
+        "grpo_run": False,
+        "prompt_change": False,
+        "evaluator_metric_change": False,
+        "prediction_repair_or_replacement": False,
+        "semantic_equivalence_scoring": False,
+        "slot_normalization": False,
+        "a100_execution": False,
+    }
+    claims = {
+        "model_recovery_claim": False,
+        "held_out_generalization_recovered": False,
+        "safety_improvement_claim": False,
+        "private_corpus_generalization_claim": False,
+        "checkpoint_release": False,
+        "adapter_release": False,
+        "production_readiness_claim": False,
+        "public_full_corpus_release": False,
+        "live_browser_benchmark_claim": False,
+        "soft_slot_f1_primary_metric": False,
+    }
+    artifact_files = {
+        "dry_run_metadata": dry_run_metadata_path.as_posix(),
+        "public_manifest": public_manifest_path.as_posix(),
+        "current_baseline_evidence": current_baseline_evidence_path.as_posix(),
+        "public_merge_evidence": public_merge_evidence_path.as_posix(),
+        "sft_config": sft_config_path.as_posix(),
+        "dev_prediction_config": dev_prediction_config_path.as_posix(),
+        "test_prediction_config": test_prediction_config_path.as_posix(),
+        "evidence_json": json_path.as_posix(),
+        "evidence_markdown": markdown_path.as_posix(),
+        "manifest": manifest_path.as_posix(),
+    }
+    safe_artifact_files = _sanitize_report_value(artifact_files)
+    limitations = [
+        "readiness-only evidence is not model-quality evidence",
+        "future A100 SFT retry still requires a separate bounded OpenSpec phase and fresh GPU preflight",
+        "the 118-row train split is small and may overfit",
+        "strict contract_exact_match and strict slot_f1 remain the headline metrics",
+        "slot_f1_soft remains diagnostic-only",
+    ]
+    evidence = {
+        "evidence_kind": "current_train_split_sft_retry_readiness",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "summary": summary,
+        "current_strict_metrics": current_metrics,
+        "public_merge_summary": merge_summary,
+        "dry_run_metadata": safe_dry_run,
+        "sft_config": safe_sft_config,
+        "prediction_configs": {"dev": safe_dev_config, "test": safe_test_config},
+        "execution_scope": execution_scope,
+        "claims": claims,
+        "artifact_files": safe_artifact_files,
+        "limitations": limitations,
+    }
+    safe_evidence = _sanitize_report_value(evidence)
+    if not isinstance(safe_evidence, dict):
+        raise AssertionError("readiness evidence must be a mapping")
+    write_json(json_path, safe_evidence)
+
+    manifest = {
+        "evidence_kind": "current_train_split_sft_retry_readiness",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "summary": summary,
+        "execution_scope": execution_scope,
+        "claims": claims,
+        "source_manifest_id": manifest_id,
+        "source_baseline_manifest_id": baseline_manifest_id,
+        "artifact_policy": {
+            "readiness_only": True,
+            "training_run": False,
+            "prediction_run": False,
+            "dataset_mutation": False,
+            "raw_logs_copied_to_git": False,
+            "checkpoints_or_adapters_copied_to_git": False,
+            "private_overrides_copied_to_git": False,
+            "private_paths_omitted": True,
+            "host_details_omitted": True,
+            "ssh_details_omitted": True,
+        },
+        "diagnostic_artifacts": safe_artifact_files,
+    }
+    write_json(manifest_path, _sanitize_report_value(manifest))
+
+    lines = [
+        f"# {title}",
+        "",
+        (
+            "This is readiness-only evidence for a later bounded current-train-split SFT retry. "
+            "It does not train, rerun predictions, mutate data, repair predictions, change prompts, "
+            "or relax evaluator metrics."
+        ),
+        "",
+        "## Boundary",
+        "",
+        "- No A100 SFT/DPO/GRPO training was launched.",
+        "- No held-out prediction rerun was launched.",
+        "- No public sample data, prompt, or evaluator metric was changed.",
+        "- No checkpoint, adapter, safety-improvement, production-readiness, private-corpus, "
+        "or live-browser claim is made.",
+        "- strict `contract_exact_match` and strict `slot_f1` remain authoritative.",
+        "- `slot_f1_soft` remains diagnostic-only.",
+        "",
+        "## Summary",
+        "",
+        f"- Manifest: `{summary['dataset_manifest_id']}`",
+        f"- Current baseline interpretation: `{summary['current_baseline_interpretation']}`",
+        f"- Train split rows selected by dry-run: `{summary['training_rows_used']}`",
+        f"- Form-fill repair train rows: `{summary['form_fill_repair_train_rows']}`",
+        f"- Blocked-payment repair train rows: `{summary['blocked_payment_repair_train_rows']}`",
+        f"- Future retry runtime: `{summary['future_retry_runtime']}`",
+        f"- Readiness status: `{summary['readiness_status']}`",
+        f"- Recommended next change: `{summary['recommended_next_change']}`",
+        "",
+        "## Current Strict Metrics Input",
+        "",
+    ]
+    for split, metrics in sorted(current_metrics.items()):
+        lines.append(f"- `{split}`: `{metrics}`")
+    lines.extend(
+        [
+            "",
+            "## Evidence Inputs",
+            "",
+            f"- Dry-run metadata: `{safe_artifact_files['dry_run_metadata']}`",
+            f"- Current baseline evidence: `{safe_artifact_files['current_baseline_evidence']}`",
+            f"- Public merge evidence: `{safe_artifact_files['public_merge_evidence']}`",
+            f"- SFT config: `{safe_artifact_files['sft_config']}`",
+            f"- Dev prediction config: `{safe_artifact_files['dev_prediction_config']}`",
+            f"- Test prediction config: `{safe_artifact_files['test_prediction_config']}`",
+            "",
+            "## Recommended Next Step",
+            "",
+            (
+                "Open `run-a100-current-train-split-sft-retry` as a separate bounded phase. "
+                "That phase must perform fresh A100 GPU preflight, use private overrides outside git, "
+                "keep all adapters/logs/checkpoints private, and publish only sanitized strict held-out evidence."
+            ),
+        ]
+    )
+    markdown_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    return {"json": json_path, "markdown": markdown_path, "manifest": manifest_path}
+
+
 def write_slot_value_candidate_sft_probe_report(
     *,
     candidate_manifest: dict[str, Any],

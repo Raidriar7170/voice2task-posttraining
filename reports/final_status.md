@@ -145,7 +145,16 @@ artifacts；仍然不能从 candidate design 本身宣称 safety improvement 或
 - 指标与 prior SFT v3 retry 一致，因为 blocked-payment repair 新增 rows 只进入 train split；
 - 该阶段没有训练、没有 prediction repair、没有改 evaluator、没有发布 adapter/checkpoint，也没有 claim safety improvement 或 model recovery。
 
-下一步如果继续，应做 current 118-row train split 的训练 readiness / retry-design，再决定是否启动一个新的 bounded SFT retry。不要直接宣称 blocked-payment repair 已改善模型，也不要跳过 readiness 直接把新数据效果归因到现有 adapter。
+随后已完成 current 118-row train split 的 SFT retry readiness / retry-design：
+
+- evidence: `reports/public-sample/current-train-split-sft-retry-readiness/current_train_split_sft_retry_readiness.md`
+- 本地 dry-run 选择全部 118 条 train rows；
+- train split 中包含 21 条 form-fill repair rows 和 4 条 blocked-payment repair rows；
+- 新增独立 future runtime label：`a100-current-train-split-sft-retry`；
+- readiness status: `ready_for_bounded_a100_sft_retry_phase`；
+- 该阶段没有训练、没有 prediction、没有改数据、没有改 prompt/evaluator、没有发布 adapter/checkpoint，也没有 claim safety improvement 或 model recovery。
+
+下一步如果继续，应打开独立的 `run-a100-current-train-split-sft-retry` phase：fresh A100 GPU preflight、private training、dev/test prediction、strict evaluation、public-safe evidence。不要直接把 readiness 证据当成模型改善。
 
 ## 主要证据链接
 
@@ -165,6 +174,7 @@ artifacts；仍然不能从 candidate design 本身宣称 safety improvement 或
 - Blocked-payment repair candidate design: `reports/public-sample/blocked-payment-safety-repair-candidate-design/blocked_payment_safety_repair_candidate_design.md`
 - Blocked-payment repair materialization: `reports/public-sample/blocked-payment-safety-repair-materialization/blocked_payment_safety_repair_materialization.md`
 - Blocked-payment repair public merge: `reports/public-sample/blocked-payment-safety-repair-public-sample-merge/blocked_payment_safety_repair_public_sample_merge.md`
+- Current train split SFT retry readiness: `reports/public-sample/current-train-split-sft-retry-readiness/current_train_split_sft_retry_readiness.md`
 - Context contract: `CONTEXT.md`
 - Human brief: `docs/human-briefs/2026-06-16-refresh-current-formal-heldout-residual-diagnosis.html`
 - Human brief (SFT v3 readiness): `docs/human-briefs/2026-06-16-assess-form-fill-remediation-sft-v3-readiness.html`
@@ -174,7 +184,8 @@ artifacts；仍然不能从 candidate design 本身宣称 safety improvement 或
 - Human brief (blocked-payment repair candidate design): `docs/human-briefs/2026-06-16-design-blocked-payment-safety-repair-candidates.html`
 - Human brief (blocked-payment repair materialization): `docs/human-briefs/2026-06-16-materialize-blocked-payment-safety-repair-candidates.html`
 - Human brief (current-manifest SFT v3 prediction baseline): `docs/human-briefs/2026-06-17-run-current-manifest-sft-v3-prediction-baseline.html`
+- Human brief (current train split SFT retry readiness): `docs/human-briefs/2026-06-17-assess-current-train-split-sft-retry-readiness.html`
 
 ## 当前交付状态
 
-可以作为阶段性交付收束：代码、public sample、OpenSpec archives、A100 prediction-only baseline、residual diagnosis / target selection、SFT v3 readiness、SFT v3 blocked preflight evidence、SFT v3 retry evidence、SFT v3 safety regression diagnosis、blocked-payment repair candidate design、blocked-payment repair materialization、current-manifest SFT v3 prediction-only baseline、Human Brief、最终状态说明都已经对齐到明确边界。下一步如果继续，应优先做 current 118-row train split 的训练 readiness / retry-design，而不是直接把新增 train rows 的效果归因到现有 adapter。
+可以作为阶段性交付收束：代码、public sample、OpenSpec archives、A100 prediction-only baseline、residual diagnosis / target selection、SFT v3 readiness、SFT v3 blocked preflight evidence、SFT v3 retry evidence、SFT v3 safety regression diagnosis、blocked-payment repair candidate design、blocked-payment repair materialization、current-manifest SFT v3 prediction-only baseline、current-train-split SFT retry readiness、Human Brief、最终状态说明都已经对齐到明确边界。下一步如果继续，应启动独立 bounded A100 SFT retry，而不是把 readiness 证据当成模型改善。

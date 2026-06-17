@@ -9,6 +9,7 @@ from voice2task.io import read_json
 from voice2task.leak_scan import scan_paths
 from voice2task.reports import (
     write_a100_merged_slot_value_adapter_restore_report,
+    write_current_train_split_sft_retry_readiness_report,
     write_form_fill_remediation_sft_v3_readiness_report,
     write_hardened_canonical_policy_rerun_report,
     write_merged_slot_value_heldout_eval_report,
@@ -88,6 +89,16 @@ def build_parser() -> argparse.ArgumentParser:
     form_fill_sft_v3.add_argument("--dev-prediction-config", type=Path, required=True)
     form_fill_sft_v3.add_argument("--test-prediction-config", type=Path, required=True)
     form_fill_sft_v3.add_argument("--output", type=Path, required=True)
+
+    current_retry = subcommands.add_parser("current-train-split-sft-retry-readiness")
+    current_retry.add_argument("--dry-run-metadata", type=Path, required=True)
+    current_retry.add_argument("--public-manifest", type=Path, required=True)
+    current_retry.add_argument("--current-baseline-evidence", type=Path, required=True)
+    current_retry.add_argument("--public-merge-evidence", type=Path, required=True)
+    current_retry.add_argument("--sft-config", type=Path, required=True)
+    current_retry.add_argument("--dev-prediction-config", type=Path, required=True)
+    current_retry.add_argument("--test-prediction-config", type=Path, required=True)
+    current_retry.add_argument("--output", type=Path, required=True)
 
     merged_eval = subcommands.add_parser("merged-slot-value-heldout-eval")
     merged_eval.add_argument("--public-manifest", type=Path, required=True)
@@ -273,6 +284,36 @@ def main(argv: list[str] | None = None) -> int:
             baseline_evidence_path=args.baseline_evidence,
             target_selection_path=args.target_selection,
             remediation_plan_path=args.remediation_plan,
+            sft_config_path=args.sft_config,
+            dev_prediction_config_path=args.dev_prediction_config,
+            test_prediction_config_path=args.test_prediction_config,
+        )
+        evidence = read_json(report_paths["json"])
+        print(
+            json.dumps(
+                {
+                    "ok": True,
+                    "paths": {key: value.as_posix() for key, value in report_paths.items()},
+                    "summary": evidence.get("summary", {}),
+                },
+                indent=2,
+            )
+        )
+        return 0
+    if args.command == "current-train-split-sft-retry-readiness":
+        report_paths = write_current_train_split_sft_retry_readiness_report(
+            public_manifest=read_json(args.public_manifest),
+            current_baseline_evidence=read_json(args.current_baseline_evidence),
+            public_merge_evidence=read_json(args.public_merge_evidence),
+            dry_run_metadata=read_json(args.dry_run_metadata),
+            sft_config=read_json(args.sft_config),
+            dev_prediction_config=read_json(args.dev_prediction_config),
+            test_prediction_config=read_json(args.test_prediction_config),
+            output_dir=args.output,
+            dry_run_metadata_path=args.dry_run_metadata,
+            public_manifest_path=args.public_manifest,
+            current_baseline_evidence_path=args.current_baseline_evidence,
+            public_merge_evidence_path=args.public_merge_evidence,
             sft_config_path=args.sft_config,
             dev_prediction_config_path=args.dev_prediction_config,
             test_prediction_config_path=args.test_prediction_config,

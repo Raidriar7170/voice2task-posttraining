@@ -1,0 +1,12 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-17T02:34:00.795630+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "reports/public-sample/current-train-split-sft-retry-readiness",
+    "configs/sft-a100-current-train-split-retry.json",
+    "configs/sft-a100-current-train-split-retry-dev-prediction.json",
+    "configs/sft-a100-current-train-split-retry-test-prediction.json"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-17T02:35:30.281399+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "reports/public-sample/current-train-split-sft-retry-readiness",
+    "configs/sft-a100-current-train-split-retry.json",
+    "configs/sft-a100-current-train-split-retry-dev-prediction.json",
+    "configs/sft-a100-current-train-split-retry-test-prediction.json",
+    "docs/human-briefs/2026-06-17-assess-current-train-split-sft-retry-readiness.html",
+    "CONTEXT.md",
+    "reports/final_status.md",
+    "openspec/changes/assess-current-train-split-sft-retry-readiness"
+  ]
+}

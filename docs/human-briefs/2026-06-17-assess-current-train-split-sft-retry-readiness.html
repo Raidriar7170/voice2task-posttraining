@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Voice2Task Current Train Split SFT Retry Readiness 简报</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 32px; line-height: 1.6; color: #17202a; }
+    main { max-width: 960px; margin: 0 auto; }
+    h1 { font-size: 28px; margin-bottom: 8px; }
+    h2 { font-size: 18px; margin-top: 28px; border-bottom: 1px solid #d8dee4; padding-bottom: 4px; }
+    code { background: #f6f8fa; padding: 2px 5px; border-radius: 4px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 12px; }
+    th, td { border: 1px solid #d8dee4; padding: 8px; text-align: right; }
+    th:first-child, td:first-child { text-align: left; }
+    .status { display: inline-block; padding: 4px 8px; border-radius: 6px; background: #ecfdf5; color: #166534; font-weight: 600; }
+    .warn { color: #9a3412; font-weight: 600; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Voice2Task Current Train Split SFT Retry Readiness 简报</h1>
+  <p><span class="status">readiness-only, ready</span></p>
+  <p><strong>一句话结论：</strong>当前 <code>118</code> 行 train split 已经通过 dry-run readiness：包含 <code>21</code> 条 form-fill repair rows 和 <code>4</code> 条 blocked-payment repair rows，可以进入一个新的 bounded A100 SFT retry phase。</p>
+
+  <h2>本阶段做了什么</h2>
+  <ul>
+    <li>新增独立 runtime label 的 public-safe SFT retry 配置：<code>a100-current-train-split-sft-retry</code>。</li>
+    <li>本地 dry-run 当前 formal public train split，确认训练输入为 <code>118</code> 行。</li>
+    <li>生成 readiness-only evidence，不训练、不预测、不改 evaluator、不发布 adapter/checkpoint。</li>
+  </ul>
+
+  <h2>Readiness 证据</h2>
+  <table>
+    <thead>
+      <tr><th>项目</th><th>值</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>manifest</td><td><code>public-sample-20260616T165835Z</code></td></tr>
+      <tr><td>train split rows</td><td>118</td></tr>
+      <tr><td>form-fill repair rows</td><td>21</td></tr>
+      <tr><td>blocked-payment repair rows</td><td>4</td></tr>
+      <tr><td>readiness status</td><td><code>ready_for_bounded_a100_sft_retry_phase</code></td></tr>
+    </tbody>
+  </table>
+
+  <h2>当前指标输入</h2>
+  <table>
+    <thead>
+      <tr><th>split</th><th>exact</th><th>strict slot_f1</th><th>route</th><th>safety_recall</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>dev</td><td>0.4638</td><td>0.5652</td><td>0.8696</td><td class="warn">0.5556</td></tr>
+      <tr><td>test</td><td>0.3478</td><td>0.4976</td><td>0.9275</td><td>1.0000</td></tr>
+    </tbody>
+  </table>
+
+  <h2>关键文件</h2>
+  <ul>
+    <li><code>reports/public-sample/current-train-split-sft-retry-readiness/</code></li>
+    <li><code>configs/sft-a100-current-train-split-retry.json</code></li>
+    <li><code>configs/sft-a100-current-train-split-retry-dev-prediction.json</code></li>
+    <li><code>configs/sft-a100-current-train-split-retry-test-prediction.json</code></li>
+    <li><code>openspec/changes/assess-current-train-split-sft-retry-readiness/</code></li>
+  </ul>
+
+  <h2>边界</h2>
+  <ul>
+    <li>这不是训练，也不是模型效果提升证据。</li>
+    <li>这不证明 blocked-payment repair rows 已改善 safety recall。</li>
+    <li>下一阶段仍需 fresh A100 GPU preflight，并且 adapter/checkpoint/logs 继续保持 private。</li>
+  </ul>
+
+  <h2>推荐下一步</h2>
+  <p>打开 <code>run-a100-current-train-split-sft-retry</code>，在 A100 上训练一个新的 private adapter，然后只提交 public-safe dev/test strict evaluation evidence。</p>
+</main>
+</body>
+</html>

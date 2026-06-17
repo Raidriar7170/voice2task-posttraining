@@ -130,6 +130,19 @@ bounded phase should be a training-readiness or retry-design step for the
 current 118-row train split, with special attention to blocked-payment safety
 false negatives.
 
+The current-train-split SFT retry readiness step is now complete under
+`reports/public-sample/current-train-split-sft-retry-readiness/`. It is
+readiness-only evidence: no A100 training, prediction generation, dataset
+mutation, prompt change, evaluator change, adapter/checkpoint release, safety
+improvement claim, or model recovery claim. The dry-run selected all `118`
+train rows and confirmed that the current train split includes `21` form-fill
+repair rows plus `4` blocked-payment repair rows. It also creates a distinct
+future retry runtime, `a100-current-train-split-sft-retry`, so a later training
+attempt does not overwrite or blur the prior `a100-form-fill-remediation-sft-v3`
+adapter evidence. If the project continues, the next bounded phase should be
+`run-a100-current-train-split-sft-retry`: fresh A100 GPU preflight, private
+training, dev/test prediction, strict evaluation, and public-safe evidence only.
+
 ## Language
 
 **Voice2Task Post-Training**:
