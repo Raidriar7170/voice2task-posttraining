@@ -5338,6 +5338,241 @@ def write_current_train_split_sft_retry_readiness_report(
     return {"json": json_path, "markdown": markdown_path, "manifest": manifest_path}
 
 
+def _baseline_split_results(baseline_evidence: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    split_results = baseline_evidence.get("split_results")
+    if not isinstance(split_results, dict):
+        return {}
+    return {
+        split: result
+        for split in ("dev", "test")
+        if isinstance((result := split_results.get(split)), dict)
+    }
+
+
+def _split_metric_delta(
+    split_results: dict[str, dict[str, Any]],
+    baseline_results: dict[str, dict[str, Any]],
+    metric_name: str,
+) -> dict[str, float]:
+    return {
+        split: float(split_results[split].get(metric_name, 0.0))
+        - float((baseline_results.get(split) or {}).get(metric_name, 0.0))
+        for split in ("dev", "test")
+    }
+
+
+def _current_train_split_sft_retry_interpretation(
+    split_results: dict[str, dict[str, Any]],
+    exact_delta: dict[str, float],
+    safety_delta: dict[str, float],
+) -> str:
+    heldout_exact = {split: float(split_results[split]["contract_exact_match"]) for split in ("dev", "test")}
+    if all(value >= 1.0 for value in heldout_exact.values()):
+        return "current_train_split_sft_retry_strict_exact_recovered"
+    if any(value < 0.0 for value in safety_delta.values()):
+        return "current_train_split_sft_retry_safety_regressed"
+    if any(value > 0.0 for value in exact_delta.values()):
+        return "current_train_split_sft_retry_partial_signal"
+    return "current_train_split_sft_retry_no_strict_exact_recovery"
+
+
+def write_current_train_split_sft_retry_report(
+    *,
+    public_manifest: dict[str, Any],
+    current_baseline_evidence: dict[str, Any],
+    training_metadata: dict[str, Any],
+    metrics_by_split: dict[str, dict[str, Any]],
+    prediction_metadata_by_split: dict[str, dict[str, Any]],
+    output_dir: Path,
+    metrics_paths: dict[str, Path],
+    prediction_metadata_paths: dict[str, Path],
+    training_metadata_path: Path,
+    title: str = "Voice2Task current train split SFT retry",
+) -> dict[str, Path]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    json_path = output_dir / "current_train_split_sft_retry.json"
+    markdown_path = output_dir / "report.md"
+    manifest_path = output_dir / "manifest.json"
+
+    safe_training = _public_merged_training_metadata(training_metadata)
+    safe_baseline = _sanitize_report_value(current_baseline_evidence)
+    if not isinstance(safe_baseline, dict):
+        raise AssertionError("current baseline evidence must be a mapping")
+    split_results = {
+        split: _merged_split_result(
+            split=split,
+            metrics_payload=metrics_by_split[split],
+            prediction_metadata=prediction_metadata_by_split[split],
+            public_manifest=public_manifest,
+            metrics_path=metrics_paths[split],
+            prediction_metadata_path=prediction_metadata_paths[split],
+        )
+        for split in ("dev", "test")
+    }
+    baseline_results = _baseline_split_results(safe_baseline)
+    exact_delta = _split_metric_delta(split_results, baseline_results, "contract_exact_match")
+    slot_delta = _split_metric_delta(split_results, baseline_results, "slot_f1")
+    safety_delta = _split_metric_delta(split_results, baseline_results, "safety_recall")
+    interpretation = _current_train_split_sft_retry_interpretation(
+        split_results,
+        exact_delta,
+        safety_delta,
+    )
+    heldout_recovered = interpretation == "current_train_split_sft_retry_strict_exact_recovered"
+    training_rows_used = safe_training.get("training_rows_used")
+    evidence = {
+        "evidence_kind": "a100_current_train_split_sft_retry",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "run_status": "observed",
+        "base_model": _public_base_model_from_training_metadata(safe_training),
+        "source_adapter_runtime": "a100-current-train-split-sft-retry",
+        "dataset_manifest_id": public_manifest.get("manifest_id"),
+        "formal_public_sample_counts": public_manifest.get("counts", {}),
+        "formal_public_sample_split_counts": public_manifest.get("split_counts", {}),
+        "formal_public_sample_source_summary": public_manifest.get("source_summary", {}),
+        "training_status": safe_training.get("training_status", "not_recorded"),
+        "training_rows_used": training_rows_used,
+        "prediction_source_kind": "private_a100_adapter",
+        "prediction_splits": ["dev", "test"],
+        "primary_evidence_splits": ["dev", "test"],
+        "split_results": split_results,
+        "comparison_to_current_baseline": {
+            "baseline_evidence_kind": safe_baseline.get("evidence_kind"),
+            "baseline_dataset_manifest_id": safe_baseline.get("dataset_manifest_id"),
+            "baseline_source_adapter_runtime": safe_baseline.get("source_adapter_runtime"),
+            "direct_comparison_valid": safe_baseline.get("dataset_manifest_id") == public_manifest.get("manifest_id"),
+            "strict_exact_delta": exact_delta,
+            "strict_slot_f1_delta": slot_delta,
+            "safety_recall_delta": safety_delta,
+        },
+        "overall_interpretation": interpretation,
+        "execution_scope": {
+            "training_run": True,
+            "prediction_run": True,
+            "dataset_mutation": False,
+            "dpo_run": False,
+            "grpo_run": False,
+            "prompt_change": False,
+            "evaluator_metric_change": False,
+            "prediction_repair_or_replacement": False,
+            "semantic_equivalence_scoring": False,
+            "slot_normalization": False,
+        },
+        "claims": {
+            "training_performed": True,
+            "held_out_generalization_recovered": heldout_recovered,
+            "model_recovery_claim": False,
+            "safety_improvement_claim": False,
+            "private_corpus_generalization_claim": False,
+            "adapter_release": False,
+            "checkpoint_release": False,
+            "production_readiness_claim": False,
+            "live_browser_benchmark_claim": False,
+            "semantic_equivalence_primary_metric": False,
+            "soft_slot_f1_primary_metric": False,
+            "evaluator_relaxation": False,
+            "prediction_repair_or_replacement": False,
+        },
+        "artifact_policy": {
+            "raw_logs_copied_to_git": False,
+            "checkpoints_or_adapters_copied_to_git": False,
+            "remote_caches_copied_to_git": False,
+            "private_overrides_copied_to_git": False,
+            "private_paths_omitted": True,
+            "host_details_omitted": True,
+            "ssh_details_omitted": True,
+            "private_corpus_rows_omitted": True,
+        },
+        "training_metadata": safe_training,
+        "prediction_metadata_by_split": _sanitize_report_value(prediction_metadata_by_split),
+    }
+    safe_evidence = _sanitize_report_value(evidence)
+    if not isinstance(safe_evidence, dict):
+        raise AssertionError("current train split SFT retry evidence must be a mapping")
+    write_json(json_path, safe_evidence)
+    manifest = {
+        "evidence_kind": safe_evidence["evidence_kind"],
+        "generated_at": safe_evidence["generated_at"],
+        "run_status": safe_evidence["run_status"],
+        "dataset_manifest_id": safe_evidence["dataset_manifest_id"],
+        "formal_public_sample_counts": safe_evidence["formal_public_sample_counts"],
+        "formal_public_sample_split_counts": safe_evidence["formal_public_sample_split_counts"],
+        "source_adapter_runtime": safe_evidence["source_adapter_runtime"],
+        "training_status": safe_evidence["training_status"],
+        "training_rows_used": safe_evidence["training_rows_used"],
+        "prediction_splits": safe_evidence["prediction_splits"],
+        "primary_evidence_splits": safe_evidence["primary_evidence_splits"],
+        "split_results": safe_evidence["split_results"],
+        "comparison_to_current_baseline": safe_evidence["comparison_to_current_baseline"],
+        "overall_interpretation": safe_evidence["overall_interpretation"],
+        "execution_scope": safe_evidence["execution_scope"],
+        "claims": safe_evidence["claims"],
+        "artifact_policy": safe_evidence["artifact_policy"],
+        "diagnostic_artifacts": {
+            "evidence": _public_report_artifact_path(output_dir, "current_train_split_sft_retry.json"),
+            "manifest": _public_report_artifact_path(output_dir, "manifest.json"),
+            "report": _public_report_artifact_path(output_dir, "report.md"),
+            "training_metadata": _sanitize_report_value(training_metadata_path.as_posix()),
+        },
+    }
+    write_json(manifest_path, _sanitize_report_value(manifest))
+
+    lines = [
+        f"# {title}",
+        "",
+        (
+            "Status: training completed for one bounded private A100 current-train-split SFT retry, "
+            "followed by dev/test prediction-only strict evaluation."
+        ),
+        "",
+        "## Scope",
+        "",
+        f"- Dataset manifest: `{safe_evidence['dataset_manifest_id']}`",
+        f"- Source adapter runtime: `{safe_evidence['source_adapter_runtime']}`",
+        f"- Training status: `{safe_evidence['training_status']}`",
+        f"- Training rows used: `{safe_evidence['training_rows_used']}`",
+        f"- Overall interpretation: `{safe_evidence['overall_interpretation']}`",
+        "",
+        "## Split Results",
+        "",
+        (
+            "| split | rows | contract_exact_match | slot_f1 | slot_f1_soft | "
+            "safety_recall | json_valid_rate | residual rows |"
+        ),
+        "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+    ]
+    for split in ("dev", "test"):
+        result = safe_evidence["split_results"][split]
+        lines.append(
+            f"| {split} | {result['prediction_count']} | {result['contract_exact_match']:.4f} | "
+            f"{result['slot_f1']:.4f} | {result['slot_f1_soft']:.4f} | "
+            f"{result['safety_recall']:.4f} | {result['json_valid_rate']:.4f} | "
+            f"{result['residual_row_count']} |"
+        )
+    comparison = safe_evidence["comparison_to_current_baseline"]
+    lines.extend(
+        [
+            "",
+            "## Current Baseline Comparison",
+            "",
+            f"- Direct comparison valid: `{comparison['direct_comparison_valid']}`",
+            f"- Strict exact delta: `{comparison['strict_exact_delta']}`",
+            f"- Strict slot F1 delta: `{comparison['strict_slot_f1_delta']}`",
+            f"- Safety recall delta: `{comparison['safety_recall_delta']}`",
+            "",
+            "## Boundary",
+            "",
+            "- Strict `contract_exact_match` and strict `slot_f1` remain primary.",
+            "- `slot_f1_soft` is diagnostic only.",
+            "- Predictions are not repaired, replaced, normalized, or re-scored.",
+            "- This report does not release a checkpoint or adapter and does not claim production readiness, "
+            "private-corpus generalization, public full-corpus release, or live-browser benchmark improvement.",
+        ]
+    )
+    markdown_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    return {"json": json_path, "markdown": markdown_path, "manifest": manifest_path}
+
+
 def write_slot_value_candidate_sft_probe_report(
     *,
     candidate_manifest: dict[str, Any],

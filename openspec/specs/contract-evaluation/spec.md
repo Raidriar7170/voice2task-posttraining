@@ -1911,6 +1911,7 @@ The system SHALL publish public-safe prediction-only evidence for the formal pub
 - **WHEN** the prediction-only A100 run cannot safely execute because the private adapter, private override, remote dependency, or idle GPU state is unavailable
 - **THEN** the evidence MUST record a blocked status without writing fabricated predictions or model-quality metrics
 - **AND** committed artifacts MUST omit raw logs, host details, SSH details, private paths, checkpoints, adapters, caches, tokens, and private corpus rows
+
 ### Requirement: Retry post-confirmation-marker-merge formal held-out prediction after A100 recovery
 The system SHALL support a public-safe prediction-only retry after a blocked A100 formal held-out prediction phase, while preserving the blocked archive, changed manifest boundary, and strict evaluation semantics.
 
@@ -2081,3 +2082,30 @@ The system SHALL publish public-safe prediction-only evidence for the existing p
 - **WHEN** the prediction-only A100 run cannot safely execute because the private adapter, private override, remote dependency, or idle GPU state is unavailable
 - **THEN** the evidence MUST record a blocked status without writing fabricated predictions or model-quality metrics
 - **AND** committed artifacts MUST omit raw logs, host details, SSH details, private paths, checkpoints, adapters, caches, tokens, and private corpus rows
+
+### Requirement: Publish current-train-split SFT retry held-out evidence
+The system SHALL publish separate public-safe dev/test strict evaluation
+evidence for the current-train-split SFT retry adapter.
+
+#### Scenario: Report observed current retry metrics
+- **WHEN** retry training and dev/test prediction-only evaluation complete
+- **THEN** the evidence MUST report strict dev/test metrics using the existing
+  contract ladder
+- **AND** it MUST compare observed metrics against the latest current-manifest
+  prediction-only baseline for `public-sample-20260616T165835Z`
+- **AND** it MUST keep strict `contract_exact_match` and strict `slot_f1` as
+  public headline metrics while labeling `slot_f1_soft` diagnostic-only
+
+#### Scenario: Report blocked or failed current retry
+- **WHEN** the retry cannot safely complete
+- **THEN** the evidence MUST record a blocked or failed status without
+  fabricating predictions, metrics, adapters, or model-quality claims
+
+#### Scenario: Preserve current retry public evidence boundaries
+- **WHEN** retry evidence is prepared for commit
+- **THEN** leak scan MUST reject raw private rows, absolute local paths, private
+  remote paths, host details, SSH details, secrets, tokens, raw logs,
+  checkpoints, adapters, caches, and oversized generated corpora
+- **AND** reports MUST NOT claim production readiness, private-corpus
+  generalization, public checkpoint release, public adapter release, or
+  live-browser benchmark improvement

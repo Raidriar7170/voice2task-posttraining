@@ -1,0 +1,147 @@
+{
+  "artifact_policy": {
+    "checkpoints_or_adapters_copied_to_git": false,
+    "host_details_omitted": true,
+    "private_corpus_rows_omitted": true,
+    "private_overrides_copied_to_git": false,
+    "private_paths_omitted": true,
+    "raw_logs_copied_to_git": false,
+    "remote_caches_copied_to_git": false,
+    "ssh_details_omitted": true
+  },
+  "claims": {
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "evaluator_relaxation": false,
+    "held_out_generalization_recovered": false,
+    "live_browser_benchmark_claim": false,
+    "model_recovery_claim": false,
+    "prediction_repair_or_replacement": false,
+    "private_corpus_generalization_claim": false,
+    "production_readiness_claim": false,
+    "safety_improvement_claim": false,
+    "semantic_equivalence_primary_metric": false,
+    "soft_slot_f1_primary_metric": false,
+    "training_performed": true
+  },
+  "comparison_to_current_baseline": {
+    "baseline_dataset_manifest_id": "public-sample-20260616T165835Z",
+    "baseline_evidence_kind": "a100_formal_public_heldout_prediction",
+    "baseline_source_adapter_runtime": "a100-form-fill-remediation-sft-v3",
+    "direct_comparison_valid": true,
+    "safety_recall_delta": {
+      "dev": 0.4444444444444444,
+      "test": 0.0
+    },
+    "strict_exact_delta": {
+      "dev": -0.02898550724637683,
+      "test": 0.05797101449275366
+    },
+    "strict_slot_f1_delta": {
+      "dev": 0.01449275362318847,
+      "test": 0.04106280193236728
+    }
+  },
+  "dataset_manifest_id": "public-sample-20260616T165835Z",
+  "diagnostic_artifacts": {
+    "evidence": "reports/public-sample/a100-current-train-split-sft-retry/current_train_split_sft_retry.json",
+    "manifest": "reports/public-sample/a100-current-train-split-sft-retry/manifest.json",
+    "report": "reports/public-sample/a100-current-train-split-sft-retry/report.md",
+    "training_metadata": "<private_path>"
+  },
+  "evidence_kind": "a100_current_train_split_sft_retry",
+  "execution_scope": {
+    "dataset_mutation": false,
+    "dpo_run": false,
+    "evaluator_metric_change": false,
+    "grpo_run": false,
+    "prediction_repair_or_replacement": false,
+    "prediction_run": true,
+    "prompt_change": false,
+    "semantic_equivalence_scoring": false,
+    "slot_normalization": false,
+    "training_run": true
+  },
+  "formal_public_sample_counts": {
+    "dpo_pairs": 864,
+    "seed_rows": 100,
+    "sft_rows": 256
+  },
+  "formal_public_sample_split_counts": {
+    "dev": 69,
+    "test": 69,
+    "train": 118
+  },
+  "generated_at": "2026-06-17T03:10:03.468222+00:00",
+  "overall_interpretation": "current_train_split_sft_retry_partial_signal",
+  "prediction_splits": [
+    "dev",
+    "test"
+  ],
+  "primary_evidence_splits": [
+    "dev",
+    "test"
+  ],
+  "run_status": "observed",
+  "source_adapter_runtime": "a100-current-train-split-sft-retry",
+  "split_results": {
+    "dev": {
+      "artifact_paths": {
+        "metrics": "reports/public-sample/a100-current-train-split-sft-retry/dev/metrics.json",
+        "prediction_metadata": "reports/public-sample/a100-current-train-split-sft-retry/dev/prediction_metadata.json"
+      },
+      "confirmation_accuracy": 0.8985507246376812,
+      "contract_exact_match": 0.43478260869565216,
+      "failure_slice_counts": {
+        "confirmation": 7,
+        "route": 6,
+        "safety": 0,
+        "schema": 0,
+        "slot": 29,
+        "task_type": 6,
+        "unknown": 0
+      },
+      "json_valid_rate": 1.0,
+      "prediction_count": 69,
+      "prediction_split": "dev",
+      "residual_row_count": 39,
+      "route_accuracy": 0.9130434782608695,
+      "safety_precision": 1.0,
+      "safety_recall": 1.0,
+      "schema_invalid_prediction_count": 0,
+      "slot_f1": 0.5797101449275363,
+      "slot_f1_soft": 0.8671497584541064,
+      "task_type_accuracy": 0.9130434782608695
+    },
+    "test": {
+      "artifact_paths": {
+        "metrics": "reports/public-sample/a100-current-train-split-sft-retry/test/metrics.json",
+        "prediction_metadata": "reports/public-sample/a100-current-train-split-sft-retry/test/prediction_metadata.json"
+      },
+      "confirmation_accuracy": 0.9565217391304348,
+      "contract_exact_match": 0.4057971014492754,
+      "failure_slice_counts": {
+        "confirmation": 3,
+        "route": 7,
+        "safety": 1,
+        "schema": 0,
+        "slot": 34,
+        "task_type": 7,
+        "unknown": 0
+      },
+      "json_valid_rate": 1.0,
+      "prediction_count": 69,
+      "prediction_split": "test",
+      "residual_row_count": 41,
+      "route_accuracy": 0.8985507246376812,
+      "safety_precision": 0.9230769230769231,
+      "safety_recall": 1.0,
+      "schema_invalid_prediction_count": 0,
+      "slot_f1": 0.5386473429951691,
+      "slot_f1_soft": 0.7681912960898468,
+      "task_type_accuracy": 0.8985507246376812
+    }
+  },
+  "training_rows_used": 118,
+  "training_status": "training_completed"
+}

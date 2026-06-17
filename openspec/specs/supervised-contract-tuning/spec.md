@@ -1446,7 +1446,6 @@ after fresh A100 connectivity and GPU preflight succeed.
   host details, SSH details, tokens, and private paths MUST remain outside git
 - **AND** committed evidence MUST use sanitized summaries and public-safe
   placeholders
-
 #### Scenario: Stop safely on retry blockers
 - **WHEN** SSH, GPU placement, dependency setup, training, or output-root policy
   cannot be verified safely
@@ -1475,3 +1474,33 @@ The system SHALL publish public-safe readiness-only evidence before launching a 
 - **WHEN** the readiness report recommends a later bounded A100 SFT retry
 - **THEN** it MUST cite the latest current-manifest prediction-only strict metrics as input evidence
 - **AND** it MUST keep `contract_exact_match` and strict `slot_f1` as headline metrics while treating `slot_f1_soft` as diagnostic-only
+
+### Requirement: Run current-train-split SFT retry after readiness evidence
+The system SHALL run at most one bounded private A100 SFT retry on the current
+formal public train split after current-train-split retry readiness evidence is
+complete.
+
+#### Scenario: Repeat A100 preflight before current retry training
+- **WHEN** the current-train-split SFT retry phase starts
+- **THEN** it MUST run fresh A100 connectivity, GPU occupancy, disk/cache/temp,
+  approved-root, dependency, manifest-count, and readiness-evidence checks
+- **AND** it MUST select a safe GPU explicitly with `CUDA_VISIBLE_DEVICES`
+  before training
+- **AND** it MUST stop with blocked evidence if safe placement cannot be
+  determined without interrupting other users
+
+#### Scenario: Train only from the current formal public train split
+- **WHEN** retry training starts
+- **THEN** it MUST use manifest `public-sample-20260616T165835Z` and the train
+  split of 118 SFT rows
+- **AND** it MUST use a runtime/output label distinct from prior SFT v3 runs,
+  `a100-current-train-split-sft-retry`
+- **AND** it MUST NOT mutate public sample rows, prompts, evaluator metrics, or
+  prediction artifacts before training
+
+#### Scenario: Keep current retry artifacts private
+- **WHEN** retry training or prediction runs
+- **THEN** private overrides, checkpoints, adapters, raw logs, model caches,
+  host details, SSH details, tokens, and private paths MUST remain outside git
+- **AND** committed evidence MUST use sanitized summaries and public-safe
+  placeholders

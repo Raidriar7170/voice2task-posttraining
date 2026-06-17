@@ -10,6 +10,7 @@ from voice2task.leak_scan import scan_paths
 from voice2task.reports import (
     write_a100_merged_slot_value_adapter_restore_report,
     write_current_train_split_sft_retry_readiness_report,
+    write_current_train_split_sft_retry_report,
     write_form_fill_remediation_sft_v3_readiness_report,
     write_hardened_canonical_policy_rerun_report,
     write_merged_slot_value_heldout_eval_report,
@@ -99,6 +100,16 @@ def build_parser() -> argparse.ArgumentParser:
     current_retry.add_argument("--dev-prediction-config", type=Path, required=True)
     current_retry.add_argument("--test-prediction-config", type=Path, required=True)
     current_retry.add_argument("--output", type=Path, required=True)
+
+    current_retry_run = subcommands.add_parser("current-train-split-sft-retry")
+    current_retry_run.add_argument("--training-metadata", type=Path, required=True)
+    current_retry_run.add_argument("--public-manifest", type=Path, required=True)
+    current_retry_run.add_argument("--current-baseline-evidence", type=Path, required=True)
+    current_retry_run.add_argument("--dev-metrics", type=Path, required=True)
+    current_retry_run.add_argument("--test-metrics", type=Path, required=True)
+    current_retry_run.add_argument("--dev-prediction-metadata", type=Path, required=True)
+    current_retry_run.add_argument("--test-prediction-metadata", type=Path, required=True)
+    current_retry_run.add_argument("--output", type=Path, required=True)
 
     merged_eval = subcommands.add_parser("merged-slot-value-heldout-eval")
     merged_eval.add_argument("--public-manifest", type=Path, required=True)
@@ -325,6 +336,43 @@ def main(argv: list[str] | None = None) -> int:
                     "ok": True,
                     "paths": {key: value.as_posix() for key, value in report_paths.items()},
                     "summary": evidence.get("summary", {}),
+                },
+                indent=2,
+            )
+        )
+        return 0
+    if args.command == "current-train-split-sft-retry":
+        metrics_paths = {
+            "dev": args.dev_metrics,
+            "test": args.test_metrics,
+        }
+        prediction_metadata_paths = {
+            "dev": args.dev_prediction_metadata,
+            "test": args.test_prediction_metadata,
+        }
+        report_paths = write_current_train_split_sft_retry_report(
+            public_manifest=read_json(args.public_manifest),
+            current_baseline_evidence=read_json(args.current_baseline_evidence),
+            training_metadata=read_json(args.training_metadata),
+            metrics_by_split={split: read_json(path) for split, path in metrics_paths.items()},
+            prediction_metadata_by_split={
+                split: read_json(path) for split, path in prediction_metadata_paths.items()
+            },
+            output_dir=args.output,
+            metrics_paths=metrics_paths,
+            prediction_metadata_paths=prediction_metadata_paths,
+            training_metadata_path=args.training_metadata,
+        )
+        evidence = read_json(report_paths["json"])
+        print(
+            json.dumps(
+                {
+                    "ok": True,
+                    "paths": {key: value.as_posix() for key, value in report_paths.items()},
+                    "summary": {
+                        "overall_interpretation": evidence.get("overall_interpretation"),
+                        "split_results": evidence.get("split_results", {}),
+                    },
                 },
                 indent=2,
             )

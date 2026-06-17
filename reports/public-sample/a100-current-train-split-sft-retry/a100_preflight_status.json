@@ -1,0 +1,26 @@
+{
+  "approved_remote_root_policy": "approved_private_a100_project_root",
+  "artifact_policy": {
+    "checkpoints_or_adapters_copied_to_git": false,
+    "host_details_omitted": true,
+    "private_overrides_copied_to_git": false,
+    "private_paths_omitted": true,
+    "raw_logs_copied_to_git": false,
+    "remote_caches_copied_to_git": false,
+    "ssh_details_omitted": true
+  },
+  "generated_at": "2026-06-17T03:10:03.488559+00:00",
+  "host_details_omitted": true,
+  "prediction_status": {
+    "dev": "private_adapter_predictions_written",
+    "test": "private_adapter_predictions_written"
+  },
+  "private_paths_omitted": true,
+  "process_interruption": false,
+  "remote_root_public_label": "<a100_project_root>/voice2task-current-train-split-sft-retry-20260617T024728Z",
+  "selected_gpu_index": "3",
+  "selected_gpu_policy": "single_idle_gpu_selected_no_process_interruption",
+  "ssh_alias_used": true,
+  "status": "observed",
+  "training_status": "training_completed"
+}
