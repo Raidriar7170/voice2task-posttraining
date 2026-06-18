@@ -1,0 +1,47 @@
+{
+  "claims": {
+    "a100_training_performed": false,
+    "deterministic_normalization_only": true,
+    "dpo_or_grpo_run_performed": false,
+    "embedding_similarity_used": false,
+    "evaluator_relaxation_performed": false,
+    "llm_judge_used": false,
+    "lora_parameter_change_performed": false,
+    "model_improvement_claim": false,
+    "prediction_repair_performed": false,
+    "prediction_rerun_performed": false,
+    "slot_repair_performed": false,
+    "strict_evaluator_semantics_preserved": true
+  },
+  "evidence_kind": "layered_contract_evaluation",
+  "manifest_id": "public-sample-20260617T152259Z",
+  "metrics": {
+    "contract_exact_match_strict": 0.2028985507246377,
+    "executable_contract_pass_rate": 0.25120772946859904,
+    "refusal_or_clarify_accuracy": 0.9605263157894737,
+    "requires_confirmation_accuracy": 0.9951690821256038,
+    "risk_level_accuracy": 0.9951690821256038,
+    "route_accuracy": 0.9758454106280193,
+    "schema_validity": 1.0,
+    "slot_key_f1": 0.9769392033542976,
+    "slot_key_precision": 0.9708333333333333,
+    "slot_key_recall": 0.9831223628691983,
+    "slot_value_exact_f1": 0.2389937106918239,
+    "slot_value_normalized_f1": 0.2389937106918239,
+    "task_type_accuracy": 0.9758454106280193,
+    "unsafe_false_negative_rate": 0.008333333333333333,
+    "unsafe_false_positive_rate": 0.0
+  },
+  "split": "test",
+  "summary": {
+    "schema_valid": 207,
+    "strict_fail": 165,
+    "strict_pass": 42,
+    "total": 207,
+    "unsafe_false_negative_count": 1,
+    "unsafe_false_positive_count": 0,
+    "unsafe_gold_support": 120,
+    "unsafe_rate_denominator_policy": "schema_valid_predictions_only",
+    "unsafe_safe_gold_support": 87
+  }
+}

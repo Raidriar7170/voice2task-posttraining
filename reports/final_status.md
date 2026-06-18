@@ -12,6 +12,8 @@
 | --- | --- |
 | Latest data evidence pack | `reports/public-sample/scaled-public-sample-merge/` |
 | Latest scaled-manifest prediction baseline evidence pack | `reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/` |
+| Latest layered evaluation evidence pack | `reports/public-sample/layered-eval/` |
+| Latest residual diagnosis evidence pack | `reports/public-sample/residual-diagnosis/` |
 | Latest scaled clarify slot-boundary candidate materialization evidence pack | `reports/public-sample/scaled-clarify-slot-boundary-candidate-materialization/` |
 | Latest scaled remediation target selection evidence pack | `reports/public-sample/scaled-residual-remediation-target-selection/` |
 | Latest scaled clarify slot-boundary candidate-design evidence pack | `reports/public-sample/scaled-clarify-slot-boundary-candidate-design/` |
@@ -110,6 +112,19 @@ A100 恢复后已完成 observed retry：
 - 没有合入 formal public sample、没有重建 formal SFT/DPO/manifest、没有生成 DPO pairs、没有训练、没有 prediction、没有 A100 execution、没有改 prompt/evaluator、没有 slot normalization、没有 prediction repair，也不能宣称模型恢复；
 - recommended next bounded decision: `merge-scaled-clarify-slot-boundary-candidates`。
 
+随后已完成 additive layered evaluator and residual diagnosis：
+
+- layered evidence: `reports/public-sample/layered-eval/`
+- residual evidence: `reports/public-sample/residual-diagnosis/`
+- docs: `docs/evaluation.md`
+- source evidence: `reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/`
+- status: evaluation-only / diagnosis-only；没有 clarify candidate merge、数据扩展、A100 training、prediction rerun、DPO/GRPO、LoRA 参数调整、evaluator relaxation、slot repair、prediction repair、adapter/checkpoint 发布或 model-quality claim；
+- strict boundary: `contract_exact_match_strict` 保持原 strict evaluator 输出，dev/test 仍为 `0.2464` / `0.2029`；
+- layered signal: executable-contract pass rate 为 `0.2705` / `0.2512`，schema validity 为 `1.0000` / `1.0000`；
+- normalization result: bounded deterministic slot-value normalization 没有额外提升当前 slot-value F1，dev/test normalized F1 与 exact F1 同为 `0.2821` / `0.2390`；
+- residual result: dev top residual fields 是 `normalized_command=91`、`slots.ambiguity=45`、`slots.field=28`；test top residual fields 是 `normalized_command=103`、`slots.ambiguity=37`、`slots.reason=32`；
+- recommended next bounded decision: review layered/residual evidence before choosing any future remediation target；不要默认继续 `merge-scaled-clarify-slot-boundary-candidates`。
+
 ## Formal Public Held-Out 指标（绑定 `public-sample-20260617T152259Z`）
 
 | 指标 | Dev | Test |
@@ -181,15 +196,23 @@ A100 恢复后已完成 observed retry：
 
 ## 推荐下一阶段
 
-当前最新推荐是先做 bounded clarify formal merge：
+当前最新推荐是先 review `add-layered-evaluator-and-residual-diagnosis` 的
+layered / residual evidence：
 
-- 输入：`data/public-samples/scaled_clarify_slot_boundary_seed_candidates.jsonl`
-  和 `reports/public-sample/scaled-clarify-slot-boundary-candidate-materialization/`
-- 目的：把 9 条 reviewed clarify boundary candidates 合入 formal public sample，并明确新的 manifest boundary；
-- 边界：可以重建 formal seed/SFT/DPO/manifest artifact，但仍不训练、不跑 prediction、不改 evaluator、不发布模型，也不能从 merge 本身宣称模型恢复；
-- 后续：只有新 manifest boundary 明确后，才应该进入 paired SFT readiness 或 prediction-only baseline。
+- 输入：`reports/public-sample/layered-eval/`、
+  `reports/public-sample/residual-diagnosis/` 和 unchanged scaled
+  prediction-only source evidence；
+- 目的：确认 strict exact、executable-contract pass、slot-value residual、
+  normalized-command residual、安全/confirmation residual 的关系，再决定是否
+  开新的 bounded remediation phase；
+- 边界：不要默认继续 `merge-scaled-clarify-slot-boundary-candidates`，不要在
+  本阶段合并数据、训练、重跑 prediction、改 evaluator、slot repair、
+  prediction repair、DPO/GRPO 或 LoRA 参数调整；
+- 后续：若要进入数据 merge、训练或 policy/canonicalization 变更，应该先开
+  新的 OpenSpec change，并保留 comparison boundary。
 
-不建议直接启动 paired SFT retry。候选数据已经 materialized，但还没有形成新的 formal manifest boundary。
+不建议直接启动 paired SFT retry，也不建议把 normalized/layered metrics 说成
+held-out recovery。
 
 ## 历史 prior-manifest 阶段
 

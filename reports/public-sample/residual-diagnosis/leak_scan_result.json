@@ -1,0 +1,12 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-18T05:15:46.952341+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "reports/public-sample/layered-eval",
+    "reports/public-sample/residual-diagnosis",
+    "docs/human-briefs/2026-06-18-add-layered-evaluator-and-residual-diagnosis.html",
+    "docs/human-briefs/2026-06-18-autonomous-loop-add-layered-evaluator-and-residual-diagnosis.html"
+  ]
+}

@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Autonomous Loop: add-layered-evaluator-and-residual-diagnosis</title>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #162126; background: #f6f7f3; }
+    main { max-width: 1040px; margin: 0 auto; padding: 32px 20px 52px; }
+    h1 { font-size: 28px; margin: 0 0 8px; }
+    h2 { font-size: 18px; margin: 28px 0 10px; border-bottom: 1px solid #d7ded2; padding-bottom: 6px; }
+    p, li { line-height: 1.62; }
+    code { background: #eef1ea; padding: 1px 5px; border-radius: 4px; }
+    table { width: 100%; border-collapse: collapse; background: #fff; margin: 12px 0; }
+    th, td { border: 1px solid #d7ded2; padding: 8px 10px; text-align: left; vertical-align: top; }
+    th { background: #edf1e8; }
+    .status { display: inline-block; padding: 4px 10px; border-radius: 6px; background: #e8ead4; border: 1px solid #c3c78e; font-weight: 650; }
+    .warn { background: #fff8df; border-left: 4px solid #d6a11d; padding: 10px 12px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Autonomous Loop Closeout</h1>
+  <p>结论：本 loop 完成并归档了 <code>add-layered-evaluator-and-residual-diagnosis</code>，新增了独立 layered evaluator 与 residual diagnosis 证据面，没有继续 clarify merge、数据扩充、A100、prediction rerun、DPO 或 LoRA 调参。</p>
+  <p><span class="status">stopped: explicit user scope boundary</span></p>
+
+  <h2>结束原因</h2>
+  <p><code>End condition: explicit_user_stop - 用户明确限定本轮只实现 add-layered-evaluator-and-residual-diagnosis，并禁止继续 merge/data/training/rerun 等路径。</code></p>
+  <p><code>Next action executed: no - blocked by explicit_user_stop</code></p>
+
+  <h2>完成阶段</h2>
+  <ul>
+    <li>创建并应用 OpenSpec change：<code>add-layered-evaluator-and-residual-diagnosis</code>。</li>
+    <li>新增 additive evaluator：<code>src/voice2task/layered_evaluation.py</code>。</li>
+    <li>新增测试：<code>tests/test_layered_evaluator_and_residual_diagnosis.py</code>。</li>
+    <li>生成报告：<code>reports/public-sample/layered-eval/</code> 与 <code>reports/public-sample/residual-diagnosis/</code>。</li>
+    <li>更新文档：<code>docs/evaluation.md</code>、<code>CONTEXT.md</code>、<code>reports/final_status.md</code>。</li>
+    <li>归档 OpenSpec：<code>openspec/changes/archive/2026-06-18-add-layered-evaluator-and-residual-diagnosis/</code>。</li>
+  </ul>
+
+  <h2>CONTEXT 目标矩阵</h2>
+  <table>
+    <thead><tr><th>目标 / 边界</th><th>证据</th><th>状态</th><th>剩余 gap</th></tr></thead>
+    <tbody>
+      <tr><td>保留 strict evaluator 和 strict exact</td><td><code>contract_exact_match_strict</code> 复制原 strict 输出；<code>src/voice2task/evaluation.py</code> 无 diff；focused/regression tests 通过。</td><td>closed</td><td>无。</td></tr>
+      <tr><td>新增 deterministic layered evaluator</td><td><code>reports/public-sample/layered-eval/</code>，dev/test executable pass rate 为 0.2705 / 0.2512。</td><td>closed</td><td>后续只可作为诊断，不可说成模型恢复。</td></tr>
+      <tr><td>新增 field-level residual diagnosis</td><td><code>reports/public-sample/residual-diagnosis/</code>，dev/test strict fail 为 156 / 165，top residual 仍是 <code>normalized_command</code>。</td><td>closed</td><td>下一步需人工或新 OpenSpec 决定 remediation target。</td></tr>
+      <tr><td>不训练、不扩数据、不 rerun、不放松 evaluator</td><td>Human Brief、docs、reports claims 全部记录非目标；leak scan clean。</td><td>closed</td><td>任何未来训练/merge/canonicalization 都必须另开 change。</td></tr>
+    </tbody>
+  </table>
+
+  <h2>项目阶段进度</h2>
+  <p>当前项目阶段目标在 <code>CONTEXT.md</code> 中表述为 evidence-backed post-training/evaluation baseline，而不是 production-ready release。这个阶段把“strict exact 低到底来自哪里”从旧 residual evidence 推进成了可重复的 layered/report surface。</p>
+  <ul>
+    <li>能力：新增 layered evaluator、deterministic normalization diagnostics、unsafe fail-closed metrics、residual family/field attribution。</li>
+    <li>证据：新报告目录、Human Brief、OpenSpec archive、主 spec 更新。</li>
+    <li>文档：新增 <code>docs/evaluation.md</code> 并刷新 <code>CONTEXT.md</code> / <code>reports/final_status.md</code>。</li>
+    <li>剩余 gap：选择未来 remediation target、是否更新数据、是否训练，都属于后续新阶段。</li>
+  </ul>
+
+  <h2>验证命令</h2>
+  <ul>
+    <li><code>PYTHONPATH=src pytest tests/test_layered_evaluator_and_residual_diagnosis.py</code>: 6 passed。</li>
+    <li><code>PYTHONPATH=src pytest tests/test_layered_evaluator_and_residual_diagnosis.py tests/test_evaluator_reports.py tests/test_formal_public_heldout_prediction.py tests/test_formal_heldout_residual_family_diagnosis.py tests/test_formal_heldout_residual_cluster_inspection.py tests/test_report_cli.py</code>: 67 passed。</li>
+    <li><code>PYTHONPATH=src python -m voice2task.cli.report leak-scan ...</code>: ok true, 0 findings。</li>
+    <li><code>openspec validate --all --strict</code>: 5 passed, 0 failed after archive。</li>
+    <li><code>PYTHONPATH=src ruff check src tests</code>: passed。</li>
+    <li><code>PYTHONPATH=src mypy --follow-imports=skip src/voice2task/layered_evaluation.py</code>: passed。</li>
+    <li><code>git diff --check</code>: passed after EOF cleanup。</li>
+  </ul>
+
+  <h2>Review / External Review</h2>
+  <ul>
+    <li>本地 Reviewer verdict: Pass after fixes；Must Fix 清零，Re-plan Needed = No。</li>
+    <li>External Pro review: not used；本阶段已有本地测试、Reviewer 和 OpenSpec validation，且没有 UI/portfolio/release-publish需求。</li>
+  </ul>
+
+  <h2>Auto Integration</h2>
+  <p>本报告生成时尚未提交；guarded auto integration 会在报告生成后评估。最终 commit / push 状态以本线程 final response 为准。</p>
+
+  <h2>不要过度宣称</h2>
+  <div class="warn">不要声称模型效果提升、held-out recovery、production readiness、safety readiness、checkpoint/adapter release 或 live-browser benchmark improvement。本阶段只新增更完整的 deterministic evaluation 与 residual attribution。</div>
+
+  <h2>推荐下一步</h2>
+  <p>先 review layered/residual evidence，再决定是否另开 bounded remediation phase。因为本 loop 受 <code>explicit_user_stop</code> 约束，下一步没有自动执行。</p>
+</main>
+</body>
+</html>

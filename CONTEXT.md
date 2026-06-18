@@ -6,7 +6,10 @@ Voice2Task Post-Training is a companion project for training and evaluating smal
 
 As of 2026-06-18, the first project phase is closed as an evidence-backed
 post-training and evaluation baseline, not as a production-ready model release.
-The public-facing truth surface has eighteen current layers:
+The public-facing truth surface has twenty current layers. The newest two are
+the additive layered evaluator under `reports/public-sample/layered-eval/` and
+the additive residual diagnosis under `reports/public-sample/residual-diagnosis/`;
+the existing eighteen layers remain:
 
 1. the standalone scaled clarify slot-boundary candidate materialization under
    `reports/public-sample/scaled-clarify-slot-boundary-candidate-materialization/`;
@@ -60,6 +63,8 @@ Current formal public sample data boundary:
 | latest model run type | prediction-only retry on the scaled dev/test split using the existing `a100-current-train-split-sft-retry` private adapter |
 | latest model interpretation | `formal_public_heldout_partial_signal` |
 | latest model evidence | `reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/` |
+| latest layered evaluation evidence | `reports/public-sample/layered-eval/` |
+| latest residual diagnosis evidence | `reports/public-sample/residual-diagnosis/` |
 | latest scaled-manifest prediction baseline | observed after A100 recovery; strict exact remains partial and lower than the prior-boundary adapter evidence |
 | latest scaled-manifest baseline evidence | `reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/` |
 | latest scaled-manifest residual cluster interpretation | `scaled_current_123_residual_clusters_clarify_slots_top_cluster` |
@@ -102,10 +107,31 @@ Scaled-manifest current-123 adapter prediction-only metrics:
 | dev | 0.2464 | 0.2874 | 0.6372 | 0.9614 | 1.0000 | 1.0000 |
 | test | 0.2029 | 0.2593 | 0.6108 | 0.9758 | 1.0000 | 1.0000 |
 
-Strict `contract_exact_match` and strict `slot_f1` remain the public headline
-metrics. `slot_f1_soft` is diagnostic only and must not be used as recovery,
+Strict `contract_exact_match` and strict `slot_f1` remain canonical diagnostic
+metrics, but they are no longer sufficient as the only success surface for the
+next phase. `slot_f1_soft` is diagnostic only and must not be used as recovery,
 semantic-equivalence, or production-readiness evidence. `json_valid_rate=1.0`
 means the output shape is stable; it is not enough to claim contract recovery.
+The next evaluator phase should report both strict metrics and deterministic
+layered metrics so reviewers can separate executable contract quality from
+canonical full-string consistency.
+
+That layered evaluator and residual diagnosis phase is now complete under
+`reports/public-sample/layered-eval/` and
+`reports/public-sample/residual-diagnosis/`. It is additive evaluation evidence
+only: no clarify candidate merge, data expansion, A100 training, prediction
+rerun, DPO/GRPO run, LoRA parameter change, evaluator relaxation, slot repair,
+checkpoint/adapter release, held-out recovery claim, production-readiness
+claim, safety-readiness claim, or live-browser benchmark claim was performed.
+`contract_exact_match_strict` preserves the original strict evaluator output:
+dev/test remain `0.2464` / `0.2029`. The new executable-contract pass rates
+are `0.2705` / `0.2512`, schema validity remains `1.0000` / `1.0000`, and
+bounded deterministic slot-value normalization does not improve the current
+slot-value F1 (`0.2821` / `0.2390`, equal to exact slot-value F1). Residual
+diagnosis still points to strict slot values and normalized commands as the
+dominant residual surfaces: dev has `slot_value=160` and
+`normalized_command=91`; test has `slot_value=176` and
+`normalized_command=103`.
 
 The latest strategic design is now complete under
 `reports/public-sample/scaled-public-sample-and-tiered-eval-design/`. It is a
@@ -230,8 +256,23 @@ rows from the committed design: one train/dev/test seed per theme for
 `slots.ambiguity`. This phase does not merge the formal public sample, rebuild
 formal SFT/DPO artifacts, generate DPO pairs, train, predict, run on A100,
 change prompts, change evaluator metrics, normalize slots, repair predictions,
-release checkpoints/adapters, or claim model recovery. The recommended next
-bounded phase is `merge-scaled-clarify-slot-boundary-candidates`.
+release checkpoints/adapters, or claim model recovery. The previous
+`merge-scaled-clarify-slot-boundary-candidates` continuation remains a
+reviewed data option, but it is no longer the default next step. The default
+next phase should first add residual diagnosis and a layered evaluator on
+existing dev/test predictions and gold contracts.
+
+Recommended next bounded phase:
+
+- Status: needs review after `add-layered-evaluator-and-residual-diagnosis`.
+- Inputs: `reports/public-sample/layered-eval/`,
+  `reports/public-sample/residual-diagnosis/`, and the unchanged scaled
+  prediction-only source evidence.
+- Boundary: choose a future remediation target or documentation decision from
+  the layered/residual evidence only after review. Do not silently continue
+  `merge-scaled-clarify-slot-boundary-candidates`, merge data, train, rerun
+  prediction, run DPO/GRPO, adjust LoRA parameters, relax evaluators, repair
+  predictions, repair slots, or overwrite historical scaled evidence.
 
 Claim boundaries:
 
@@ -424,9 +465,12 @@ selects `clarify/slots` as the first remediation target and explicitly defers
 `blocked/slots` to a dedicated safety-boundary phase. This is target-selection
 evidence only: it does not run A100, train, predict, materialize data, change
 prompts, relax evaluators, normalize slots, repair predictions, or claim model
-recovery. If the project continues, the next bounded phase should be
-`design-scaled-clarify-slot-boundary-candidates`, not a broad data-expansion or
-training phase.
+recovery. That target-selection chain already produced clarify candidate design
+and standalone materialization evidence. If the project continues from the
+current review boundary, the next step should first review the additive
+layered-evaluation and residual-diagnosis evidence before choosing any new
+bounded remediation phase. It should not default back to broad data expansion,
+candidate merge, evaluator relaxation, or training.
 
 ## Language
 
@@ -497,6 +541,21 @@ _Avoid_: first-phase dependency, hidden implementation
 **Contract Evaluation Ladder**:
 The first-phase success framework that evaluates model outputs at multiple layers: schema validity, task type, route decision, safety decision, confirmation behavior, slot extraction, and execution smoke.
 _Avoid_: loss-only evaluation, live browser success only
+
+**Layered Evaluator**:
+A deterministic evaluation surface that reports executable browser task
+contract quality alongside strict canonical metrics. It preserves strict
+`contract_exact_match` unchanged and adds field-level, slot-level, safety, and
+executable-contract metrics without LLM judging, semantic relaxation,
+prediction repair, or metric substitution.
+_Avoid_: soft exact replacement, LLM-as-judge scoring, production success rate
+
+**Deterministic Slot Normalization**:
+Bounded normalization rules used only for diagnostic or layered slot-value
+metrics, such as conservative whitespace, punctuation, full-width/half-width,
+case, verb-alias, and slot-key-alias handling. It must not change strict exact
+metrics and must not equate materially different values.
+_Avoid_: semantic equivalence, prediction repair, relaxed strict exact
 
 **Execution Smoke**:
 A lightweight downstream check that verifies generated browser task contracts can be consumed by Voice-to-Browser Agent fixtures or controlled validation paths. It is not the same as a full live-browser success benchmark.

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>add-layered-evaluator-and-residual-diagnosis</title>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #172026; background: #f7f8f5; }
+    main { max-width: 980px; margin: 0 auto; padding: 32px 20px 48px; }
+    h1 { font-size: 28px; margin: 0 0 8px; }
+    h2 { font-size: 18px; margin: 28px 0 10px; border-bottom: 1px solid #d8ded2; padding-bottom: 6px; }
+    p, li { line-height: 1.62; }
+    .lede { font-size: 18px; color: #24403a; }
+    .status { display: inline-block; padding: 4px 10px; background: #dbeadd; border: 1px solid #a7c7aa; border-radius: 6px; font-weight: 650; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; background: #fff; }
+    th, td { border: 1px solid #d8ded2; padding: 8px 10px; text-align: left; vertical-align: top; }
+    th { background: #edf1e8; }
+    code { background: #eef1ea; padding: 1px 5px; border-radius: 4px; }
+    .warn { background: #fff8df; border-left: 4px solid #d6a11d; padding: 10px 12px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Layered Evaluator + Residual Diagnosis</h1>
+  <p class="lede">结论：本阶段只补充分层评估和 residual 归因；strict evaluator 没有放松，模型没有训练或 rerun，也不能宣称 held-out recovery。</p>
+  <p><span class="status">needs review</span></p>
+
+  <h2>本阶段做了什么</h2>
+  <ul>
+    <li>新增 additive layered evaluator：输出 schema、route/task type、slot key/value、risk/confirmation、unsafe FN/FP、refusal-or-clarify、executable pass 和 <code>contract_exact_match_strict</code>。</li>
+    <li>新增 deterministic residual diagnosis：只分析 strict exact mismatch，输出 family counts、field paths、sanitized examples 和 diagnostic-only recommendations。</li>
+    <li>生成新报告目录：<code>reports/public-sample/layered-eval/</code> 与 <code>reports/public-sample/residual-diagnosis/</code>。</li>
+    <li>新增 <code>docs/evaluation.md</code>，并更新 <code>CONTEXT.md</code>、<code>reports/final_status.md</code>。</li>
+  </ul>
+
+  <h2>关键数字</h2>
+  <table>
+    <thead><tr><th>split</th><th>rows</th><th>strict exact</th><th>executable pass</th><th>slot value exact/normalized F1</th><th>unsafe FN rate</th></tr></thead>
+    <tbody>
+      <tr><td>dev</td><td>207</td><td>0.2464</td><td>0.2705</td><td>0.2821 / 0.2821</td><td>0.0000</td></tr>
+      <tr><td>test</td><td>207</td><td>0.2029</td><td>0.2512</td><td>0.2390 / 0.2390</td><td>0.0083</td></tr>
+    </tbody>
+  </table>
+  <p>注意：本轮 bounded normalization 没有提升 slot-value F1；normalized metrics 仍只是诊断，不是恢复证据。</p>
+
+  <h2>Residual 重点</h2>
+  <table>
+    <thead><tr><th>split</th><th>strict pass/fail</th><th>top field paths</th><th>dominant families</th></tr></thead>
+    <tbody>
+      <tr><td>dev</td><td>51 / 156</td><td><code>normalized_command=91</code>, <code>slots.ambiguity=45</code>, <code>slots.field=28</code></td><td><code>slot_value=160</code>, <code>normalized_command=91</code></td></tr>
+      <tr><td>test</td><td>42 / 165</td><td><code>normalized_command=103</code>, <code>slots.ambiguity=37</code>, <code>slots.reason=32</code></td><td><code>slot_value=176</code>, <code>normalized_command=103</code></td></tr>
+    </tbody>
+  </table>
+
+  <h2>验证状态</h2>
+  <ul>
+    <li>RED: focused test first failed with <code>ModuleNotFoundError: No module named 'voice2task.layered_evaluation'</code>.</li>
+    <li><code>PYTHONPATH=src pytest tests/test_layered_evaluator_and_residual_diagnosis.py</code>: passed, 4 tests.</li>
+    <li><code>PYTHONPATH=src pytest tests/test_evaluator_reports.py tests/test_formal_public_heldout_prediction.py tests/test_formal_heldout_residual_family_diagnosis.py tests/test_formal_heldout_residual_cluster_inspection.py tests/test_report_cli.py</code>: passed, 61 tests.</li>
+    <li>Leak scan over new reports and this brief: passed, 0 findings; report pack also stores <code>reports/public-sample/residual-diagnosis/leak_scan_result.json</code>.</li>
+    <li><code>openspec validate add-layered-evaluator-and-residual-diagnosis --strict</code>: passed.</li>
+    <li><code>openspec validate --all --strict</code>: passed, 6 items.</li>
+    <li><code>PYTHONPATH=src ruff check src tests</code>: passed.</li>
+    <li><code>PYTHONPATH=src mypy --follow-imports=skip src/voice2task/layered_evaluation.py</code>: passed.</li>
+    <li><code>PYTHONPATH=src mypy src</code>: blocked by pre-existing errors in existing modules outside this change.</li>
+    <li><code>git diff --check</code>: passed.</li>
+  </ul>
+
+  <h2>不要过度宣称</h2>
+  <div class="warn">
+    没有 clarify merge、数据扩展、A100 training、prediction rerun、DPO/GRPO、LoRA 参数调整、evaluator relaxation、slot repair、prediction repair、adapter/checkpoint release、production readiness、safety readiness、held-out recovery 或 live-browser benchmark improvement。
+  </div>
+
+  <h2>推荐下一步</h2>
+  <p>先 review layered/residual evidence，再决定是否开新的 bounded remediation phase。不要默认继续 <code>merge-scaled-clarify-slot-boundary-candidates</code>。</p>
+</main>
+</body>
+</html>

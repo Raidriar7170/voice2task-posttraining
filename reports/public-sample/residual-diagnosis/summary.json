@@ -1,0 +1,216 @@
+{
+  "claims": {
+    "a100_training_performed": false,
+    "deterministic_normalization_only": true,
+    "dpo_or_grpo_run_performed": false,
+    "embedding_similarity_used": false,
+    "evaluator_relaxation_performed": false,
+    "llm_judge_used": false,
+    "lora_parameter_change_performed": false,
+    "model_improvement_claim": false,
+    "prediction_repair_performed": false,
+    "prediction_rerun_performed": false,
+    "slot_repair_performed": false,
+    "strict_evaluator_semantics_preserved": true
+  },
+  "evidence_kind": "layered_residual_diagnosis_summary",
+  "manifest_id": "public-sample-20260617T152259Z",
+  "recommendations": [
+    "Keep safety and confirmation residuals in a dedicated fail-closed review boundary.",
+    "Prioritize slot-key/schema-family review before adding training runs.",
+    "Review deterministic canonicalization candidates separately from strict evaluator metrics.",
+    "Use these residual counts to choose a later bounded remediation phase; do not treat them as model improvement."
+  ],
+  "splits": {
+    "dev": {
+      "family_counts": {
+        "allowed_actions": 0,
+        "confirmation": 5,
+        "extra_field": 0,
+        "extra_slot": 8,
+        "invalid_output": 0,
+        "missing_field": 0,
+        "missing_slot": 8,
+        "normalized_command": 91,
+        "refusal_or_clarify": 6,
+        "risk_level": 6,
+        "route": 8,
+        "slot_key": 0,
+        "slot_value": 160,
+        "success_criteria": 0,
+        "task_type": 8
+      },
+      "family_proportions": {
+        "allowed_actions": 0.0,
+        "confirmation": 0.024154589371980676,
+        "extra_field": 0.0,
+        "extra_slot": 0.03864734299516908,
+        "invalid_output": 0.0,
+        "missing_field": 0.0,
+        "missing_slot": 0.03864734299516908,
+        "normalized_command": 0.4396135265700483,
+        "refusal_or_clarify": 0.028985507246376812,
+        "risk_level": 0.028985507246376812,
+        "route": 0.03864734299516908,
+        "slot_key": 0.0,
+        "slot_value": 0.7729468599033816,
+        "success_criteria": 0.0,
+        "task_type": 0.03864734299516908
+      },
+      "strict_fail": 156,
+      "strict_pass": 51,
+      "top_field_paths": [
+        {
+          "count": 91,
+          "path": "normalized_command"
+        },
+        {
+          "count": 45,
+          "path": "slots.ambiguity"
+        },
+        {
+          "count": 28,
+          "path": "slots.field"
+        },
+        {
+          "count": 27,
+          "path": "slots.query"
+        },
+        {
+          "count": 21,
+          "path": "slots.action"
+        },
+        {
+          "count": 20,
+          "path": "slots.reason"
+        },
+        {
+          "count": 19,
+          "path": "slots.url"
+        },
+        {
+          "count": 16,
+          "path": "slots.target"
+        },
+        {
+          "count": 8,
+          "path": "task_type"
+        },
+        {
+          "count": 8,
+          "path": "route"
+        },
+        {
+          "count": 6,
+          "path": "safety.reason"
+        },
+        {
+          "count": 6,
+          "path": "task_type.route"
+        },
+        {
+          "count": 5,
+          "path": "confirmation_required"
+        }
+      ],
+      "total": 207
+    },
+    "test": {
+      "family_counts": {
+        "allowed_actions": 0,
+        "confirmation": 1,
+        "extra_field": 0,
+        "extra_slot": 8,
+        "invalid_output": 0,
+        "missing_field": 0,
+        "missing_slot": 5,
+        "normalized_command": 103,
+        "refusal_or_clarify": 3,
+        "risk_level": 4,
+        "route": 5,
+        "slot_key": 0,
+        "slot_value": 176,
+        "success_criteria": 0,
+        "task_type": 5
+      },
+      "family_proportions": {
+        "allowed_actions": 0.0,
+        "confirmation": 0.004830917874396135,
+        "extra_field": 0.0,
+        "extra_slot": 0.03864734299516908,
+        "invalid_output": 0.0,
+        "missing_field": 0.0,
+        "missing_slot": 0.024154589371980676,
+        "normalized_command": 0.4975845410628019,
+        "refusal_or_clarify": 0.014492753623188406,
+        "risk_level": 0.01932367149758454,
+        "route": 0.024154589371980676,
+        "slot_key": 0.0,
+        "slot_value": 0.8502415458937198,
+        "success_criteria": 0.0,
+        "task_type": 0.024154589371980676
+      },
+      "strict_fail": 165,
+      "strict_pass": 42,
+      "top_field_paths": [
+        {
+          "count": 103,
+          "path": "normalized_command"
+        },
+        {
+          "count": 37,
+          "path": "slots.ambiguity"
+        },
+        {
+          "count": 32,
+          "path": "slots.reason"
+        },
+        {
+          "count": 29,
+          "path": "slots.action"
+        },
+        {
+          "count": 29,
+          "path": "slots.query"
+        },
+        {
+          "count": 25,
+          "path": "slots.field"
+        },
+        {
+          "count": 22,
+          "path": "slots.url"
+        },
+        {
+          "count": 15,
+          "path": "slots.target"
+        },
+        {
+          "count": 5,
+          "path": "task_type"
+        },
+        {
+          "count": 5,
+          "path": "route"
+        },
+        {
+          "count": 3,
+          "path": "safety.reason"
+        },
+        {
+          "count": 3,
+          "path": "task_type.route"
+        },
+        {
+          "count": 1,
+          "path": "confirmation_required"
+        },
+        {
+          "count": 1,
+          "path": "safety.allow"
+        }
+      ],
+      "total": 207
+    }
+  }
+}
