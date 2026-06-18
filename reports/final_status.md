@@ -12,6 +12,7 @@
 | --- | --- |
 | Latest data evidence pack | `reports/public-sample/scaled-public-sample-merge/` |
 | Latest scaled-manifest prediction baseline evidence pack | `reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/` |
+| Latest canonical slot-boundary candidate materialization evidence pack | `reports/public-sample/canonical-slot-boundary-candidates/` |
 | Latest slot canonicalization policy evidence pack | `reports/public-sample/slot-canonicalization-policy/` |
 | Latest safety repair candidate-design review evidence pack | `reports/public-sample/safety-repair-candidate-design-review/` |
 | Latest safety repair candidate-design evidence pack | `reports/public-sample/safety-repair-candidate-design/` |
@@ -41,8 +42,9 @@
 | Latest interpretation | `formal_public_heldout_partial_signal` |
 | Latest strategic-design interpretation | `scale_data_and_diagnose_by_tier_before_another_training_retry` |
 | Latest scaled-manifest cluster interpretation | `scaled_current_123_residual_clusters_clarify_slots_top_cluster` |
+| Latest canonical slot-boundary candidate result | standalone report-local public-safe examples only; no formal data/SFT/DPO/manifest/prediction/training/evaluator change |
 | Latest slot canonicalization policy result | design-only policy: slot keys comparatively stable; slot values and `normalized_command` dominate strict residuals |
-| Latest slot canonicalization recommended next step | `materialize-canonical-slot-boundary-candidates` |
+| Latest slot canonicalization recommended next step | review/archive `materialize-canonical-slot-boundary-candidates`; later formal merge/postprocessor/training require separate bounded phases |
 | Latest residual-driven remediation target selection | `safety-repair-unsafe-false-negative` first, `slot-value-canonicalization-policy` second |
 | Latest safety repair candidate-design review result | 1 row-backed theme ready for later bounded proposal, 1 policy-scoped theme, 1 broad theme deferred; review-only and not materialization approval |
 | Latest safety repair candidate-design review recommended next step | `propose_clarify_confirmation_safety_repair_materialization_after_review` |
@@ -178,6 +180,16 @@ A100 恢复后已完成 observed retry：
 - status: design-only；没有 formal public sample mutation、SFT/DPO rows、split change、训练、prediction rerun、A100 job、prompt/evaluator 改动、evaluator relaxation、LLM judge、semantic-equivalence scoring、prediction repair、adapter/checkpoint release 或 model-quality claim；
 - key conclusion: slot keys are comparatively stable, while slot values and `normalized_command` dominate current strict residuals；
 - recommended next bounded step: `materialize-canonical-slot-boundary-candidates`。
+
+随后已完成 canonical slot-boundary candidate materialization：
+
+- evidence: `reports/public-sample/canonical-slot-boundary-candidates/summary.md`
+- machine-readable evidence: `reports/public-sample/canonical-slot-boundary-candidates/summary.json`
+- leak scan record: `reports/public-sample/canonical-slot-boundary-candidates/leak_scan_result.json`
+- status: standalone report-local candidates only；没有 JSONL seed candidates、formal public sample mutation、SFT/DPO rows、manifest rebuild、split change、prediction rerun、训练、A100 job、model config、evaluator code、postprocessor implementation、strict exact relaxation、LLM judge、semantic-equivalence scoring、prediction repair、adapter/checkpoint release 或 model-quality claim；
+- accepted groups: `slot_key_aliases`、`slot_value_boundaries`、`normalized_command_display_diagnostic`；
+- excluded cases: date、city/location、product、URL host、price/amount、product/query、location/destination、action/reason 非等价合并；
+- next step: Reviewer diff review；archive 由主线程处理。
 
 ## Formal Public Held-Out 指标（绑定 `public-sample-20260617T152259Z`）
 

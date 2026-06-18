@@ -1,0 +1,354 @@
+{
+  "evidence_kind": "canonical_slot_boundary_candidate_materialization",
+  "materialization_status": "standalone_candidate_examples_materialized",
+  "source_policy_dir": "reports/public-sample/slot-canonicalization-policy",
+  "source_manifest_id": "public-sample-20260617T152259Z",
+  "generated_at": "2026-06-18",
+  "summary": {
+    "conclusion": "Public-safe canonical slot-boundary examples have been materialized as standalone report-local candidates only.",
+    "accepted_candidate_count": 9,
+    "excluded_non_equivalence_count": 8,
+    "formal_public_sample_status": "not_added"
+  },
+  "source_policy_files": [
+    "reports/public-sample/slot-canonicalization-policy/slot-key-policy.md",
+    "reports/public-sample/slot-canonicalization-policy/slot-value-policy.md",
+    "reports/public-sample/slot-canonicalization-policy/normalized-command-policy.md",
+    "reports/public-sample/slot-canonicalization-policy/model-target-boundary.md",
+    "reports/public-sample/slot-canonicalization-policy/summary.json"
+  ],
+  "accepted_candidates": [
+    {
+      "candidate_id": "slot-key-alias-search-text-query",
+      "candidate_group": "slot_key_aliases",
+      "source_policy_file": "slot-key-policy.md",
+      "source_policy_section": "Alias To Canonical",
+      "task_type": "search",
+      "input_slot_sketch": {
+        "search_text": "厦门轮渡时刻表"
+      },
+      "canonical_slot_sketch": {
+        "query": "厦门轮渡时刻表"
+      },
+      "rationale": "Alias-only key rewrite preserves the same public search intent.",
+      "review_status": "report_local_candidate_only",
+      "later_allowed_operation": "formal_sample_review_or_diagnostic_materialization",
+      "strict_exact_impact": "none",
+      "formal_public_sample_status": "not_added"
+    },
+    {
+      "candidate_id": "slot-key-alias-site-url",
+      "candidate_group": "slot_key_aliases",
+      "source_policy_file": "slot-key-policy.md",
+      "source_policy_section": "Alias To Canonical",
+      "task_type": "navigate",
+      "input_slot_sketch": {
+        "site": "https://example.com/help"
+      },
+      "canonical_slot_sketch": {
+        "url": "https://example.com/help"
+      },
+      "rationale": "Alias-only key rewrite preserves the same public URL.",
+      "review_status": "report_local_candidate_only",
+      "later_allowed_operation": "formal_sample_review_or_diagnostic_materialization",
+      "strict_exact_impact": "none",
+      "formal_public_sample_status": "not_added"
+    },
+    {
+      "candidate_id": "slot-key-alias-field-value",
+      "candidate_group": "slot_key_aliases",
+      "source_policy_file": "slot-key-policy.md",
+      "source_policy_section": "Alias To Canonical",
+      "task_type": "form_fill",
+      "input_slot_sketch": {
+        "field": "备注",
+        "value": "请尽快处理"
+      },
+      "canonical_slot_sketch": {
+        "field_name": "备注",
+        "field_value": "请尽快处理"
+      },
+      "rationale": "Form field key aliases are deterministic and preserve the same public field/value pair.",
+      "review_status": "report_local_candidate_only",
+      "later_allowed_operation": "formal_sample_review_or_diagnostic_materialization",
+      "strict_exact_impact": "none",
+      "formal_public_sample_status": "not_added"
+    },
+    {
+      "candidate_id": "slot-value-boundary-whitespace-trim",
+      "candidate_group": "slot_value_boundaries",
+      "source_policy_file": "slot-value-policy.md",
+      "source_policy_section": "Safe Canonicalization Types",
+      "task_type": "search",
+      "input_slot_sketch": {
+        "query": "  南京今天空气质量  "
+      },
+      "canonical_slot_sketch": {
+        "query": "南京今天空气质量"
+      },
+      "rationale": "Leading and trailing whitespace removal preserves the same public entity and intent.",
+      "review_status": "report_local_candidate_only",
+      "later_allowed_operation": "formal_sample_review_or_diagnostic_materialization",
+      "strict_exact_impact": "none",
+      "formal_public_sample_status": "not_added"
+    },
+    {
+      "candidate_id": "slot-value-boundary-fullwidth-punctuation",
+      "candidate_group": "slot_value_boundaries",
+      "source_policy_file": "slot-value-policy.md",
+      "source_policy_section": "Safe Canonicalization Types",
+      "task_type": "extract",
+      "input_slot_sketch": {
+        "target": "商品价格，库存"
+      },
+      "canonical_slot_sketch": {
+        "target": "商品价格,库存"
+      },
+      "rationale": "Punctuation normalization is reviewable when the named public fields stay unchanged.",
+      "review_status": "report_local_candidate_only",
+      "later_allowed_operation": "formal_sample_review_or_diagnostic_materialization",
+      "strict_exact_impact": "none",
+      "formal_public_sample_status": "not_added"
+    },
+    {
+      "candidate_id": "slot-value-boundary-filler-removal",
+      "candidate_group": "slot_value_boundaries",
+      "source_policy_file": "slot-value-policy.md",
+      "source_policy_section": "Chinese Filler And Request Words",
+      "task_type": "search",
+      "input_slot_sketch": {
+        "query": "请帮我查厦门轮渡时刻表"
+      },
+      "canonical_slot_sketch": {
+        "query": "厦门轮渡时刻表"
+      },
+      "rationale": "Request filler removal is reviewable only when the concrete public entity remains unchanged.",
+      "review_status": "report_local_candidate_only",
+      "later_allowed_operation": "formal_sample_review_or_diagnostic_materialization",
+      "strict_exact_impact": "none",
+      "formal_public_sample_status": "not_added"
+    },
+    {
+      "candidate_id": "slot-value-boundary-url-email-casing",
+      "candidate_group": "slot_value_boundaries",
+      "source_policy_file": "slot-value-policy.md",
+      "source_policy_section": "Numeric, Date, Price, City, Product, URL, Email, Phone",
+      "task_type": "navigate",
+      "input_slot_sketch": {
+        "url": "HTTPS://EXAMPLE.COM/Help"
+      },
+      "canonical_slot_sketch": {
+        "url": "https://example.com/Help"
+      },
+      "rationale": "Protocol and host casing can be reviewed when URL semantics are preserved and path casing is not rewritten.",
+      "review_status": "report_local_candidate_only",
+      "later_allowed_operation": "formal_sample_review_or_diagnostic_materialization",
+      "strict_exact_impact": "none",
+      "formal_public_sample_status": "not_added"
+    },
+    {
+      "candidate_id": "normalized-command-display-search-template",
+      "candidate_group": "normalized_command_display_diagnostic",
+      "source_policy_file": "normalized-command-policy.md",
+      "source_policy_section": "Examples",
+      "task_type": "diagnostic_display",
+      "input_slot_sketch": {
+        "task_type": "search",
+        "slots": {
+          "query": "南京今日空气质量"
+        },
+        "normalized_command": "搜索南京今日空气质量"
+      },
+      "canonical_slot_sketch": {
+        "display_normalized_command": "搜索南京今日空气质量"
+      },
+      "rationale": "Display wording may be reviewed later, but this candidate does not declare equivalence or alter strict scoring.",
+      "review_status": "report_local_candidate_only",
+      "later_allowed_operation": "display_template_review_only",
+      "strict_exact_impact": "none",
+      "formal_public_sample_status": "not_added",
+      "declares_equivalence": false,
+      "rescore_prior_residuals": false,
+      "repair_prediction": false
+    },
+    {
+      "candidate_id": "normalized-command-display-safety-template",
+      "candidate_group": "normalized_command_display_diagnostic",
+      "source_policy_file": "normalized-command-policy.md",
+      "source_policy_section": "Examples",
+      "task_type": "diagnostic_display",
+      "input_slot_sketch": {
+        "task_type": "blocked",
+        "slots": {
+          "reason": "payment_requires_user_control"
+        },
+        "normalized_command": "拒绝代替用户付款"
+      },
+      "canonical_slot_sketch": {
+        "display_normalized_command": "拒绝代替用户付款"
+      },
+      "rationale": "Safety-facing display wording stays diagnostic and review-visible until a later policy owns it.",
+      "review_status": "report_local_candidate_only",
+      "later_allowed_operation": "display_template_review_only",
+      "strict_exact_impact": "none",
+      "formal_public_sample_status": "not_added",
+      "declares_equivalence": false,
+      "rescore_prior_residuals": false,
+      "repair_prediction": false
+    }
+  ],
+  "excluded_non_equivalence_examples": [
+    {
+      "case_id": "date_today_vs_tomorrow",
+      "source_policy_file": "slot-value-policy.md",
+      "source_policy_section": "Numeric, Date, Price, City, Product, URL, Email, Phone",
+      "input_slot_sketch": {
+        "date": "今天"
+      },
+      "rejected_canonical_slot_sketch": {
+        "date": "明天"
+      },
+      "merge_allowed": false,
+      "reason": "Relative dates are not equivalent without a separately defined date-reference boundary.",
+      "formal_public_sample_status": "not_added"
+    },
+    {
+      "case_id": "city_origin_vs_destination",
+      "source_policy_file": "slot-value-policy.md",
+      "source_policy_section": "Numeric, Date, Price, City, Product, URL, Email, Phone",
+      "input_slot_sketch": {
+        "city": "武汉"
+      },
+      "rejected_canonical_slot_sketch": {
+        "destination": "武汉"
+      },
+      "merge_allowed": false,
+      "reason": "Origin, filter city, and destination are task-scoped semantics.",
+      "formal_public_sample_status": "not_added"
+    },
+    {
+      "case_id": "product_name_change",
+      "source_policy_file": "slot-value-policy.md",
+      "source_policy_section": "Numeric, Date, Price, City, Product, URL, Email, Phone",
+      "input_slot_sketch": {
+        "product_name": "示例耳机 A"
+      },
+      "rejected_canonical_slot_sketch": {
+        "product_name": "示例耳机 B"
+      },
+      "merge_allowed": false,
+      "reason": "Distinct public product placeholders remain distinct values.",
+      "formal_public_sample_status": "not_added"
+    },
+    {
+      "case_id": "url_host_change",
+      "source_policy_file": "slot-value-policy.md",
+      "source_policy_section": "Do Not Merge",
+      "input_slot_sketch": {
+        "url": "https://map.example.com"
+      },
+      "rejected_canonical_slot_sketch": {
+        "url": "https://maps.example.com"
+      },
+      "merge_allowed": false,
+      "reason": "URL host changes are executable target changes.",
+      "formal_public_sample_status": "not_added"
+    },
+    {
+      "case_id": "price_amount_change",
+      "source_policy_file": "slot-value-policy.md",
+      "source_policy_section": "Numeric, Date, Price, City, Product, URL, Email, Phone",
+      "input_slot_sketch": {
+        "amount": "100元"
+      },
+      "rejected_canonical_slot_sketch": {
+        "amount": "200元"
+      },
+      "merge_allowed": false,
+      "reason": "Changed quantities or price bounds are material changes.",
+      "formal_public_sample_status": "not_added"
+    },
+    {
+      "case_id": "product_name_vs_query",
+      "source_policy_file": "slot-key-policy.md",
+      "source_policy_section": "Non-Equivalence Cases",
+      "input_slot_sketch": {
+        "product_name": "示例耳机 A"
+      },
+      "rejected_canonical_slot_sketch": {
+        "query": "示例耳机 A"
+      },
+      "merge_allowed": false,
+      "reason": "A product identifier is not always the same as a search intent.",
+      "formal_public_sample_status": "not_added"
+    },
+    {
+      "case_id": "location_vs_destination",
+      "source_policy_file": "slot-key-policy.md",
+      "source_policy_section": "Non-Equivalence Cases",
+      "input_slot_sketch": {
+        "location": "厦门"
+      },
+      "rejected_canonical_slot_sketch": {
+        "destination": "厦门"
+      },
+      "merge_allowed": false,
+      "reason": "Current location and destination can drive different browser actions.",
+      "formal_public_sample_status": "not_added"
+    },
+    {
+      "case_id": "action_vs_reason",
+      "source_policy_file": "slot-key-policy.md",
+      "source_policy_section": "Non-Equivalence Cases",
+      "input_slot_sketch": {
+        "action": "代替用户付款"
+      },
+      "rejected_canonical_slot_sketch": {
+        "reason": "payment_requires_user_control"
+      },
+      "merge_allowed": false,
+      "reason": "Blocked action and refusal reason must remain separately reviewable.",
+      "formal_public_sample_status": "not_added"
+    }
+  ],
+  "report_local_manifest": {
+    "artifact_dir": "reports/public-sample/canonical-slot-boundary-candidates",
+    "artifact_files": [
+      "summary.json",
+      "summary.md",
+      "leak_scan_result.json"
+    ],
+    "candidate_examples_are_public_safe": true,
+    "candidate_examples_are_formal_data": false,
+    "candidate_examples_are_sft_rows": false,
+    "candidate_examples_are_dpo_pairs": false,
+    "candidate_examples_are_predictions": false,
+    "candidate_examples_are_training_outputs": false
+  },
+  "execution_scope": {
+    "hard_boundary": true,
+    "formal_public_sample_data_mutation": false,
+    "sft_or_dpo_rows_added": false,
+    "manifest_rebuilt": false,
+    "split_change": false,
+    "evaluator_definition_change": false,
+    "evaluator_metric_change": false,
+    "prediction_run": false,
+    "training_run": false,
+    "a100_job": false,
+    "deterministic_postprocessor_implemented": false,
+    "strict_exact_relaxation": false,
+    "llm_judge": false,
+    "semantic_equivalence_scoring": false,
+    "prediction_repair": false,
+    "checkpoint_or_adapter_release": false
+  },
+  "claims": {
+    "strict_exact_preserved": true,
+    "model_improvement_claim": false,
+    "held_out_recovery_claim": false,
+    "production_readiness_claim": false,
+    "safety_readiness_claim": false,
+    "live_browser_benchmark_improvement_claim": false
+  }
+}

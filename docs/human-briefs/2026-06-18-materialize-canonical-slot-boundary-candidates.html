@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Canonical Slot Boundary Candidates</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #1f2933;
+      background: #f7f4ef;
+      line-height: 1.6;
+    }
+    main {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 40px 22px 56px;
+    }
+    header {
+      border-bottom: 3px solid #2f6f73;
+      margin-bottom: 28px;
+      padding-bottom: 18px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      letter-spacing: 0;
+    }
+    h2 {
+      margin-top: 26px;
+      font-size: 19px;
+      color: #2f6f73;
+      letter-spacing: 0;
+    }
+    .status {
+      display: inline-block;
+      padding: 4px 9px;
+      border-radius: 4px;
+      background: #e4f0ef;
+      color: #214f52;
+      font-weight: 700;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 12px;
+    }
+    .tile {
+      background: #ffffff;
+      border: 1px solid #d8dedb;
+      border-radius: 6px;
+      padding: 14px;
+    }
+    code {
+      background: #ece7df;
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 0.95em;
+    }
+    ul {
+      padding-left: 20px;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>canonical slot boundary candidates</h1>
+      <p class="status">状态：已完成 worker materialization，待 review / archive</p>
+      <p>一句话结论：本阶段只把 slot canonicalization policy 转成 report-local 的 public-safe 候选例子，没有进入正式 public sample，也没有触发训练、预测或 evaluator 变化。</p>
+    </header>
+
+    <h2>本阶段改变了什么</h2>
+    <div class="grid">
+      <section class="tile">
+        <strong>机器可读报告</strong>
+        <p><code>summary.json</code> 记录候选 schema、source policy、execution scope 和 claims 边界。</p>
+      </section>
+      <section class="tile">
+        <strong>人类可读摘要</strong>
+        <p><code>summary.md</code> 汇总 accepted groups、excluded cases 和 standalone 边界。</p>
+      </section>
+      <section class="tile">
+        <strong>Focused test</strong>
+        <p>新增测试锁住 artifact presence、非等价排除、normalized_command diagnostic-only 和 protected paths。</p>
+      </section>
+    </div>
+
+    <h2>关键文件</h2>
+    <ul>
+      <li><code>reports/public-sample/canonical-slot-boundary-candidates/summary.json</code></li>
+      <li><code>reports/public-sample/canonical-slot-boundary-candidates/summary.md</code></li>
+      <li><code>reports/public-sample/canonical-slot-boundary-candidates/leak_scan_result.json</code></li>
+      <li><code>tests/test_canonical_slot_boundary_candidate_materialization.py</code></li>
+      <li><code>openspec/changes/materialize-canonical-slot-boundary-candidates/tasks.md</code></li>
+    </ul>
+
+    <h2>候选范围</h2>
+    <ul>
+      <li><code>slot_key_aliases</code>: <code>search_text -&gt; query</code>, <code>site -&gt; url</code>, <code>field/value -&gt; field_name/field_value</code>。</li>
+      <li><code>slot_value_boundaries</code>: whitespace trim、full-width punctuation、filler removal、URL casing under semantic-preserving constraints。</li>
+      <li><code>normalized_command_display_diagnostic</code>: 只做 display/template review 候选，不声明 equivalence，不 repair，不 re-score。</li>
+    </ul>
+
+    <h2>明确排除</h2>
+    <p>报告显式排除 date、city/location、product、URL host、price/amount、product/query、location/destination、action/reason 等非等价合并。</p>
+
+    <h2>验证命令</h2>
+    <ul>
+      <li><code>python -m pytest -q tests/test_canonical_slot_boundary_candidate_materialization.py</code></li>
+      <li><code>python -m pytest -q tests/test_slot_canonicalization_policy.py tests/test_canonical_slot_boundary_candidate_materialization.py</code></li>
+      <li><code>python -m pytest -q</code></li>
+      <li><code>openspec validate --all --strict</code></li>
+      <li><code>git diff --check</code></li>
+    </ul>
+
+    <h2>不要过度声称</h2>
+    <p>这不是 model recovery、不是 held-out improvement、不是 safety readiness、不是 production readiness，也不是 live-browser benchmark evidence。</p>
+
+    <h2>推荐下一步</h2>
+    <p>先进入 Reviewer diff review；只修 Must Fix。通过后由主线程决定 archive，不在 worker 阶段归档。</p>
+  </main>
+</body>
+</html>

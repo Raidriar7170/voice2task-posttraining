@@ -6,8 +6,10 @@ Voice2Task Post-Training is a companion project for training and evaluating smal
 
 As of 2026-06-18, the first project phase is closed as an evidence-backed
 post-training and evaluation baseline, not as a production-ready model release.
-The public-facing truth surface has twenty-four current layers. The newest
-five are the slot canonicalization policy under
+The public-facing truth surface has twenty-five current layers. The newest
+six are the standalone canonical slot-boundary candidate materialization under
+`reports/public-sample/canonical-slot-boundary-candidates/`, the slot
+canonicalization policy under
 `reports/public-sample/slot-canonicalization-policy/`, the safety repair
 candidate design review under
 `reports/public-sample/safety-repair-candidate-design-review/`, the safety
@@ -71,9 +73,11 @@ Current formal public sample data boundary:
 | latest model run type | prediction-only retry on the scaled dev/test split using the existing `a100-current-train-split-sft-retry` private adapter |
 | latest model interpretation | `formal_public_heldout_partial_signal` |
 | latest model evidence | `reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/` |
+| latest canonical slot-boundary candidate evidence | `reports/public-sample/canonical-slot-boundary-candidates/` |
+| latest canonical slot-boundary candidate result | standalone public-safe report-local examples only; no formal data/SFT/DPO/manifest/prediction/training/evaluator change |
 | latest slot canonicalization policy evidence | `reports/public-sample/slot-canonicalization-policy/` |
 | latest slot canonicalization policy result | design-only policy evidence: slot keys are comparatively stable, while slot values and `normalized_command` dominate current strict residuals; no data/training/evaluator change |
-| latest slot canonicalization recommended next step | `materialize-canonical-slot-boundary-candidates` before formal merge, postprocessor implementation, or training retry |
+| latest slot canonicalization recommended next step | review/archive `materialize-canonical-slot-boundary-candidates`; later formal merge, postprocessor implementation, or training retry still require separate bounded phases |
 | latest safety repair candidate-design review evidence | `reports/public-sample/safety-repair-candidate-design-review/` |
 | latest safety repair candidate-design review result | 1 row-backed theme ready for later bounded materialization proposal, 1 policy-scoped theme, 1 broad unsafe-action theme deferred to policy design; review-only, not data approval |
 | latest safety repair candidate-design review recommended next step | `propose_clarify_confirmation_safety_repair_materialization_after_review` |
@@ -220,6 +224,19 @@ repair predictions, release adapters/checkpoints, or claim held-out recovery,
 model improvement, production readiness, safety readiness, or live-browser
 benchmark improvement. The recommended next bounded step is
 `materialize-canonical-slot-boundary-candidates`.
+
+The canonical slot-boundary candidate materialization is now complete under
+`reports/public-sample/canonical-slot-boundary-candidates/`. It is standalone
+report-local materialization evidence, not formal public sample data and not
+model-quality evidence. It materializes public-safe examples for slot key
+aliases, conservative slot value boundaries, normalized-command display
+diagnostics, and explicit non-equivalence exclusions. It does not write JSONL
+seed candidates, SFT/DPO rows, manifests, predictions, model configs,
+evaluator code, A100 outputs, or active scaled-clarify change files; it does
+not train, predict, implement a deterministic postprocessor, relax strict
+exact, use an LLM judge, run semantic-equivalence scoring, repair predictions,
+release adapters/checkpoints, or claim held-out recovery, model improvement,
+production readiness, safety readiness, or live-browser benchmark improvement.
 
 The latest strategic design is now complete under
 `reports/public-sample/scaled-public-sample-and-tiered-eval-design/`. It is a
