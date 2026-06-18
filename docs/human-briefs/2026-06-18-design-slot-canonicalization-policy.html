@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Slot canonicalization policy</title>
+  <style>
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:32px;line-height:1.6;color:#1f2933;background:#ffffff}
+    main{max-width:920px;margin:0 auto}
+    h1{font-size:28px;margin-bottom:8px}
+    h2{font-size:18px;margin-top:28px}
+    code{background:#f3f4f6;padding:1px 4px;border-radius:4px}
+    .status{display:inline-block;border:1px solid #9aa6b2;border-radius:6px;padding:4px 8px;font-size:13px}
+    table{border-collapse:collapse;width:100%;margin:12px 0}
+    th,td{border:1px solid #d6dde5;padding:6px 8px;text-align:left}
+    th{background:#f7f9fb}
+    a{color:#075985}
+  </style>
+</head>
+<body>
+<main>
+  <p class="status">applying / design-only</p>
+  <h1>Slot canonicalization policy</h1>
+  <p><strong>一句话结论：</strong>本阶段把 slot key、slot value、<code>normalized_command</code> 和 model/postprocessor 边界写成 public-safe 设计证据；没有训练、预测、改 evaluator、改 split 或声明模型改善。</p>
+
+  <h2>当前状态</h2>
+  <p>基于 <code>public-sample-20260617T152259Z</code> 的 layered/residual 证据：slot key 较稳定，但 slot value 与 <code>normalized_command</code> 是主要严格 residual。</p>
+
+  <h2>本阶段变化</h2>
+  <ul>
+    <li>新增 <code>reports/public-sample/slot-canonicalization-policy/</code> 下 7 个 policy 文件。</li>
+    <li>明确 key alias、非等价边界、value normalization 非目标、<code>normalized_command</code> diagnostic/display 定位。</li>
+    <li>把 <code>allowed_actions</code>、<code>success_criteria</code>、display normalized command、policy tags、runtime hints 归为后续 deterministic postprocessor 候选。</li>
+  </ul>
+
+  <h2>关键文件</h2>
+  <ul>
+    <li><a href="../../reports/public-sample/slot-canonicalization-policy/summary.md"><code>summary.md</code></a></li>
+    <li><a href="../../reports/public-sample/slot-canonicalization-policy/slot-key-policy.md"><code>slot-key-policy.md</code></a></li>
+    <li><a href="../../reports/public-sample/slot-canonicalization-policy/slot-value-policy.md"><code>slot-value-policy.md</code></a></li>
+    <li><a href="../../reports/public-sample/slot-canonicalization-policy/model-target-boundary.md"><code>model-target-boundary.md</code></a></li>
+    <li><a href="../../openspec/changes/design-slot-canonicalization-policy/tasks.md"><code>OpenSpec tasks.md</code></a></li>
+  </ul>
+
+  <h2>验证</h2>
+  <table>
+    <tr><th>命令</th><th>结果</th></tr>
+    <tr><td><code>PYTHONPATH=src python -m pytest -q tests/test_slot_canonicalization_policy.py</code></td><td>RED 阶段先因缺失 artifacts 失败；实现后 6 passed。</td></tr>
+    <tr><td><code>PYTHONPATH=src python -m pytest -q</code></td><td>465 passed。</td></tr>
+    <tr><td><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code></td><td>6 passed, 0 failed。</td></tr>
+    <tr><td><code>git diff --check</code></td><td>passed，无输出。</td></tr>
+    <tr><td><code>PYTHONPATH=src python -m voice2task.cli.report leak-scan ...</code></td><td>ok true，0 findings。</td></tr>
+  </table>
+
+  <h2>剩余风险</h2>
+  <ul>
+    <li>Policy 语言可能被误读为已实现 normalization；实际只是 design-only。</li>
+    <li>下一阶段如果要 materialize candidates、实现 postprocessor 或训练，必须新开 bounded OpenSpec phase。</li>
+    <li>不能把当前报告解读为 strict exact、slot F1、production readiness 或 safety readiness 改善。</li>
+  </ul>
+
+  <h2>推荐下一步</h2>
+  <p>建议新开 <code>materialize-canonical-slot-boundary-candidates</code>，只做 public-safe candidate materialization 和 review；不要直接跳到训练或 evaluator relaxation。</p>
+</main>
+</body>
+</html>

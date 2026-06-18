@@ -1,0 +1,236 @@
+{
+  "evidence_kind": "slot_canonicalization_policy",
+  "manifest_id": "public-sample-20260617T152259Z",
+  "phase_status": "design_only",
+  "summary": {
+    "conclusion": "Slot value and normalized_command residuals dominate the current strict failures, while slot keys are comparatively stable; the next step should be bounded policy materialization, not training.",
+    "strict_exact_dev": 0.2464,
+    "strict_exact_test": 0.2029,
+    "slot_key_f1_dev": 0.9872,
+    "slot_key_f1_test": 0.9769,
+    "slot_value_exact_f1_dev": 0.2821,
+    "slot_value_exact_f1_test": 0.239,
+    "slot_value_normalized_f1_dev": 0.2821,
+    "slot_value_normalized_f1_test": 0.239,
+    "dominant_residuals": {
+      "slot_value_mismatch": 336,
+      "normalized_command_mismatch": 194,
+      "extra_slot": 16,
+      "missing_slot": 13,
+      "route_mismatch": 13,
+      "task_type_mismatch": 13
+    }
+  },
+  "source_artifacts": {
+    "context": "CONTEXT.md",
+    "layered_summary": "reports/public-sample/layered-eval/summary.md",
+    "layered_dev_metrics": "reports/public-sample/layered-eval/dev/metrics.json",
+    "layered_test_metrics": "reports/public-sample/layered-eval/test/metrics.json",
+    "residual_summary": "reports/public-sample/residual-diagnosis/summary.md",
+    "residual_dev": "reports/public-sample/residual-diagnosis/dev/residual_diagnosis.json",
+    "residual_test": "reports/public-sample/residual-diagnosis/test/residual_diagnosis.json",
+    "remediation_selection": "reports/public-sample/remediation-target-selection/summary.json",
+    "schema": "src/voice2task/schemas.py",
+    "strict_evaluator": "src/voice2task/evaluation.py",
+    "layered_evaluator": "src/voice2task/layered_evaluation.py",
+    "evaluation_docs": "docs/evaluation.md"
+  },
+  "slot_key_policy": {
+    "canonical_keys": [
+      "query",
+      "url",
+      "field_name",
+      "field_value",
+      "target",
+      "ambiguity",
+      "reason",
+      "amount",
+      "date",
+      "city",
+      "destination",
+      "product_name",
+      "action"
+    ],
+    "aliases": {
+      "keyword": "query",
+      "keywords": "query",
+      "search_text": "query",
+      "search_term": "query",
+      "q": "query",
+      "webpage": "url",
+      "page": "url",
+      "site": "url",
+      "website": "url",
+      "field": "field_name",
+      "form_field": "field_name",
+      "input_field": "field_name",
+      "value": "field_value",
+      "input_value": "field_value"
+    },
+    "disallowed_keys": [
+      "raw_transcript",
+      "asr_text",
+      "debug",
+      "notes",
+      "private_path",
+      "runtime_hint",
+      "allowed_actions",
+      "success_criteria"
+    ],
+    "task_type_boundaries": {
+      "search": {
+        "required": [
+          "query"
+        ],
+        "optional": [
+          "date",
+          "city"
+        ]
+      },
+      "navigate": {
+        "required": [
+          "url"
+        ],
+        "optional": []
+      },
+      "form_fill": {
+        "required": [
+          "field_name",
+          "field_value"
+        ],
+        "optional": [
+          "url"
+        ]
+      },
+      "extract": {
+        "required": [
+          "target"
+        ],
+        "optional": [
+          "url",
+          "query",
+          "field_name"
+        ]
+      },
+      "clarify": {
+        "required": [
+          "ambiguity"
+        ],
+        "optional": []
+      },
+      "blocked": {
+        "required": [
+          "reason"
+        ],
+        "optional": [
+          "action"
+        ]
+      }
+    },
+    "non_equivalence_cases": [
+      {
+        "case_id": "product_name_vs_query",
+        "merge_allowed": false,
+        "reason": "A product identifier is not always the same as a search intent."
+      },
+      {
+        "case_id": "location_vs_destination",
+        "merge_allowed": false,
+        "reason": "Origin, current location, city filter, and destination have different task semantics."
+      },
+      {
+        "case_id": "action_vs_reason",
+        "merge_allowed": false,
+        "reason": "Blocked actions and refusal reasons must remain inspectable separately."
+      }
+    ]
+  },
+  "slot_value_policy": {
+    "safe_canonicalization_types": [
+      "trim leading and trailing whitespace",
+      "normalize full-width and half-width punctuation",
+      "remove purely filler request words when the entity remains unchanged",
+      "normalize ASCII casing for URLs and emails only where the protocol/domain semantics allow it"
+    ],
+    "non_equivalence_cases": [
+      {
+        "case_id": "date_today_vs_tomorrow",
+        "merge_allowed": false
+      },
+      {
+        "case_id": "city_origin_vs_destination",
+        "merge_allowed": false
+      },
+      {
+        "case_id": "url_host_change",
+        "merge_allowed": false
+      },
+      {
+        "case_id": "product_name_change",
+        "merge_allowed": false
+      },
+      {
+        "case_id": "price_amount_change",
+        "merge_allowed": false
+      }
+    ],
+    "strict_exact_impact": "none"
+  },
+  "normalized_command_policy": {
+    "positioning": "diagnostic_display_candidate",
+    "recommended_target": "deterministic_template_or_display_derivation_after_separate_change",
+    "strict_exact_impact": "none",
+    "core_executable_contract_impact": "outside_core_pass_condition"
+  },
+  "model_target_boundary": {
+    "model_target": [
+      "task_type",
+      "route",
+      "safety.allow",
+      "safety.reason",
+      "confirmation_required",
+      "slots"
+    ],
+    "derived_field": [
+      "allowed_actions",
+      "success_criteria",
+      "display_normalized_command",
+      "policy_tags",
+      "confirmation_defaults",
+      "runtime_hints"
+    ],
+    "validated_field": [
+      "language",
+      "contract_version"
+    ]
+  },
+  "recommended_next_change": {
+    "proposed_change_id": "materialize-canonical-slot-boundary-candidates",
+    "rationale": "Turn this design policy into reviewed public-safe canonical slot-boundary candidates before any formal merge, postprocessor, or training retry.",
+    "implemented_in_this_phase": false
+  },
+  "execution_scope": {
+    "design_only": true,
+    "training_run": false,
+    "prediction_run": false,
+    "a100_job": false,
+    "public_sample_data_mutation": false,
+    "split_change": false,
+    "sft_or_dpo_rows_added": false,
+    "evaluator_definition_change": false,
+    "evaluator_metric_change": false,
+    "evaluator_relaxation": false,
+    "llm_judge": false,
+    "semantic_equivalence_scoring": false,
+    "prediction_repair": false,
+    "checkpoint_or_adapter_release": false
+  },
+  "claims": {
+    "strict_exact_preserved": true,
+    "model_improvement_claim": false,
+    "held_out_recovery_claim": false,
+    "production_readiness_claim": false,
+    "safety_readiness_claim": false,
+    "live_browser_benchmark_improvement_claim": false
+  }
+}

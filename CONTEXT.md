@@ -6,54 +6,57 @@ Voice2Task Post-Training is a companion project for training and evaluating smal
 
 As of 2026-06-18, the first project phase is closed as an evidence-backed
 post-training and evaluation baseline, not as a production-ready model release.
-The public-facing truth surface has twenty-three current layers. The newest
-five are the safety repair candidate design review under
+The public-facing truth surface has twenty-four current layers. The newest
+five are the slot canonicalization policy under
+`reports/public-sample/slot-canonicalization-policy/`, the safety repair
+candidate design review under
 `reports/public-sample/safety-repair-candidate-design-review/`, the safety
 repair candidate design under `reports/public-sample/safety-repair-candidate-design/`,
 the residual-driven remediation target selection under
-`reports/public-sample/remediation-target-selection/`, the additive layered
-evaluator under `reports/public-sample/layered-eval/`, and the additive
-residual diagnosis under `reports/public-sample/residual-diagnosis/`;
-the existing eighteen layers remain:
+`reports/public-sample/remediation-target-selection/`, and the additive layered
+evaluator under `reports/public-sample/layered-eval/`;
+the existing nineteen layers remain:
 
-1. the standalone scaled clarify slot-boundary candidate materialization under
+1. the additive residual diagnosis under
+   `reports/public-sample/residual-diagnosis/`;
+2. the standalone scaled clarify slot-boundary candidate materialization under
    `reports/public-sample/scaled-clarify-slot-boundary-candidate-materialization/`;
-2. the scaled clarify slot-boundary candidate design under
+3. the scaled clarify slot-boundary candidate design under
    `reports/public-sample/scaled-clarify-slot-boundary-candidate-design/`;
-3. the scaled residual remediation target selection under
+4. the scaled residual remediation target selection under
    `reports/public-sample/scaled-residual-remediation-target-selection/`;
-4. the scaled-manifest current-123 adapter prediction baseline recovery retry
+5. the scaled-manifest current-123 adapter prediction baseline recovery retry
    evidence under
    `reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/`;
-5. the scaled-manifest current-123 adapter residual-cluster inspection under
+6. the scaled-manifest current-123 adapter residual-cluster inspection under
    `reports/public-sample/scaled-current-123-adapter-residual-cluster-inspection/`;
-6. the scaled-manifest current-123 adapter residual-family diagnosis under
+7. the scaled-manifest current-123 adapter residual-family diagnosis under
    `reports/public-sample/scaled-current-123-adapter-residual-diagnosis/`;
-7. the prior scaled-manifest current-123 adapter prediction baseline blocked evidence
+8. the prior scaled-manifest current-123 adapter prediction baseline blocked evidence
    under
    `reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline/`;
-8. the scaled public-sample formal merge evidence under
+9. the scaled public-sample formal merge evidence under
    `reports/public-sample/scaled-public-sample-merge/`;
-9. the standalone scaled public-sample candidate materialization evidence under
+10. the standalone scaled public-sample candidate materialization evidence under
    `reports/public-sample/scaled-public-sample-candidate-materialization/`;
-10. the scaled public-sample and tiered-evaluation design evidence under
+11. the scaled public-sample and tiered-evaluation design evidence under
    `reports/public-sample/scaled-public-sample-and-tiered-eval-design/`;
-11. the current-123-row train-split SFT retry model evidence under
+12. the current-123-row train-split SFT retry model evidence under
    `reports/public-sample/a100-current-123-train-split-sft-retry/`;
-12. the current-123-row train-split SFT retry readiness evidence under
+13. the current-123-row train-split SFT retry readiness evidence under
    `reports/public-sample/current-123-train-split-sft-retry-readiness/`;
-13. the current-retry confirmation-preservation materialization and public merge
+14. the current-retry confirmation-preservation materialization and public merge
    under
    `reports/public-sample/current-retry-confirmation-preservation-public-sample-merge/`;
-14. the current-retry confirmation-preservation candidate design under
+15. the current-retry confirmation-preservation candidate design under
    `reports/public-sample/current-retry-confirmation-preservation-candidate-design/`;
-15. the current-train-split SFT retry trade-off diagnosis under
+16. the current-train-split SFT retry trade-off diagnosis under
    `reports/public-sample/current-train-split-sft-retry-tradeoff-diagnosis/`;
-16. the prior current-train-split SFT retry under
+17. the prior current-train-split SFT retry under
    `reports/public-sample/a100-current-train-split-sft-retry/`;
-17. the current-manifest SFT v3 prediction-only baseline under
+18. the current-manifest SFT v3 prediction-only baseline under
    `reports/public-sample/a100-current-manifest-sft-v3-prediction-baseline/`;
-18. the bounded SFT v3 retry after SSH recovery, now a prior-manifest model
+19. the bounded SFT v3 retry after SSH recovery, now a prior-manifest model
    source, under
    `reports/public-sample/a100-form-fill-remediation-sft-v3-retry-after-ssh-recovery/`.
 
@@ -68,6 +71,9 @@ Current formal public sample data boundary:
 | latest model run type | prediction-only retry on the scaled dev/test split using the existing `a100-current-train-split-sft-retry` private adapter |
 | latest model interpretation | `formal_public_heldout_partial_signal` |
 | latest model evidence | `reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/` |
+| latest slot canonicalization policy evidence | `reports/public-sample/slot-canonicalization-policy/` |
+| latest slot canonicalization policy result | design-only policy evidence: slot keys are comparatively stable, while slot values and `normalized_command` dominate current strict residuals; no data/training/evaluator change |
+| latest slot canonicalization recommended next step | `materialize-canonical-slot-boundary-candidates` before formal merge, postprocessor implementation, or training retry |
 | latest safety repair candidate-design review evidence | `reports/public-sample/safety-repair-candidate-design-review/` |
 | latest safety repair candidate-design review result | 1 row-backed theme ready for later bounded materialization proposal, 1 policy-scoped theme, 1 broad unsafe-action theme deferred to policy design; review-only, not data approval |
 | latest safety repair candidate-design review recommended next step | `propose_clarify_confirmation_safety_repair_materialization_after_review` |
@@ -197,6 +203,23 @@ DPO/GRPO, change prompts, alter evaluator metrics, relax the evaluator, use an
 LLM judge, run semantic-equivalence scoring, repair predictions, release
 adapters/checkpoints, or claim held-out recovery, production readiness, safety
 readiness, safety improvement, or live-browser benchmark improvement.
+
+The slot canonicalization policy is now complete under
+`reports/public-sample/slot-canonicalization-policy/`. It is design-only policy
+evidence, not data approval and not model-quality evidence. It records that
+slot keys are comparatively stable (`slot_key_f1` dev/test `0.9872` / `0.9769`),
+while strict slot values and `normalized_command` dominate current strict
+residuals (`slot_value_mismatch=336`, `normalized_command_mismatch=194`). The
+policy defines canonical slot-key aliases, non-equivalence boundaries,
+conservative slot-value normalization guidance, diagnostic/display positioning
+for `normalized_command`, and the model-target vs deterministic-postprocessor
+boundary. It does not mutate the formal public sample, add SFT/DPO rows, change
+splits, train, rerun predictions, run on A100, change prompts, alter evaluator
+metrics, relax strict exact, use an LLM judge, run semantic-equivalence scoring,
+repair predictions, release adapters/checkpoints, or claim held-out recovery,
+model improvement, production readiness, safety readiness, or live-browser
+benchmark improvement. The recommended next bounded step is
+`materialize-canonical-slot-boundary-candidates`.
 
 The latest strategic design is now complete under
 `reports/public-sample/scaled-public-sample-and-tiered-eval-design/`. It is a

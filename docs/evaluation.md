@@ -87,3 +87,14 @@ Current residual summary:
 Recommendations in these reports are diagnostic-only. They may guide a later
 bounded OpenSpec phase, but they do not materialize data, change strict metrics,
 alter predictions, or claim model improvement.
+
+## Slot Canonicalization Policy Note
+
+The `design-slot-canonicalization-policy` phase publishes design-only guidance
+under `reports/public-sample/slot-canonicalization-policy/`. It records the
+current slot/canonical contract consistency bottleneck: slot keys are
+comparatively stable, while slot values and `normalized_command` dominate
+strict residuals. The phase does not train, predict, mutate public sample data,
+change splits, add SFT/DPO rows, relax strict exact, change evaluator
+definitions, repair predictions, or claim model improvement. The policy is a
+source for later bounded materialization or postprocessor proposals only.
