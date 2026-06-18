@@ -3716,6 +3716,202 @@ def select_formal_heldout_remediation_target(
     }
 
 
+def _scaled_cluster_deferral_reason(cluster: dict[str, Any]) -> str:
+    short_name = str(cluster.get("short_name", "unknown"))
+    action = str(cluster.get("recommended_action_candidate", ""))
+    field_path = str(cluster.get("field_path", "unknown"))
+    if short_name == "blocked" or "safety" in action:
+        return "defer_to_dedicated_safety_boundary_phase"
+    if short_name in {"search", "navigate", "extract"} or "canonicalization" in action:
+        return "defer_to_later_label_canonicalization_phase"
+    if short_name == "form_fill":
+        return "defer_until_clarify_boundary_target_is_reviewed"
+    return f"defer_after_first_selected_cluster_review_for_{_sanitize_public_summary(field_path)}"
+
+
+def _scaled_cluster_priority_key(cluster: dict[str, Any]) -> tuple[int, int, int, str]:
+    is_safety = int(
+        str(cluster.get("short_name", "")) == "blocked"
+        or "safety" in str(cluster.get("recommended_action_candidate", ""))
+    )
+    return (
+        is_safety,
+        -int(cluster.get("residual_row_count", 0)),
+        -int(cluster.get("residual_field_count", 0)),
+        str(cluster.get("task_family", "")),
+    )
+
+
+def select_scaled_residual_remediation_target(
+    *,
+    residual_cluster_inspection: dict[str, Any],
+    cluster_inspection_artifact: str | None = None,
+) -> dict[str, Any]:
+    if (
+        residual_cluster_inspection.get("evidence_kind")
+        != "formal_heldout_residual_cluster_inspection"
+    ):
+        raise ValueError("cluster inspection must be formal_heldout_residual_cluster_inspection evidence")
+    if (
+        residual_cluster_inspection.get("diagnostic_kind")
+        != "formal_public_heldout_residual_cluster_inspection"
+    ):
+        raise ValueError("cluster inspection diagnostic_kind is not formal public heldout cluster inspection")
+
+    clusters = [
+        cluster
+        for cluster in residual_cluster_inspection.get("residual_clusters", [])
+        if isinstance(cluster, dict)
+    ]
+    if not clusters:
+        raise ValueError("cluster inspection contains no residual clusters")
+
+    source_evidence = residual_cluster_inspection.get("source_residual_diagnosis", {}).get(
+        "source_formal_heldout_evidence",
+        {},
+    )
+    source_manifest_id = _sanitize_public_summary(str(source_evidence.get("dataset_manifest_id", "")))
+    if source_manifest_id != "public-sample-20260617T152259Z":
+        raise ValueError(
+            "scaled residual target selection requires public-sample-20260617T152259Z cluster evidence"
+        )
+
+    ranked_clusters = [
+        {
+            "rank": index,
+            "task_family": _sanitize_public_summary(str(cluster.get("task_family", "unknown"))),
+            "short_name": _sanitize_public_summary(str(cluster.get("short_name", "unknown"))),
+            "field_path": _sanitize_public_summary(str(cluster.get("field_path", "unknown"))),
+            "category": _sanitize_public_summary(str(cluster.get("category", "unknown"))),
+            "mismatch_category": _sanitize_public_summary(
+                str(cluster.get("mismatch_category", "unknown"))
+            ),
+            "residual_row_count": int(cluster.get("residual_row_count", 0)),
+            "residual_field_count": int(cluster.get("residual_field_count", 0)),
+            "residual_rows_by_split": _sanitize_public_value(cluster.get("residual_rows_by_split", {})),
+            "source_family_counts": _sanitize_public_value(cluster.get("source_family_counts", {})),
+            "recommended_action_candidate": _sanitize_public_summary(
+                str(cluster.get("recommended_action_candidate", "unknown"))
+            ),
+            "representative_examples": _sanitize_public_value(
+                cluster.get("representative_examples", [])[:5]
+            ),
+        }
+        for index, cluster in enumerate(clusters, start=1)
+    ]
+    selected = min(ranked_clusters, key=_scaled_cluster_priority_key)
+    if selected["short_name"] != "clarify" or selected["field_path"] != "slots":
+        raise ValueError("scaled residual target selector expected clarify slots to be the first target")
+
+    deferred = [
+        {
+            "rank": cluster["rank"],
+            "task_family": cluster["task_family"],
+            "short_name": cluster["short_name"],
+            "field_path": cluster["field_path"],
+            "residual_row_count": cluster["residual_row_count"],
+            "residual_field_count": cluster["residual_field_count"],
+            "recommended_action_candidate": cluster["recommended_action_candidate"],
+            "reason": _scaled_cluster_deferral_reason(cluster),
+        }
+        for cluster in ranked_clusters
+        if cluster is not selected
+    ][:5]
+
+    source_consistency = residual_cluster_inspection.get("source_count_consistency", {})
+    if not isinstance(source_consistency, dict) or source_consistency.get("ok") is not True:
+        raise ValueError("source cluster inspection count consistency is not ok")
+
+    summary = residual_cluster_inspection.get("summary", {})
+    source_artifact = (
+        cluster_inspection_artifact
+        or "reports/public-sample/scaled-current-123-adapter-residual-cluster-inspection/"
+        "formal_heldout_residual_cluster_inspection.json"
+    )
+
+    return {
+        "evidence_kind": "scaled_residual_remediation_target_selection",
+        "selection_status": "selected_first_bounded_target",
+        "source_residual_cluster_inspection": {
+            "evidence_kind": _sanitize_public_summary(str(residual_cluster_inspection.get("evidence_kind", ""))),
+            "diagnostic_kind": _sanitize_public_summary(
+                str(residual_cluster_inspection.get("diagnostic_kind", ""))
+            ),
+            "inspection_artifact": _sanitize_public_summary(source_artifact),
+            "source_manifest_id": source_manifest_id,
+            "source_count_consistency": _sanitize_public_value(source_consistency),
+        },
+        "summary": {
+            "source_manifest_id": source_manifest_id,
+            "selected_target": selected["short_name"],
+            "selected_task_family": selected["task_family"],
+            "selected_field_path": selected["field_path"],
+            "selected_residual_row_count": selected["residual_row_count"],
+            "selected_residual_field_count": selected["residual_field_count"],
+            "ranked_cluster_count": len(ranked_clusters),
+            "source_residual_row_count": int(summary.get("residual_row_count", 0)),
+            "source_residual_field_count": int(summary.get("source_residual_field_count", 0)),
+            "strict_contract_exact_match": _sanitize_public_value(
+                summary.get("strict_contract_exact_match", {})
+            ),
+            "strict_slot_f1": _sanitize_public_value(summary.get("strict_slot_f1", {})),
+            "soft_slot_f1": _sanitize_public_value(summary.get("soft_slot_f1", {})),
+            "soft_slot_f1_primary_metric": False,
+            "recommended_next_change": "design-scaled-clarify-slot-boundary-candidates",
+            "recommended_next_step": (
+                "open_bounded_design-scaled-clarify-slot-boundary-candidates_before_data_training_"
+                "prompt_or_metric_changes"
+            ),
+        },
+        "selection": {
+            "selected": selected,
+            "rationale": [
+                "largest strict residual cluster in the scaled cluster inspection",
+                "selected cluster is a non-safety slots boundary before higher-risk safety remediation",
+                "clarify slots residuals point to ambiguous-request boundary design before data or training",
+            ],
+            "deferred_targets": deferred,
+        },
+        "ranked_clusters": ranked_clusters,
+        "execution_scope": {
+            "source_residual_cluster_inspection_read_as_input": True,
+            "raw_predictions_read": False,
+            "a100_job": False,
+            "prediction_run": False,
+            "training_run": False,
+            "sft_training_run": False,
+            "dpo_run": False,
+            "grpo_run": False,
+            "new_data_generated": False,
+            "data_materialization": False,
+            "dataset_mutation": False,
+            "prompt_change": False,
+            "gold_policy_change": False,
+            "evaluator_metric_change": False,
+            "evaluator_relaxation": False,
+            "semantic_equivalence_scoring": False,
+            "slot_normalization": False,
+            "prediction_repair": False,
+            "prediction_replacement": False,
+            "prediction_rescore": False,
+        },
+        "claims": {
+            "analysis_only": True,
+            "target_selection_only": True,
+            "model_recovery_claim": False,
+            "held_out_recovery_claim": False,
+            "production_readiness_claim": False,
+            "private_corpus_generalization_claim": False,
+            "public_full_corpus_release_claim": False,
+            "semantic_equivalence_primary_metric": False,
+            "soft_slot_f1_primary_metric": False,
+            "adapter_release_claim": False,
+            "checkpoint_release_claim": False,
+            "live_browser_benchmark_claim": False,
+        },
+    }
+
+
 _FORM_FILL_TASK_FAMILY = "form_fill|fill_form|requires_confirmation|confirm:true|slots:field"
 
 

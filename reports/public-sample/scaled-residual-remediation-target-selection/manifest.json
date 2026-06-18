@@ -1,0 +1,115 @@
+{
+  "artifact_policy": {
+    "a100_job": false,
+    "checkpoints_or_adapters_copied_to_git": false,
+    "data_generation": false,
+    "data_materialization": false,
+    "dataset_mutation": false,
+    "dpo_run": false,
+    "evaluator_metric_change": false,
+    "evaluator_relaxation": false,
+    "gold_policy_change": false,
+    "grpo_run": false,
+    "host_details_omitted": true,
+    "prediction_repair": false,
+    "prediction_repair_or_replacement": false,
+    "prediction_replacement": false,
+    "prediction_rescore": false,
+    "prediction_run": false,
+    "private_corpus_rows_omitted": true,
+    "private_overrides_copied_to_git": false,
+    "private_paths_omitted": true,
+    "prompt_change": false,
+    "raw_logs_copied_to_git": false,
+    "raw_predictions_copied_to_git": false,
+    "semantic_equivalence_scoring": false,
+    "sft_training_run": false,
+    "slot_normalization": false,
+    "ssh_details_omitted": true,
+    "target_selection_only": true,
+    "training_run": false
+  },
+  "claims": {
+    "adapter_release_claim": false,
+    "analysis_only": true,
+    "checkpoint_release_claim": false,
+    "held_out_recovery_claim": false,
+    "live_browser_benchmark_claim": false,
+    "model_recovery_claim": false,
+    "private_corpus_generalization_claim": false,
+    "production_readiness_claim": false,
+    "public_full_corpus_release_claim": false,
+    "semantic_equivalence_primary_metric": false,
+    "soft_slot_f1_primary_metric": false,
+    "target_selection_only": true
+  },
+  "diagnostic_artifacts": {
+    "manifest": "reports/public-sample/scaled-residual-remediation-target-selection/manifest.json",
+    "markdown": "reports/public-sample/scaled-residual-remediation-target-selection/scaled_residual_remediation_target_selection.md",
+    "selection": "reports/public-sample/scaled-residual-remediation-target-selection/scaled_residual_remediation_target_selection.json"
+  },
+  "evidence_kind": "scaled_residual_remediation_target_selection",
+  "execution_scope": {
+    "a100_job": false,
+    "data_materialization": false,
+    "dataset_mutation": false,
+    "dpo_run": false,
+    "evaluator_metric_change": false,
+    "evaluator_relaxation": false,
+    "gold_policy_change": false,
+    "grpo_run": false,
+    "new_data_generated": false,
+    "prediction_repair": false,
+    "prediction_replacement": false,
+    "prediction_rescore": false,
+    "prediction_run": false,
+    "prompt_change": false,
+    "raw_predictions_read": false,
+    "semantic_equivalence_scoring": false,
+    "sft_training_run": false,
+    "slot_normalization": false,
+    "source_residual_cluster_inspection_read_as_input": true,
+    "training_run": false
+  },
+  "generated_at": "2026-06-18T02:30:46.571370+00:00",
+  "selection_status": "selected_first_bounded_target",
+  "source_residual_cluster_inspection": {
+    "diagnostic_kind": "formal_public_heldout_residual_cluster_inspection",
+    "evidence_kind": "formal_heldout_residual_cluster_inspection",
+    "inspection_artifact": "reports/public-sample/scaled-current-123-adapter-residual-cluster-inspection/formal_heldout_residual_cluster_inspection.json",
+    "source_count_consistency": {
+      "clustered_residual_fields": 540,
+      "clustered_residual_rows": 321,
+      "expected_residual_fields": 540,
+      "expected_residual_rows": 321,
+      "ok": true
+    },
+    "source_manifest_id": "public-sample-20260617T152259Z"
+  },
+  "summary": {
+    "ranked_cluster_count": 29,
+    "recommended_next_change": "design-scaled-clarify-slot-boundary-candidates",
+    "recommended_next_step": "open_bounded_design-scaled-clarify-slot-boundary-candidates_before_data_training_prompt_or_metric_changes",
+    "selected_field_path": "slots",
+    "selected_residual_field_count": 78,
+    "selected_residual_row_count": 78,
+    "selected_target": "clarify",
+    "selected_task_family": "clarify|clarify|ambiguous_request|confirm:true|slots:ambiguity",
+    "soft_slot_f1": {
+      "dev": 0.6372298122661537,
+      "test": 0.6107811374904073
+    },
+    "soft_slot_f1_primary_metric": false,
+    "source_manifest_id": "public-sample-20260617T152259Z",
+    "source_residual_field_count": 540,
+    "source_residual_row_count": 321,
+    "strict_contract_exact_match": {
+      "dev": 0.2463768115942029,
+      "test": 0.2028985507246377
+    },
+    "strict_slot_f1": {
+      "dev": 0.28743961352657005,
+      "test": 0.2592592592592593
+    }
+  }
+}

@@ -32,6 +32,7 @@ from voice2task.evaluation import (
     rule_baseline_predictions,
     run_execution_smoke,
     select_formal_heldout_remediation_target,
+    select_scaled_residual_remediation_target,
     write_predictions,
 )
 from voice2task.io import read_json, read_jsonl
@@ -52,6 +53,7 @@ from voice2task.reports import (
     write_merged_slot_value_residual_report,
     write_metrics_report,
     write_runtime_label_tiny_overfit_diagnostic_report,
+    write_scaled_residual_remediation_target_selection_report,
     write_schema_diagnostics_report,
     write_sft_contract_learning_signal_report,
     write_sft_v3_safety_regression_diagnosis_report,
@@ -245,6 +247,14 @@ def build_parser() -> argparse.ArgumentParser:
     inspect_formal_clusters.add_argument(
         "--title",
         default="Voice2Task formal held-out residual cluster inspection",
+    )
+
+    select_scaled_target = subcommands.add_parser("select-scaled-residual-remediation-target")
+    select_scaled_target.add_argument("--residual-clusters", type=Path, required=True)
+    select_scaled_target.add_argument("--output", type=Path, required=True)
+    select_scaled_target.add_argument(
+        "--title",
+        default="Voice2Task scaled residual remediation target selection",
     )
 
     inspect_form_fill = subcommands.add_parser("inspect-form-fill-boundary-field-specificity")
@@ -535,6 +545,18 @@ def main(argv: list[str] | None = None) -> int:
         )
         paths = write_formal_heldout_residual_cluster_inspection_report(
             inspection,
+            output_dir=args.output,
+            title=args.title,
+        )
+        print(json.dumps({"ok": True, "paths": {key: value.as_posix() for key, value in paths.items()}}, indent=2))
+        return 0
+    if args.command == "select-scaled-residual-remediation-target":
+        selection = select_scaled_residual_remediation_target(
+            residual_cluster_inspection=read_json(args.residual_clusters),
+            cluster_inspection_artifact=_public_cli_artifact_path(args.residual_clusters),
+        )
+        paths = write_scaled_residual_remediation_target_selection_report(
+            selection,
             output_dir=args.output,
             title=args.title,
         )

@@ -3574,6 +3574,162 @@ def write_formal_heldout_remediation_target_selection_report(
     return {"json": json_path, "markdown": markdown_path, "manifest": manifest_path}
 
 
+def write_scaled_residual_remediation_target_selection_report(
+    selection: dict[str, Any],
+    output_dir: Path,
+    title: str = "Voice2Task scaled residual remediation target selection",
+) -> dict[str, Path]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    json_path = output_dir / "scaled_residual_remediation_target_selection.json"
+    markdown_path = output_dir / "scaled_residual_remediation_target_selection.md"
+    manifest_path = output_dir / "manifest.json"
+    safe_selection = _sanitize_report_value(selection)
+    write_json(json_path, safe_selection)
+
+    manifest = {
+        "evidence_kind": safe_selection["evidence_kind"],
+        "selection_status": safe_selection["selection_status"],
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "source_residual_cluster_inspection": safe_selection["source_residual_cluster_inspection"],
+        "summary": safe_selection["summary"],
+        "execution_scope": safe_selection["execution_scope"],
+        "claims": safe_selection["claims"],
+        "artifact_policy": {
+            "target_selection_only": True,
+            "raw_predictions_copied_to_git": False,
+            "raw_logs_copied_to_git": False,
+            "checkpoints_or_adapters_copied_to_git": False,
+            "private_overrides_copied_to_git": False,
+            "private_paths_omitted": True,
+            "host_details_omitted": True,
+            "ssh_details_omitted": True,
+            "private_corpus_rows_omitted": True,
+            "prediction_repair_or_replacement": False,
+            "prediction_repair": False,
+            "prediction_replacement": False,
+            "prediction_rescore": False,
+            "prediction_run": False,
+            "prompt_change": False,
+            "evaluator_metric_change": False,
+            "evaluator_relaxation": False,
+            "semantic_equivalence_scoring": False,
+            "gold_policy_change": False,
+            "slot_normalization": False,
+            "data_generation": False,
+            "data_materialization": False,
+            "dataset_mutation": False,
+            "training_run": False,
+            "sft_training_run": False,
+            "dpo_run": False,
+            "grpo_run": False,
+            "a100_job": False,
+        },
+        "diagnostic_artifacts": {
+            "selection": _public_report_artifact_path(
+                output_dir,
+                "scaled_residual_remediation_target_selection.json",
+            ),
+            "markdown": _public_report_artifact_path(
+                output_dir,
+                "scaled_residual_remediation_target_selection.md",
+            ),
+            "manifest": _public_report_artifact_path(output_dir, "manifest.json"),
+        },
+    }
+    write_json(manifest_path, manifest)
+
+    summary = safe_selection["summary"]
+    selected = safe_selection["selection"]["selected"]
+    lines = [
+        f"# {title}",
+        "",
+        (
+            "This report selects the first bounded remediation target from the scaled residual-cluster "
+            "inspection. It is target-selection evidence only: not data materialization, not training, "
+            "not a prediction rerun, not model recovery, and not evaluator relaxation."
+        ),
+        "",
+        "## Boundary",
+        "",
+        "- strict `contract_exact_match` remains primary.",
+        "- Strict `slot_f1` remains authoritative for slot scoring.",
+        "- `slot_f1_soft` remains diagnostic-only.",
+        "- No raw prediction stream is copied as the planning artifact.",
+        (
+            "- No A100 job, SFT, DPO, GRPO, new data, prompt change, gold rewrite, "
+            "prediction repair, or metric change is performed."
+        ),
+        "- Blocked-payment residuals are deferred to a dedicated safety boundary phase, not treated as solved.",
+        "",
+        "## Selected Target",
+        "",
+        f"- Source manifest id: `{summary['source_manifest_id']}`",
+        f"- Selected target: `{summary['selected_target']}`",
+        f"- Selected task family: `{summary['selected_task_family']}`",
+        f"- Selected field path: `{summary['selected_field_path']}`",
+        f"- Residual rows: `{summary['selected_residual_row_count']}`",
+        f"- Residual fields: `{summary['selected_residual_field_count']}`",
+        f"- Source residual rows: `{summary['source_residual_row_count']}`",
+        f"- Source residual fields: `{summary['source_residual_field_count']}`",
+        f"- Ranked clusters: `{summary['ranked_cluster_count']}`",
+        f"- Recommended next change: `{summary['recommended_next_change']}`",
+        f"- Recommended next step: `{summary['recommended_next_step']}`",
+        "",
+        "## Why This Target",
+        "",
+    ]
+    for reason in safe_selection["selection"].get("rationale", []):
+        lines.append(f"- {reason}")
+    lines.extend(
+        [
+            "",
+            "## Selected Cluster",
+            "",
+            f"- Rank: `{selected['rank']}`",
+            f"- Rows by split: `{selected['residual_rows_by_split']}`",
+            f"- Recommended action candidate: `{selected['recommended_action_candidate']}`",
+            "",
+            "## Deferred High-Ranked Targets",
+            "",
+        ]
+    )
+    for target in safe_selection["selection"].get("deferred_targets", []):
+        lines.append(
+            "- "
+            f"rank `{target['rank']}` `{target['short_name']}` / `{target['field_path']}` "
+            f"({target['residual_row_count']} rows): {target['reason']}"
+        )
+    lines.extend(["", "## Ranked Clusters", ""])
+    for item in safe_selection.get("ranked_clusters", [])[:10]:
+        lines.append(
+            "- "
+            f"rank `{item['rank']}` `{item['short_name']}` / `{item['field_path']}` / "
+            f"`{item['task_family']}`: {item['residual_row_count']} rows, "
+            f"{item['residual_field_count']} fields"
+        )
+    lines.extend(["", "## Representative Sanitized Examples", ""])
+    for example in selected.get("representative_examples", []):
+        lines.append(
+            "- "
+            f"`{example['split']} / {example['row_id']} / {example['field_path']}`: "
+            f"gold {example['gold_value_summary']}; prediction {example['predicted_value_summary']}"
+        )
+    lines.extend(
+        [
+            "",
+            "## Recommended Next Step",
+            "",
+            (
+                "Open a separate bounded OpenSpec phase for clarify slot-boundary candidate design. "
+                "That phase may design public-safe cases or policy guidance, but this selection report "
+                "does not authorize materialization, training, prompts, predictions, or evaluator changes."
+            ),
+        ]
+    )
+    markdown_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    return {"json": json_path, "markdown": markdown_path, "manifest": manifest_path}
+
+
 def write_form_fill_remediation_plan_report(
     diagnosis: dict[str, Any],
     output_dir: Path,

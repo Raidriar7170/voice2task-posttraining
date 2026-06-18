@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Voice2Task 扩样本残差修复目标选择简报</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.55; margin: 32px; color: #202124; }
+    main { max-width: 980px; margin: 0 auto; }
+    h1 { font-size: 28px; margin-bottom: 8px; }
+    h2 { font-size: 18px; margin-top: 28px; border-bottom: 1px solid #ddd; padding-bottom: 6px; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; }
+    th { background: #f6f8fa; }
+    code { background: #f6f8fa; padding: 1px 4px; border-radius: 4px; }
+    .claim { padding: 12px 14px; background: #eef6ff; border-left: 4px solid #2563eb; }
+    .warn { padding: 12px 14px; background: #fff7ed; border-left: 4px solid #f97316; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Voice2Task 扩样本残差修复目标选择简报</h1>
+  <p class="claim">结论：target selection 已完成；第一修复目标应是 <code>clarify/slots</code>，不是泛化扩数据或直接训练。</p>
+
+  <h2>当前状态</h2>
+  <table>
+    <tr><th>项目</th><th>状态</th></tr>
+    <tr><td>OpenSpec change</td><td><code>select-scaled-residual-remediation-target</code></td></tr>
+    <tr><td>阶段类型</td><td>target-selection only；不启动 A100、不训练、不预测、不 materialize 数据、不改 prompt/evaluator</td></tr>
+    <tr><td>Source cluster inspection</td><td><code>reports/public-sample/scaled-current-123-adapter-residual-cluster-inspection/</code></td></tr>
+    <tr><td>Target manifest</td><td><code>public-sample-20260617T152259Z</code></td></tr>
+    <tr><td>Selection evidence</td><td><code>reports/public-sample/scaled-residual-remediation-target-selection/</code></td></tr>
+  </table>
+
+  <h2>本阶段做了什么</h2>
+  <ul>
+    <li>读取已提交的 scaled residual cluster inspection。</li>
+    <li>从 29 个 ranked clusters 中选择第一修复目标。</li>
+    <li>选择 <code>clarify|clarify|ambiguous_request|confirm:true|slots:ambiguity</code> / <code>slots</code>，共 78 rows / 78 fields。</li>
+    <li>明确把 <code>blocked/slots</code> defer 到 dedicated safety boundary phase。</li>
+    <li>更新 <code>CONTEXT.md</code>、<code>reports/final_status.md</code> 和本简报。</li>
+  </ul>
+
+  <h2>为什么不是直接扩数据</h2>
+  <table>
+    <tr><th>候选</th><th>Rows</th><th>处理方式</th><th>原因</th></tr>
+    <tr><td><code>clarify/slots</code></td><td>78</td><td>选为第一目标</td><td>最大非安全 slots cluster，适合先做边界设计</td></tr>
+    <tr><td><code>blocked/slots</code></td><td>51</td><td>暂缓</td><td>安全语义敏感，应进入独立 safety phase</td></tr>
+    <tr><td><code>search/slots</code></td><td>51</td><td>暂缓</td><td>更像 canonicalization 问题，排在 top cluster 后</td></tr>
+    <tr><td><code>form_fill/slots</code></td><td>50</td><td>暂缓</td><td>已经做过多轮 remediation，应先处理更大的 clarify cluster</td></tr>
+  </table>
+
+  <h2>关键文件</h2>
+  <ul>
+    <li><code>reports/public-sample/scaled-residual-remediation-target-selection/scaled_residual_remediation_target_selection.md</code></li>
+    <li><code>reports/public-sample/scaled-residual-remediation-target-selection/scaled_residual_remediation_target_selection.json</code></li>
+    <li><code>reports/public-sample/scaled-residual-remediation-target-selection/manifest.json</code></li>
+    <li><code>CONTEXT.md</code></li>
+    <li><code>reports/final_status.md</code></li>
+  </ul>
+
+  <h2>验证</h2>
+  <ul>
+    <li>Focused tests、full pytest、ruff、OpenSpec strict validation、leak scan、diff check：以最终命令输出为准。</li>
+    <li>Leak scan: target-selection evidence directory 通过 public-safe scan。</li>
+    <li>Strict metric authority 保持不变：<code>contract_exact_match</code> 和 strict <code>slot_f1</code> 是主指标；<code>slot_f1_soft</code> 仍是 diagnostic-only。</li>
+  </ul>
+
+  <h2>剩余风险</h2>
+  <ul>
+    <li>本阶段只是选择目标，不代表 clarify 问题已经修复。</li>
+    <li>blocked-payment residuals 没有被忽略，但需要独立 safety boundary phase。</li>
+    <li>下一阶段如果要生成数据，必须先设计 public-safe candidate sketches，再 materialize。</li>
+  </ul>
+
+  <h2>推荐下一步</h2>
+  <p>开启 bounded <code>design-scaled-clarify-slot-boundary-candidates</code> phase：先审查 ambiguity slot / route-intent 边界，设计可审阅的 clarify 对照案例或策略。</p>
+
+  <p class="warn">不要从本阶段直接跳到 A100 SFT retry；也不要把 target selection 说成模型效果提升。</p>
+</main>
+</body>
+</html>

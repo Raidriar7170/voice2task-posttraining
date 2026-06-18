@@ -350,6 +350,25 @@ private-corpus, held-out recovery, or live-browser improvement. If the project
 continues, the next bounded phase should diagnose current-123 residual families
 and trade-offs before any additional data design or training.
 
+The scaled-manifest residual-family diagnosis and residual-cluster inspection
+are now complete for `public-sample-20260617T152259Z`. The scaled current-123
+adapter evidence remains partial: dev/test `contract_exact_match` are `0.2464`
+/ `0.2029`, strict slot F1 are `0.2874` / `0.2593`, and `slot_f1_soft` remains
+diagnostic-only. The cluster inspection grouped `321` residual rows / `540`
+residual fields into `29` clusters; the largest cluster is
+`clarify|clarify|ambiguous_request|confirm:true|slots:ambiguity` on `slots`
+with `78` residual rows.
+
+The latest bounded target-selection evidence is
+`reports/public-sample/scaled-residual-remediation-target-selection/`. It
+selects `clarify/slots` as the first remediation target and explicitly defers
+`blocked/slots` to a dedicated safety-boundary phase. This is target-selection
+evidence only: it does not run A100, train, predict, materialize data, change
+prompts, relax evaluators, normalize slots, repair predictions, or claim model
+recovery. If the project continues, the next bounded phase should be
+`design-scaled-clarify-slot-boundary-candidates`, not a broad data-expansion or
+training phase.
+
 ## Language
 
 **Voice2Task Post-Training**:
