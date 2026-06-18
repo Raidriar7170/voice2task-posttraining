@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Autonomous Loop - residual-driven remediation target selection</title>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #172026; background: #f7f8f5; }
+    main { max-width: 1040px; margin: 0 auto; padding: 32px 20px 48px; }
+    h1 { font-size: 28px; margin: 0 0 8px; }
+    h2 { font-size: 18px; margin: 28px 0 10px; border-bottom: 1px solid #d8ded2; padding-bottom: 6px; }
+    p, li { line-height: 1.62; }
+    .lede { font-size: 18px; color: #24403a; }
+    .status { display: inline-block; padding: 4px 10px; background: #dbeadd; border: 1px solid #a7c7aa; border-radius: 6px; font-weight: 650; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; background: #fff; }
+    th, td { border: 1px solid #d8ded2; padding: 8px 10px; text-align: left; vertical-align: top; }
+    th { background: #edf1e8; }
+    code { background: #eef1ea; padding: 1px 5px; border-radius: 4px; }
+    .warn { background: #fff8df; border-left: 4px solid #d6a11d; padding: 10px 12px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Residual-Driven Remediation Auto Loop</h1>
+  <p class="lede">结论：本轮 auto loop 已把 residual-driven target selection 执行、归档并延伸到 safety repair design 与 review-only gate；未进入数据 materialization、训练、prediction rerun 或 evaluator 变更。</p>
+  <p><span class="status">success-complete</span></p>
+
+  <h2>End Condition</h2>
+  <p><code>End condition: success_complete_context_goals_met - The requested residual-driven target-selection path is archived, its safety repair candidate design and review-only evidence are archived, validation passed, and remaining materialization/merge work is a new data-mutating direction rather than an unmet evidence/review goal.</code></p>
+  <p><code>Next action executed: no - blocked by success_complete_context_goals_met because the next action is a new bounded materialization proposal; the older active clarify merge change is also outside the user's explicit boundary for this loop.</code></p>
+
+  <h2>Completed Phases</h2>
+  <table>
+    <thead><tr><th>phase</th><th>commit</th><th>status</th><th>key evidence</th></tr></thead>
+    <tbody>
+      <tr><td><code>select-residual-driven-remediation-target</code></td><td><code>7eb77f7</code></td><td>archived, pushed</td><td><code>reports/public-sample/remediation-target-selection/</code></td></tr>
+      <tr><td><code>design-safety-repair-candidates</code></td><td><code>c2966b0</code></td><td>archived, pushed</td><td><code>reports/public-sample/safety-repair-candidate-design/</code></td></tr>
+      <tr><td><code>review-safety-repair-candidates-before-materialization</code></td><td><code>2989ab1</code></td><td>archived, pushed</td><td><code>reports/public-sample/safety-repair-candidate-design-review/</code></td></tr>
+    </tbody>
+  </table>
+
+  <h2>Goal Closure Matrix</h2>
+  <table>
+    <thead><tr><th>goal</th><th>evidence</th><th>status</th><th>remaining gap</th></tr></thead>
+    <tbody>
+      <tr><td>Turn attachment into next OpenSpec phase</td><td><code>openspec/changes/archive/2026-06-18-select-residual-driven-remediation-target/</code></td><td>closed</td><td>None for target selection.</td></tr>
+      <tr><td>Use layered/residual evidence to pick bounded next target</td><td><code>summary.json</code>, <code>top-failures.md</code>, <code>recommended-next-change.md</code></td><td>closed</td><td>Safety target first; slot canonicalization second.</td></tr>
+      <tr><td>Keep strict evaluator and historical evidence intact</td><td>Focused tests, full pytest, OpenSpec validation, leak scans, git status checks</td><td>closed</td><td>No historical evidence directories modified.</td></tr>
+      <tr><td>Design safety repair candidates before any data change</td><td><code>reports/public-sample/safety-repair-candidate-design/</code></td><td>closed</td><td>No seed rows generated.</td></tr>
+      <tr><td>Review safety repair themes before materialization</td><td><code>reports/public-sample/safety-repair-candidate-design-review/</code></td><td>closed</td><td>All themes remain <code>approved_for_materialization=false</code>.</td></tr>
+      <tr><td>Materialize row-backed repair data</td><td>Not executed</td><td>new direction</td><td>Requires a new bounded OpenSpec materialization proposal.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Project-Stage Progress</h2>
+  <ul>
+    <li>Current target: one current unsafe false negative in the layered evaluator, row-backed by <code>family-clarify-test-1-aug-1</code>.</li>
+    <li>Phase contribution: target selection chose safety first, design defined three candidate themes, review narrowed immediate follow-up to row-backed clarify confirmation only.</li>
+    <li>Remaining gaps: no data materialization, no formal public sample mutation, no training, no prediction rerun, no safety improvement evidence.</li>
+    <li>Next-stage plan: open a separate bounded proposal only if continuing to <code>propose_clarify_confirmation_safety_repair_materialization_after_review</code>; broader unsafe-action denial needs safety-policy design first.</li>
+  </ul>
+
+  <h2>Explicitly Not Continued</h2>
+  <p>The repository still contains the older active OpenSpec proposal <code>merge-scaled-clarify-slot-boundary-candidates</code>. It was not executed in this closeout because the user explicitly excluded clarify candidate merge, data expansion, A100 training, prediction rerun, DPO rerun, LoRA changes, evaluator relaxation, and slot repair from this change boundary.</p>
+
+  <h2>Validation</h2>
+  <table>
+    <thead><tr><th>command</th><th>result</th></tr></thead>
+    <tbody>
+      <tr><td><code>PYTHONPATH=src pytest -q</code></td><td>459 passed in the fresh closeout run.</td></tr>
+      <tr><td><code>PYTHONPATH=src ruff check src tests</code></td><td>passed.</td></tr>
+      <tr><td><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code></td><td>5 passed, 0 failed.</td></tr>
+      <tr><td><code>git diff --check</code></td><td>passed.</td></tr>
+      <tr><td><code>PYTHONPATH=src python -m voice2task.cli.report leak-scan --paths docs/human-briefs/2026-06-18-autonomous-loop-residual-driven-remediation-target-selection.html</code></td><td>passed, 0 findings.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Key Files</h2>
+  <ul>
+    <li><code>reports/public-sample/remediation-target-selection/</code></li>
+    <li><code>reports/public-sample/safety-repair-candidate-design/</code></li>
+    <li><code>reports/public-sample/safety-repair-candidate-design-review/</code></li>
+    <li><code>docs/human-briefs/2026-06-18-select-residual-driven-remediation-target.html</code></li>
+    <li><code>docs/human-briefs/2026-06-18-design-safety-repair-candidates.html</code></li>
+    <li><code>docs/human-briefs/2026-06-18-review-safety-repair-candidates-before-materialization.html</code></li>
+    <li><code>CONTEXT.md</code> and <code>reports/final_status.md</code></li>
+  </ul>
+
+  <h2>Auto Integration</h2>
+  <p>Phase integration status: staged, committed, fast-forward merged to <code>main</code>, and pushed to <code>origin/main</code>. Current pushed phase head: <code>2989ab1</code>. Earlier pushed commits in this loop: <code>7eb77f7</code> and <code>c2966b0</code>. Loop report integration is pending final guarded git commit and push.</p>
+
+  <h2>Remaining Risks</h2>
+  <div class="warn">
+    Do not claim held-out recovery, model improvement, production readiness, safety readiness, safety improvement, checkpoint/adapter release, live-browser benchmark improvement, or evaluator relaxation. The next materialization proposal, if opened, must stay row-backed and narrow.
+  </div>
+</main>
+</body>
+</html>
