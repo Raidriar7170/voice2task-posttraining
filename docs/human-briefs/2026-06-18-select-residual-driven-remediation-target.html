@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>select-residual-driven-remediation-target</title>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #172026; background: #f7f8f5; }
+    main { max-width: 980px; margin: 0 auto; padding: 32px 20px 48px; }
+    h1 { font-size: 28px; margin: 0 0 8px; }
+    h2 { font-size: 18px; margin: 28px 0 10px; border-bottom: 1px solid #d8ded2; padding-bottom: 6px; }
+    p, li { line-height: 1.62; }
+    .lede { font-size: 18px; color: #24403a; }
+    .status { display: inline-block; padding: 4px 10px; background: #dbeadd; border: 1px solid #a7c7aa; border-radius: 6px; font-weight: 650; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; background: #fff; }
+    th, td { border: 1px solid #d8ded2; padding: 8px 10px; text-align: left; vertical-align: top; }
+    th { background: #edf1e8; }
+    code { background: #eef1ea; padding: 1px 5px; border-radius: 4px; }
+    .warn { background: #fff8df; border-left: 4px solid #d6a11d; padding: 10px 12px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Residual-Driven Remediation Target Selection</h1>
+  <p class="lede">结论：本阶段只做目标选择；安全 false negative 因风险优先成为第一目标，slot value/canonicalization 是第二目标。</p>
+  <p><span class="status">needs review</span></p>
+
+  <h2>本阶段做了什么</h2>
+  <ul>
+    <li>读取已提交的 <code>reports/public-sample/layered-eval/</code> 与 <code>reports/public-sample/residual-diagnosis/</code>。</li>
+    <li>新建 <code>reports/public-sample/remediation-target-selection/</code>，输出 <code>summary.md</code>、<code>summary.json</code>、<code>top-failures.md</code>、<code>recommended-next-change.md</code>。</li>
+    <li>按 failure family 汇总 dev/test count、比例、split 分布、strategy 和 sanitized examples。</li>
+    <li>选择最多 2 个下一阶段目标，不执行训练、预测、数据变更或 evaluator 变更。</li>
+  </ul>
+
+  <h2>关键指标</h2>
+  <table>
+    <thead><tr><th>split</th><th>rows</th><th>strict exact</th><th>executable pass</th><th>slot key F1</th><th>slot value exact / normalized F1</th><th>unsafe FN rate</th></tr></thead>
+    <tbody>
+      <tr><td>dev</td><td>207</td><td>0.2464</td><td>0.2705</td><td>0.9872</td><td>0.2821 / 0.2821</td><td>0.0000</td></tr>
+      <tr><td>test</td><td>207</td><td>0.2029</td><td>0.2512</td><td>0.9769</td><td>0.2390 / 0.2390</td><td>0.0083</td></tr>
+    </tbody>
+  </table>
+  <p>strict exact 仍是 canonical diagnostic；executable pass 是 deterministic layered metric；normalized slot metrics 仍只用于诊断。</p>
+
+  <h2>Top Failures</h2>
+  <table>
+    <thead><tr><th>rank</th><th>family</th><th>count</th><th>strategy</th><th>解释</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><code>slot_value_mismatch</code></td><td>336</td><td><code>SCHEMA_CANONICALIZATION</code></td><td>slot value 是最大 residual surface。</td></tr>
+      <tr><td>2</td><td><code>normalized_command_mismatch</code></td><td>194</td><td><code>SCHEMA_CANONICALIZATION</code></td><td>高频但不一定阻塞执行，应保持 diagnostic 边界。</td></tr>
+      <tr><td>3</td><td><code>extra_slot</code></td><td>16</td><td><code>DATA_REMEDIATION</code></td><td>slot 边界覆盖不足或 canonical policy 不清。</td></tr>
+      <tr><td>4</td><td><code>missing_slot</code></td><td>13</td><td><code>DATA_REMEDIATION</code></td><td>slot 覆盖或边界样本不足。</td></tr>
+      <tr><td>5</td><td><code>route_mismatch</code></td><td>13</td><td><code>DEFER</code></td><td>route/task-type 相对低频，不应优先浪费下一阶段。</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Selected Targets</h2>
+  <table>
+    <thead><tr><th>target</th><th>evidence</th><th>next change</th><th>为什么优先</th></tr></thead>
+    <tbody>
+      <tr><td><code>safety-repair-unsafe-false-negative</code></td><td>1 unsafe false negative</td><td><code>design-safety-repair-candidates</code></td><td>安全错误数量少但风险高，按规则优先。</td></tr>
+      <tr><td><code>slot-value-canonicalization-policy</code></td><td>365 slot-related residuals</td><td><code>design-slot-canonicalization-policy</code></td><td>slot value 是 strict residual 的主要来源，应先设计 canonical policy。</td></tr>
+    </tbody>
+  </table>
+
+  <h2>验证状态</h2>
+  <ul>
+    <li>RED: 新测试首次因 <code>ModuleNotFoundError: No module named 'voice2task.remediation_target_selection'</code> 失败。</li>
+    <li><code>python -m pytest -q tests/test_residual_driven_remediation_target_selection.py</code>: passed, 5 tests。</li>
+    <li><code>python -m pytest -q</code>: passed, 454 tests。</li>
+    <li><code>openspec validate --all --strict</code>: passed, 6 items。</li>
+    <li><code>PYTHONPATH=src ruff check src tests</code>: passed。</li>
+    <li><code>PYTHONPATH=src mypy --follow-imports=skip src/voice2task/remediation_target_selection.py</code>: passed。</li>
+    <li><code>git diff --check</code>: passed。</li>
+    <li>Leak scan over new reports, this brief, <code>CONTEXT.md</code>, and <code>reports/final_status.md</code>: passed, 0 findings。</li>
+  </ul>
+
+  <h2>项目阶段进度</h2>
+  <ul>
+    <li>当前阶段目标：<code>not explicitly defined</code>；<code>CONTEXT.md</code> 将项目定位为 evidence-backed post-training/evaluation baseline。</li>
+    <li>已推进：从 layered/residual evidence 进入可执行的 remediation target selection，避免直接跳到训练或 evaluator relaxation。</li>
+    <li>剩余 gap：安全边界 repair design、slot canonicalization policy、后续数据/训练/预测都必须各自成为独立 bounded OpenSpec phase。</li>
+    <li>推荐下一步：<code>design-safety-repair-candidates</code>，尚未在本阶段执行。</li>
+  </ul>
+
+  <h2>不要过度宣称</h2>
+  <div class="warn">
+    没有训练、没有 prediction rerun、没有扩数据、没有 candidate merge、没有 split 改动、没有 DPO 扩展、没有 LoRA/base model 改动、没有 evaluator relaxation、没有 LLM judge、没有 semantic-equivalence scoring、没有 prediction repair、没有 checkpoint/adapter release，也不能宣称 held-out recovery、production readiness、safety readiness 或 live-browser benchmark improvement。
+  </div>
+</main>
+</body>
+</html>

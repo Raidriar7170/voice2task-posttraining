@@ -6,9 +6,11 @@ Voice2Task Post-Training is a companion project for training and evaluating smal
 
 As of 2026-06-18, the first project phase is closed as an evidence-backed
 post-training and evaluation baseline, not as a production-ready model release.
-The public-facing truth surface has twenty current layers. The newest two are
-the additive layered evaluator under `reports/public-sample/layered-eval/` and
-the additive residual diagnosis under `reports/public-sample/residual-diagnosis/`;
+The public-facing truth surface has twenty-one current layers. The newest
+three are the residual-driven remediation target selection under
+`reports/public-sample/remediation-target-selection/`, the additive layered
+evaluator under `reports/public-sample/layered-eval/`, and the additive
+residual diagnosis under `reports/public-sample/residual-diagnosis/`;
 the existing eighteen layers remain:
 
 1. the standalone scaled clarify slot-boundary candidate materialization under
@@ -63,6 +65,9 @@ Current formal public sample data boundary:
 | latest model run type | prediction-only retry on the scaled dev/test split using the existing `a100-current-train-split-sft-retry` private adapter |
 | latest model interpretation | `formal_public_heldout_partial_signal` |
 | latest model evidence | `reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/` |
+| latest residual-driven remediation target selection evidence | `reports/public-sample/remediation-target-selection/` |
+| latest residual-driven remediation target selection | selected `safety-repair-unsafe-false-negative` first and `slot-value-canonicalization-policy` second; recommendation source only, no training/data/evaluator change |
+| latest residual-driven recommended next change | `design-safety-repair-candidates` |
 | latest layered evaluation evidence | `reports/public-sample/layered-eval/` |
 | latest residual diagnosis evidence | `reports/public-sample/residual-diagnosis/` |
 | latest scaled-manifest prediction baseline | observed after A100 recovery; strict exact remains partial and lower than the prior-boundary adapter evidence |
@@ -132,6 +137,24 @@ diagnosis still points to strict slot values and normalized commands as the
 dominant residual surfaces: dev has `slot_value=160` and
 `normalized_command=91`; test has `slot_value=176` and
 `normalized_command=103`.
+
+The residual-driven remediation target selection is now complete under
+`reports/public-sample/remediation-target-selection/`. It reads the committed
+layered-eval and residual-diagnosis artifacts only, ranks dev/test failure
+families, maps them to remediation strategies, and selects at most two next
+targets. The top failure families are `slot_value_mismatch=336`,
+`normalized_command_mismatch=194`, `extra_slot=16`, `missing_slot=13`, and
+`route_mismatch=13` (with `task_type_mismatch=13` at the same count). Because
+the test split contains one unsafe false negative, the first recommended target
+is `safety-repair-unsafe-false-negative` with proposed change
+`design-safety-repair-candidates`; the second is
+`slot-value-canonicalization-policy` with proposed change
+`design-slot-canonicalization-policy`. This phase is target-selection only: no
+training, prediction rerun, data mutation, split change, evaluator metric
+change, evaluator relaxation, LLM judge, semantic-equivalence scoring,
+prediction repair, checkpoint/adapter release, held-out recovery claim,
+production-readiness claim, safety-readiness claim, or live-browser benchmark
+claim was performed.
 
 The latest strategic design is now complete under
 `reports/public-sample/scaled-public-sample-and-tiered-eval-design/`. It is a
@@ -258,18 +281,21 @@ formal SFT/DPO artifacts, generate DPO pairs, train, predict, run on A100,
 change prompts, change evaluator metrics, normalize slots, repair predictions,
 release checkpoints/adapters, or claim model recovery. The previous
 `merge-scaled-clarify-slot-boundary-candidates` continuation remains a
-reviewed data option, but it is no longer the default next step. The default
-next phase should first add residual diagnosis and a layered evaluator on
-existing dev/test predictions and gold contracts.
+reviewed data option, but it is no longer the default next step. The current
+residual-driven target-selection evidence now recommends a bounded
+`design-safety-repair-candidates` phase before any data merge or training
+retry.
 
 Recommended next bounded phase:
 
-- Status: needs review after `add-layered-evaluator-and-residual-diagnosis`.
-- Inputs: `reports/public-sample/layered-eval/`,
-  `reports/public-sample/residual-diagnosis/`, and the unchanged scaled
-  prediction-only source evidence.
-- Boundary: choose a future remediation target or documentation decision from
-  the layered/residual evidence only after review. Do not silently continue
+- Status: needs separate OpenSpec phase after
+  `select-residual-driven-remediation-target`.
+- Inputs: `reports/public-sample/remediation-target-selection/summary.json`,
+  `reports/public-sample/remediation-target-selection/top-failures.md`, and
+  `reports/public-sample/remediation-target-selection/recommended-next-change.md`.
+- Recommended change id: `design-safety-repair-candidates`.
+- Boundary: design public-safe safety repair candidates and fail-closed safety
+  examples only. Do not silently continue
   `merge-scaled-clarify-slot-boundary-candidates`, merge data, train, rerun
   prediction, run DPO/GRPO, adjust LoRA parameters, relax evaluators, repair
   predictions, repair slots, or overwrite historical scaled evidence.
@@ -459,7 +485,7 @@ residual fields into `29` clusters; the largest cluster is
 `clarify|clarify|ambiguous_request|confirm:true|slots:ambiguity` on `slots`
 with `78` residual rows.
 
-The latest bounded target-selection evidence is
+The latest scaled bounded target-selection evidence is
 `reports/public-sample/scaled-residual-remediation-target-selection/`. It
 selects `clarify/slots` as the first remediation target and explicitly defers
 `blocked/slots` to a dedicated safety-boundary phase. This is target-selection
@@ -467,10 +493,18 @@ evidence only: it does not run A100, train, predict, materialize data, change
 prompts, relax evaluators, normalize slots, repair predictions, or claim model
 recovery. That target-selection chain already produced clarify candidate design
 and standalone materialization evidence. If the project continues from the
-current review boundary, the next step should first review the additive
-layered-evaluation and residual-diagnosis evidence before choosing any new
-bounded remediation phase. It should not default back to broad data expansion,
-candidate merge, evaluator relaxation, or training.
+current review boundary, the newer residual-driven target-selection evidence
+under `reports/public-sample/remediation-target-selection/` supersedes this as
+the default next decision source. It should not default back to broad data
+expansion, candidate merge, evaluator relaxation, or training.
+
+**Residual-Driven Remediation Target Selection**:
+A target-selection report that reads committed layered-eval and residual
+diagnosis artifacts, ranks failure families, maps each family to a remediation
+strategy, and selects at most two next bounded targets. It is not data
+materialization, evaluator relaxation, prediction repair, model training, or
+model-quality evidence.
+_Avoid_: training plan, model improvement proof, safety readiness proof
 
 ## Language
 
