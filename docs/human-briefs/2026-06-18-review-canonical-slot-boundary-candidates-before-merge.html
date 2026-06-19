@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Canonical Slot Boundary Candidate Review</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1f2937;
+      --muted: #5b6472;
+      --line: #d6dde8;
+      --paper: #f7f8fb;
+      --accent: #0f766e;
+      --warn: #9a3412;
+      --block: #7f1d1d;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+      line-height: 1.55;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 32px 20px 40px;
+    }
+    header {
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 18px;
+      margin-bottom: 22px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      line-height: 1.2;
+    }
+    h2 {
+      margin: 26px 0 10px;
+      font-size: 18px;
+    }
+    p {
+      margin: 8px 0;
+    }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 10px;
+      border: 1px solid var(--line);
+      background: white;
+      font-size: 14px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 12px;
+    }
+    .panel {
+      border: 1px solid var(--line);
+      background: white;
+      padding: 14px;
+    }
+    .k {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .v {
+      margin-top: 4px;
+      font-weight: 650;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border: 1px solid var(--line);
+    }
+    th, td {
+      text-align: left;
+      vertical-align: top;
+      border-bottom: 1px solid var(--line);
+      padding: 10px;
+      font-size: 14px;
+    }
+    th {
+      background: #eef4f2;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.92em;
+    }
+    .ok {
+      color: var(--accent);
+      font-weight: 650;
+    }
+    .warn {
+      color: var(--warn);
+      font-weight: 650;
+    }
+    .block {
+      color: var(--block);
+      font-weight: 650;
+    }
+    ul {
+      padding-left: 20px;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="status">状态：archived / review-only evidence</div>
+      <h1>Canonical Slot Boundary 候选边界复核</h1>
+      <p>结论：本阶段只把候选类分成“可进入后续 bounded formal merge proposal”“仅诊断展示”“非等价阻塞/延期”，不批准立即合并数据。</p>
+    </header>
+
+    <section class="grid" aria-label="phase facts">
+      <div class="panel">
+        <div class="k">Source</div>
+        <div class="v"><code>reports/public-sample/canonical-slot-boundary-candidates/summary.json</code></div>
+      </div>
+      <div class="panel">
+        <div class="k">Evidence</div>
+        <div class="v"><code>reports/public-sample/canonical-slot-boundary-candidate-review/</code></div>
+      </div>
+      <div class="panel">
+        <div class="k">Formal Merge</div>
+        <div class="v block">not approved now</div>
+      </div>
+      <div class="panel">
+        <div class="k">Recommended Next</div>
+        <div class="v"><code>propose-canonical-slot-boundary-formal-merge-after-review</code></div>
+      </div>
+    </section>
+
+    <h2>本阶段改了什么</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>类别</th>
+          <th>复核结论</th>
+          <th>边界</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>slot_key_aliases</code></td>
+          <td class="ok">eligible for later proposal only</td>
+          <td>可作为后续 bounded OpenSpec formal merge proposal 的输入；现在不合并。</td>
+        </tr>
+        <tr>
+          <td><code>slot_value_boundaries</code></td>
+          <td class="ok">eligible for later proposal only</td>
+          <td>只覆盖保守 value 边界；现在不改 public sample、SFT/DPO、manifest 或 evaluator。</td>
+        </tr>
+        <tr>
+          <td><code>normalized_command_display_diagnostic</code></td>
+          <td class="warn">diagnostic display only</td>
+          <td>不声明等价、不修 prediction、不重算 residual、不放松 strict exact。</td>
+        </tr>
+        <tr>
+          <td>excluded non-equivalence cases</td>
+          <td class="block">blocked or deferred</td>
+          <td>date、city/location、product、URL host、price/amount、query/product、location/destination、action/reason 仍保持非等价边界。</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>关键文件</h2>
+    <ul>
+      <li><code>tests/test_canonical_slot_boundary_candidate_review.py</code></li>
+      <li><code>reports/public-sample/canonical-slot-boundary-candidate-review/summary.json</code></li>
+      <li><code>reports/public-sample/canonical-slot-boundary-candidate-review/summary.md</code></li>
+      <li><code>reports/public-sample/canonical-slot-boundary-candidate-review/leak_scan_result.json</code></li>
+      <li><code>CONTEXT.md</code> 和 <code>reports/final_status.md</code></li>
+    </ul>
+
+    <h2>验证</h2>
+    <ul>
+      <li><code>PYTHONPATH=src python -m pytest -q tests/test_canonical_slot_boundary_candidate_review.py tests/test_canonical_slot_boundary_candidate_materialization.py tests/test_slot_canonicalization_policy.py tests/test_safety_repair_candidate_design_review.py</code>：20 passed。</li>
+      <li><code>PYTHONPATH=src python -m pytest -q</code>：477 passed。</li>
+      <li><code>OPENSPEC_TELEMETRY=0 openspec validate review-canonical-slot-boundary-candidates-before-merge --strict</code>：valid。</li>
+      <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：6 passed, 0 failed。</li>
+      <li><code>git diff --check</code>：passed。</li>
+      <li><code>leak_scan_result.json</code>：ok=true，findings=[]。</li>
+    </ul>
+
+    <h2>不要过度宣称</h2>
+    <p>本阶段不是 formal public sample merge、不是 held-out recovery、不是模型质量提升、不是 production readiness，也不是 postprocessor 或 evaluator 变更。</p>
+
+    <h2>推荐下一步</h2>
+    <p>Reviewer diff review 和 OpenSpec archive 已完成。如要继续数据变更，再单独开 bounded OpenSpec proposal：<code>propose-canonical-slot-boundary-formal-merge-after-review</code>。</p>
+  </main>
+</body>
+</html>

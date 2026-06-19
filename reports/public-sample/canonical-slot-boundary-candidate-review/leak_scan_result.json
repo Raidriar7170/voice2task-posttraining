@@ -1,0 +1,14 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-19T08:09:10.135213+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "reports/public-sample/canonical-slot-boundary-candidate-review",
+    "docs/human-briefs/2026-06-18-review-canonical-slot-boundary-candidates-before-merge.html",
+    "openspec/changes/archive/2026-06-19-review-canonical-slot-boundary-candidates-before-merge",
+    "openspec/specs/slot-canonicalization-policy/spec.md",
+    "CONTEXT.md",
+    "reports/final_status.md"
+  ]
+}

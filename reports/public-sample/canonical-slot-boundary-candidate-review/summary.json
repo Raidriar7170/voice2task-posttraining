@@ -1,0 +1,218 @@
+{
+  "evidence_kind": "canonical_slot_boundary_candidate_review",
+  "review_status": "review_complete_archived",
+  "review_mode": "public_safe_review_only_no_data_or_training",
+  "generated_at": "2026-06-18",
+  "archived_at": "2026-06-19",
+  "openspec_archive": "openspec/changes/archive/2026-06-19-review-canonical-slot-boundary-candidates-before-merge",
+  "source_candidate_materialization": {
+    "artifact": "reports/public-sample/canonical-slot-boundary-candidates/summary.json",
+    "evidence_kind": "canonical_slot_boundary_candidate_materialization",
+    "accepted_candidate_count": 9,
+    "excluded_non_equivalence_count": 8,
+    "formal_public_sample_status": "not_added"
+  },
+  "summary": {
+    "conclusion": "Canonical slot-boundary candidates have been reviewed as public-safe class-level evidence only.",
+    "eligible_for_later_formal_merge_proposal_count": 2,
+    "diagnostic_display_only_count": 1,
+    "blocked_or_deferred_non_equivalence_count": 1,
+    "approved_for_formal_merge_now_count": 0,
+    "requires_separate_openspec_change_for_every_class": true
+  },
+  "candidate_class_reviews": [
+    {
+      "candidate_group": "slot_key_aliases",
+      "source_candidate_count": 3,
+      "review_classification": "eligible_for_later_formal_merge_proposal",
+      "approved_for_formal_merge_now": false,
+      "requires_separate_openspec_change": true,
+      "allowed_later_operation": "bounded_openspec_proposal_only",
+      "representative_candidate_ids": [
+        "slot-key-alias-search-text-query",
+        "slot-key-alias-site-url",
+        "slot-key-alias-field-value"
+      ],
+      "rationale": "Alias-only slot-key rewrites are narrow enough to be proposed later, but this review does not approve immediate data mutation.",
+      "formal_public_sample_status": "not_added",
+      "strict_exact_impact": "none",
+      "blocked_operations": [
+        "formal_public_sample_merge_now",
+        "jsonl_seed_candidate_generation",
+        "sft_or_dpo_row_generation",
+        "manifest_rebuild",
+        "split_change",
+        "evaluator_definition_change",
+        "prediction_run",
+        "training_run",
+        "a100_job",
+        "postprocessor_implementation",
+        "strict_exact_relaxation",
+        "llm_judge",
+        "semantic_equivalence_scoring",
+        "prediction_repair",
+        "model_quality_claim"
+      ]
+    },
+    {
+      "candidate_group": "slot_value_boundaries",
+      "source_candidate_count": 4,
+      "review_classification": "eligible_for_later_formal_merge_proposal",
+      "approved_for_formal_merge_now": false,
+      "requires_separate_openspec_change": true,
+      "allowed_later_operation": "bounded_openspec_proposal_only",
+      "representative_candidate_ids": [
+        "slot-value-boundary-whitespace-trim",
+        "slot-value-boundary-fullwidth-punctuation",
+        "slot-value-boundary-filler-removal",
+        "slot-value-boundary-url-email-casing"
+      ],
+      "rationale": "Conservative value-boundary examples are reviewable only as inputs to a later bounded formal-merge proposal.",
+      "formal_public_sample_status": "not_added",
+      "strict_exact_impact": "none",
+      "blocked_operations": [
+        "formal_public_sample_merge_now",
+        "jsonl_seed_candidate_generation",
+        "sft_or_dpo_row_generation",
+        "manifest_rebuild",
+        "split_change",
+        "evaluator_definition_change",
+        "prediction_run",
+        "training_run",
+        "a100_job",
+        "postprocessor_implementation",
+        "strict_exact_relaxation",
+        "llm_judge",
+        "semantic_equivalence_scoring",
+        "prediction_repair",
+        "model_quality_claim"
+      ]
+    },
+    {
+      "candidate_group": "normalized_command_display_diagnostic",
+      "source_candidate_count": 2,
+      "review_classification": "diagnostic_display_only",
+      "approved_for_formal_merge_now": false,
+      "requires_separate_openspec_change": true,
+      "allowed_later_operation": "bounded_openspec_proposal_only",
+      "representative_candidate_ids": [
+        "normalized-command-display-search-template",
+        "normalized-command-display-safety-template"
+      ],
+      "rationale": "Normalized-command examples remain display diagnostics and do not define equivalence, scoring repair, or prediction repair.",
+      "formal_public_sample_status": "not_added",
+      "strict_exact_impact": "none",
+      "declares_equivalence": false,
+      "alters_strict_exact": false,
+      "alters_executable_contract_pass_conditions": false,
+      "rescores_prior_residuals": false,
+      "repairs_predictions": false,
+      "blocked_operations": [
+        "formal_public_sample_merge_now",
+        "jsonl_seed_candidate_generation",
+        "sft_or_dpo_row_generation",
+        "manifest_rebuild",
+        "split_change",
+        "evaluator_definition_change",
+        "prediction_run",
+        "training_run",
+        "a100_job",
+        "postprocessor_implementation",
+        "strict_exact_relaxation",
+        "llm_judge",
+        "semantic_equivalence_scoring",
+        "prediction_repair",
+        "model_quality_claim"
+      ]
+    },
+    {
+      "candidate_group": "excluded_non_equivalence_cases",
+      "source_candidate_count": 8,
+      "review_classification": "blocked_or_deferred_non_equivalence",
+      "approved_for_formal_merge_now": false,
+      "requires_separate_openspec_change": true,
+      "allowed_later_operation": "bounded_openspec_proposal_only",
+      "representative_case_ids": [
+        "date_today_vs_tomorrow",
+        "city_origin_vs_destination",
+        "product_name_change",
+        "url_host_change",
+        "price_amount_change",
+        "product_name_vs_query",
+        "location_vs_destination",
+        "action_vs_reason"
+      ],
+      "preserved_non_equivalence_boundaries": [
+        "date",
+        "city_or_location",
+        "product",
+        "url_host",
+        "price_or_amount",
+        "query_or_product",
+        "location_or_destination",
+        "action_or_reason"
+      ],
+      "rationale": "Excluded cases remain non-equivalence evidence and cannot be merged without a later policy boundary change.",
+      "formal_public_sample_status": "not_added",
+      "strict_exact_impact": "none",
+      "loosen_slot_value_policy": false,
+      "blocked_operations": [
+        "formal_public_sample_merge_now",
+        "jsonl_seed_candidate_generation",
+        "sft_or_dpo_row_generation",
+        "manifest_rebuild",
+        "split_change",
+        "evaluator_definition_change",
+        "prediction_run",
+        "training_run",
+        "a100_job",
+        "postprocessor_implementation",
+        "strict_exact_relaxation",
+        "llm_judge",
+        "semantic_equivalence_scoring",
+        "prediction_repair",
+        "model_quality_claim"
+      ]
+    }
+  ],
+  "execution_scope": {
+    "review_only": true,
+    "formal_public_sample_data_mutation": false,
+    "jsonl_seed_candidates_generated": false,
+    "sft_or_dpo_rows_generated": false,
+    "manifest_rebuilt": false,
+    "split_change": false,
+    "evaluator_definition_change": false,
+    "prediction_run": false,
+    "training_run": false,
+    "a100_job": false,
+    "deterministic_postprocessor_implemented": false,
+    "strict_exact_relaxation": false,
+    "llm_judge": false,
+    "semantic_equivalence_scoring": false,
+    "prediction_repair": false,
+    "checkpoint_or_adapter_release": false
+  },
+  "protected_paths_not_modified": [
+    "data/public-samples/seed_traces.jsonl",
+    "data/public-samples/sft_public_sample.jsonl",
+    "data/public-samples/dpo_public_sample.jsonl",
+    "data/public-samples/manifest_public_sample.json",
+    "reports/public-sample/canonical-slot-boundary-candidates",
+    "openspec/changes/merge-scaled-clarify-slot-boundary-candidates"
+  ],
+  "claims": {
+    "review_evidence_only": true,
+    "formal_merge_approval_claim": false,
+    "model_improvement_claim": false,
+    "held_out_recovery_claim": false,
+    "production_readiness_claim": false,
+    "safety_readiness_claim": false,
+    "live_browser_benchmark_improvement_claim": false
+  },
+  "recommended_next_step": {
+    "proposed_change_id": "propose-canonical-slot-boundary-formal-merge-after-review",
+    "operation": "later_bounded_openspec_proposal_only",
+    "implemented_now": false
+  }
+}
