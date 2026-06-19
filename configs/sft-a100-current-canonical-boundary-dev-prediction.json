@@ -1,0 +1,33 @@
+{
+  "adapter_path": "<a100_project_root>/runs/a100-current-train-split-sft-retry/adapter",
+  "allow_private_prediction": true,
+  "base_model": "Qwen/Qwen2.5-7B-Instruct",
+  "current_canonical_boundary_prediction": true,
+  "current_train_split_sft_retry_prediction": true,
+  "dataset_manifest_id": "public-sample-20260619T090925Z",
+  "evidence_output_dir": "<a100_project_root>/evidence/a100-current-canonical-boundary-prediction-baseline/dev",
+  "formal_public_sample_heldout_prediction": true,
+  "generalization_claim": false,
+  "max_new_tokens": 256,
+  "model_cache_policy": "private_remote_model_cache_not_copied_to_git",
+  "model_source": "modelscope",
+  "output_policy": "current_canonical_boundary_prediction_requires_private_override_no_direct_public_template_run",
+  "output_root": "<a100_project_root>",
+  "overfit_diagnostic": false,
+  "prediction_artifact_policy": "commit_only_sanitized_public_sample_predictions_sidecars_metrics_manifest_and_report",
+  "prediction_split": "dev",
+  "private_override_required": true,
+  "requires_paired_training_manifest_id": "public-sample-20260617T045941Z",
+  "source_adapter_dataset_manifest_id": "public-sample-20260617T045941Z",
+  "source_adapter_runtime": "a100-current-train-split-sft-retry",
+  "target_dataset_manifest_id": "public-sample-20260619T090925Z",
+  "private_override_requirements": [
+    "Create a private override outside git before remote execution.",
+    "Resolve <a100_project_root> to the approved private A100 project directory.",
+    "Resolve adapter_path to the private current-123 SFT retry adapter produced by the paired training phase.",
+    "Run prediction only; do not launch SFT, DPO, or GRPO training from this config.",
+    "Keep raw logs, checkpoints, adapters, caches, host details, SSH details, tokens, and private corpus rows out of committed artifacts."
+  ],
+  "public_sample_manifest": "data/public-samples/manifest_public_sample.json",
+  "reference_runtime": "a100-current-canonical-boundary-dev-prediction"
+}

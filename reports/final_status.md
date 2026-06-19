@@ -10,6 +10,7 @@
 
 | 项目 | 值 |
 | --- | --- |
+| Latest current-canonical-boundary prediction baseline evidence pack | `reports/public-sample/a100-current-canonical-boundary-prediction-baseline/` |
 | Latest data evidence pack | `reports/public-sample/canonical-slot-boundary-formal-merge/` |
 | Latest scaled-manifest prediction baseline evidence pack | `reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/` |
 | Latest canonical slot-boundary formal merge evidence pack | `reports/public-sample/canonical-slot-boundary-formal-merge/` |
@@ -31,7 +32,8 @@
 | Prior blocked scaled-manifest baseline evidence pack | `reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline/` |
 | Latest standalone scaled candidate evidence pack | `reports/public-sample/scaled-public-sample-candidate-materialization/` |
 | Latest readiness evidence pack | `reports/public-sample/current-123-train-split-sft-retry-readiness/` |
-| Latest model evidence pack | `reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/` |
+| Latest model evidence pack | `reports/public-sample/a100-current-canonical-boundary-prediction-baseline/` |
+| Latest observed model evidence pack | `reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/` |
 | Prior current-123 model evidence pack | `reports/public-sample/a100-current-123-train-split-sft-retry/` |
 | Latest strategic-design evidence pack | `reports/public-sample/scaled-public-sample-and-tiered-eval-design/` |
 | Latest candidate-design evidence pack | `reports/public-sample/current-retry-confirmation-preservation-candidate-design/` |
@@ -42,8 +44,9 @@
 | Current split | train 282 / dev 207 / test 207 |
 | Latest evaluated manifest | `public-sample-20260617T152259Z` |
 | Latest evaluated public sample | 240 seeds / 675 SFT rows / 2046 DPO pairs |
-| Latest run type | prediction-only retry on the scaled dev/test split using the existing `a100-current-train-split-sft-retry` private adapter |
-| Latest interpretation | `formal_public_heldout_partial_signal` |
+| Latest run type | current-canonical-boundary prediction-only baseline using the existing `a100-current-train-split-sft-retry` adapter lineage; blocked locally before A100 prediction |
+| Latest interpretation | `formal_public_heldout_prediction_blocked` |
+| Latest observed interpretation | `formal_public_heldout_partial_signal`, historical because it targets `public-sample-20260617T152259Z` |
 | Latest canonical slot-boundary formal merge result | exactly 7 reviewed train-only canonical slot-boundary candidate seeds promoted into formal public sample; formal SFT/DPO/manifest rebuilt; comparison boundary changed; no training/prediction/A100/prompt/postprocessor/evaluator/model-quality claim |
 | Latest canonical slot-boundary formal merge recommended next step | later bounded prediction-only or training phase must explicitly bind to `public-sample-20260619T090925Z`; old metrics are not directly comparable |
 | Latest canonical slot-boundary row-level candidate materialization result | 7 train-only standalone candidate seed rows in `data/public-samples/canonical_slot_boundary_seed_candidates.jsonl`; 21 report-local SFT preview rows; no formal data mutation |
@@ -70,7 +73,9 @@
 | Latest prior-manifest diagnosis interpretation | `current_sft_retry_tradeoff_diagnosis_confirmation_regression_after_safety_recovery` |
 | Prior SFT v3 retry evidence | `reports/public-sample/a100-form-fill-remediation-sft-v3-retry-after-ssh-recovery/` |
 
-最新模型证据仍绑定 `public-sample-20260617T152259Z`，而当前 formal data boundary 已更新为 `public-sample-20260619T090925Z`。它是 A100 恢复后的 prediction-only retry：使用已有的 private `a100-current-train-split-sft-retry` adapter，在 scaled dev/test split 上生成预测并用 strict evaluator 评估。没有训练、没有修 prediction、没有 normalize slot、没有改 prompt、没有放松 evaluator。adapter、checkpoint、raw log、private override 和远端缓存都没有发布。
+最新 current-canonical-boundary prediction baseline 已记录在 `reports/public-sample/a100-current-canonical-boundary-prediction-baseline/`。它绑定 `public-sample-20260619T090925Z`，保留 source adapter runtime `a100-current-train-split-sft-retry` 和 source adapter manifest `public-sample-20260617T045941Z`，但 sanitized read-only A100 SSH preflight 超时，未能安全验证 GPU occupancy 或 private adapter，也没有写入 predictions 或 model-quality metrics。状态是 `run_status=blocked` / `formal_public_heldout_prediction_blocked`；这只是当前边界的 fail-closed execution evidence，不是模型效果证据。
+
+最新 observed 模型证据仍绑定 `public-sample-20260617T152259Z`，而当前 formal data boundary 已更新为 `public-sample-20260619T090925Z`。它是 A100 恢复后的 prediction-only retry：使用已有的 private `a100-current-train-split-sft-retry` adapter，在 scaled dev/test split 上生成预测并用 strict evaluator 评估。没有训练、没有修 prediction、没有 normalize slot、没有改 prompt、没有放松 evaluator。adapter、checkpoint、raw log、private override 和远端缓存都没有发布。
 
 注意比较边界：这个 adapter 的训练来源是 `public-sample-20260617T045941Z`，本次评估目标是 `public-sample-20260617T152259Z`，当前数据边界又已变为 `public-sample-20260619T090925Z`。因此这份结果是历史 model evidence，不是当前 canonical slot-boundary merged boundary 的 clean improvement/regression comparison。
 

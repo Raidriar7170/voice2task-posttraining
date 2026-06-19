@@ -1,0 +1,26 @@
+{
+  "artifact_policy": {
+    "checkpoints_or_adapters_copied_to_git": false,
+    "host_details_omitted": true,
+    "private_corpus_rows_omitted": true,
+    "private_overrides_copied_to_git": false,
+    "private_paths_omitted": true,
+    "raw_logs_copied_to_git": false,
+    "remote_caches_copied_to_git": false,
+    "ssh_details_omitted": true
+  },
+  "blocked_reason": "a100_ssh_preflight_timeout_no_safe_prediction_execution",
+  "checks": {
+    "gpu_occupancy": "not_available_because_remote_preflight_timed_out",
+    "prediction_execution": "not_started",
+    "private_adapter_availability": "not_available_because_remote_preflight_timed_out",
+    "private_override_status": "not_created_because_remote_preflight_timed_out",
+    "remote_connectivity": "timeout",
+    "sanitized_preflight_command_class": "ssh_alias_nvidia_smi_query",
+    "timeout_seconds": 60
+  },
+  "evidence_kind": "a100_formal_public_heldout_prediction_preflight",
+  "generated_at": "2026-06-19T14:42:16.426180+00:00",
+  "notes": "A sanitized read-only A100 SSH preflight attempt timed out before GPU occupancy or private adapter availability could be verified. No A100 prediction was launched and no predictions or metrics were written.",
+  "status": "blocked"
+}

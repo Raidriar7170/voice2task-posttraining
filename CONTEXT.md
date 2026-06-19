@@ -6,8 +6,10 @@ Voice2Task Post-Training is a companion project for training and evaluating smal
 
 As of 2026-06-19, the first project phase is closed as an evidence-backed
 post-training and evaluation baseline, not as a production-ready model release.
-The public-facing truth surface has twenty-nine current layers. The newest
-ten are the canonical slot-boundary formal merge under
+The public-facing truth surface has thirty current layers. The newest
+eleven are the current-canonical-boundary prediction baseline under
+`reports/public-sample/a100-current-canonical-boundary-prediction-baseline/`,
+the canonical slot-boundary formal merge under
 `reports/public-sample/canonical-slot-boundary-formal-merge/`, the canonical
 slot-boundary row-level candidate materialization under
 `reports/public-sample/canonical-slot-boundary-row-level-candidates/`, the
@@ -78,9 +80,12 @@ Current formal public sample data boundary:
 | public sample | 247 seeds / 696 SFT rows / 2100 DPO pairs |
 | split counts | train 282 / dev 207 / test 207 |
 | latest evaluated manifest | `public-sample-20260617T152259Z` |
-| latest model run type | prediction-only retry on the scaled dev/test split using the existing `a100-current-train-split-sft-retry` private adapter |
-| latest model interpretation | `formal_public_heldout_partial_signal` |
-| latest model evidence | `reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/` |
+| latest model run type | current-canonical-boundary prediction-only baseline for dev/test using the existing `a100-current-train-split-sft-retry` private adapter lineage; blocked locally before A100 prediction |
+| latest model interpretation | `formal_public_heldout_prediction_blocked` for the current canonical-boundary baseline |
+| latest model evidence | `reports/public-sample/a100-current-canonical-boundary-prediction-baseline/` |
+| latest observed model evidence | `reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/` |
+| latest observed model interpretation | `formal_public_heldout_partial_signal`, historical because it targets `public-sample-20260617T152259Z` |
+| latest current-canonical-boundary prediction baseline result | blocked locally before A100 prediction; no predictions, no model-quality metrics, no training, no data mutation, no prompt/evaluator change, no prediction repair, no adapter/checkpoint release |
 | latest canonical slot-boundary formal merge evidence | `reports/public-sample/canonical-slot-boundary-formal-merge/` |
 | latest canonical slot-boundary formal merge result | promoted exactly 7 reviewed train-only canonical slot-boundary candidate seeds into the formal public sample; rebuilt formal seed/SFT/DPO/manifest artifacts to 247 / 696 / 2100; `comparison_boundary.changed=true`; no training, prediction, A100 execution, prompt change, postprocessor implementation, evaluator metric change, or model-quality claim |
 | latest canonical slot-boundary formal merge recommended next step | only a later bounded prediction-only or training phase may bind to `public-sample-20260619T090925Z`; old held-out metrics are not directly comparable |
@@ -135,14 +140,25 @@ Current formal public sample data boundary:
 | prior SFT v3 retry manifest | `public-sample-20260616T074315Z` |
 | prior SFT v3 retry interpretation | `form_fill_sft_v3_partial_improvement_with_safety_regression_risk` |
 
-The metric table below is still the latest observed model evidence, bound to
+The current-canonical-boundary prediction baseline is now recorded under
+`reports/public-sample/a100-current-canonical-boundary-prediction-baseline/`.
+It binds to `public-sample-20260619T090925Z`, preserves the source adapter
+runtime `a100-current-train-split-sft-retry` and source adapter manifest
+`public-sample-20260617T045941Z`, and fails closed with
+`run_status=blocked` / `overall_interpretation=formal_public_heldout_prediction_blocked`.
+This local Worker did not safely run A100 prediction, verify a private adapter,
+inspect GPU occupancy, or write predictions/metrics. The blocked artifact is
+evidence of current-boundary execution status only, not model quality.
+
+The metric table below remains the latest observed model evidence, bound to
 `public-sample-20260617T152259Z`, not to the current
 `public-sample-20260619T090925Z` data boundary. It is a prediction-only A100 recovery retry
 using the existing private `a100-current-train-split-sft-retry` adapter trained
 on `public-sample-20260617T045941Z`. It did not train, repair predictions,
 normalize slots, change prompts, relax metrics, or publish a checkpoint/adapter.
 Because the source adapter, evaluated manifest, and current formal data boundary
-now differ, this remains historical model evidence and is not directly
+now differ, and because the current-boundary baseline is blocked without
+metrics, this remains historical observed model evidence and is not directly
 comparable to future metrics on the canonical slot-boundary merged manifest.
 
 Scaled-manifest current-123 adapter prediction-only metrics:

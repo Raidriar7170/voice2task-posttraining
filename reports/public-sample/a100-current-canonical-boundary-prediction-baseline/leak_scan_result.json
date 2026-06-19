@@ -1,0 +1,15 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-19T14:58:54.440127+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "configs/sft-a100-current-canonical-boundary-dev-prediction.json",
+    "configs/sft-a100-current-canonical-boundary-test-prediction.json",
+    "reports/public-sample/a100-current-canonical-boundary-prediction-baseline",
+    "docs/human-briefs/2026-06-19-run-current-canonical-boundary-prediction-baseline.html",
+    "CONTEXT.md",
+    "reports/final_status.md",
+    "openspec/changes/archive/2026-06-19-run-current-canonical-boundary-prediction-baseline"
+  ]
+}

@@ -1,0 +1,187 @@
+{
+  "artifact_paths_by_split": {},
+  "artifact_policy": {
+    "checkpoints_or_adapters_copied_to_git": false,
+    "host_details_omitted": true,
+    "private_corpus_rows_omitted": true,
+    "private_overrides_copied_to_git": false,
+    "private_paths_omitted": true,
+    "raw_logs_copied_to_git": false,
+    "remote_caches_copied_to_git": false,
+    "ssh_details_omitted": true
+  },
+  "base_model": "Qwen/Qwen2.5-7B-Instruct",
+  "blocked_reason": "a100_ssh_preflight_timeout_no_safe_prediction_execution",
+  "claims": {
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "data_changed": false,
+    "evaluator_relaxation": false,
+    "held_out_generalization_recovered": false,
+    "live_browser_benchmark_claim": false,
+    "model_recovery_claim": false,
+    "prediction_only": true,
+    "prediction_repair_or_replacement": false,
+    "prediction_repair_or_rescore": false,
+    "private_corpus_generalization_claim": false,
+    "production_readiness_claim": false,
+    "public_full_corpus_release_claim": false,
+    "semantic_equivalence_primary_metric": false,
+    "soft_slot_f1_primary_metric": false,
+    "training_performed": false
+  },
+  "comparison_boundary": {
+    "comparison_note": "target manifest changed to the canonical slot-boundary merge; old metrics are historical and not a direct improvement/regression comparison",
+    "current_dataset_manifest_id": "public-sample-20260619T090925Z",
+    "direct_improvement_regression_comparison_valid": false,
+    "prior_blocked_evidence_dir": "reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline",
+    "prior_dataset_manifest_id": "public-sample-20260617T152259Z",
+    "prior_evidence_dir": "reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery",
+    "source_adapter_dataset_manifest_id": "public-sample-20260617T045941Z",
+    "source_adapter_runtime": "a100-current-train-split-sft-retry",
+    "target_dataset_manifest_id": "public-sample-20260619T090925Z"
+  },
+  "dataset_manifest_id": "public-sample-20260619T090925Z",
+  "evidence_kind": "a100_formal_public_heldout_prediction",
+  "formal_public_sample_counts": {
+    "dpo_pairs": 2100,
+    "seed_rows": 247,
+    "sft_rows": 696
+  },
+  "formal_public_sample_source_summary": {
+    "blocked_payment_safety_repair_candidate_seed_rows": 2,
+    "blocked_payment_safety_repair_candidate_sft_rows": 4,
+    "blocked_payment_safety_repair_candidates_formal_public_sample": true,
+    "blocked_payment_safety_repair_families": [
+      "refund_confirmation_or_processing",
+      "subscription_charge_confirmation"
+    ],
+    "blocked_payment_safety_repair_seed_split_counts": {
+      "dev": 0,
+      "test": 0,
+      "train": 2
+    },
+    "canonical_slot_boundary_candidate_class_counts": {
+      "slot_key_aliases": 3,
+      "slot_value_boundaries": 4
+    },
+    "canonical_slot_boundary_candidate_seed_rows": 7,
+    "canonical_slot_boundary_candidate_sft_rows": 21,
+    "canonical_slot_boundary_candidates_formal_public_sample": true,
+    "canonical_slot_boundary_seed_split_counts": {
+      "dev": 0,
+      "test": 0,
+      "train": 7
+    },
+    "comparison_boundary_changed": true,
+    "comparison_boundary_warning": "formal public sample boundary changed; old metrics are not directly comparable",
+    "current_retry_confirmation_preservation_candidate_seed_rows": 2,
+    "current_retry_confirmation_preservation_candidate_sft_rows": 5,
+    "current_retry_confirmation_preservation_candidates_formal_public_sample": true,
+    "current_retry_confirmation_preservation_families": [
+      "public_navigation_non_confirmation_preservation",
+      "unsafe_payment_confirmation_preservation"
+    ],
+    "current_retry_confirmation_preservation_seed_split_counts": {
+      "dev": 0,
+      "test": 0,
+      "train": 2
+    },
+    "family_stratified_candidate_seed_rows": 63,
+    "family_stratified_candidate_sft_rows": 189,
+    "family_stratified_candidates_formal_public_sample": true,
+    "family_stratified_families": [
+      "blocked_payment",
+      "clarify",
+      "confirmation",
+      "extract",
+      "form_fill",
+      "navigation",
+      "search"
+    ],
+    "family_stratified_seed_split_counts": {
+      "dev": 21,
+      "test": 21,
+      "train": 21
+    },
+    "form_fill_confirmation_marker_extension_candidate_seed_rows": 12,
+    "form_fill_confirmation_marker_extension_candidate_sft_rows": 12,
+    "form_fill_confirmation_marker_extension_candidates_formal_public_sample": true,
+    "form_fill_confirmation_marker_extension_seed_split_counts": {
+      "dev": 0,
+      "test": 0,
+      "train": 12
+    },
+    "form_fill_confirmation_marker_extension_source_family_ids": [
+      "family-confirmation-dev-1",
+      "family-confirmation-dev-2",
+      "family-confirmation-dev-3",
+      "family-confirmation-test-1",
+      "family-confirmation-test-2",
+      "family-confirmation-test-3",
+      "family-form_fill-dev-1",
+      "family-form_fill-dev-2",
+      "family-form_fill-dev-3",
+      "family-form_fill-test-1",
+      "family-form_fill-test-2",
+      "family-form_fill-test-3"
+    ],
+    "form_fill_remediation_candidate_seed_rows": 9,
+    "form_fill_remediation_candidate_sft_rows": 9,
+    "form_fill_remediation_candidates_formal_public_sample": true,
+    "form_fill_remediation_source_case_groups": [
+      "form-fill-clarify-boundary-protection",
+      "form-fill-confirmation-marker-preservation",
+      "form-fill-field-specificity-preservation"
+    ],
+    "scaled_public_sample_candidate_group_counts": {
+      "confirmation_boundary_overlay": 20,
+      "core_family_delta": 118
+    },
+    "scaled_public_sample_candidate_seed_rows": 138,
+    "scaled_public_sample_candidate_sft_rows": 414,
+    "scaled_public_sample_candidates_formal_public_sample": true,
+    "scaled_public_sample_family_counts": {
+      "blocked_payment": 20,
+      "clarify": 33,
+      "confirmation_boundary": 20,
+      "extract": 25,
+      "form_fill": 3,
+      "navigation": 17,
+      "search": 20
+    },
+    "scaled_public_sample_seed_split_counts": {
+      "dev": 46,
+      "test": 46,
+      "train": 46
+    },
+    "seed_rows": 247,
+    "slot_value_candidate_seed_rows": 4,
+    "slot_value_candidates_formal_public_sample": true,
+    "source": "sanitized_public_seed_fixture"
+  },
+  "formal_public_sample_split_counts": {
+    "dev": 207,
+    "test": 207,
+    "train": 282
+  },
+  "generated_at": "2026-06-19T14:42:16.426180+00:00",
+  "leak_scan_result": {
+    "findings": [],
+    "ok": true
+  },
+  "overall_interpretation": "formal_public_heldout_prediction_blocked",
+  "prediction_metadata_by_split": {},
+  "prediction_splits": [
+    "dev",
+    "test"
+  ],
+  "primary_evidence_splits": [
+    "dev",
+    "test"
+  ],
+  "run_status": "blocked",
+  "source_adapter_runtime": "a100-current-train-split-sft-retry",
+  "split_results": {},
+  "training_status": "prediction_only_no_training"
+}

@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Current Canonical Boundary Prediction Baseline</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1f2937;
+      --muted: #5d6675;
+      --line: #d9dee7;
+      --paper: #f7f8fa;
+      --panel: #ffffff;
+      --accent: #0f766e;
+      --warn: #9a3412;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+      line-height: 1.55;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 32px 20px 42px;
+    }
+    header {
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 22px;
+      padding-bottom: 18px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      line-height: 1.2;
+    }
+    h2 {
+      margin: 24px 0 10px;
+      font-size: 18px;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.92em;
+    }
+    .status {
+      display: inline-flex;
+      padding: 5px 10px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      font-size: 14px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+    .panel {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      padding: 14px;
+    }
+    .k {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .v {
+      margin-top: 4px;
+      font-weight: 650;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--panel);
+      border: 1px solid var(--line);
+    }
+    th,
+    td {
+      text-align: left;
+      vertical-align: top;
+      border-bottom: 1px solid var(--line);
+      padding: 10px;
+      font-size: 14px;
+    }
+    th {
+      background: #eef4f2;
+    }
+    ul {
+      padding-left: 20px;
+    }
+    .ok {
+      color: var(--accent);
+      font-weight: 650;
+    }
+    .warn {
+      color: var(--warn);
+      font-weight: 650;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="status">状态：blocked / prediction-only</div>
+      <h1>Current Canonical Boundary Prediction Baseline</h1>
+      <p>结论：本阶段已把 prediction-only baseline 绑定到 <code>public-sample-20260619T090925Z</code>，但 sanitized read-only A100 SSH preflight 超时，无法安全验证 GPU occupancy 或 private adapter，因此只发布 fail-closed blocked evidence，不发布 predictions 或 model-quality metrics。</p>
+    </header>
+
+    <section class="grid" aria-label="phase facts">
+      <div class="panel">
+        <div class="k">Target Manifest</div>
+        <div class="v"><code>public-sample-20260619T090925Z</code></div>
+      </div>
+      <div class="panel">
+        <div class="k">Current Counts</div>
+        <div class="v ok">247 seed / 696 SFT / 2100 DPO</div>
+      </div>
+      <div class="panel">
+        <div class="k">Source Adapter Runtime</div>
+        <div class="v"><code>a100-current-train-split-sft-retry</code></div>
+      </div>
+      <div class="panel">
+        <div class="k">Result</div>
+        <div class="v warn">blocked before private prediction</div>
+      </div>
+    </section>
+
+    <h2>本阶段改了什么</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>项目</th>
+          <th>结果</th>
+          <th>边界</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>prediction configs</td>
+          <td class="ok">added dev/test templates</td>
+          <td>只包含 placeholder private override；没有真实 private path、host、SSH 或 adapter 内容。</td>
+        </tr>
+        <tr>
+          <td>evidence pack</td>
+          <td class="warn">blocked evidence</td>
+          <td><code>formal_public_heldout_prediction.json</code> 没有 predictions、metrics 或 recovery claim。</td>
+        </tr>
+        <tr>
+          <td>comparison boundary</td>
+          <td class="ok">explicitly changed</td>
+          <td>旧 observed metrics 仍是历史证据，不能和当前 canonical boundary 直接比较。</td>
+        </tr>
+        <tr>
+          <td>metric authority</td>
+          <td class="ok">strict metrics stay primary</td>
+          <td>strict <code>contract_exact_match</code> 与 strict <code>slot_f1</code> 仍是 primary；<code>slot_f1_soft</code> 只是 diagnostic。</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>关键文件</h2>
+    <ul>
+      <li><code>configs/sft-a100-current-canonical-boundary-dev-prediction.json</code></li>
+      <li><code>configs/sft-a100-current-canonical-boundary-test-prediction.json</code></li>
+      <li><code>reports/public-sample/a100-current-canonical-boundary-prediction-baseline/formal_public_heldout_prediction.json</code></li>
+      <li><code>reports/public-sample/a100-current-canonical-boundary-prediction-baseline/report.md</code></li>
+      <li><code>CONTEXT.md</code></li>
+      <li><code>reports/final_status.md</code></li>
+      <li><code>openspec/changes/run-current-canonical-boundary-prediction-baseline/tasks.md</code></li>
+    </ul>
+
+    <h2>验证</h2>
+    <ul>
+      <li><code>PYTHONPATH=src python -m pytest tests/test_current_canonical_boundary_prediction_baseline.py -q</code>：3 passed。</li>
+      <li><code>PYTHONPATH=src python -m pytest -q</code>：501 passed。</li>
+      <li><code>uv run ruff check .</code>：All checks passed。</li>
+      <li><code>PYTHONPATH=src python -m voice2task.cli.data validate --sft data/public-samples/sft_public_sample.jsonl --dpo data/public-samples/dpo_public_sample.jsonl --manifest data/public-samples/manifest_public_sample.json --public</code>：ok=true，SFT 696 / DPO 2100。</li>
+      <li><code>PYTHONPATH=src python -m voice2task.cli.data dpo-check --dpo data/public-samples/dpo_public_sample.jsonl</code>：total_pairs=2100。</li>
+      <li><code>OPENSPEC_TELEMETRY=0 openspec validate run-current-canonical-boundary-prediction-baseline --strict</code>：valid。</li>
+      <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：7 passed。</li>
+      <li><code>PYTHONPATH=src python -m voice2task.cli.report leak-scan ...</code>：ok=true。</li>
+      <li><code>git diff --check</code>：passed。</li>
+      <li>Reviewer Must Fix：已补全 Human Brief 对完整验证束的记录；preflight timestamp 已改为真实生成时间并加入 sanitized timeout metadata。</li>
+    </ul>
+
+    <h2>不要过度宣称</h2>
+    <p>这不是 observed A100 model run、不是 held-out recovery、不是 model-quality improvement、不是 production readiness、不是 live-browser benchmark improvement，也不是 adapter/checkpoint release。它只证明当前 boundary 的 prediction-only baseline 已经有 public-safe observed-or-blocked artifact surface，并且本轮状态是 blocked。</p>
+
+    <h2>推荐下一步</h2>
+    <p>主线程 Review 后，如果要得到 observed metrics，需要另一次安全的 A100 prediction-only execution：先确认 GPU placement、private override 和 adapter availability，再生成 sanitized dev/test predictions 与 strict metrics。</p>
+  </main>
+</body>
+</html>

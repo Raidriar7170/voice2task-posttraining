@@ -9212,7 +9212,7 @@ def write_formal_public_heldout_prediction_report(
             "",
             "## Boundary",
             "",
-            "- Strict `contract_exact_match` remains primary.",
+            "- strict `contract_exact_match` and strict `slot_f1` remain primary.",
             "- `slot_f1_soft` is diagnostic only.",
             "- Predictions are not repaired, replaced, normalized, or re-scored.",
             (

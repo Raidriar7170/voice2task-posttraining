@@ -1,0 +1,77 @@
+{
+  "artifact_policy": {
+    "checkpoints_or_adapters_copied_to_git": false,
+    "host_details_omitted": true,
+    "private_corpus_rows_omitted": true,
+    "private_overrides_copied_to_git": false,
+    "private_paths_omitted": true,
+    "raw_logs_copied_to_git": false,
+    "remote_caches_copied_to_git": false,
+    "ssh_details_omitted": true
+  },
+  "blocked_reason": "a100_ssh_preflight_timeout_no_safe_prediction_execution",
+  "claims": {
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "data_changed": false,
+    "evaluator_relaxation": false,
+    "held_out_generalization_recovered": false,
+    "live_browser_benchmark_claim": false,
+    "model_recovery_claim": false,
+    "prediction_only": true,
+    "prediction_repair_or_replacement": false,
+    "prediction_repair_or_rescore": false,
+    "private_corpus_generalization_claim": false,
+    "production_readiness_claim": false,
+    "public_full_corpus_release_claim": false,
+    "semantic_equivalence_primary_metric": false,
+    "soft_slot_f1_primary_metric": false,
+    "training_performed": false
+  },
+  "comparison_boundary": {
+    "comparison_note": "target manifest changed to the canonical slot-boundary merge; old metrics are historical and not a direct improvement/regression comparison",
+    "current_dataset_manifest_id": "public-sample-20260619T090925Z",
+    "direct_improvement_regression_comparison_valid": false,
+    "prior_blocked_evidence_dir": "reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline",
+    "prior_dataset_manifest_id": "public-sample-20260617T152259Z",
+    "prior_evidence_dir": "reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery",
+    "source_adapter_dataset_manifest_id": "public-sample-20260617T045941Z",
+    "source_adapter_runtime": "a100-current-train-split-sft-retry",
+    "target_dataset_manifest_id": "public-sample-20260619T090925Z"
+  },
+  "dataset_manifest_id": "public-sample-20260619T090925Z",
+  "diagnostic_artifacts": {
+    "a100_preflight_status": "reports/public-sample/a100-current-canonical-boundary-prediction-baseline/a100_preflight_status.json",
+    "evidence": "reports/public-sample/a100-current-canonical-boundary-prediction-baseline/formal_public_heldout_prediction.json",
+    "final_phase_leak_scan": "reports/public-sample/a100-current-canonical-boundary-prediction-baseline/final_phase_leak_scan_result.json",
+    "leak_scan": "reports/public-sample/a100-current-canonical-boundary-prediction-baseline/leak_scan_result.json",
+    "manifest": "reports/public-sample/a100-current-canonical-boundary-prediction-baseline/manifest.json",
+    "phase_validation_leak_scan": "reports/public-sample/a100-current-canonical-boundary-prediction-baseline/phase_validation_leak_scan_result.json",
+    "report": "reports/public-sample/a100-current-canonical-boundary-prediction-baseline/report.md"
+  },
+  "evidence_kind": "a100_formal_public_heldout_prediction",
+  "formal_public_sample_counts": {
+    "dpo_pairs": 2100,
+    "seed_rows": 247,
+    "sft_rows": 696
+  },
+  "formal_public_sample_split_counts": {
+    "dev": 207,
+    "test": 207,
+    "train": 282
+  },
+  "generated_at": "2026-06-19T14:42:16.426180+00:00",
+  "overall_interpretation": "formal_public_heldout_prediction_blocked",
+  "prediction_splits": [
+    "dev",
+    "test"
+  ],
+  "primary_evidence_splits": [
+    "dev",
+    "test"
+  ],
+  "run_status": "blocked",
+  "source_adapter_runtime": "a100-current-train-split-sft-retry",
+  "split_results": {},
+  "training_status": "prediction_only_no_training"
+}
