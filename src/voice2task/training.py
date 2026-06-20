@@ -720,6 +720,87 @@ def _record_sft_training_selection_from_config(
     return rows
 
 
+def _target_token_count(records: list[dict[str, Any]]) -> int:
+    total = 0
+    for record in records:
+        labels = _token_list(record.get("labels"))
+        total += sum(1 for label in labels if label != -100)
+    return total
+
+
+def _safe_training_metric_value(value: Any) -> int | float | str | bool | None:
+    if value is None or isinstance(value, str | bool):
+        return value
+    if isinstance(value, int | float):
+        return value
+    return str(value)
+
+
+def _observed_optimizer_steps(trainer: Any, train_result: Any) -> int | None:
+    state = getattr(trainer, "state", None)
+    value = getattr(state, "global_step", None)
+    if value is None:
+        value = getattr(train_result, "global_step", None)
+    if value is None:
+        metrics = getattr(train_result, "metrics", None)
+        if isinstance(metrics, dict):
+            value = metrics.get("global_step")
+    if isinstance(value, int | float):
+        return int(value)
+    return None
+
+
+def _record_sft_training_budget_metadata(
+    metadata: dict[str, Any],
+    *,
+    config: dict[str, Any],
+    train_row_count: int,
+    records: list[dict[str, Any]],
+    trainer: Any,
+    train_result: Any,
+) -> None:
+    effective_batch_size = int(config.get("per_device_train_batch_size", 1)) * int(
+        config.get("gradient_accumulation_steps", 1)
+    )
+    configured_max_steps = int(config.get("max_steps", -1))
+    observed_steps = _observed_optimizer_steps(trainer, train_result)
+    step_budget = observed_steps if observed_steps is not None else configured_max_steps
+    if step_budget > 0:
+        theoretical_examples_seen = step_budget * effective_batch_size
+    else:
+        theoretical_examples_seen = int(round(train_row_count * float(config.get("num_train_epochs", 1))))
+    target_tokens_per_single_pass = _target_token_count(records)
+    target_tokens_seen_estimate = (
+        int(round(target_tokens_per_single_pass * theoretical_examples_seen / train_row_count))
+        if train_row_count
+        else 0
+    )
+    metrics = getattr(train_result, "metrics", None)
+    metadata["training_budget"] = {
+        "configured_max_steps": configured_max_steps,
+        "observed_optimizer_steps": observed_steps,
+        "num_train_epochs": float(config.get("num_train_epochs", 1)),
+        "per_device_train_batch_size": int(config.get("per_device_train_batch_size", 1)),
+        "gradient_accumulation_steps": int(config.get("gradient_accumulation_steps", 1)),
+        "effective_batch_size": effective_batch_size,
+        "scheduler_max_steps": configured_max_steps if configured_max_steps > 0 else None,
+        "train_row_count": train_row_count,
+        "theoretical_examples_seen": theoretical_examples_seen,
+        "target_tokens_per_single_pass": target_tokens_per_single_pass,
+        "target_tokens_seen_estimate": target_tokens_seen_estimate,
+        "target_tokens_seen_status": "estimated_from_label_tokens_and_step_budget",
+        "step_matching_unit": "optimizer_steps",
+        "step_matched_not_token_matched": True,
+    }
+    metadata["observed_optimizer_steps"] = observed_steps
+    metadata["target_tokens_seen"] = target_tokens_seen_estimate
+    metadata["target_tokens_seen_status"] = "estimated_from_label_tokens_and_step_budget"
+    if isinstance(metrics, dict):
+        metadata["train_result_metrics"] = {
+            str(key): _safe_training_metric_value(value) for key, value in sorted(metrics.items())
+        }
+
+
 def _load_sft_prediction_rows(manifest_path: Path, split: str) -> list[SFTDatasetRow]:
     summary = _manifest_load_summary(manifest_path, "sft")
     dataset_path = summary["dataset_path"]
@@ -2416,7 +2497,15 @@ def _run_real_sft(metadata: dict[str, Any], config: dict[str, Any], manifest_pat
         data_collator=_AssistantOnlyCausalLmDataCollator(tokenizer),
         **_sft_trainer_tokenizer_kwargs(SFTTrainer, tokenizer),
     )
-    trainer.train()
+    train_result = trainer.train()
+    _record_sft_training_budget_metadata(
+        metadata,
+        config=config,
+        train_row_count=len(rows),
+        records=records,
+        trainer=trainer,
+        train_result=train_result,
+    )
     trainer.model.save_pretrained(metadata["adapter_path"])
 
 

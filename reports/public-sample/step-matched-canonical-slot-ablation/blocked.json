@@ -1,0 +1,54 @@
+{
+  "phase": "run-step-matched-canonical-slot-ablation",
+  "status": "blocked",
+  "blocked_stage": "a100_preflight_connectivity",
+  "blocked_reason": "A100 development machine was not reachable during SSH preflight.",
+  "blocked_at": "2026-06-20",
+  "run_policy": {
+    "no_training_launched": true,
+    "no_prediction_launched": true,
+    "no_metrics_fabricated": true,
+    "no_dpo_or_grpo": true,
+    "no_llm_judge": true,
+    "no_prediction_repair": true,
+    "no_semantic_equivalence_scoring": true,
+    "no_evaluator_change": true,
+    "no_candidate_design_loop": true,
+    "no_contract_v2_work": true,
+    "no_public_adapter_or_checkpoint_release": true
+  },
+  "intended_comparison": {
+    "control_manifest": "public-sample-20260617T152259Z",
+    "treatment_manifest": "public-sample-20260619T090925Z",
+    "training_mode": "fresh_one_seed_sft_ab",
+    "step_matching_required": true,
+    "fixed_seed": 7170
+  },
+  "missing_evidence": [
+    "safe_gpu_occupancy_check",
+    "previous_control_optimizer_step_budget_recovery",
+    "fresh_control_training",
+    "fresh_treatment_training",
+    "dev_predictions",
+    "test_predictions",
+    "paired_comparison_metrics",
+    "pilot_gate_decision"
+  ],
+  "claim_boundaries": {
+    "canonical_data_effect_claim": false,
+    "held_out_recovery_claim": false,
+    "production_readiness_claim": false,
+    "live_browser_benchmark_claim": false,
+    "safety_certification_claim": false
+  },
+  "next_step": "Stop and wait for A100 connectivity to recover, then resume this same bounded phase from preflight.",
+  "public_safety": {
+    "contains_private_paths": false,
+    "contains_host_details": false,
+    "contains_ssh_details": false,
+    "contains_raw_logs": false,
+    "contains_checkpoints_or_adapters": false,
+    "contains_tokens_or_secrets": false,
+    "contains_private_corpus_rows": false
+  }
+}

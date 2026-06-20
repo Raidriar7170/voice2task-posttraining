@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>run-step-matched-canonical-slot-ablation brief</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #172026;
+      background: #f7f8fa;
+    }
+    main {
+      max-width: 940px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 26px;
+      letter-spacing: 0;
+    }
+    h2 {
+      margin: 24px 0 10px;
+      font-size: 17px;
+      letter-spacing: 0;
+    }
+    p, li {
+      font-size: 14px;
+      line-height: 1.65;
+    }
+    .status {
+      display: inline-block;
+      margin: 8px 0 18px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: #ffe8d1;
+      color: #793d00;
+      font-weight: 600;
+      font-size: 13px;
+    }
+    section {
+      border-top: 1px solid #d8dee6;
+      padding-top: 12px;
+    }
+    code {
+      background: #edf1f5;
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+    a {
+      color: #0b62a3;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>step-matched canonical slot ablation</h1>
+    <div class="status">状态：blocked</div>
+    <p>结论：本阶段已按 OpenSpec 建立并开始 apply，但 A100 SSH preflight 未连通，所以没有启动训练、预测或指标比较。</p>
+
+    <section>
+      <h2>本阶段改变了什么</h2>
+      <ul>
+        <li>新增 OpenSpec change：<code>run-step-matched-canonical-slot-ablation</code>。</li>
+        <li>新增 step-matched Control/Treatment SFT 配置模板，显式使用相同 <code>max_steps=3132</code>。</li>
+        <li>新增 dev/test prediction 配置模板，保持同一 base model、prompt、tokenizer、decoding 和 evaluator 边界。</li>
+        <li>训练路径新增 public-safe training-budget metadata，用于真实运行后记录 optimizer steps、effective batch、examples seen 和 target-token exposure。</li>
+        <li>写入单一 blocked artifact：<code>reports/public-sample/step-matched-canonical-slot-ablation/blocked.json</code>。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>关键文件</h2>
+      <ul>
+        <li><a href="../../openspec/changes/run-step-matched-canonical-slot-ablation/proposal.md">proposal.md</a></li>
+        <li><a href="../../openspec/changes/run-step-matched-canonical-slot-ablation/design.md">design.md</a></li>
+        <li><a href="../../openspec/changes/run-step-matched-canonical-slot-ablation/tasks.md">tasks.md</a></li>
+        <li><a href="../../reports/public-sample/step-matched-canonical-slot-ablation/blocked.json">blocked.json</a></li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>验证结果</h2>
+      <ul>
+        <li><code>openspec validate run-step-matched-canonical-slot-ablation --strict</code>：通过。</li>
+        <li><code>PYTHONPATH=src pytest -q tests/test_training_arguments.py::test_sft_training_budget_metadata_records_observed_step_exposure</code>：通过。</li>
+        <li>A100 preflight：未连通，阶段按规则停止。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>不要过度声明</h2>
+      <p>本阶段没有训练 fresh paired adapters，没有生成 dev/test predictions，没有 paired deltas、bootstrap CI 或 pilot gate 结论。因此不能声称 canonical slot-boundary data 有或没有改善模型，也不能声称 held-out recovery、production readiness、safety certification 或 live-browser benchmark improvement。</p>
+    </section>
+
+    <section>
+      <h2>建议下一步</h2>
+      <p>等待 A100 连接恢复后，从同一个 bounded phase 的 preflight 继续；不要新增 design-only、review-only 或 candidate-only evidence phase。</p>
+    </section>
+  </main>
+</body>
+</html>
