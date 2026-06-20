@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Canonical Slot Paired SFT Ablation</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1f2937;
+      --muted: #5f6877;
+      --line: #d9dee7;
+      --paper: #f7f8fa;
+      --panel: #ffffff;
+      --accent: #0f766e;
+      --warn: #9a3412;
+      --soft: #eef4f2;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+      line-height: 1.55;
+    }
+    main {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 32px 20px 42px;
+    }
+    header {
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 22px;
+      padding-bottom: 18px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      line-height: 1.2;
+    }
+    h2 {
+      margin: 24px 0 10px;
+      font-size: 18px;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.92em;
+    }
+    .status {
+      display: inline-flex;
+      padding: 5px 10px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      font-size: 14px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+    .panel {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      padding: 14px;
+    }
+    .k {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .v {
+      margin-top: 4px;
+      font-weight: 650;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--panel);
+      border: 1px solid var(--line);
+    }
+    th,
+    td {
+      text-align: left;
+      vertical-align: top;
+      border-bottom: 1px solid var(--line);
+      padding: 10px;
+      font-size: 14px;
+    }
+    th {
+      background: var(--soft);
+    }
+    ul {
+      padding-left: 20px;
+    }
+    .ok {
+      color: var(--accent);
+      font-weight: 650;
+    }
+    .warn {
+      color: var(--warn);
+      font-weight: 650;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="status">状态：observed / gate failed</div>
+      <h1>Canonical Slot Paired SFT Ablation</h1>
+      <p>结论：canonical slot-boundary 数据在 fresh paired SFT A/B 中带来正向 partial signal，但 test slot exact F1 只提升 <code>+0.027740</code>，低于预设 <code>+0.03</code> gate，因此不建议 3-seed confirmation、DPO 或继续小批量 candidate 追加。</p>
+    </header>
+
+    <section class="grid" aria-label="phase facts">
+      <div class="panel">
+        <div class="k">Control</div>
+        <div class="v"><code>public-sample-20260617T152259Z</code><br>261 train SFT rows</div>
+      </div>
+      <div class="panel">
+        <div class="k">Treatment</div>
+        <div class="v"><code>public-sample-20260619T090925Z</code><br>282 train SFT rows</div>
+      </div>
+      <div class="panel">
+        <div class="k">Frozen Dev/Test</div>
+        <div class="v ok">207 dev / 207 test, identical gold boundary</div>
+      </div>
+      <div class="panel">
+        <div class="k">Pilot Gate</div>
+        <div class="v warn">failed: test slot delta below threshold</div>
+      </div>
+    </section>
+
+    <h2>本阶段改了什么</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>项目</th>
+          <th>结果</th>
+          <th>边界</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>comparison boundary</td>
+          <td class="ok">passed</td>
+          <td>control/treatment 的 dev/test row order、input text、gold contracts 和 content hash 完全一致。</td>
+        </tr>
+        <tr>
+          <td>paired SFT</td>
+          <td class="ok">fresh adapters trained</td>
+          <td>同 base model、LoRA、learning rate、epoch/max steps、batch、seed、prompt、tokenizer、decoding、evaluator 和 frozen inputs；每个 arm 都有 sanitized training summary。</td>
+        </tr>
+        <tr>
+          <td>evaluation</td>
+          <td class="ok">dev/test separated</td>
+          <td>报告 strict exact、slot exact/normalized F1、executable pass、schema/route/task/safety/confirmation/json guardrails。</td>
+        </tr>
+        <tr>
+          <td>scope controls</td>
+          <td class="ok">held</td>
+          <td>没有 DPO/GRPO、evaluator change、LLM judge、prediction repair、semantic-equivalence scoring、adapter/checkpoint release。</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>关键结果</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>split</th>
+          <th>slot exact F1 delta</th>
+          <th>executable pass delta</th>
+          <th>safety recall delta</th>
+          <th>gate note</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>dev</td>
+          <td class="ok">+0.051282</td>
+          <td class="ok">+0.053140</td>
+          <td>+0.000000</td>
+          <td>passes slot and executable thresholds</td>
+        </tr>
+        <tr>
+          <td>test</td>
+          <td class="warn">+0.027740</td>
+          <td class="ok">+0.028986</td>
+          <td>+0.000000</td>
+          <td>fails slot threshold by 0.002260</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>关键文件</h2>
+    <ul>
+      <li><code>reports/public-sample/canonical-slot-paired-sft-ablation/boundary-verification.json</code></li>
+      <li><code>reports/public-sample/canonical-slot-paired-sft-ablation/comparison.md</code></li>
+      <li><code>reports/public-sample/canonical-slot-paired-sft-ablation/comparison.json</code></li>
+      <li><code>reports/public-sample/canonical-slot-paired-sft-ablation/control/training_summary.json</code></li>
+      <li><code>reports/public-sample/canonical-slot-paired-sft-ablation/treatment/training_summary.json</code></li>
+      <li><code>reports/public-sample/canonical-slot-paired-sft-ablation/control/</code></li>
+      <li><code>reports/public-sample/canonical-slot-paired-sft-ablation/treatment/</code></li>
+      <li><code>configs/sft-a100-canonical-slot-paired-control.json</code></li>
+      <li><code>configs/sft-a100-canonical-slot-paired-treatment.json</code></li>
+      <li><code>scripts/run_canonical_slot_paired_sft_ablation_eval.py</code></li>
+    </ul>
+
+    <h2>验证</h2>
+    <ul>
+      <li><code>PYTHONPATH=src pytest -q tests/test_training_arguments.py tests/test_canonical_slot_paired_sft_ablation_configs.py</code>：5 passed。</li>
+      <li><code>PYTHONPATH=src pytest -q tests/test_canonical_slot_paired_sft_ablation_configs.py::test_canonical_slot_paired_public_artifacts_include_training_provenance</code>：1 passed。</li>
+      <li><code>PYTHONPATH=src python -m py_compile scripts/run_canonical_slot_paired_sft_ablation_eval.py</code>：passed。</li>
+      <li><code>jq -e ... boundary-verification.json</code>：true。</li>
+      <li><code>jq -e ... comparison.json</code>：true。</li>
+      <li><code>PYTHONPATH=src python -m voice2task.cli.data validate ... --public</code>：ok=true，SFT 696 / DPO 2100。</li>
+      <li><code>PYTHONPATH=src python -m voice2task.cli.data dpo-check --dpo data/public-samples/dpo_public_sample.jsonl</code>：total_pairs=2100。</li>
+      <li><code>PYTHONPATH=src pytest -q</code>：506 passed。</li>
+      <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：7 passed。</li>
+      <li><code>uv run ruff check .</code>：All checks passed。</li>
+      <li><code>PYTHONPATH=src python -m voice2task.cli.report leak-scan ...</code>：ok=true。</li>
+      <li><code>git diff --check</code>：passed。</li>
+    </ul>
+
+    <h2>不要过度宣称</h2>
+    <p>这不是 held-out recovery、不是 production readiness、不是 public adapter/checkpoint release、不是 semantic-equivalence recovery，也不是 DPO 值得继续的证据。它只说明 canonical data 在一个固定 seed 的 paired SFT 中有正向 partial signal，但没有达到预设 pilot gate。</p>
+
+    <h2>推荐下一步</h2>
+    <p>按 gate 规则停止 SFT/DPO/candidate loop。若继续，应另开 <code>design-and-implement-contract-v2</code>：模型只预测 <code>task_type</code>、<code>route</code>、<code>safety</code>、<code>confirmation</code> 和 <code>slots</code>，由 deterministic postprocessor 生成 runtime/action/display/policy fields。</p>
+  </main>
+</body>
+</html>

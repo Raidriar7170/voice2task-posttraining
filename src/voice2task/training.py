@@ -49,11 +49,13 @@ def _resolve_manifest_file(manifest_path: Path, value: Any) -> Path | None:
     if not isinstance(value, str) or not value:
         return None
     candidate = Path(value)
-    if candidate.exists():
+    if candidate.is_absolute() and candidate.exists():
         return candidate
     relative_candidate = manifest_path.parent / candidate.name
     if relative_candidate.exists():
         return relative_candidate
+    if candidate.exists():
+        return candidate
     return None
 
 
@@ -119,6 +121,14 @@ def _public_display_model(value: Any) -> str:
     if isinstance(value, str) and value:
         return _public_display_path(value, "<private_base_model>")
     return "unknown"
+
+
+def _public_base_model(config: dict[str, Any]) -> str:
+    return str(config.get("base_model_public_id") or config.get("base_model") or "unknown")
+
+
+def _runtime_base_model(config: dict[str, Any]) -> str:
+    return str(config.get("base_model_runtime_path") or config.get("base_model"))
 
 
 def _public_display_artifact_path(value: Path, placeholder: str) -> str:
@@ -450,7 +460,7 @@ def _metadata_common(
     return {
         "stage": stage,
         "stack": _training_stack(stage),
-        "base_model": config.get("base_model"),
+        "base_model": _public_base_model(config),
         "adapter_path": adapter_path.as_posix(),
         "dataset_manifest_id": load_summary["manifest_id"],
         "dataset_manifest_path": manifest_path.as_posix(),
@@ -590,9 +600,14 @@ def _training_arguments(config: dict[str, Any], output_dir: Path) -> Any:
     return TrainingArguments(
         output_dir=output_dir.as_posix(),
         num_train_epochs=float(config.get("num_train_epochs", 1)),
+        max_steps=int(config.get("max_steps", -1)),
         per_device_train_batch_size=int(config.get("per_device_train_batch_size", 1)),
+        gradient_accumulation_steps=int(config.get("gradient_accumulation_steps", 1)),
+        learning_rate=float(config.get("learning_rate", 5e-5)),
+        warmup_ratio=float(config.get("warmup_ratio", 0.0)),
         logging_steps=int(config.get("logging_steps", 1)),
         save_strategy=str(config.get("save_strategy", "no")),
+        seed=int(config.get("seed", 42)),
         report_to=[],
     )
 
@@ -827,7 +842,7 @@ def _prediction_metadata_common(
     return {
         "stage": "sft_prediction",
         "stack": "transformers+peft+trl",
-        "base_model": _public_display_model(config.get("base_model_public_id") or config.get("base_model")),
+        "base_model": _public_display_model(_public_base_model(config)),
         "model_source": config.get("model_source", "unknown"),
         "dataset_manifest_id": load_summary["manifest_id"],
         "dataset_manifest_path": _public_display_path(manifest_path, "data/public-samples/manifest_public_sample.json"),
@@ -1417,7 +1432,7 @@ def _run_real_sft_prediction(
     from peft import PeftModel  # type: ignore[import-not-found, unused-ignore]
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
-    base_model = str(config["base_model"])
+    base_model = _runtime_base_model(config)
     adapter_path = str(config["adapter_path"])
     tokenizer: Any = AutoTokenizer.from_pretrained(base_model, trust_remote_code=True)
     dtype = torch.float16 if torch.cuda.is_available() else torch.float32
@@ -2387,11 +2402,12 @@ def _run_real_sft(metadata: dict[str, Any], config: dict[str, Any], manifest_pat
     from trl import SFTTrainer  # type: ignore[import-not-found, unused-ignore]
 
     rows = _record_sft_training_selection_from_config(metadata, config, manifest_path)
-    tokenizer = AutoTokenizer.from_pretrained(config["base_model"])
+    base_model = _runtime_base_model(config)
+    tokenizer = AutoTokenizer.from_pretrained(base_model)
     max_seq_length = int(config.get("max_seq_length", 1024))
     records = [_assistant_only_training_record(row, tokenizer, max_seq_length=max_seq_length) for row in rows]
     dataset = Dataset.from_list(records)
-    model = AutoModelForCausalLM.from_pretrained(config["base_model"])
+    model = AutoModelForCausalLM.from_pretrained(base_model)
     trainer = SFTTrainer(
         model=model,
         train_dataset=dataset,

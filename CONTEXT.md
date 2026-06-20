@@ -4,10 +4,12 @@ Voice2Task Post-Training is a companion project for training and evaluating smal
 
 ## Current Status Contract
 
-As of 2026-06-19, the first project phase is closed as an evidence-backed
+As of 2026-06-20, the first project phase is closed as an evidence-backed
 post-training and evaluation baseline, not as a production-ready model release.
-The public-facing truth surface has thirty current layers. The newest
-eleven are the current-canonical-boundary prediction baseline under
+The public-facing truth surface has thirty-one current layers. The newest
+twelve are the canonical slot paired SFT ablation under
+`reports/public-sample/canonical-slot-paired-sft-ablation/`, the
+current-canonical-boundary prediction baseline under
 `reports/public-sample/a100-current-canonical-boundary-prediction-baseline/`,
 the canonical slot-boundary formal merge under
 `reports/public-sample/canonical-slot-boundary-formal-merge/`, the canonical
@@ -79,12 +81,15 @@ Current formal public sample data boundary:
 | manifest | `public-sample-20260619T090925Z` |
 | public sample | 247 seeds / 696 SFT rows / 2100 DPO pairs |
 | split counts | train 282 / dev 207 / test 207 |
-| latest evaluated manifest | `public-sample-20260617T152259Z` |
-| latest model run type | current-canonical-boundary prediction-only baseline for dev/test using the existing `a100-current-train-split-sft-retry` private adapter lineage; blocked locally before A100 prediction |
-| latest model interpretation | `formal_public_heldout_prediction_blocked` for the current canonical-boundary baseline |
-| latest model evidence | `reports/public-sample/a100-current-canonical-boundary-prediction-baseline/` |
-| latest observed model evidence | `reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/` |
-| latest observed model interpretation | `formal_public_heldout_partial_signal`, historical because it targets `public-sample-20260617T152259Z` |
+| latest evaluated manifest | frozen dev/test from `public-sample-20260619T090925Z`, verified identical to `public-sample-20260617T152259Z` dev/test by row order, input text, and gold contracts |
+| latest model run type | one-seed paired SFT A/B: fresh control adapter trained on 261 rows from `public-sample-20260617T152259Z`; fresh treatment adapter trained on 282 rows from `public-sample-20260619T090925Z`; same base model, LoRA, seed, decoding, evaluator, and frozen dev/test |
+| latest model interpretation | `canonical_slot_paired_sft_ablation_gate_failed`: treatment has positive dev/test deltas, but the pilot gate fails because test `slot_value_exact_f1` improves only `+0.027740`, below the required `+0.03` |
+| latest model evidence | `reports/public-sample/canonical-slot-paired-sft-ablation/` |
+| latest observed model evidence | `reports/public-sample/canonical-slot-paired-sft-ablation/` |
+| latest observed model interpretation | one-seed SFT-only causal comparison with fresh paired adapters; positive partial signal but no 3-seed confirmation recommendation, no DPO, no extra candidate loop, no adapter/checkpoint release, and no production-readiness claim |
+| latest canonical slot paired SFT boundary evidence | `reports/public-sample/canonical-slot-paired-sft-ablation/boundary-verification.json` |
+| latest canonical slot paired SFT result | boundary verification passed; dev/test gold hashes match exactly, control/treatment fresh SFT completed, dev slot exact delta `+0.051282`, test slot exact delta `+0.027740`, dev executable delta `+0.053140`, test executable delta `+0.028986`, safety recall did not drop |
+| latest canonical slot paired SFT recommended next step | `design-and-implement-contract-v2`; do not continue with small canonical candidates, DPO/GRPO, semantic-equivalence scoring, prediction repair, or public checkpoint/adapter release |
 | latest current-canonical-boundary prediction baseline result | blocked locally before A100 prediction; no predictions, no model-quality metrics, no training, no data mutation, no prompt/evaluator change, no prediction repair, no adapter/checkpoint release |
 | latest canonical slot-boundary formal merge evidence | `reports/public-sample/canonical-slot-boundary-formal-merge/` |
 | latest canonical slot-boundary formal merge result | promoted exactly 7 reviewed train-only canonical slot-boundary candidate seeds into the formal public sample; rebuilt formal seed/SFT/DPO/manifest artifacts to 247 / 696 / 2100; `comparison_boundary.changed=true`; no training, prediction, A100 execution, prompt change, postprocessor implementation, evaluator metric change, or model-quality claim |
@@ -140,7 +145,23 @@ Current formal public sample data boundary:
 | prior SFT v3 retry manifest | `public-sample-20260616T074315Z` |
 | prior SFT v3 retry interpretation | `form_fill_sft_v3_partial_improvement_with_safety_regression_risk` |
 
-The current-canonical-boundary prediction baseline is now recorded under
+The canonical slot paired SFT ablation is now recorded under
+`reports/public-sample/canonical-slot-paired-sft-ablation/`. It verifies that
+control `public-sample-20260617T152259Z` and treatment
+`public-sample-20260619T090925Z` share exactly the same dev/test samples, row
+order, input text, and gold contracts before training. The phase then trains two
+fresh SFT-only adapters with matched base model, LoRA hyperparameters, seed,
+prompt template, tokenizer, decoding parameters, evaluator, and frozen dev/test
+inputs. Treatment improves dev/test exact and executable metrics, but the
+predeclared one-seed pilot gate fails because test `slot_value_exact_f1` improves
+by only `+0.027740`, below the required `+0.03`. Therefore this is positive
+partial signal, not a 3-seed confirmation trigger, not a held-out recovery
+claim, and not a reason to add small canonical candidates or run DPO. The
+recommended next bounded phase is `design-and-implement-contract-v2`, where the
+model predicts only task type, route, safety, confirmation, and slots while
+deterministic postprocessing generates runtime/action fields.
+
+The prior current-canonical-boundary prediction baseline is recorded under
 `reports/public-sample/a100-current-canonical-boundary-prediction-baseline/`.
 It binds to `public-sample-20260619T090925Z`, preserves the source adapter
 runtime `a100-current-train-split-sft-retry` and source adapter manifest
@@ -150,7 +171,7 @@ This local Worker did not safely run A100 prediction, verify a private adapter,
 inspect GPU occupancy, or write predictions/metrics. The blocked artifact is
 evidence of current-boundary execution status only, not model quality.
 
-The metric table below remains the latest observed model evidence, bound to
+The metric table below remains prior observed model evidence, bound to
 `public-sample-20260617T152259Z`, not to the current
 `public-sample-20260619T090925Z` data boundary. It is a prediction-only A100 recovery retry
 using the existing private `a100-current-train-split-sft-retry` adapter trained

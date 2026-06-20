@@ -1,0 +1,51 @@
+{
+  "a100_project_root_policy": "must_resolve_to_approved_private_a100_project_root",
+  "adapter_output_dir": "<a100_project_root>/runs/canonical-slot-paired-sft-ablation/treatment/adapter",
+  "allow_heavy_training": true,
+  "base_model": "Qwen/Qwen2.5-7B-Instruct",
+  "canonical_slot_paired_sft_ablation": true,
+  "dataset_manifest_id": "public-sample-20260619T090925Z",
+  "dataset_split": "train",
+  "dpo_or_grpo_allowed": false,
+  "evidence_output_dir": "<a100_project_root>/evidence/canonical-slot-paired-sft-ablation/treatment/train",
+  "expected_train_sft_rows": 282,
+  "generalization_claim": false,
+  "gpu_identifier_policy": "policy_only_no_host_ip_or_gpu_uuid",
+  "gpu_selection_policy": "select_idle_gpu_only_no_process_interruption",
+  "gradient_accumulation_steps": 1,
+  "learning_rate": 0.00005,
+  "logging_steps": 1,
+  "lora": {
+    "alpha": 32,
+    "dropout": 0.05,
+    "r": 16,
+    "target_modules": [
+      "q_proj",
+      "k_proj",
+      "v_proj",
+      "o_proj"
+    ]
+  },
+  "max_seq_length": 2048,
+  "max_steps": -1,
+  "num_train_epochs": 12,
+  "output_dir": "<a100_project_root>/runs/canonical-slot-paired-sft-ablation/treatment",
+  "output_policy": "canonical_slot_paired_sft_ablation_outputs_remain_private_by_default",
+  "output_root": "<a100_project_root>",
+  "overfit_diagnostic": false,
+  "paired_control": false,
+  "paired_treatment": true,
+  "per_device_train_batch_size": 1,
+  "private_override_required": true,
+  "private_override_requirements": [
+    "Create a private override outside git before remote execution.",
+    "Resolve <a100_project_root> to the approved private A100 project directory.",
+    "Use a coherent snapshot of public-sample-20260619T090925Z manifest and SFT rows.",
+    "Keep raw logs, checkpoints, adapters, caches, host details, SSH details, tokens, and private corpus rows out of committed artifacts."
+  ],
+  "public_sample_manifest": "data/public-samples/manifest_public_sample.json",
+  "reference_runtime": "canonical-slot-paired-sft-ablation-treatment",
+  "save_strategy": "no",
+  "seed": 7170,
+  "trainer": "trl.SFTTrainer"
+}

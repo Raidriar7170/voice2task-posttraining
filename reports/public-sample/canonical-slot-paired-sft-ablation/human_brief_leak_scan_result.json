@@ -1,0 +1,9 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-20T03:39:50.138664+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "docs/human-briefs/2026-06-20-run-canonical-slot-paired-sft-ablation.html"
+  ]
+}

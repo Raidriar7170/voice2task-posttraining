@@ -1,0 +1,170 @@
+{
+  "phase": "run-canonical-slot-paired-sft-ablation",
+  "status": "ready_for_paired_training",
+  "blocked_reason": null,
+  "control_manifest_id": "public-sample-20260617T152259Z",
+  "treatment_manifest_id": "public-sample-20260619T090925Z",
+  "methodology": {
+    "source": "git historical snapshots of public sample manifest and SFT JSONL",
+    "gold_row_shape": [
+      "id",
+      "input_text",
+      "target_contract"
+    ],
+    "hash_algorithm": "sha256 over canonical JSONL with sorted object keys",
+    "note": "split counts alone are not used as proof of held-out equivalence"
+  },
+  "arms": {
+    "control": {
+      "commit": "c25a09874ae10c052364aaf5bfa55ee45b819e9a",
+      "manifest_id": "public-sample-20260617T152259Z",
+      "manifest_path": "data/public-samples/manifest_public_sample.json",
+      "sft_path": "data/public-samples/sft_public_sample.jsonl",
+      "manifest_counts": {
+        "dpo_pairs": 2046,
+        "seed_rows": 240,
+        "sft_rows": 675
+      },
+      "manifest_split_counts": {
+        "dev": 207,
+        "test": 207,
+        "train": 261
+      },
+      "actual_sft_split_counts": {
+        "train": 261,
+        "dev": 207,
+        "test": 207
+      },
+      "dev": {
+        "gold_row_count": 207,
+        "gold_content_sha256": "0b53a313657a587161d69ac4a615181d579fd5293981975167687433f96b3298",
+        "row_id_order_sha256": "053b9242e4129b73d3b710955848a4687ca9b8bc56168c2f6ba4e4b66167294f",
+        "contract_content_sha256": "6086ab1aacafec12c1219e3e6353beb93caecc22dab22a2e283f992b710a8d5b",
+        "sample_first_ids": [
+          "seed-open-example",
+          "seed-open-example-aug-1",
+          "seed-open-example-aug-2",
+          "seed-clarify-ambiguous",
+          "seed-clarify-ambiguous-aug-1"
+        ],
+        "sample_last_ids": [
+          "scaled-public-sample-overlay-confirmation-boundary-016-aug-1",
+          "scaled-public-sample-overlay-confirmation-boundary-016-aug-2",
+          "scaled-public-sample-overlay-confirmation-boundary-019",
+          "scaled-public-sample-overlay-confirmation-boundary-019-aug-1",
+          "scaled-public-sample-overlay-confirmation-boundary-019-aug-2"
+        ]
+      },
+      "test": {
+        "gold_row_count": 207,
+        "gold_content_sha256": "d4e62a314ba78b007a4a872e2f16cb10e4dec03136da64c105fcbf3842c4f19d",
+        "row_id_order_sha256": "f66e9a9de8f86e54d227ecc7e1d5288d0387764d26facc757dd0c1625176ccc9",
+        "contract_content_sha256": "593f7d167e5698ee3687c2177bba7731cf91740f2d623b7c8966b4063855bc2c",
+        "sample_first_ids": [
+          "seed-form-email",
+          "seed-form-email-aug-1",
+          "seed-form-email-aug-2",
+          "seed-block-purchase",
+          "seed-block-purchase-aug-1"
+        ],
+        "sample_last_ids": [
+          "scaled-public-sample-overlay-confirmation-boundary-017-aug-1",
+          "scaled-public-sample-overlay-confirmation-boundary-017-aug-2",
+          "scaled-public-sample-overlay-confirmation-boundary-020",
+          "scaled-public-sample-overlay-confirmation-boundary-020-aug-1",
+          "scaled-public-sample-overlay-confirmation-boundary-020-aug-2"
+        ]
+      }
+    },
+    "treatment": {
+      "commit": "879494d98c6a32bec56915939cb1bee597b82a5b",
+      "manifest_id": "public-sample-20260619T090925Z",
+      "manifest_path": "data/public-samples/manifest_public_sample.json",
+      "sft_path": "data/public-samples/sft_public_sample.jsonl",
+      "manifest_counts": {
+        "dpo_pairs": 2100,
+        "seed_rows": 247,
+        "sft_rows": 696
+      },
+      "manifest_split_counts": {
+        "dev": 207,
+        "test": 207,
+        "train": 282
+      },
+      "actual_sft_split_counts": {
+        "train": 282,
+        "dev": 207,
+        "test": 207
+      },
+      "dev": {
+        "gold_row_count": 207,
+        "gold_content_sha256": "0b53a313657a587161d69ac4a615181d579fd5293981975167687433f96b3298",
+        "row_id_order_sha256": "053b9242e4129b73d3b710955848a4687ca9b8bc56168c2f6ba4e4b66167294f",
+        "contract_content_sha256": "6086ab1aacafec12c1219e3e6353beb93caecc22dab22a2e283f992b710a8d5b",
+        "sample_first_ids": [
+          "seed-open-example",
+          "seed-open-example-aug-1",
+          "seed-open-example-aug-2",
+          "seed-clarify-ambiguous",
+          "seed-clarify-ambiguous-aug-1"
+        ],
+        "sample_last_ids": [
+          "scaled-public-sample-overlay-confirmation-boundary-016-aug-1",
+          "scaled-public-sample-overlay-confirmation-boundary-016-aug-2",
+          "scaled-public-sample-overlay-confirmation-boundary-019",
+          "scaled-public-sample-overlay-confirmation-boundary-019-aug-1",
+          "scaled-public-sample-overlay-confirmation-boundary-019-aug-2"
+        ]
+      },
+      "test": {
+        "gold_row_count": 207,
+        "gold_content_sha256": "d4e62a314ba78b007a4a872e2f16cb10e4dec03136da64c105fcbf3842c4f19d",
+        "row_id_order_sha256": "f66e9a9de8f86e54d227ecc7e1d5288d0387764d26facc757dd0c1625176ccc9",
+        "contract_content_sha256": "593f7d167e5698ee3687c2177bba7731cf91740f2d623b7c8966b4063855bc2c",
+        "sample_first_ids": [
+          "seed-form-email",
+          "seed-form-email-aug-1",
+          "seed-form-email-aug-2",
+          "seed-block-purchase",
+          "seed-block-purchase-aug-1"
+        ],
+        "sample_last_ids": [
+          "scaled-public-sample-overlay-confirmation-boundary-017-aug-1",
+          "scaled-public-sample-overlay-confirmation-boundary-017-aug-2",
+          "scaled-public-sample-overlay-confirmation-boundary-020",
+          "scaled-public-sample-overlay-confirmation-boundary-020-aug-1",
+          "scaled-public-sample-overlay-confirmation-boundary-020-aug-2"
+        ]
+      }
+    }
+  },
+  "comparisons": {
+    "dev": {
+      "control_gold_row_count": 207,
+      "treatment_gold_row_count": 207,
+      "gold_row_count_equal": true,
+      "row_id_order_equal": true,
+      "input_text_equal": true,
+      "target_contract_equal": true,
+      "gold_content_equal": true,
+      "control_gold_content_sha256": "0b53a313657a587161d69ac4a615181d579fd5293981975167687433f96b3298",
+      "treatment_gold_content_sha256": "0b53a313657a587161d69ac4a615181d579fd5293981975167687433f96b3298",
+      "first_mismatch": null
+    },
+    "test": {
+      "control_gold_row_count": 207,
+      "treatment_gold_row_count": 207,
+      "gold_row_count_equal": true,
+      "row_id_order_equal": true,
+      "input_text_equal": true,
+      "target_contract_equal": true,
+      "gold_content_equal": true,
+      "control_gold_content_sha256": "d4e62a314ba78b007a4a872e2f16cb10e4dec03136da64c105fcbf3842c4f19d",
+      "treatment_gold_content_sha256": "d4e62a314ba78b007a4a872e2f16cb10e4dec03136da64c105fcbf3842c4f19d",
+      "first_mismatch": null
+    }
+  },
+  "dev_test_gold_boundary_identical": true,
+  "causal_training_allowed": true,
+  "recommended_next_step": "run_paired_sft_training"
+}

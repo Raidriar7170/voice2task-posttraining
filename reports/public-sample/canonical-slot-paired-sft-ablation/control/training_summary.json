@@ -1,0 +1,39 @@
+{
+  "phase": "run-canonical-slot-paired-sft-ablation",
+  "arm": "control",
+  "training_status": "training_completed",
+  "training_manifest_id": "public-sample-20260617T152259Z",
+  "evaluation_manifest_id": "public-sample-20260619T090925Z",
+  "training_split": "train",
+  "selected_train_sft_rows": 261,
+  "expected_train_sft_rows": 261,
+  "base_model_public_id": "Qwen/Qwen2.5-7B-Instruct",
+  "lora": {
+    "alpha": 32,
+    "dropout": 0.05,
+    "r": 16,
+    "target_modules": [
+      "q_proj",
+      "k_proj",
+      "v_proj",
+      "o_proj"
+    ]
+  },
+  "learning_rate": 0.00005,
+  "num_train_epochs": 12,
+  "max_steps": -1,
+  "per_device_train_batch_size": 1,
+  "gradient_accumulation_steps": 1,
+  "seed": 7170,
+  "max_seq_length": 2048,
+  "trainer": "trl.SFTTrainer",
+  "save_strategy": "no",
+  "dpo_or_grpo_run_performed": false,
+  "adapter_release_status": "not_released",
+  "checkpoint_release_status": "not_released",
+  "raw_private_paths_copied_to_git": false,
+  "sanitized_for_public_evidence": true,
+  "provenance_source": "sanitized_training_config_and_observed_a100_completion",
+  "training_artifact_policy": "adapters_checkpoints_raw_logs_caches_and_private_runtime_paths_not_committed",
+  "observed_training_status_basis": "A100 SFT command completed before prediction generation; raw adapter metadata, logs, private paths, and caches remain uncommitted."
+}
