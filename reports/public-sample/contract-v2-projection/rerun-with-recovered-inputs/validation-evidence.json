@@ -1,0 +1,49 @@
+{
+  "commands": [
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src pytest -q tests/test_contract_v2_projection_rerun.py tests/test_step_matched_projection_input_recovery.py tests/test_layered_evaluator_and_residual_diagnosis.py -p no:cacheprovider",
+      "observed": "29 passed in 0.62s",
+      "status": "passed"
+    },
+    {
+      "command": "PYTHONPATH=src pytest -q",
+      "observed": "536 passed in 16.36s",
+      "status": "passed"
+    },
+    {
+      "command": "PYTHONPATH=src ruff check src tests scripts/rerun_contract_v2_projection_with_recovered_inputs.py",
+      "observed": "All checks passed!",
+      "status": "passed"
+    },
+    {
+      "command": "OPENSPEC_TELEMETRY=0 openspec validate --all --strict",
+      "observed": "10 passed, 0 failed",
+      "status": "passed"
+    },
+    {
+      "command": "git diff --check",
+      "observed": "no output",
+      "status": "passed"
+    },
+    {
+      "command": "PYTHONPATH=src python -m voice2task.cli.report leak-scan README.md README_en.md CONTEXT.md docs/human-briefs/2026-06-21-rerun-contract-v2-projection-with-recovered-inputs.html openspec/changes/rerun-contract-v2-projection-with-recovered-inputs reports/public-sample/contract-v2-projection/rerun-with-recovered-inputs",
+      "observed": "ok=true, findings=[]",
+      "status": "passed"
+    },
+    {
+      "command": "PYTHONPATH=src python scripts/rerun_contract_v2_projection_with_recovered_inputs.py --output-dir <unapproved-output-dir> ; test $? -ne 0",
+      "observed": "refusing unapproved output dir, without writing rerun artifacts outside the approved root",
+      "status": "passed"
+    }
+  ],
+  "evidence_kind": "contract_v2_projection_rerun_validation_evidence",
+  "generated_at": "2026-06-21T05:28:28+00:00",
+  "scope": [
+    "rerun artifacts",
+    "README.md",
+    "README_en.md",
+    "CONTEXT.md",
+    "Human Brief HTML",
+    "OpenSpec change"
+  ]
+}

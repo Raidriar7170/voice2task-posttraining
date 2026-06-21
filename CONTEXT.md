@@ -6,10 +6,12 @@ Voice2Task Post-Training is a companion project for training and evaluating smal
 
 As of 2026-06-21, the first project phase is closed as an evidence-backed
 post-training and evaluation baseline, not as a production-ready model release.
-The public-facing truth surface has thirty-four current layers. The newest
-fifteen are the step-matched projection input recovery under
+The public-facing truth surface has thirty-five current layers. The newest
+sixteen are the recovered-input Contract V2 projection rerun under
+`reports/public-sample/contract-v2-projection/rerun-with-recovered-inputs/`,
+the step-matched projection input recovery under
 `reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/`, the
-blocked Contract V2 projection evidence under
+historical blocked Contract V2 projection evidence under
 `reports/public-sample/contract-v2-projection/`, the step-matched canonical slot
 SFT ablation under `reports/public-sample/step-matched-canonical-slot-ablation/`, the prior
 canonical slot paired SFT ablation under
@@ -94,9 +96,9 @@ Current formal public sample data boundary:
 | latest observed model interpretation | step-matched SFT-only causal comparison; mixed / inconclusive result, no small canonical candidate continuation, no DPO/GRPO, no adapter/checkpoint release, and no production-readiness claim |
 | latest projection input recovery evidence | `reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/` |
 | latest projection input recovery result | `RECOVERED_FROM_EXISTING_ARTIFACTS`: original current step-matched Control/Treatment dev/test predictions and dev/test gold contracts are committed as public-safe raw inputs; boundary verification passes and metrics reproduce committed aggregates exactly |
-| latest projection evidence | `reports/public-sample/contract-v2-projection/` |
-| latest projection result | prior `PROJECTION_BLOCKED_OR_INVALID`: latest step-matched aggregate artifacts existed, but current raw Control/Treatment dev/test predictions and aligned dev/test gold contracts were not committed at that time |
-| latest projection recommended next action | rerun the same bounded projection evaluation with recovered step-matched inputs; do not substitute older non-step-matched predictions and do not broaden into Contract V2 implementation |
+| latest projection evidence | `reports/public-sample/contract-v2-projection/rerun-with-recovered-inputs/` |
+| latest projection result | `PARTIAL_SCHEMA_BENEFIT`: recovered-input projection uses the restored step-matched contracts; normalized-command-only failures are 14.65%, metadata-only failures are 0%, V2 core exact improves by +0.0193/+0.0386 Control dev/test and +0.0290/+0.0242 Treatment dev/test, renderer support is 0.9988, deterministic roundtrip is 1.0, but V2 core executable pass does not improve and slot failures remain dominant |
+| latest projection recommended next action | `decide-contract-v2-core-implementation-scope` only; do not auto implement Contract V2, train, DPO, expand data, rerun predictions, or start a challenge-set phase |
 | latest canonical slot paired SFT boundary evidence | `reports/public-sample/step-matched-canonical-slot-ablation/boundary-verification.json` |
 | latest canonical slot paired SFT result | boundary verification passed; dev/test gold hashes match exactly, control/treatment fresh SFT completed with same optimizer-step budget; dev strict exact delta `0.000000`, test strict exact delta `+0.014493`, dev executable delta `+0.009662`, test executable delta `-0.004831`, safety recall did not drop |
 | latest canonical slot paired SFT recommended next step | completed as blocked projection evidence under `reports/public-sample/contract-v2-projection/`; do not continue with small canonical candidates, DPO/GRPO, semantic-equivalence scoring, prediction repair, or public checkpoint/adapter release |
@@ -171,17 +173,26 @@ not a held-out recovery claim, and is not a reason to add small canonical
 candidates or run DPO. This led to the bounded
 `design-and-evaluate-contract-v2-projection` phase.
 
-The Contract V2 projection evidence is now recorded under
+The recovered-input Contract V2 projection rerun is now recorded under
+`reports/public-sample/contract-v2-projection/rerun-with-recovered-inputs/`
+with `decision_label=PARTIAL_SCHEMA_BENEFIT`. It reads only recovered
+`prediction_contract` and `gold_contract` objects from
+`reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/`, not
+`raw_model_output`, older non-step-matched predictions, or any new model
+generation. It answers the previous blocked question narrowly: removing
+derived/display fields eliminates 23 of 157 V1 strict failures, all from
+`normalized_command`; V2 core exact improves modestly, but V2 core executable
+pass does not improve and core slot failures remain the dominant bottleneck.
+This is schema-burden evidence only. It is not model improvement, held-out
+recovery, production readiness, safety readiness, live-browser benchmark gain,
+checkpoint/adapter release, DPO justification, or approval for another
+canonical-candidate loop.
+
+The historical Contract V2 projection evidence remains preserved under
 `reports/public-sample/contract-v2-projection/` with
-`decision_label=PROJECTION_BLOCKED_OR_INVALID`. The phase confirmed that the
-latest step-matched aggregate artifacts exist, but current raw Control/Treatment
-dev/test prediction contracts and aligned dev/test gold contracts are not
-committed. Because deterministic V2 projection, renderer coverage, field
-contribution, and bootstrap metrics require those raw contracts, the phase
-failed closed and rejected older non-step-matched raw predictions as invalid
-substitutes. The next bounded action is raw-artifact recovery plus rerun of the
-same projection evaluation, not Contract V2 implementation, training, DPO, data
-expansion, or challenge-set work.
+`decision_label=PROJECTION_BLOCKED_OR_INVALID`. That earlier phase failed
+closed because the current raw Control/Treatment dev/test prediction contracts
+and aligned dev/test gold contracts were not yet committed.
 
 The step-matched projection input recovery is now recorded under
 `reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/` with

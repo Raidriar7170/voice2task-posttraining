@@ -13,7 +13,7 @@ The core question is intentionally narrow:
 
 > Can a 7B model reliably convert natural Chinese browser intent into executable contract JSON, beyond memorizing the training format?
 
-The current answer is conservative. The Qwen2.5-7B LoRA path runs on the private A100 environment. The latest current evidence is step-matched projection input recovery: the prior Contract V2 projection failed closed because current raw prediction / gold contract artifacts were missing; those public-safe Control/Treatment dev/test predictions and dev/test gold contracts are now recovered and reproduce the committed aggregate metrics. The next action is not another small canonical-candidate loop, DPO, or Contract V2 implementation. It is to rerun the same bounded projection evaluation with the recovered inputs.
+The current answer is conservative. The Qwen2.5-7B LoRA path runs on the private A100 environment. The latest current evidence is a recovered-input Contract V2 projection rerun: it used recovered step-matched Control/Treatment dev/test prediction contracts and dev/test gold contracts, then reran projection offline. The decision is `PARTIAL_SCHEMA_BENEFIT`: removing derived/display fields gives a small strict-exact gain, but V2 core executable pass does not improve and slot failures still dominate. This does not justify a model-improvement, held-out recovery, production-readiness, safety-readiness, or formal Contract V2 implementation claim.
 
 ## TL;DR
 
@@ -21,7 +21,7 @@ The current answer is conservative. The Qwen2.5-7B LoRA path runs on the private
 - Output: strict-schema browser task contract JSON.
 - Data: the current formal public sample boundary is `public-sample-20260619T090925Z`, with 247 seeds, 696 SFT rows, and 2100 DPO preference pairs, split as train/dev/test = 282/207/207. The old 77-seed / 231-SFT / 661-DPO boundary is historical.
 - Model path: Qwen2.5-7B-Instruct + LoRA. Training and prediction evidence comes from a private A100 runtime; weights and adapters are not committed.
-- Latest public evidence: [`step-matched-canonical-slot-ablation/raw-inputs`](reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/recovery-summary.md) recovers the current step-matched projection inputs; the prior [`contract-v2-projection`](reports/public-sample/contract-v2-projection/decision.md) remains blocked projection evidence.
+- Latest public evidence: [`contract-v2-projection/rerun-with-recovered-inputs`](reports/public-sample/contract-v2-projection/rerun-with-recovered-inputs/summary.md) reruns Contract V2 projection with recovered step-matched raw inputs; input recovery evidence is under [`raw-inputs`](reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/recovery-summary.md).
 - Boundary: this repo proves that the data/training/prediction/eval path is real; it does not claim stable canonical-slot benefit, held-out recovery, production readiness, private-corpus generalization, live-browser benchmark gains, or a released checkpoint.
 
 ## Current Snapshot
@@ -32,13 +32,13 @@ The current answer is conservative. The Qwen2.5-7B LoRA path runs on the private
 | Public split | current: train 282 / dev 207 / test 207; historical: train 93 / dev 69 / test 69 |
 | Base model | Qwen/Qwen2.5-7B-Instruct |
 | Adapter state | step-matched Control / Treatment private A100 adapters observed, not released |
-| Latest evidence | Step-matched projection input recovery |
+| Latest evidence | Recovered-input Contract V2 projection rerun |
 | Optimizer-step budget | Control and Treatment both use 3132 optimizer steps |
 | Strict exact match | Control dev 0.8357 / test 0.7778; Treatment dev 0.8357 / test 0.7923 |
 | Executable pass | Control dev 0.8551 / test 0.8213; Treatment dev 0.8647 / test 0.8164 |
-| Projection decision | previous projection remains `PROJECTION_BLOCKED_OR_INVALID`; recovered inputs are `RECOVERED_FROM_EXISTING_ARTIFACTS` |
-| Interpretation | mixed / inconclusive source ablation; raw projection inputs are now recovered, but Contract V2 projection metrics have not been rerun |
-| Next bounded action | rerun the same bounded projection evaluation with recovered step-matched inputs |
+| Projection decision | `PARTIAL_SCHEMA_BENEFIT` under `reports/public-sample/contract-v2-projection/rerun-with-recovered-inputs/` |
+| Interpretation | recovered-input projection improves V2 core exact by +0.0193/+0.0386 Control dev/test and +0.0290/+0.0242 Treatment dev/test; V2 executable pass does not improve and slot failures remain dominant |
+| Next bounded action | `decide-contract-v2-core-implementation-scope` only; do not auto implement Contract V2, train, DPO, or expand data |
 
 ## Positioning
 
@@ -79,11 +79,11 @@ flowchart LR
 
 ## 3-Minute Reviewer Path
 
-1. Read the current boundary: [`reports/public-sample/step-matched-canonical-slot-ablation/decision.md`](reports/public-sample/step-matched-canonical-slot-ablation/decision.md).
-2. Inspect current dev/test metrics and deltas: [`comparison.json`](reports/public-sample/step-matched-canonical-slot-ablation/comparison.json).
-3. Inspect boundary verification: [`boundary-verification.json`](reports/public-sample/step-matched-canonical-slot-ablation/boundary-verification.json).
-4. Inspect row/family diagnostics: [`paired-row-analysis.json`](reports/public-sample/step-matched-canonical-slot-ablation/paired-row-analysis.json) and [`family-level-deltas.json`](reports/public-sample/step-matched-canonical-slot-ablation/family-level-deltas.json).
-5. Inspect the active OpenSpec change for the blocked projection phase: [`openspec/changes/design-and-evaluate-contract-v2-projection/proposal.md`](openspec/changes/design-and-evaluate-contract-v2-projection/proposal.md).
+1. Read the current projection decision: [`reports/public-sample/contract-v2-projection/rerun-with-recovered-inputs/decision.md`](reports/public-sample/contract-v2-projection/rerun-with-recovered-inputs/decision.md).
+2. Inspect required answers and deltas: [`summary.json`](reports/public-sample/contract-v2-projection/rerun-with-recovered-inputs/summary.json).
+3. Inspect failure contribution: [`failure-contribution-analysis.md`](reports/public-sample/contract-v2-projection/rerun-with-recovered-inputs/failure-contribution-analysis.md).
+4. Inspect recovered input boundary: [`source-boundary.json`](reports/public-sample/contract-v2-projection/rerun-with-recovered-inputs/source-boundary.json).
+5. Inspect the source step-matched ablation boundary: [`reports/public-sample/step-matched-canonical-slot-ablation/decision.md`](reports/public-sample/step-matched-canonical-slot-ablation/decision.md).
 
 ## Quick Start
 
@@ -155,6 +155,7 @@ Prediction-only private runs should write sanitized public-sample outputs and me
 
 | Evidence | What it proves | What it does not prove |
 | --- | --- | --- |
+| [`contract-v2-projection/rerun-with-recovered-inputs`](reports/public-sample/contract-v2-projection/rerun-with-recovered-inputs/summary.md) | Recovered-input Contract V2 projection rerun completed offline: normalized-command-only share 14.65%, metadata-only share 0%, V2 core exact improves by +0.0193/+0.0386 Control dev/test and +0.0290/+0.0242 Treatment dev/test, renderer support 0.9988, deterministic roundtrip 1.0 | Model improvement, V2 executable improvement, held-out recovery, formal Contract V2 implementation readiness, production or safety readiness |
 | [`step-matched-canonical-slot-ablation/raw-inputs`](reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/recovery-summary.md) | Current raw-input recovery: original step-matched Control/Treatment dev/test predictions and dev/test gold contracts are public-safe, boundary-verified, and reproduce committed aggregate metrics | Contract V2 projection gain, V2 renderer coverage, Contract V2 implementation readiness, retraining justification |
 | [`contract-v2-projection`](reports/public-sample/contract-v2-projection/decision.md) | Prior blocked projection evidence: latest step-matched aggregate artifacts existed, but current raw Control/Treatment dev/test predictions and gold contracts were not yet committed | V2 exact gain, executable gain, renderer coverage, failure-contribution percentages, Contract V2 implementation readiness |
 | [`step-matched-canonical-slot-ablation`](reports/public-sample/step-matched-canonical-slot-ablation/decision.md) | Current step-matched Control / Treatment SFT ablation using the same 3132 optimizer-step budget; mixed / inconclusive result with no stable broad canonical-slot benefit | DPO justification, more small-candidate-loop approval, held-out recovery, model recovery, checkpoint release, production readiness |
@@ -174,7 +175,7 @@ The latest step-matched ablation therefore reads as:
 - Control / Treatment used the same 3132 optimizer-step budget;
 - dev strict exact did not move, test strict exact improved by 0.0145, but test executable pass declined by 0.0048 and strict slot F1 declined by 0.0032;
 - the result is mixed / inconclusive and does not prove stable, general canonical-slot-data benefit;
-- the prior attempted projection could not answer the architectural question because the current raw step-matched prediction and gold contracts were not committed; the new raw-input recovery fixes that input gap but has not rerun projection metrics.
+- the recovered-input projection rerun answers the architectural question narrowly: derived/display fields explain 14.65% of V1 strict failures, but core slot failures remain dominant and V2 executable pass does not improve.
 
 ## Normalized Command Target Policy
 
@@ -182,12 +183,7 @@ The latest step-matched ablation therefore reads as:
 
 ## Recommended Next Stage
 
-The next useful action is not another broad rerun, small canonical-candidate loop, DPO, immediate retraining, or Contract V2 implementation. Raw-artifact recovery is now complete under [`raw-inputs`](reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/recovery-summary.md), so the next bounded stage is projection rerun only:
-
-1. use the recovered public-safe current step-matched Control/Treatment dev/test prediction contracts;
-2. use the aligned current dev/test gold contract JSONL files;
-3. rerun the same bounded projection evaluation without using older non-step-matched predictions;
-4. only then decide whether Contract V2 implementation is justified or whether the slot bottleneck persists.
+The next useful action is not another broad rerun, small canonical-candidate loop, DPO, immediate retraining, or automatic Contract V2 implementation. The recovered-input projection rerun recommends only `decide-contract-v2-core-implementation-scope`: review whether the small exact-match gain is worth a formal V2 core/postprocessor implementation despite no executable-pass improvement and a persistent slot bottleneck.
 
 ## Validation
 

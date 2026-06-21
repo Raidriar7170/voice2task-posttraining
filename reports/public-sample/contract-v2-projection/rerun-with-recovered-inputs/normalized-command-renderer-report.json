@@ -1,0 +1,111 @@
+{
+  "claims": {
+    "adapter_or_checkpoint_release": false,
+    "contract_v2_implemented": false,
+    "evaluator_relaxation_performed": false,
+    "live_browser_claim": false,
+    "llm_judge_used": false,
+    "prediction_repair_performed": false,
+    "prediction_rerun_performed": false,
+    "release_or_readiness_claim": false,
+    "semantic_equivalence_scoring_used": false,
+    "training_performed": false
+  },
+  "deterministic_roundtrip_rate": 1.0,
+  "evidence_kind": "normalized_command_renderer_report",
+  "examples": [
+    {
+      "arm": "control",
+      "renderer_reason": "supported",
+      "renderer_supported": true,
+      "sample_id": "seed-open-example",
+      "split": "dev",
+      "task_type": "navigate"
+    },
+    {
+      "arm": "control",
+      "renderer_reason": "supported",
+      "renderer_supported": true,
+      "sample_id": "seed-open-example-aug-1",
+      "split": "dev",
+      "task_type": "navigate"
+    },
+    {
+      "arm": "control",
+      "renderer_reason": "supported",
+      "renderer_supported": true,
+      "sample_id": "seed-open-example-aug-2",
+      "split": "dev",
+      "task_type": "navigate"
+    },
+    {
+      "arm": "control",
+      "renderer_reason": "supported",
+      "renderer_supported": true,
+      "sample_id": "seed-clarify-ambiguous",
+      "split": "dev",
+      "task_type": "clarify"
+    },
+    {
+      "arm": "control",
+      "renderer_reason": "supported",
+      "renderer_supported": true,
+      "sample_id": "seed-clarify-ambiguous-aug-1",
+      "split": "dev",
+      "task_type": "clarify"
+    },
+    {
+      "arm": "control",
+      "renderer_reason": "supported",
+      "renderer_supported": true,
+      "sample_id": "seed-clarify-ambiguous-aug-2",
+      "split": "dev",
+      "task_type": "clarify"
+    },
+    {
+      "arm": "control",
+      "renderer_reason": "supported",
+      "renderer_supported": true,
+      "sample_id": "family-search-dev-1",
+      "split": "dev",
+      "task_type": "search"
+    },
+    {
+      "arm": "control",
+      "renderer_reason": "supported",
+      "renderer_supported": true,
+      "sample_id": "family-search-dev-1-aug-1",
+      "split": "dev",
+      "task_type": "search"
+    },
+    {
+      "arm": "control",
+      "renderer_reason": "supported",
+      "renderer_supported": true,
+      "sample_id": "family-search-dev-1-aug-2",
+      "split": "dev",
+      "task_type": "search"
+    },
+    {
+      "arm": "control",
+      "renderer_reason": "supported",
+      "renderer_supported": true,
+      "sample_id": "family-search-dev-2",
+      "split": "dev",
+      "task_type": "search"
+    }
+  ],
+  "supported_rate": 0.998792270531401,
+  "task_type_coverage": {
+    "blocked": 120,
+    "clarify": 174,
+    "extract": 138,
+    "form_fill": 174,
+    "navigate": 108,
+    "search": 114
+  },
+  "unsupported_count": 1,
+  "unsupported_reason_distribution": {
+    "missing_query_slot": 1
+  }
+}

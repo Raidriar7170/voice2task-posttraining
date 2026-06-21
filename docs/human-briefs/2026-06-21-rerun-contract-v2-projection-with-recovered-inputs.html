@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Recovered-input Contract V2 Projection Rerun 简报</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17202a;
+      --muted: #52616f;
+      --line: #d8dee6;
+      --accent: #0b6e69;
+      --warn: #7a4b00;
+      --bg: #f7f9fb;
+      --panel: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      line-height: 1.55;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+    }
+    header {
+      border-bottom: 2px solid var(--accent);
+      padding-bottom: 18px;
+      margin-bottom: 24px;
+    }
+    h1 {
+      font-size: 30px;
+      margin: 0 0 8px;
+      letter-spacing: 0;
+    }
+    h2 {
+      font-size: 18px;
+      margin: 28px 0 10px;
+      letter-spacing: 0;
+    }
+    p { margin: 8px 0; }
+    ul { margin: 8px 0 0 20px; padding: 0; }
+    li { margin: 5px 0; }
+    code {
+      background: #edf2f6;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.92em;
+    }
+    .status {
+      display: inline-block;
+      color: var(--warn);
+      font-weight: 700;
+      border: 1px solid #d7ad63;
+      background: #fff8e6;
+      border-radius: 4px;
+      padding: 3px 8px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 14px;
+    }
+    .label {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 3px;
+    }
+    a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Recovered-input Contract V2 Projection Rerun 简报</h1>
+      <p><span class="status">partial schema benefit</span> 结论：用恢复后的 step-matched raw inputs 重跑后，V2 Core exact 小幅提升，但 executable pass 不提升，slot bottleneck 仍然主导。</p>
+    </header>
+
+    <section>
+      <h2>一句话结论</h2>
+      <p>本阶段完成离线 projection rerun，decision label 为 <code>PARTIAL_SCHEMA_BENEFIT</code>；它支持“derived/display field 造成一部分 strict exact 负担”，但不支持正式 Contract V2 实施或模型能力提升声明。</p>
+    </section>
+
+    <section>
+      <h2>当前状态</h2>
+      <div class="grid">
+        <div class="panel">
+          <div class="label">Decision label</div>
+          <code>PARTIAL_SCHEMA_BENEFIT</code>
+        </div>
+        <div class="panel">
+          <div class="label">输出目录</div>
+          <code>reports/public-sample/contract-v2-projection/rerun-with-recovered-inputs/</code>
+        </div>
+        <div class="panel">
+          <div class="label">推荐下一 change</div>
+          <code>decide-contract-v2-core-implementation-scope</code>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>本阶段改动</h2>
+      <ul>
+        <li>新增 OpenSpec change：<code>rerun-contract-v2-projection-with-recovered-inputs</code>。</li>
+        <li>新增纯函数 projection / renderer / boundary / report 模块和 rerun CLI。</li>
+        <li>生成 recovered-input projection evidence bundle，未覆盖历史 blocked 根目录证据。</li>
+        <li>更新 <code>README.md</code>、<code>README_en.md</code>、<code>CONTEXT.md</code> 当前快照。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>关键结果</h2>
+      <div class="grid">
+        <div class="panel">
+          <div class="label">normalized_command-only share</div>
+          <code>0.1465</code>
+        </div>
+        <div class="panel">
+          <div class="label">metadata-only share</div>
+          <code>0.0000</code>
+        </div>
+        <div class="panel">
+          <div class="label">renderer supported rate</div>
+          <code>0.9988</code>
+        </div>
+        <div class="panel">
+          <div class="label">deterministic roundtrip</div>
+          <code>1.0000</code>
+        </div>
+      </div>
+      <ul>
+        <li>V2 core exact delta：Control dev <code>+0.0193</code> / test <code>+0.0386</code>；Treatment dev <code>+0.0290</code> / test <code>+0.0242</code>。</li>
+        <li>V2 core executable pass：没有改善。</li>
+        <li>失败贡献：157 个 V1 strict failures 中 23 个由 V2 Core 消除；remaining core failures 为 134。</li>
+        <li>slot bottleneck：仍然主导，<code>CORE_SLOT_FAILURE=108</code>，<code>MIXED_CORE_FAILURE=16</code>。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>关键文件</h2>
+      <ul>
+        <li><a href="../../reports/public-sample/contract-v2-projection/rerun-with-recovered-inputs/summary.md">summary.md</a></li>
+        <li><a href="../../reports/public-sample/contract-v2-projection/rerun-with-recovered-inputs/decision.md">decision.md</a></li>
+        <li><a href="../../reports/public-sample/contract-v2-projection/rerun-with-recovered-inputs/failure-contribution-analysis.md">failure-contribution-analysis.md</a></li>
+        <li><a href="../../reports/public-sample/contract-v2-projection/rerun-with-recovered-inputs/source-boundary.json">source-boundary.json</a></li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>验证命令</h2>
+      <ul>
+        <li>完整验证记录见 <a href="../../reports/public-sample/contract-v2-projection/rerun-with-recovered-inputs/validation-evidence.json">validation-evidence.json</a>。</li>
+        <li>覆盖项包括 full pytest、ruff、OpenSpec strict、diff check、docs/Human Brief/rerun artifact leak scan，以及 CLI 非批准路径 fail-closed。</li>
+        <li>本 brief 不是 metrics source of truth；指标以 rerun evidence JSON/Markdown 为准。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>不能宣称</h2>
+      <ul>
+        <li>不能宣称 model improvement、held-out recovery、production readiness、safety readiness 或 live-browser benchmark gain。</li>
+        <li>不能宣称 checkpoint / adapter release、DPO justification、正式 Contract V2 implementation readiness。</li>
+        <li>不能把此结果当作自动继续 canonical candidate loop、训练、扩数据或 challenge set 的授权。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>推荐下一步</h2>
+      <p>只建议开启一个新的 bounded decision change：<code>decide-contract-v2-core-implementation-scope</code>，审查小幅 exact gain 是否值得正式实现 V2 core/postprocessor；不得在本阶段自动实施。</p>
+    </section>
+  </main>
+</body>
+</html>

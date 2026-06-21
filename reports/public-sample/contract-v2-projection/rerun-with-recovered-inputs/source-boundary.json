@@ -1,0 +1,62 @@
+{
+  "accepted_metric_reproduction_statuses": [
+    "passed",
+    "reproduced"
+  ],
+  "claims": {
+    "adapter_or_checkpoint_release": false,
+    "contract_v2_implemented": false,
+    "evaluator_relaxation_performed": false,
+    "live_browser_claim": false,
+    "llm_judge_used": false,
+    "prediction_repair_performed": false,
+    "prediction_rerun_performed": false,
+    "release_or_readiness_claim": false,
+    "semantic_equivalence_scoring_used": false,
+    "training_performed": false
+  },
+  "decision_label": "SOURCE_BOUNDARY_PASSED",
+  "dev_test_sample_ids_disjoint": true,
+  "evidence_kind": "contract_v2_projection_recovered_source_boundary",
+  "failures": [],
+  "hashes": {
+    "dev_gold_hash": "6086ab1aacafec12c1219e3e6353beb93caecc22dab22a2e283f992b710a8d5b",
+    "evaluator_hash": "f3e0cc59d549d3d234c76975412ef5cd576df3e80c02aea8fc38c1df35dbfd18",
+    "prediction_config_hashes": {
+      "control_dev": "c2a7459c5c0aaff75c9b382c4be7fd82aca1faffa06f6ec3c73d00ac561033ca",
+      "control_test": "769a4b5ef3346a2a8ddc444ceeda097c257fc8884d7c18c4281ac5c9eb50734f",
+      "treatment_dev": "214442f78bdd21a5627b6a36ddcb4f005ac110f96efbd8c5879aea09895e634c",
+      "treatment_test": "c4bdc3e38291ab7dc3ea5118d4de360e882ad866bf99471ddfc1c3e2764df40b"
+    },
+    "prompt_hash": "7f65709182901208d7c142b0d5a7027e445c725ecaf47e84e0f75d4af4edbd67",
+    "test_gold_hash": "593f7d167e5698ee3687c2177bba7731cf91740f2d623b7c8966b4063855bc2c"
+  },
+  "historical_blocked_evidence_preserved": true,
+  "metric_reproduction_status": "reproduced",
+  "prediction_contract_used_for_projection": true,
+  "projection_inputs_ready": true,
+  "raw_model_output_used_for_projection": false,
+  "recovery_method": "recovered_from_existing_artifacts",
+  "sanitization_status": "passed",
+  "source_root": "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs",
+  "splits": {
+    "dev": {
+      "actual_gold_hash": "6086ab1aacafec12c1219e3e6353beb93caecc22dab22a2e283f992b710a8d5b",
+      "actual_sample_id_hash": "053b9242e4129b73d3b710955848a4687ca9b8bc56168c2f6ba4e4b66167294f",
+      "gold_hash_match": true,
+      "gold_ids_match_control": true,
+      "gold_ids_match_treatment": true,
+      "row_count": 207,
+      "sample_id_hash": "053b9242e4129b73d3b710955848a4687ca9b8bc56168c2f6ba4e4b66167294f"
+    },
+    "test": {
+      "actual_gold_hash": "593f7d167e5698ee3687c2177bba7731cf91740f2d623b7c8966b4063855bc2c",
+      "actual_sample_id_hash": "f66e9a9de8f86e54d227ecc7e1d5288d0387764d26facc757dd0c1625176ccc9",
+      "gold_hash_match": true,
+      "gold_ids_match_control": true,
+      "gold_ids_match_treatment": true,
+      "row_count": 207,
+      "sample_id_hash": "f66e9a9de8f86e54d227ecc7e1d5288d0387764d26facc757dd0c1625176ccc9"
+    }
+  }
+}

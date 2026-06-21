@@ -1,0 +1,199 @@
+{
+  "by_arm_split": {
+    "control": {
+      "dev": {
+        "exact_pass_delta_ci95": [
+          0.0,
+          0.03864734299516908
+        ],
+        "exact_pass_delta_mean": 0.019570048309178745,
+        "executable_pass_delta_ci95": [
+          0.0,
+          0.0
+        ],
+        "executable_pass_delta_mean": 0.0,
+        "family_level_delta": {
+          "blocked": {
+            "l2_exact_minus_l0_exact": 0.0,
+            "row_count": 27,
+            "v2_core_executable_minus_v1_executable": 0.0
+          },
+          "clarify": {
+            "l2_exact_minus_l0_exact": 0.0,
+            "row_count": 45,
+            "v2_core_executable_minus_v1_executable": 0.0
+          },
+          "extract": {
+            "l2_exact_minus_l0_exact": 0.0,
+            "row_count": 36,
+            "v2_core_executable_minus_v1_executable": 0.0
+          },
+          "form_fill": {
+            "l2_exact_minus_l0_exact": 0.0,
+            "row_count": 42,
+            "v2_core_executable_minus_v1_executable": 0.0
+          },
+          "navigate": {
+            "l2_exact_minus_l0_exact": 0.14814814814814814,
+            "row_count": 27,
+            "v2_core_executable_minus_v1_executable": 0.0
+          },
+          "search": {
+            "l2_exact_minus_l0_exact": 0.0,
+            "row_count": 30,
+            "v2_core_executable_minus_v1_executable": 0.0
+          }
+        },
+        "iterations": 1000,
+        "row_count": 207,
+        "seed": 20260621
+      },
+      "test": {
+        "exact_pass_delta_ci95": [
+          0.014492753623188406,
+          0.06763285024154589
+        ],
+        "exact_pass_delta_mean": 0.03896618357487922,
+        "executable_pass_delta_ci95": [
+          0.0,
+          0.0
+        ],
+        "executable_pass_delta_mean": 0.0,
+        "family_level_delta": {
+          "blocked": {
+            "l2_exact_minus_l0_exact": 0.0,
+            "row_count": 33,
+            "v2_core_executable_minus_v1_executable": 0.0
+          },
+          "clarify": {
+            "l2_exact_minus_l0_exact": 0.0,
+            "row_count": 42,
+            "v2_core_executable_minus_v1_executable": 0.0
+          },
+          "extract": {
+            "l2_exact_minus_l0_exact": 0.0,
+            "row_count": 33,
+            "v2_core_executable_minus_v1_executable": 0.0
+          },
+          "form_fill": {
+            "l2_exact_minus_l0_exact": 0.06666666666666667,
+            "row_count": 45,
+            "v2_core_executable_minus_v1_executable": 0.0
+          },
+          "navigate": {
+            "l2_exact_minus_l0_exact": 0.18518518518518517,
+            "row_count": 27,
+            "v2_core_executable_minus_v1_executable": 0.0
+          },
+          "search": {
+            "l2_exact_minus_l0_exact": 0.0,
+            "row_count": 27,
+            "v2_core_executable_minus_v1_executable": 0.0
+          }
+        },
+        "iterations": 1000,
+        "row_count": 207,
+        "seed": 20260621
+      }
+    },
+    "treatment": {
+      "dev": {
+        "exact_pass_delta_ci95": [
+          0.00966183574879227,
+          0.05314009661835749
+        ],
+        "exact_pass_delta_mean": 0.028917874396135263,
+        "executable_pass_delta_ci95": [
+          0.0,
+          0.0
+        ],
+        "executable_pass_delta_mean": 0.0,
+        "family_level_delta": {
+          "blocked": {
+            "l2_exact_minus_l0_exact": 0.0,
+            "row_count": 27,
+            "v2_core_executable_minus_v1_executable": 0.0
+          },
+          "clarify": {
+            "l2_exact_minus_l0_exact": 0.0,
+            "row_count": 45,
+            "v2_core_executable_minus_v1_executable": 0.0
+          },
+          "extract": {
+            "l2_exact_minus_l0_exact": 0.0,
+            "row_count": 36,
+            "v2_core_executable_minus_v1_executable": 0.0
+          },
+          "form_fill": {
+            "l2_exact_minus_l0_exact": 0.023809523809523808,
+            "row_count": 42,
+            "v2_core_executable_minus_v1_executable": 0.0
+          },
+          "navigate": {
+            "l2_exact_minus_l0_exact": 0.14814814814814814,
+            "row_count": 27,
+            "v2_core_executable_minus_v1_executable": 0.0
+          },
+          "search": {
+            "l2_exact_minus_l0_exact": 0.03333333333333333,
+            "row_count": 30,
+            "v2_core_executable_minus_v1_executable": 0.0
+          }
+        },
+        "iterations": 1000,
+        "row_count": 207,
+        "seed": 20260621
+      },
+      "test": {
+        "exact_pass_delta_ci95": [
+          0.004830917874396135,
+          0.043478260869565216
+        ],
+        "exact_pass_delta_mean": 0.024019323671497585,
+        "executable_pass_delta_ci95": [
+          0.0,
+          0.0
+        ],
+        "executable_pass_delta_mean": 0.0,
+        "family_level_delta": {
+          "blocked": {
+            "l2_exact_minus_l0_exact": 0.0,
+            "row_count": 33,
+            "v2_core_executable_minus_v1_executable": 0.0
+          },
+          "clarify": {
+            "l2_exact_minus_l0_exact": 0.0,
+            "row_count": 42,
+            "v2_core_executable_minus_v1_executable": 0.0
+          },
+          "extract": {
+            "l2_exact_minus_l0_exact": 0.0,
+            "row_count": 33,
+            "v2_core_executable_minus_v1_executable": 0.0
+          },
+          "form_fill": {
+            "l2_exact_minus_l0_exact": 0.044444444444444446,
+            "row_count": 45,
+            "v2_core_executable_minus_v1_executable": 0.0
+          },
+          "navigate": {
+            "l2_exact_minus_l0_exact": 0.1111111111111111,
+            "row_count": 27,
+            "v2_core_executable_minus_v1_executable": 0.0
+          },
+          "search": {
+            "l2_exact_minus_l0_exact": 0.0,
+            "row_count": 27,
+            "v2_core_executable_minus_v1_executable": 0.0
+          }
+        },
+        "iterations": 1000,
+        "row_count": 207,
+        "seed": 20260621
+      }
+    }
+  },
+  "evidence_kind": "contract_v2_projection_bootstrap_analysis",
+  "iterations": 1000,
+  "seed": 20260621
+}

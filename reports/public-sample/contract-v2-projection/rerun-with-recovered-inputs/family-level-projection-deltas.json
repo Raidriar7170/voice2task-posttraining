@@ -1,0 +1,137 @@
+{
+  "by_arm_split": {
+    "control": {
+      "dev": {
+        "blocked": {
+          "l2_exact_minus_l0_exact": 0.0,
+          "row_count": 27,
+          "v2_core_executable_minus_v1_executable": 0.0
+        },
+        "clarify": {
+          "l2_exact_minus_l0_exact": 0.0,
+          "row_count": 45,
+          "v2_core_executable_minus_v1_executable": 0.0
+        },
+        "extract": {
+          "l2_exact_minus_l0_exact": 0.0,
+          "row_count": 36,
+          "v2_core_executable_minus_v1_executable": 0.0
+        },
+        "form_fill": {
+          "l2_exact_minus_l0_exact": 0.0,
+          "row_count": 42,
+          "v2_core_executable_minus_v1_executable": 0.0
+        },
+        "navigate": {
+          "l2_exact_minus_l0_exact": 0.14814814814814814,
+          "row_count": 27,
+          "v2_core_executable_minus_v1_executable": 0.0
+        },
+        "search": {
+          "l2_exact_minus_l0_exact": 0.0,
+          "row_count": 30,
+          "v2_core_executable_minus_v1_executable": 0.0
+        }
+      },
+      "test": {
+        "blocked": {
+          "l2_exact_minus_l0_exact": 0.0,
+          "row_count": 33,
+          "v2_core_executable_minus_v1_executable": 0.0
+        },
+        "clarify": {
+          "l2_exact_minus_l0_exact": 0.0,
+          "row_count": 42,
+          "v2_core_executable_minus_v1_executable": 0.0
+        },
+        "extract": {
+          "l2_exact_minus_l0_exact": 0.0,
+          "row_count": 33,
+          "v2_core_executable_minus_v1_executable": 0.0
+        },
+        "form_fill": {
+          "l2_exact_minus_l0_exact": 0.06666666666666667,
+          "row_count": 45,
+          "v2_core_executable_minus_v1_executable": 0.0
+        },
+        "navigate": {
+          "l2_exact_minus_l0_exact": 0.18518518518518517,
+          "row_count": 27,
+          "v2_core_executable_minus_v1_executable": 0.0
+        },
+        "search": {
+          "l2_exact_minus_l0_exact": 0.0,
+          "row_count": 27,
+          "v2_core_executable_minus_v1_executable": 0.0
+        }
+      }
+    },
+    "treatment": {
+      "dev": {
+        "blocked": {
+          "l2_exact_minus_l0_exact": 0.0,
+          "row_count": 27,
+          "v2_core_executable_minus_v1_executable": 0.0
+        },
+        "clarify": {
+          "l2_exact_minus_l0_exact": 0.0,
+          "row_count": 45,
+          "v2_core_executable_minus_v1_executable": 0.0
+        },
+        "extract": {
+          "l2_exact_minus_l0_exact": 0.0,
+          "row_count": 36,
+          "v2_core_executable_minus_v1_executable": 0.0
+        },
+        "form_fill": {
+          "l2_exact_minus_l0_exact": 0.023809523809523808,
+          "row_count": 42,
+          "v2_core_executable_minus_v1_executable": 0.0
+        },
+        "navigate": {
+          "l2_exact_minus_l0_exact": 0.14814814814814814,
+          "row_count": 27,
+          "v2_core_executable_minus_v1_executable": 0.0
+        },
+        "search": {
+          "l2_exact_minus_l0_exact": 0.03333333333333333,
+          "row_count": 30,
+          "v2_core_executable_minus_v1_executable": 0.0
+        }
+      },
+      "test": {
+        "blocked": {
+          "l2_exact_minus_l0_exact": 0.0,
+          "row_count": 33,
+          "v2_core_executable_minus_v1_executable": 0.0
+        },
+        "clarify": {
+          "l2_exact_minus_l0_exact": 0.0,
+          "row_count": 42,
+          "v2_core_executable_minus_v1_executable": 0.0
+        },
+        "extract": {
+          "l2_exact_minus_l0_exact": 0.0,
+          "row_count": 33,
+          "v2_core_executable_minus_v1_executable": 0.0
+        },
+        "form_fill": {
+          "l2_exact_minus_l0_exact": 0.044444444444444446,
+          "row_count": 45,
+          "v2_core_executable_minus_v1_executable": 0.0
+        },
+        "navigate": {
+          "l2_exact_minus_l0_exact": 0.1111111111111111,
+          "row_count": 27,
+          "v2_core_executable_minus_v1_executable": 0.0
+        },
+        "search": {
+          "l2_exact_minus_l0_exact": 0.0,
+          "row_count": 27,
+          "v2_core_executable_minus_v1_executable": 0.0
+        }
+      }
+    }
+  },
+  "evidence_kind": "family_level_projection_deltas"
+}

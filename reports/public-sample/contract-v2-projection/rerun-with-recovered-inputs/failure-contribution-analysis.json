@@ -1,0 +1,286 @@
+{
+  "approved_categories": [
+    "NORMALIZED_COMMAND_ONLY",
+    "METADATA_ONLY",
+    "DERIVED_FIELD_ONLY",
+    "CORE_SLOT_FAILURE",
+    "CORE_ROUTE_TASK_FAILURE",
+    "CORE_SAFETY_CONFIRMATION_FAILURE",
+    "MIXED_CORE_FAILURE",
+    "INVALID_OR_UNPARSEABLE"
+  ],
+  "by_arm_split": {
+    "control": {
+      "dev": {
+        "category_counts": {
+          "CORE_ROUTE_TASK_FAILURE": 1,
+          "CORE_SAFETY_CONFIRMATION_FAILURE": 3,
+          "CORE_SLOT_FAILURE": 21,
+          "MIXED_CORE_FAILURE": 5,
+          "NORMALIZED_COMMAND_ONLY": 4
+        },
+        "category_proportions": {
+          "CORE_ROUTE_TASK_FAILURE": 0.029411764705882353,
+          "CORE_SAFETY_CONFIRMATION_FAILURE": 0.08823529411764706,
+          "CORE_SLOT_FAILURE": 0.6176470588235294,
+          "MIXED_CORE_FAILURE": 0.14705882352941177,
+          "NORMALIZED_COMMAND_ONLY": 0.11764705882352941
+        },
+        "remaining_core_failures": 26,
+        "strict_failure_count": 34,
+        "task_family_distribution": {
+          "blocked": 6,
+          "clarify": 8,
+          "extract": 3,
+          "form_fill": 4,
+          "navigate": 7,
+          "search": 6
+        },
+        "v1_strict_failures_eliminated_by_v2_core": 4
+      },
+      "test": {
+        "category_counts": {
+          "CORE_ROUTE_TASK_FAILURE": 2,
+          "CORE_SLOT_FAILURE": 33,
+          "MIXED_CORE_FAILURE": 3,
+          "NORMALIZED_COMMAND_ONLY": 8
+        },
+        "category_proportions": {
+          "CORE_ROUTE_TASK_FAILURE": 0.043478260869565216,
+          "CORE_SLOT_FAILURE": 0.717391304347826,
+          "MIXED_CORE_FAILURE": 0.06521739130434782,
+          "NORMALIZED_COMMAND_ONLY": 0.17391304347826086
+        },
+        "remaining_core_failures": 30,
+        "strict_failure_count": 46,
+        "task_family_distribution": {
+          "blocked": 11,
+          "clarify": 4,
+          "extract": 4,
+          "form_fill": 10,
+          "navigate": 9,
+          "search": 8
+        },
+        "v1_strict_failures_eliminated_by_v2_core": 8
+      }
+    },
+    "treatment": {
+      "dev": {
+        "category_counts": {
+          "CORE_SAFETY_CONFIRMATION_FAILURE": 3,
+          "CORE_SLOT_FAILURE": 20,
+          "MIXED_CORE_FAILURE": 5,
+          "NORMALIZED_COMMAND_ONLY": 6
+        },
+        "category_proportions": {
+          "CORE_SAFETY_CONFIRMATION_FAILURE": 0.08823529411764706,
+          "CORE_SLOT_FAILURE": 0.5882352941176471,
+          "MIXED_CORE_FAILURE": 0.14705882352941177,
+          "NORMALIZED_COMMAND_ONLY": 0.17647058823529413
+        },
+        "remaining_core_failures": 22,
+        "strict_failure_count": 34,
+        "task_family_distribution": {
+          "blocked": 6,
+          "clarify": 9,
+          "extract": 3,
+          "form_fill": 4,
+          "navigate": 7,
+          "search": 5
+        },
+        "v1_strict_failures_eliminated_by_v2_core": 6
+      },
+      "test": {
+        "category_counts": {
+          "CORE_ROUTE_TASK_FAILURE": 1,
+          "CORE_SLOT_FAILURE": 34,
+          "MIXED_CORE_FAILURE": 3,
+          "NORMALIZED_COMMAND_ONLY": 5
+        },
+        "category_proportions": {
+          "CORE_ROUTE_TASK_FAILURE": 0.023255813953488372,
+          "CORE_SLOT_FAILURE": 0.7906976744186046,
+          "MIXED_CORE_FAILURE": 0.06976744186046512,
+          "NORMALIZED_COMMAND_ONLY": 0.11627906976744186
+        },
+        "remaining_core_failures": 33,
+        "strict_failure_count": 43,
+        "task_family_distribution": {
+          "blocked": 10,
+          "clarify": 5,
+          "extract": 3,
+          "form_fill": 12,
+          "navigate": 7,
+          "search": 6
+        },
+        "v1_strict_failures_eliminated_by_v2_core": 5
+      }
+    }
+  },
+  "claims": {
+    "adapter_or_checkpoint_release": false,
+    "contract_v2_implemented": false,
+    "evaluator_relaxation_performed": false,
+    "live_browser_claim": false,
+    "llm_judge_used": false,
+    "prediction_repair_performed": false,
+    "prediction_rerun_performed": false,
+    "release_or_readiness_claim": false,
+    "semantic_equivalence_scoring_used": false,
+    "training_performed": false
+  },
+  "evidence_kind": "contract_v2_projection_failure_contribution_analysis",
+  "overall": {
+    "category_counts": {
+      "CORE_ROUTE_TASK_FAILURE": 4,
+      "CORE_SAFETY_CONFIRMATION_FAILURE": 6,
+      "CORE_SLOT_FAILURE": 108,
+      "MIXED_CORE_FAILURE": 16,
+      "NORMALIZED_COMMAND_ONLY": 23
+    },
+    "category_proportions": {
+      "CORE_ROUTE_TASK_FAILURE": 0.025477707006369428,
+      "CORE_SAFETY_CONFIRMATION_FAILURE": 0.03821656050955414,
+      "CORE_SLOT_FAILURE": 0.6878980891719745,
+      "MIXED_CORE_FAILURE": 0.10191082802547771,
+      "NORMALIZED_COMMAND_ONLY": 0.1464968152866242
+    },
+    "derived_field_only_total_count": 23,
+    "derived_field_only_total_share": 0.1464968152866242,
+    "metadata_only_share": 0.0,
+    "normalized_command_only_share": 0.1464968152866242,
+    "remaining_core_failures": 134,
+    "strict_failure_count": 157,
+    "top_slot_field_paths": {
+      "slots": 124
+    },
+    "v1_strict_failures_eliminated_by_v2_core": 23
+  },
+  "public_safe_examples": [
+    {
+      "arm": "control",
+      "category": "CORE_SLOT_FAILURE",
+      "mismatch_paths": [
+        "slots"
+      ],
+      "sample_id": "seed-clarify-ambiguous",
+      "split": "dev",
+      "task_type": "clarify"
+    },
+    {
+      "arm": "control",
+      "category": "CORE_SLOT_FAILURE",
+      "mismatch_paths": [
+        "slots"
+      ],
+      "sample_id": "seed-clarify-ambiguous-aug-1",
+      "split": "dev",
+      "task_type": "clarify"
+    },
+    {
+      "arm": "control",
+      "category": "CORE_SLOT_FAILURE",
+      "mismatch_paths": [
+        "slots"
+      ],
+      "sample_id": "seed-clarify-ambiguous-aug-2",
+      "split": "dev",
+      "task_type": "clarify"
+    },
+    {
+      "arm": "control",
+      "category": "CORE_SLOT_FAILURE",
+      "mismatch_paths": [
+        "slots",
+        "normalized_command"
+      ],
+      "sample_id": "family-search-dev-1-aug-1",
+      "split": "dev",
+      "task_type": "search"
+    },
+    {
+      "arm": "control",
+      "category": "CORE_SLOT_FAILURE",
+      "mismatch_paths": [
+        "slots",
+        "normalized_command"
+      ],
+      "sample_id": "family-search-dev-2-aug-1",
+      "split": "dev",
+      "task_type": "search"
+    },
+    {
+      "arm": "control",
+      "category": "CORE_SLOT_FAILURE",
+      "mismatch_paths": [
+        "slots",
+        "normalized_command"
+      ],
+      "sample_id": "family-search-dev-2-aug-2",
+      "split": "dev",
+      "task_type": "search"
+    },
+    {
+      "arm": "control",
+      "category": "CORE_SLOT_FAILURE",
+      "mismatch_paths": [
+        "slots",
+        "normalized_command"
+      ],
+      "sample_id": "family-search-dev-3-aug-1",
+      "split": "dev",
+      "task_type": "search"
+    },
+    {
+      "arm": "control",
+      "category": "CORE_SLOT_FAILURE",
+      "mismatch_paths": [
+        "slots",
+        "normalized_command"
+      ],
+      "sample_id": "family-search-dev-3-aug-2",
+      "split": "dev",
+      "task_type": "search"
+    },
+    {
+      "arm": "control",
+      "category": "NORMALIZED_COMMAND_ONLY",
+      "mismatch_paths": [
+        "normalized_command"
+      ],
+      "sample_id": "family-navigation-dev-1-aug-1",
+      "split": "dev",
+      "task_type": "navigate"
+    },
+    {
+      "arm": "control",
+      "category": "NORMALIZED_COMMAND_ONLY",
+      "mismatch_paths": [
+        "normalized_command"
+      ],
+      "sample_id": "family-navigation-dev-1-aug-2",
+      "split": "dev",
+      "task_type": "navigate"
+    },
+    {
+      "arm": "control",
+      "category": "CORE_SLOT_FAILURE",
+      "mismatch_paths": [
+        "slots"
+      ],
+      "sample_id": "family-navigation-dev-2",
+      "split": "dev",
+      "task_type": "navigate"
+    },
+    {
+      "arm": "control",
+      "category": "NORMALIZED_COMMAND_ONLY",
+      "mismatch_paths": [
+        "normalized_command"
+      ],
+      "sample_id": "family-navigation-dev-2-aug-1",
+      "split": "dev",
+      "task_type": "navigate"
+    }
+  ]
+}
