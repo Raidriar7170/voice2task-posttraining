@@ -46,7 +46,6 @@ REQUIRED_EXCLUDED_CASES = {
 
 PROTECTED_PATHS = [
     "reports/public-sample/slot-canonicalization-policy",
-    "openspec/changes/merge-scaled-clarify-slot-boundary-candidates",
 ]
 
 
@@ -150,7 +149,7 @@ def test_normalized_command_candidates_are_diagnostic_display_only() -> None:
         assert candidate["repair_prediction"] is False
 
 
-def test_protected_formal_data_and_stale_active_change_are_not_modified() -> None:
+def test_protected_formal_data_are_not_modified() -> None:
     result = subprocess.run(
         ["git", "status", "--short", "--", *PROTECTED_PATHS],
         cwd=REPO_ROOT,

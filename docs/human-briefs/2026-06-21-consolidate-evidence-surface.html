@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>consolidate-evidence-surface</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; color: #17202a; background: #f6f8fb; }
+    main { max-width: 960px; margin: 0 auto; padding: 32px 20px 48px; }
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    h2 { margin: 24px 0 8px; font-size: 18px; }
+    p, li { line-height: 1.62; }
+    .summary { padding: 16px 18px; background: #e9f5f2; border-left: 4px solid #0b6e69; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+    section { background: #fff; border: 1px solid #dbe3ec; border-radius: 8px; padding: 14px 16px; }
+    code { background: #eef2f7; padding: 1px 4px; border-radius: 4px; }
+    .warn { color: #8a5200; font-weight: 600; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>consolidate-evidence-surface</h1>
+  <p class="summary">一句话结论：本阶段把 Voice2Task 当前公开真相收口到 README / README_en / CONTEXT / EVIDENCE_INDEX，并把旧 OpenSpec 活动项归档为完成、blocked-then-recovered 或 deprecated/superseded。</p>
+
+  <div class="grid">
+    <section>
+      <h2>当前状态</h2>
+      <p>Archived；旧 active changes 已从 5 个收口到 0 个。cleanup change 已归档为 <code>openspec/changes/archive/2026-06-21-consolidate-evidence-surface/</code>。</p>
+    </section>
+    <section>
+      <h2>本阶段改动</h2>
+      <ul>
+        <li>压缩 <code>README.md</code> / <code>README_en.md</code> 当前快照。</li>
+        <li>重写 <code>CONTEXT.md</code> 为 8 个当前上下文章节。</li>
+        <li>新增 <code>reports/public-sample/EVIDENCE_INDEX.md</code> 和 <code>evidence-index.json</code>。</li>
+        <li>新增 <code>scripts/check_current_truth_surface.py</code> 与 focused pytest。</li>
+      </ul>
+    </section>
+    <section>
+      <h2>关键当前证据</h2>
+      <p><code>public-sample-20260619T090925Z</code>：247 seeds / 696 SFT rows / 2100 DPO pairs。最新模型实验是 step-matched canonical-slot SFT ablation，结论 mixed / inconclusive。最新架构实验是 Contract V2 projection，结论 <code>PARTIAL_SCHEMA_BENEFIT</code>。</p>
+    </section>
+    <section>
+      <h2>不能过度声称</h2>
+      <p>不能声称 model improvement、executable quality improvement、production readiness、safety readiness、held-out recovery、live-browser benchmark gain、checkpoint/adapter release、DPO justification 或 another canonical-candidate loop。</p>
+    </section>
+    <section>
+      <h2>验证状态</h2>
+      <p><code>PYTHONPATH=src pytest -q</code>：539 passed。<code>PYTHONPATH=src ruff check src tests</code>：passed。Post-archive <code>openspec validate --all --strict</code>：5 passed，0 failed。<code>python scripts/check_current_truth_surface.py</code>：passed。<code>git diff --check</code>：clean。Public leak scan：ok true，0 findings。</p>
+    </section>
+    <section>
+      <h2>推荐下一步</h2>
+      <p><code>decide-contract-v2-core-implementation-scope</code>。本阶段不运行该技术变更。</p>
+    </section>
+  </div>
+
+  <h2>权威来源</h2>
+  <ul>
+    <li><a href="../../README.md">README.md</a></li>
+    <li><a href="../../README_en.md">README_en.md</a></li>
+    <li><a href="../../CONTEXT.md">CONTEXT.md</a></li>
+    <li><a href="../../reports/public-sample/EVIDENCE_INDEX.md">EVIDENCE_INDEX.md</a></li>
+    <li><a href="../../reports/public-sample/contract-v2-projection/rerun-with-recovered-inputs/summary.json">latest Contract V2 projection summary</a></li>
+  </ul>
+
+  <p class="warn">本 HTML 只是人工阅读伴侣；OpenSpec artifacts、manifest、summary.json、测试和验证输出仍是权威证据。</p>
+</main>
+</body>
+</html>

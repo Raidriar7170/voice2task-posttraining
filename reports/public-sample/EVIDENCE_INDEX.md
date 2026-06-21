@@ -1,0 +1,66 @@
+# Public Sample Evidence Index
+
+This index is the navigation layer for public Voice2Task evidence. Raw report
+artifacts remain authoritative; this file only classifies them so current,
+historical, superseded, blocked, design-only, raw-input, and archived evidence
+are not mixed in README or CONTEXT.
+
+Allowed statuses: `CURRENT`, `HISTORICAL`, `SUPERSEDED`, `BLOCKED`,
+`DESIGN_ONLY`, `RAW_INPUT`, `ARCHIVED`.
+
+## Current Evidence
+
+| status | phase | manifest/model boundary | conclusion | superseded by | path |
+| --- | --- | --- | --- | --- | --- |
+| CURRENT | formal-public-sample-boundary | `public-sample-20260619T090925Z`; 247 seeds / 696 SFT rows / 2100 DPO pairs | Current data boundary only; not a model-quality claim. | - | `data/public-samples/manifest_public_sample.json` |
+| CURRENT | rerun-contract-v2-projection-with-recovered-inputs | recovered step-matched contracts from `step-matched-canonical-slot-ablation-20260620T000000Z` | `PARTIAL_SCHEMA_BENEFIT`; derived-field-only strict failures 14.65%; metadata-only 0%; V2 core exact improves slightly; V2 executable pass does not improve. | - | `reports/public-sample/contract-v2-projection/rerun-with-recovered-inputs/summary.json` |
+| CURRENT | run-step-matched-canonical-slot-ablation | one-seed step-matched SFT-only comparison; 3132 optimizer steps per arm | Mixed / statistically inconclusive; no stable general canonical-slot data benefit. | - | `reports/public-sample/step-matched-canonical-slot-ablation/comparison.json` |
+| CURRENT | merge-canonical-slot-boundary-row-level-candidates | produced `public-sample-20260619T090925Z` | Current data-boundary evidence only; no training, prediction, or model-quality claim. | - | `reports/public-sample/canonical-slot-boundary-formal-merge/manifest.json` |
+
+## Historical Training Runs
+
+| status | phase | manifest/model boundary | conclusion | superseded by | path |
+| --- | --- | --- | --- | --- | --- |
+| HISTORICAL | retry-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery | `public-sample-20260617T152259Z`; `a100-current-123-train-split-sft-retry` | Prior-manifest prediction-only evidence; not directly comparable to the current formal data boundary. | - | `reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline-after-a100-recovery/manifest.json` |
+| HISTORICAL | run-formal-heldout-prediction | older formal public sample; `a100-form-fill-remediation-sft-v3` | Earlier held-out prediction evidence; not the current snapshot. | - | `reports/public-sample/a100-formal-public-heldout-prediction/report.md` |
+| HISTORICAL | run-a100-current-123-train-split-sft-retry | `public-sample-20260617T045941Z`; `a100-current-123-train-split-sft-retry` | Historical model evidence before the current canonical slot-boundary formal data boundary. | - | `reports/public-sample/a100-current-123-train-split-sft-retry/manifest.json` |
+| HISTORICAL | retry-a100-form-fill-remediation-sft-v3-after-ssh-recovery | `public-sample-20260616T074315Z`; `a100-form-fill-remediation-sft-v3` | Historical setup/model evidence from an older manifest boundary. | - | `reports/public-sample/a100-form-fill-remediation-sft-v3-retry-after-ssh-recovery/manifest.json` |
+
+## Superseded Evidence
+
+| status | phase | manifest/model boundary | conclusion | superseded by | path |
+| --- | --- | --- | --- | --- | --- |
+| SUPERSEDED | run-canonical-slot-paired-sft-ablation | earlier paired SFT comparison before optimizer-step matching | Useful background, but no longer the current canonical-slot causal result. | `step-matched-canonical-slot-ablation` | `reports/public-sample/canonical-slot-paired-sft-ablation/comparison.json` |
+| SUPERSEDED | propose-canonical-slot-boundary-formal-merge-after-review | proposal/readiness evidence before row-level source existed | Superseded by row-level materialization and formal merge evidence. | `canonical-slot-boundary-formal-merge` | `reports/public-sample/canonical-slot-boundary-formal-merge-proposal/summary.json` |
+| SUPERSEDED | materialize-canonical-slot-boundary-row-level-candidates | standalone candidate rows before formal promotion | Superseded by the canonical slot-boundary formal merge. | `canonical-slot-boundary-formal-merge` | `reports/public-sample/canonical-slot-boundary-row-level-candidates/manifest.json` |
+
+## Blocked Runs
+
+| status | phase | manifest/model boundary | conclusion | superseded by | path |
+| --- | --- | --- | --- | --- | --- |
+| BLOCKED | design-and-evaluate-contract-v2-projection | initial Contract V2 projection before raw contracts were recovered | `PROJECTION_BLOCKED_OR_INVALID`; current raw prediction/gold contracts were missing. | `contract-v2-projection-rerun` | `reports/public-sample/contract-v2-projection/summary.json` |
+| BLOCKED | run-current-canonical-boundary-prediction-baseline | `public-sample-20260619T090925Z`; current-boundary prediction attempt | Blocked before A100 prediction; no current model metrics. | - | `reports/public-sample/a100-current-canonical-boundary-prediction-baseline/manifest.json` |
+| BLOCKED | run-scaled-public-sample-current-123-adapter-prediction-baseline | `public-sample-20260617T152259Z`; prior scaled-manifest prediction attempt | Historical blocked prediction baseline with no current model metrics; later recovered by a separate retry. | `a100-scaled-current-123-baseline-after-recovery` | `reports/public-sample/a100-scaled-public-sample-current-123-adapter-prediction-baseline/manifest.json` |
+
+## Design-Only Evidence
+
+| status | phase | manifest/model boundary | conclusion | superseded by | path |
+| --- | --- | --- | --- | --- | --- |
+| DESIGN_ONLY | design-slot-canonicalization-policy | no formal data or model mutation | Policy analysis only; no data, training, evaluator, or model improvement claim. | - | `reports/public-sample/slot-canonicalization-policy/summary.json` |
+| DESIGN_ONLY | design-safety-repair-candidates | no formal data or model mutation | Candidate design only; no materialization, training, or evaluator change. | - | `reports/public-sample/safety-repair-candidate-design/manifest.json` |
+| DESIGN_ONLY | design-scaled-clarify-slot-boundary-candidates | no formal data or model mutation | Candidate design only; not current model evidence and not the current recommended next change. | - | `reports/public-sample/scaled-clarify-slot-boundary-candidate-design/manifest.json` |
+| DESIGN_ONLY | design-scaled-public-sample-and-tiered-eval | no formal data or model mutation | Strategic planning evidence only. | - | `reports/public-sample/scaled-public-sample-and-tiered-eval-design/manifest.json` |
+
+## Raw/Reproducibility Inputs
+
+| status | phase | manifest/model boundary | conclusion | superseded by | path |
+| --- | --- | --- | --- | --- | --- |
+| RAW_INPUT | recover-step-matched-projection-inputs | recovered public-safe contracts; 207 dev rows and 207 test rows | `RECOVERED_FROM_EXISTING_ARTIFACTS`; boundary and metric reproduction passed. | - | `reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/artifact-manifest.json` |
+
+## Archived Process Evidence
+
+| status | phase | manifest/model boundary | conclusion | superseded by | path |
+| --- | --- | --- | --- | --- | --- |
+| ARCHIVED | openspec-change-history | archived OpenSpec proposal/design/task history | Process evidence only; not runtime model evidence by itself. | - | `openspec/changes/archive` |
+
+Machine-readable source: [`evidence-index.json`](evidence-index.json).

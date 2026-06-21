@@ -103,7 +103,6 @@ STILL_PROTECTED_AFTER_FORMAL_MERGE_PATHS = [
     "reports/public-sample/canonical-slot-boundary-candidate-review",
     "reports/public-sample/canonical-slot-boundary-formal-merge-proposal",
     "reports/public-sample/slot-canonicalization-policy",
-    "openspec/changes/merge-scaled-clarify-slot-boundary-candidates",
 ]
 
 

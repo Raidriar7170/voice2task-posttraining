@@ -84,7 +84,6 @@ PROTECTED_PATHS = [
 STILL_PROTECTED_AFTER_FORMAL_MERGE_PATHS = [
     "reports/public-sample/canonical-slot-boundary-candidate-review",
     "reports/public-sample/canonical-slot-boundary-candidates",
-    "openspec/changes/merge-scaled-clarify-slot-boundary-candidates",
 ]
 
 
@@ -206,7 +205,7 @@ def test_execution_scope_blocks_data_training_evaluator_and_claim_changes() -> N
     assert claims["live_browser_benchmark_improvement_claim"] is False
 
 
-def test_protected_sources_formal_data_and_stale_active_change_are_not_modified() -> None:
+def test_protected_sources_and_formal_data_are_not_modified() -> None:
     result = subprocess.run(
         ["git", "status", "--short", "--", *STILL_PROTECTED_AFTER_FORMAL_MERGE_PATHS],
         cwd=REPO_ROOT,
