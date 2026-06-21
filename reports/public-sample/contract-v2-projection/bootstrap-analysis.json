@@ -1,0 +1,10 @@
+{
+  "status": "blocked",
+  "decision_label": "PROJECTION_BLOCKED_OR_INVALID",
+  "bootstrap_seed": 20260620,
+  "bootstrap_iterations": 0,
+  "exact_pass_delta": null,
+  "executable_pass_delta": null,
+  "task_family_level_delta": null,
+  "blocked_reason": "Paired bootstrap on projection metrics requires row-level current raw contracts."
+}

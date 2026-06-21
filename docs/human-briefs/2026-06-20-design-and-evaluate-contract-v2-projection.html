@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Contract V2 Projection 阶段简报</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17202a;
+      --muted: #52616f;
+      --line: #d8dee6;
+      --accent: #0b6e69;
+      --warn: #a44a00;
+      --bg: #f7f9fb;
+      --panel: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      line-height: 1.55;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+    }
+    header {
+      border-bottom: 2px solid var(--accent);
+      padding-bottom: 18px;
+      margin-bottom: 24px;
+    }
+    h1 {
+      font-size: 30px;
+      margin: 0 0 8px;
+      letter-spacing: 0;
+    }
+    h2 {
+      font-size: 18px;
+      margin: 28px 0 10px;
+      letter-spacing: 0;
+    }
+    p { margin: 8px 0; }
+    ul { margin: 8px 0 0 20px; padding: 0; }
+    li { margin: 5px 0; }
+    code {
+      background: #edf2f6;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.92em;
+    }
+    .status {
+      display: inline-block;
+      color: var(--warn);
+      font-weight: 700;
+      border: 1px solid #e4b27e;
+      background: #fff7ed;
+      border-radius: 4px;
+      padding: 3px 8px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 14px;
+    }
+    .label {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 3px;
+    }
+    a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Contract V2 Projection 阶段简报</h1>
+      <p><span class="status">blocked</span> 结论：当前 step-matched evidence 缺少 raw prediction / gold contracts，不能诚实计算 V2 projection 指标。</p>
+    </header>
+
+    <section>
+      <h2>一句话结论</h2>
+      <p>本阶段已完成 OpenSpec 设计和 truth surface 修复，但 projection evaluation 必须 fail closed：不能用旧 non-step-matched predictions 替代当前输入。</p>
+    </section>
+
+    <section>
+      <h2>当前状态</h2>
+      <div class="grid">
+        <div class="panel">
+          <div class="label">Decision label</div>
+          <code>PROJECTION_BLOCKED_OR_INVALID</code>
+        </div>
+        <div class="panel">
+          <div class="label">当前 evidence root</div>
+          <code>reports/public-sample/step-matched-canonical-slot-ablation/</code>
+        </div>
+        <div class="panel">
+          <div class="label">已拒绝替代输入</div>
+          <code>canonical-slot-paired-sft-ablation</code>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>本阶段改动</h2>
+      <ul>
+        <li>新增 OpenSpec change：<code>design-and-evaluate-contract-v2-projection</code>。</li>
+        <li>修复 <code>README.md</code>、<code>README_en.md</code>、<code>CONTEXT.md</code> 的 current snapshot，将旧 77 / 231 / 661 边界标为 historical。</li>
+        <li>新增 blocked evidence pack，说明缺少当前 raw Control/Treatment dev/test predictions 与 gold JSONL。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>关键文件</h2>
+      <ul>
+        <li><a href="../../openspec/changes/design-and-evaluate-contract-v2-projection/proposal.md">OpenSpec proposal</a></li>
+        <li><a href="../../reports/public-sample/contract-v2-projection/source-boundary.json">source-boundary.json</a></li>
+        <li><a href="../../reports/public-sample/contract-v2-projection/decision.md">decision.md</a></li>
+        <li><a href="../../reports/public-sample/contract-v2-projection/summary.md">summary.md</a></li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>验证状态</h2>
+      <ul>
+        <li><code>PYTHONPATH=src pytest -q</code>：513 passed。</li>
+        <li><code>PYTHONPATH=src ruff check src tests</code>：passed。</li>
+        <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：8 passed, 0 failed。</li>
+        <li><code>git diff --check</code>：passed。</li>
+        <li>public leak scan：<code>ok=true</code>，无 findings。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>剩余风险与不能宣称</h2>
+      <ul>
+        <li>不能回答 normalized_command / metadata 占 V1 strict failure 的比例。</li>
+        <li>不能回答 V2 core exact 或 executable pass 是否提升。</li>
+        <li>不能宣称 Contract V2 值得实施、模型变强、held-out recovery、生产可用、安全就绪、live-browser benchmark 提升、checkpoint 或 adapter release。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>推荐下一步</h2>
+      <p>先恢复或提交 public-safe 的当前 step-matched raw predictions 与 gold contracts，然后重新运行同一个 bounded projection evaluation；不得自动启动 Contract V2 implementation、训练、DPO、扩数据或 challenge set。</p>
+    </section>
+  </main>
+</body>
+</html>

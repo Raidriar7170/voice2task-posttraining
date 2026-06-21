@@ -13,29 +13,32 @@ The core question is intentionally narrow:
 
 > Can a 7B model reliably convert natural Chinese browser intent into executable contract JSON, beyond memorizing the training format?
 
-The current answer is conservative. The Qwen2.5-7B LoRA path runs on the private A100 environment and emits 100% schema-valid JSON on the current formal public sample, but strict full-contract exact match on the latest formal held-out evidence is only dev 0.3043 / test 0.2899. The infrastructure is real; the current bottleneck is residual route/task-type, safety-recall, and slot-exactness behavior, not another broad smoke run.
+The current answer is conservative. The Qwen2.5-7B LoRA path runs on the private A100 environment. The latest current evidence is Contract V2 projection blocked evidence: the step-matched canonical-slot SFT ablation used the same optimizer-step budget for Control and Treatment and remained mixed / inconclusive; the following offline Contract V2 projection failed closed because current raw prediction / gold contract artifacts are missing. The next action is not another small canonical-candidate loop, DPO, or Contract V2 implementation. It is to recover or commit public-safe current step-matched raw artifacts, then rerun the same bounded projection evaluation.
 
 ## TL;DR
 
 - Input: Chinese voice commands, ASR transcripts, browser task intent.
 - Output: strict-schema browser task contract JSON.
-- Data: the committed formal public sample contains 77 seeds, 231 SFT rows, and 661 DPO preference pairs, split as train/dev/test = 93/69/69.
+- Data: the current formal public sample boundary is `public-sample-20260619T090925Z`, with 247 seeds, 696 SFT rows, and 2100 DPO preference pairs, split as train/dev/test = 282/207/207. The old 77-seed / 231-SFT / 661-DPO boundary is historical.
 - Model path: Qwen2.5-7B-Instruct + LoRA. Training and prediction evidence comes from a private A100 runtime; weights and adapters are not committed.
-- Latest public evidence: [`a100-formal-public-heldout-prediction`](reports/public-sample/a100-formal-public-heldout-prediction/report.md) is the current-manifest prediction-only dev/test evidence.
-- Boundary: this repo proves that the data/training/prediction/eval path is real; it does not claim held-out recovery, production readiness, private-corpus generalization, live-browser benchmark gains, or a released checkpoint.
+- Latest public evidence: [`contract-v2-projection`](reports/public-sample/contract-v2-projection/decision.md) is the current blocked projection evidence; its source boundary is [`step-matched-canonical-slot-ablation`](reports/public-sample/step-matched-canonical-slot-ablation/decision.md).
+- Boundary: this repo proves that the data/training/prediction/eval path is real; it does not claim stable canonical-slot benefit, held-out recovery, production readiness, private-corpus generalization, live-browser benchmark gains, or a released checkpoint.
 
 ## Current Snapshot
 
 | Item | Status |
 | --- | --- |
-| Public sample | 77 seeds, 231 SFT rows, 661 DPO pairs |
-| Public split | train 93 / dev 69 / test 69 |
+| Public sample | current: 247 seeds, 696 SFT rows, 2100 DPO pairs; historical: 77 seeds, 231 SFT rows, 661 DPO pairs |
+| Public split | current: train 282 / dev 207 / test 207; historical: train 93 / dev 69 / test 69 |
 | Base model | Qwen/Qwen2.5-7B-Instruct |
-| Adapter state | A100 merged slot-value adapter available for private prediction, not released |
-| Latest evidence | formal public held-out prediction-only evaluation |
-| Strict exact match | dev 0.3043 / test 0.2899 |
-| JSON validity | dev 1.0000 / test 1.0000 |
-| Interpretation | partial held-out signal; no recovery or release claim |
+| Adapter state | step-matched Control / Treatment private A100 adapters observed, not released |
+| Latest evidence | Contract V2 projection blocked evidence |
+| Optimizer-step budget | Control and Treatment both use 3132 optimizer steps |
+| Strict exact match | Control dev 0.8357 / test 0.7778; Treatment dev 0.8357 / test 0.7923 |
+| Executable pass | Control dev 0.8551 / test 0.8213; Treatment dev 0.8647 / test 0.8164 |
+| Projection decision | `PROJECTION_BLOCKED_OR_INVALID` |
+| Interpretation | mixed / inconclusive source ablation; projection metrics unavailable because current raw predictions/gold contracts are missing |
+| Next bounded action | recover or commit public-safe current step-matched raw prediction/gold artifacts, then rerun the same projection evaluation |
 
 ## Positioning
 
@@ -76,11 +79,11 @@ flowchart LR
 
 ## 3-Minute Reviewer Path
 
-1. Read the current boundary: [`reports/public-sample/a100-formal-public-heldout-prediction/report.md`](reports/public-sample/a100-formal-public-heldout-prediction/report.md).
-2. Inspect dev/test strict metrics: [`dev/metrics.md`](reports/public-sample/a100-formal-public-heldout-prediction/dev/metrics.md) and [`test/metrics.md`](reports/public-sample/a100-formal-public-heldout-prediction/test/metrics.md).
-3. Inspect the formal public sample manifest: [`data/public-samples/manifest_public_sample.json`](data/public-samples/manifest_public_sample.json).
-4. Skim the Chinese phase brief for this documentation refresh: [`docs/human-briefs/2026-06-15-refresh-project-visibility-report.html`](docs/human-briefs/2026-06-15-refresh-project-visibility-report.html).
-5. Inspect the archived OpenSpec change: [`openspec/changes/archive/2026-06-15-evaluate-formal-public-sample-heldout-prediction/proposal.md`](openspec/changes/archive/2026-06-15-evaluate-formal-public-sample-heldout-prediction/proposal.md).
+1. Read the current boundary: [`reports/public-sample/step-matched-canonical-slot-ablation/decision.md`](reports/public-sample/step-matched-canonical-slot-ablation/decision.md).
+2. Inspect current dev/test metrics and deltas: [`comparison.json`](reports/public-sample/step-matched-canonical-slot-ablation/comparison.json).
+3. Inspect boundary verification: [`boundary-verification.json`](reports/public-sample/step-matched-canonical-slot-ablation/boundary-verification.json).
+4. Inspect row/family diagnostics: [`paired-row-analysis.json`](reports/public-sample/step-matched-canonical-slot-ablation/paired-row-analysis.json) and [`family-level-deltas.json`](reports/public-sample/step-matched-canonical-slot-ablation/family-level-deltas.json).
+5. Inspect the active OpenSpec change for the blocked projection phase: [`openspec/changes/design-and-evaluate-contract-v2-projection/proposal.md`](openspec/changes/design-and-evaluate-contract-v2-projection/proposal.md).
 
 ## Quick Start
 
@@ -152,7 +155,9 @@ Prediction-only private runs should write sanitized public-sample outputs and me
 
 | Evidence | What it proves | What it does not prove |
 | --- | --- | --- |
-| [`a100-formal-public-heldout-prediction`](reports/public-sample/a100-formal-public-heldout-prediction/report.md) | Current formal public manifest prediction-only dev/test evidence: JSON validity 1.0000, strict exact dev 0.3043 / test 0.2899 | Held-out recovery, model recovery, checkpoint release, production readiness |
+| [`contract-v2-projection`](reports/public-sample/contract-v2-projection/decision.md) | Current blocked projection evidence: latest step-matched aggregate artifacts exist, but current raw Control/Treatment dev/test predictions and gold contracts are missing | V2 exact gain, executable gain, renderer coverage, failure-contribution percentages, Contract V2 implementation readiness |
+| [`step-matched-canonical-slot-ablation`](reports/public-sample/step-matched-canonical-slot-ablation/decision.md) | Current step-matched Control / Treatment SFT ablation using the same 3132 optimizer-step budget; mixed / inconclusive result with no stable broad canonical-slot benefit | DPO justification, more small-candidate-loop approval, held-out recovery, model recovery, checkpoint release, production readiness |
+| [`a100-formal-public-heldout-prediction`](reports/public-sample/a100-formal-public-heldout-prediction/report.md) | Historical formal public manifest prediction-only dev/test evidence: JSON validity 1.0000, strict exact dev 0.3043 / test 0.2899 | Current snapshot, held-out recovery, model recovery, checkpoint release, production readiness |
 | [`a100-merged-slot-value-adapter-restore`](reports/public-sample/a100-merged-slot-value-adapter-restore/report.md) | The private 7B adapter prerequisite was available/regenerated on A100 | Model recovery, checkpoint release, public adapter availability |
 | [`a100-hardened-canonical-policy-rerun-observed`](reports/public-sample/a100-hardened-canonical-policy-rerun-observed/report.md) | Prediction-only rerun emitted schema-valid public-sample contracts and preserved strict metrics | Held-out recovery, evaluator relaxation, semantic scoring |
 | [`a100-merged-slot-value-heldout-eval`](reports/public-sample/a100-merged-slot-value-heldout-eval/report.md) | Earlier merged slot-value adapter evaluation boundary | Production or full private-corpus generalization |
@@ -163,12 +168,12 @@ Prediction-only private runs should write sanitized public-sample outputs and me
 
 `contract_exact_match` is a hard full-contract exact-match metric. `normalized_command` string-mismatch diagnostics are explanatory row-level evidence only: they do not relax, normalize, semantically score, repair, replace, or re-score predictions, and they do not automatically mark Chinese phrase differences such as `搜索/查询` or `明天的天气/明天天气` as equivalent.
 
-The latest formal public held-out result therefore reads as:
+The latest step-matched ablation therefore reads as:
 
-- JSON validity = 1.0000 on dev/test: schema-constrained output format is working;
-- strict `contract_exact_match` = 0.3043 on dev and 0.2899 on test: full-contract held-out behavior is still partial;
-- strict `slot_f1` = 0.3913 on dev and 0.5072 on test; `slot_f1_soft` = 0.7315 on dev and 0.7609 on test, but soft F1 is internal diagnostic only;
-- route/task-type accuracy = 0.8551 on dev and 0.9130 on test, so residuals are not only slot wording differences.
+- Control / Treatment used the same 3132 optimizer-step budget;
+- dev strict exact did not move, test strict exact improved by 0.0145, but test executable pass declined by 0.0048 and strict slot F1 declined by 0.0032;
+- the result is mixed / inconclusive and does not prove stable, general canonical-slot-data benefit;
+- the attempted projection could not answer the architectural question because the current raw step-matched prediction and gold contracts are not committed.
 
 ## Normalized Command Target Policy
 
@@ -176,12 +181,12 @@ The latest formal public held-out result therefore reads as:
 
 ## Recommended Next Stage
 
-The next useful phase is residual/family diagnosis rather than another broad rerun or immediate retraining:
+The next useful action is not another broad rerun, small canonical-candidate loop, DPO, immediate retraining, or Contract V2 implementation. The blocked projection evidence first calls for raw-artifact recovery:
 
-1. inspect dev/test residual rows by family and field path across route, task type, safety, confirmation, and slots;
-2. identify whether failures cluster in clarify, extract, blocked-payment, form-fill, or other families before adding data;
-3. only then propose a bounded data or prompt-policy phase with train/dev/test family separation;
-4. claim progress only if held-out `contract_exact_match` and relevant strict metrics improve without evaluator changes or prediction repair.
+1. recover or commit public-safe current step-matched Control/Treatment dev/test raw prediction contracts;
+2. recover or commit the aligned current dev/test gold contract JSONL files;
+3. rerun the same `design-and-evaluate-contract-v2-projection` evaluation without using older non-step-matched predictions;
+4. only then decide whether Contract V2 implementation is justified or whether the slot bottleneck persists.
 
 ## Validation
 

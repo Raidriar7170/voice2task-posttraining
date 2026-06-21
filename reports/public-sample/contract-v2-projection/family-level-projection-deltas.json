@@ -1,0 +1,6 @@
+{
+  "status": "blocked",
+  "decision_label": "PROJECTION_BLOCKED_OR_INVALID",
+  "deltas": [],
+  "blocked_reason": "Family-level projection deltas require current raw step-matched gold and prediction contracts."
+}

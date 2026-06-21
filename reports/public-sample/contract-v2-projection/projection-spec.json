@@ -1,0 +1,32 @@
+{
+  "status": "blocked",
+  "decision_label": "PROJECTION_BLOCKED_OR_INVALID",
+  "v2_core_fields": [
+    "task_type",
+    "route",
+    "safety.allow",
+    "safety.reason",
+    "confirmation_required",
+    "slots"
+  ],
+  "excluded_v1_fields": [
+    "normalized_command",
+    "language",
+    "contract_version"
+  ],
+  "fixed_envelope_fields": {
+    "language": "zh-CN",
+    "contract_version": "v2"
+  },
+  "scope": {
+    "experimental": true,
+    "offline_evaluation_only": true,
+    "modifies_v1_schema": false,
+    "modifies_v1_evaluator": false,
+    "modifies_layered_evaluator": false,
+    "modifies_runtime": false,
+    "trains_model": false,
+    "generates_predictions": false
+  },
+  "blocked_reason": "Missing latest step-matched raw prediction and gold contract artifacts."
+}

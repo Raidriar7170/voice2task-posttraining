@@ -1,0 +1,22 @@
+{
+  "status": "blocked",
+  "decision_label": "PROJECTION_BLOCKED_OR_INVALID",
+  "analysis_executed": false,
+  "categories": [
+    "NORMALIZED_COMMAND_ONLY",
+    "METADATA_ONLY",
+    "DERIVED_FIELD_ONLY",
+    "CORE_SLOT_FAILURE",
+    "CORE_ROUTE_TASK_FAILURE",
+    "CORE_SAFETY_CONFIRMATION_FAILURE",
+    "MIXED_CORE_FAILURE"
+  ],
+  "counts": {},
+  "proportions": {},
+  "top_task_families": [],
+  "top_slot_field_paths": [],
+  "public_safe_examples": [],
+  "v1_strict_failures_eliminated_by_projection": null,
+  "projection_residual_failures": null,
+  "blocked_reason": "Failure contribution requires row-level gold and predicted contracts from the latest step-matched run; only aggregate metrics and row-status summaries are committed."
+}

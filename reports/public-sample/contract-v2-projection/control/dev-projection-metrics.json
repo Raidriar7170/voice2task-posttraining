@@ -1,0 +1,16 @@
+{
+  "arm": "control",
+  "split": "dev",
+  "status": "blocked",
+  "decision_label": "PROJECTION_BLOCKED_OR_INVALID",
+  "source_metrics_path": "reports/public-sample/step-matched-canonical-slot-ablation/control/dev-metrics.json",
+  "v1_contract_exact_match_strict": null,
+  "v1_without_normalized_command_exact": null,
+  "v2_core_exact_match": null,
+  "v2_core_schema_validity": null,
+  "v2_core_executable_pass_rate": null,
+  "v2_envelope_build_success_rate": null,
+  "normalized_command_renderer_supported_rate": null,
+  "deterministic_roundtrip_rate": null,
+  "blocked_reason": "Missing current raw prediction contracts and dev gold contracts."
+}

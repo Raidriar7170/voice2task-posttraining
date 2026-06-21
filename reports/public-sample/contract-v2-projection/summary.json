@@ -1,0 +1,34 @@
+{
+  "phase": "design-and-evaluate-contract-v2-projection",
+  "status": "blocked",
+  "decision_label": "PROJECTION_BLOCKED_OR_INVALID",
+  "metrics_computed": false,
+  "renderer_evaluated": false,
+  "failure_contribution_computed": false,
+  "bootstrap_computed": false,
+  "current_step_matched_root": "reports/public-sample/step-matched-canonical-slot-ablation/",
+  "missing_inputs": [
+    "control dev raw prediction contracts",
+    "control test raw prediction contracts",
+    "treatment dev raw prediction contracts",
+    "treatment test raw prediction contracts",
+    "dev gold contract JSONL",
+    "test gold contract JSONL"
+  ],
+  "rejected_alternate_inputs": [
+    "reports/public-sample/canonical-slot-paired-sft-ablation/ raw predictions because they are not step-matched current inputs"
+  ],
+  "recommended_next_action": "Recover or commit public-safe raw step-matched prediction and gold contract artifacts, then rerun this same bounded projection evaluation.",
+  "claims_not_supported": [
+    "model improvement",
+    "held-out recovery",
+    "production readiness",
+    "safety readiness",
+    "live-browser benchmark improvement",
+    "checkpoint release",
+    "adapter release",
+    "DPO justification",
+    "approval for another small canonical candidate loop",
+    "Contract V2 implementation readiness"
+  ]
+}

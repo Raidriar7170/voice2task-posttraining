@@ -6,8 +6,11 @@ Voice2Task Post-Training is a companion project for training and evaluating smal
 
 As of 2026-06-20, the first project phase is closed as an evidence-backed
 post-training and evaluation baseline, not as a production-ready model release.
-The public-facing truth surface has thirty-one current layers. The newest
-twelve are the canonical slot paired SFT ablation under
+The public-facing truth surface has thirty-three current layers. The newest
+fourteen are the blocked Contract V2 projection evidence under
+`reports/public-sample/contract-v2-projection/`, the step-matched canonical slot
+SFT ablation under `reports/public-sample/step-matched-canonical-slot-ablation/`, the prior
+canonical slot paired SFT ablation under
 `reports/public-sample/canonical-slot-paired-sft-ablation/`, the
 current-canonical-boundary prediction baseline under
 `reports/public-sample/a100-current-canonical-boundary-prediction-baseline/`,
@@ -82,14 +85,17 @@ Current formal public sample data boundary:
 | public sample | 247 seeds / 696 SFT rows / 2100 DPO pairs |
 | split counts | train 282 / dev 207 / test 207 |
 | latest evaluated manifest | frozen dev/test from `public-sample-20260619T090925Z`, verified identical to `public-sample-20260617T152259Z` dev/test by row order, input text, and gold contracts |
-| latest model run type | one-seed paired SFT A/B: fresh control adapter trained on 261 rows from `public-sample-20260617T152259Z`; fresh treatment adapter trained on 282 rows from `public-sample-20260619T090925Z`; same base model, LoRA, seed, decoding, evaluator, and frozen dev/test |
-| latest model interpretation | `canonical_slot_paired_sft_ablation_gate_failed`: treatment has positive dev/test deltas, but the pilot gate fails because test `slot_value_exact_f1` improves only `+0.027740`, below the required `+0.03` |
-| latest model evidence | `reports/public-sample/canonical-slot-paired-sft-ablation/` |
-| latest observed model evidence | `reports/public-sample/canonical-slot-paired-sft-ablation/` |
-| latest observed model interpretation | one-seed SFT-only causal comparison with fresh paired adapters; positive partial signal but no 3-seed confirmation recommendation, no DPO, no extra candidate loop, no adapter/checkpoint release, and no production-readiness claim |
-| latest canonical slot paired SFT boundary evidence | `reports/public-sample/canonical-slot-paired-sft-ablation/boundary-verification.json` |
-| latest canonical slot paired SFT result | boundary verification passed; dev/test gold hashes match exactly, control/treatment fresh SFT completed, dev slot exact delta `+0.051282`, test slot exact delta `+0.027740`, dev executable delta `+0.053140`, test executable delta `+0.028986`, safety recall did not drop |
-| latest canonical slot paired SFT recommended next step | `design-and-implement-contract-v2`; do not continue with small canonical candidates, DPO/GRPO, semantic-equivalence scoring, prediction repair, or public checkpoint/adapter release |
+| latest model run type | step-matched one-seed paired SFT A/B: fresh control adapter trained on 261 rows from `public-sample-20260617T152259Z`; fresh treatment adapter trained on 282 rows from `public-sample-20260619T090925Z`; same explicit 3132 optimizer-step budget, base model, LoRA, seed, decoding, evaluator, and frozen dev/test |
+| latest model interpretation | `step_matched_canonical_slot_ablation_mixed_inconclusive`: treatment does not prove stable broad canonical-slot benefit; test executable pass and strict slot F1 do not clear guardrails |
+| latest model evidence | `reports/public-sample/step-matched-canonical-slot-ablation/` |
+| latest observed model evidence | `reports/public-sample/step-matched-canonical-slot-ablation/` |
+| latest observed model interpretation | step-matched SFT-only causal comparison; mixed / inconclusive result, no small canonical candidate continuation, no DPO/GRPO, no adapter/checkpoint release, and no production-readiness claim |
+| latest projection evidence | `reports/public-sample/contract-v2-projection/` |
+| latest projection result | `PROJECTION_BLOCKED_OR_INVALID`: latest step-matched aggregate artifacts exist, but current raw Control/Treatment dev/test predictions and aligned dev/test gold contracts are not committed |
+| latest projection recommended next action | recover or commit public-safe current step-matched raw prediction/gold artifacts, then rerun the same bounded projection evaluation; do not substitute older non-step-matched predictions |
+| latest canonical slot paired SFT boundary evidence | `reports/public-sample/step-matched-canonical-slot-ablation/boundary-verification.json` |
+| latest canonical slot paired SFT result | boundary verification passed; dev/test gold hashes match exactly, control/treatment fresh SFT completed with same optimizer-step budget; dev strict exact delta `0.000000`, test strict exact delta `+0.014493`, dev executable delta `+0.009662`, test executable delta `-0.004831`, safety recall did not drop |
+| latest canonical slot paired SFT recommended next step | completed as blocked projection evidence under `reports/public-sample/contract-v2-projection/`; do not continue with small canonical candidates, DPO/GRPO, semantic-equivalence scoring, prediction repair, or public checkpoint/adapter release |
 | latest current-canonical-boundary prediction baseline result | blocked locally before A100 prediction; no predictions, no model-quality metrics, no training, no data mutation, no prompt/evaluator change, no prediction repair, no adapter/checkpoint release |
 | latest canonical slot-boundary formal merge evidence | `reports/public-sample/canonical-slot-boundary-formal-merge/` |
 | latest canonical slot-boundary formal merge result | promoted exactly 7 reviewed train-only canonical slot-boundary candidate seeds into the formal public sample; rebuilt formal seed/SFT/DPO/manifest artifacts to 247 / 696 / 2100; `comparison_boundary.changed=true`; no training, prediction, A100 execution, prompt change, postprocessor implementation, evaluator metric change, or model-quality claim |
@@ -145,21 +151,39 @@ Current formal public sample data boundary:
 | prior SFT v3 retry manifest | `public-sample-20260616T074315Z` |
 | prior SFT v3 retry interpretation | `form_fill_sft_v3_partial_improvement_with_safety_regression_risk` |
 
-The canonical slot paired SFT ablation is now recorded under
-`reports/public-sample/canonical-slot-paired-sft-ablation/`. It verifies that
+The latest step-matched canonical slot SFT ablation is now recorded under
+`reports/public-sample/step-matched-canonical-slot-ablation/`. It verifies that
 control `public-sample-20260617T152259Z` and treatment
 `public-sample-20260619T090925Z` share exactly the same dev/test samples, row
-order, input text, and gold contracts before training. The phase then trains two
-fresh SFT-only adapters with matched base model, LoRA hyperparameters, seed,
-prompt template, tokenizer, decoding parameters, evaluator, and frozen dev/test
-inputs. Treatment improves dev/test exact and executable metrics, but the
-predeclared one-seed pilot gate fails because test `slot_value_exact_f1` improves
-by only `+0.027740`, below the required `+0.03`. Therefore this is positive
-partial signal, not a 3-seed confirmation trigger, not a held-out recovery
-claim, and not a reason to add small canonical candidates or run DPO. The
-recommended next bounded phase is `design-and-implement-contract-v2`, where the
-model predicts only task type, route, safety, confirmation, and slots while
-deterministic postprocessing generates runtime/action fields.
+order, input text, and gold contracts before evaluation. The phase then trains
+two fresh SFT-only adapters with the same explicit 3132 optimizer-step budget,
+base model, LoRA hyperparameters, seed, prompt template, tokenizer, decoding
+parameters, evaluator, and frozen dev/test inputs. Treatment is mixed:
+dev strict exact does not move, test strict exact improves by `+0.014493`, dev
+executable improves by `+0.009662`, but test executable declines by `-0.004831`
+and test strict slot F1 declines by `-0.003221`. Therefore this does not prove
+stable general canonical-slot benefit, is not a 3-seed confirmation trigger, is
+not a held-out recovery claim, and is not a reason to add small canonical
+candidates or run DPO. This led to the bounded
+`design-and-evaluate-contract-v2-projection` phase.
+
+The Contract V2 projection evidence is now recorded under
+`reports/public-sample/contract-v2-projection/` with
+`decision_label=PROJECTION_BLOCKED_OR_INVALID`. The phase confirmed that the
+latest step-matched aggregate artifacts exist, but current raw Control/Treatment
+dev/test prediction contracts and aligned dev/test gold contracts are not
+committed. Because deterministic V2 projection, renderer coverage, field
+contribution, and bootstrap metrics require those raw contracts, the phase
+failed closed and rejected older non-step-matched raw predictions as invalid
+substitutes. The next bounded action is raw-artifact recovery plus rerun of the
+same projection evaluation, not Contract V2 implementation, training, DPO, data
+expansion, or challenge-set work.
+
+The prior canonical slot paired SFT ablation under
+`reports/public-sample/canonical-slot-paired-sft-ablation/` is historical
+because it was not step-matched. It remains evidence, but it is not the current
+snapshot and must not be used to justify more candidates, DPO, or model-quality
+claims.
 
 The prior current-canonical-boundary prediction baseline is recorded under
 `reports/public-sample/a100-current-canonical-boundary-prediction-baseline/`.

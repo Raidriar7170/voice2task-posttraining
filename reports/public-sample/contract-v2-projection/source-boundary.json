@@ -1,0 +1,89 @@
+{
+  "phase": "design-and-evaluate-contract-v2-projection",
+  "status": "blocked",
+  "decision_label": "PROJECTION_BLOCKED_OR_INVALID",
+  "source_root": "reports/public-sample/step-matched-canonical-slot-ablation/",
+  "generated_at": "2026-06-20",
+  "required_current_sources": {
+    "boundary_verification": {
+      "path": "reports/public-sample/step-matched-canonical-slot-ablation/boundary-verification.json",
+      "status": "present"
+    },
+    "control_dev_metrics": {
+      "path": "reports/public-sample/step-matched-canonical-slot-ablation/control/dev-metrics.json",
+      "status": "present"
+    },
+    "control_test_metrics": {
+      "path": "reports/public-sample/step-matched-canonical-slot-ablation/control/test-metrics.json",
+      "status": "present"
+    },
+    "treatment_dev_metrics": {
+      "path": "reports/public-sample/step-matched-canonical-slot-ablation/treatment/dev-metrics.json",
+      "status": "present"
+    },
+    "treatment_test_metrics": {
+      "path": "reports/public-sample/step-matched-canonical-slot-ablation/treatment/test-metrics.json",
+      "status": "present"
+    },
+    "paired_row_analysis": {
+      "path": "reports/public-sample/step-matched-canonical-slot-ablation/paired-row-analysis.json",
+      "status": "present"
+    },
+    "family_level_deltas": {
+      "path": "reports/public-sample/step-matched-canonical-slot-ablation/family-level-deltas.json",
+      "status": "present"
+    },
+    "comparison": {
+      "path": "reports/public-sample/step-matched-canonical-slot-ablation/comparison.json",
+      "status": "present"
+    },
+    "decision": {
+      "path": "reports/public-sample/step-matched-canonical-slot-ablation/decision.md",
+      "status": "present"
+    },
+    "control_dev_raw_predictions": {
+      "expected_pattern": "reports/public-sample/step-matched-canonical-slot-ablation/control/dev/**/predictions.jsonl",
+      "status": "missing"
+    },
+    "control_test_raw_predictions": {
+      "expected_pattern": "reports/public-sample/step-matched-canonical-slot-ablation/control/test/**/predictions.jsonl",
+      "status": "missing"
+    },
+    "treatment_dev_raw_predictions": {
+      "expected_pattern": "reports/public-sample/step-matched-canonical-slot-ablation/treatment/dev/**/predictions.jsonl",
+      "status": "missing"
+    },
+    "treatment_test_raw_predictions": {
+      "expected_pattern": "reports/public-sample/step-matched-canonical-slot-ablation/treatment/test/**/predictions.jsonl",
+      "status": "missing"
+    },
+    "dev_gold_contract_rows": {
+      "expected_pattern": "reports/public-sample/step-matched-canonical-slot-ablation/**/dev_gold.jsonl",
+      "status": "missing"
+    },
+    "test_gold_contract_rows": {
+      "expected_pattern": "reports/public-sample/step-matched-canonical-slot-ablation/**/test_gold.jsonl",
+      "status": "missing"
+    }
+  },
+  "confirmed_boundaries": {
+    "uses_latest_step_matched_root": true,
+    "uses_older_non_step_matched_predictions": false,
+    "a100_required": false,
+    "ssh_required": false,
+    "model_adapter_required": false,
+    "new_prediction_generation_required": false,
+    "training_required": false,
+    "v1_schema_source_from_code": "src/voice2task/schemas.py",
+    "v1_evaluator_source_from_code": "src/voice2task/evaluation.py",
+    "layered_evaluator_source_from_code": "src/voice2task/layered_evaluation.py"
+  },
+  "blocked_reason": "The latest committed step-matched evidence root contains aggregate metrics and row-status summaries but does not contain raw Control/Treatment dev/test prediction contracts or dev/test gold JSONL contracts. Deterministic V2 projection and field-contribution analysis require raw gold and predicted contracts aligned by stable sample id.",
+  "alternate_sources_rejected": [
+    {
+      "path": "reports/public-sample/canonical-slot-paired-sft-ablation/",
+      "reason": "Contains older non-step-matched raw predictions and would violate the current step-matched boundary."
+    }
+  ],
+  "hard_stop": true
+}

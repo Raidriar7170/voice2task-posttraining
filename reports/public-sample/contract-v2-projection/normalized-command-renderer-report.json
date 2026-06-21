@@ -1,0 +1,11 @@
+{
+  "status": "blocked",
+  "decision_label": "PROJECTION_BLOCKED_OR_INVALID",
+  "renderer_executed": false,
+  "renderer_supported_rate": null,
+  "renderer_unsupported_count": null,
+  "task_type_coverage": {},
+  "unsupported_reason_distribution": {},
+  "public_safe_examples": [],
+  "blocked_reason": "Missing latest step-matched raw prediction and gold contract artifacts."
+}
