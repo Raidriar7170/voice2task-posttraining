@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>recover-step-matched-projection-inputs</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1f2937;
+      --muted: #64748b;
+      --line: #d7dee8;
+      --ok: #0f766e;
+      --warn: #b45309;
+      --bg: #f8fafc;
+      --panel: #ffffff;
+    }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      letter-spacing: 0;
+    }
+    h2 {
+      margin: 26px 0 10px;
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+    p {
+      margin: 8px 0;
+    }
+    a {
+      color: #2563eb;
+      text-decoration: none;
+    }
+    .summary {
+      border-left: 5px solid var(--ok);
+      background: var(--panel);
+      padding: 14px 16px;
+      margin: 18px 0;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .tile {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      padding: 14px;
+    }
+    .label {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+    .value {
+      margin-top: 4px;
+      font-weight: 700;
+    }
+    code {
+      background: #eef2f7;
+      border: 1px solid #dbe3ef;
+      padding: 1px 4px;
+      border-radius: 4px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.92em;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--panel);
+      border: 1px solid var(--line);
+    }
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 9px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+    ul {
+      margin: 8px 0 0 20px;
+      padding: 0;
+    }
+    li {
+      margin: 5px 0;
+    }
+    .warn {
+      color: var(--warn);
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+<main>
+  <h1>recover-step-matched-projection-inputs</h1>
+  <p class="label">OpenSpec bounded apply phase · 2026-06-21</p>
+
+  <section class="summary">
+    <strong>结论：</strong>本阶段从原 step-matched run 恢复了当前 Control/Treatment dev/test 逐样本 predictions 和 dev/test gold contracts，边界校验通过，已提交 aggregate metrics 可精确复现；Contract V2 projection 仍未执行。
+  </section>
+
+  <div class="grid">
+    <div class="tile">
+      <div class="label">Status</div>
+      <div class="value">applied</div>
+    </div>
+    <div class="tile">
+      <div class="label">Decision</div>
+      <div class="value"><code>RECOVERED_FROM_EXISTING_ARTIFACTS</code></div>
+    </div>
+    <div class="tile">
+      <div class="label">Recovery method</div>
+      <div class="value"><code>recovered_from_existing_artifacts</code></div>
+    </div>
+    <div class="tile">
+      <div class="label">Projection ready</div>
+      <div class="value">true, for rerun only</div>
+    </div>
+  </div>
+
+  <h2>What Changed</h2>
+  <ul>
+    <li>新增 <a href="../../reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/recovery-summary.md">raw-input recovery summary</a> 和 manifest/boundary/metric reproduction artifacts。</li>
+    <li>写入四份 recovered prediction JSONL：Control/Treatment × dev/test，每份 207 rows。</li>
+    <li>写入两份 aligned gold JSONL：dev/test，各 207 rows。</li>
+    <li>新增 recovery 脚本和测试，覆盖 duplicate/missing rows、boundary mismatch、metric mismatch、privacy scan、adapter identity、no-projection guard。</li>
+    <li>更新 README、README_en 和 CONTEXT，把下一步从“恢复 raw artifacts”改为“用 recovered inputs 重跑 bounded projection”。</li>
+  </ul>
+
+  <h2>Key Artifacts</h2>
+  <table>
+    <thead>
+      <tr><th>Artifact</th><th>Role</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a href="../../reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/artifact-manifest.json">artifact-manifest.json</a></td>
+        <td>记录 recovery method、run IDs、adapter identity hashes、config/prompt/evaluator hashes、gold/prediction hashes、claims。</td>
+      </tr>
+      <tr>
+        <td><a href="../../reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/boundary-verification.json">boundary-verification.json</a></td>
+        <td>证明 Control/Treatment/Gold IDs 对齐，dev/test 无交叉，gold hash 匹配 frozen boundary，adapter/config/prompt/evaluator 校验通过。</td>
+      </tr>
+      <tr>
+        <td><a href="../../reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/metric-reproduction.json">metric-reproduction.json</a></td>
+        <td>使用当前 evaluator 从 recovered rows 复现 committed step-matched aggregate metrics，所有差异为 0。</td>
+      </tr>
+      <tr>
+        <td><code>raw-inputs/control</code>, <code>raw-inputs/treatment</code>, <code>raw-inputs/gold</code></td>
+        <td>供下一阶段 projection rerun 使用的 public-safe row-level inputs。</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Verification</h2>
+  <ul>
+    <li><code>PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src pytest -q tests/test_step_matched_projection_input_recovery.py -p no:cacheprovider</code> passed: 2 tests.</li>
+    <li>Full validation will run before closeout: pytest, ruff, OpenSpec strict validation, diff check, and leak scan.</li>
+  </ul>
+
+  <h2>Risks And Non-Claims</h2>
+  <ul>
+    <li>No training, no prediction-only reproduction, no DPO/GRPO, no data expansion.</li>
+    <li>No schema, prompt, evaluator, split, or gold mutation.</li>
+    <li>No prediction repair, LLM judge, semantic-equivalence scoring, or Contract V2 projection execution.</li>
+    <li class="warn">Still cannot claim Contract V2 exact gain, executable gain, renderer coverage, implementation readiness, production readiness, safety certification, held-out recovery, checkpoint release, or adapter release.</li>
+  </ul>
+
+  <h2>Recommended Next Step</h2>
+  <p>Start a separate bounded change: <code>rerun-contract-v2-projection-with-recovered-inputs</code>. That phase should consume only the recovered raw-input artifacts and rerun the same projection evaluation.</p>
+</main>
+</body>
+</html>

@@ -13,7 +13,7 @@ The core question is intentionally narrow:
 
 > Can a 7B model reliably convert natural Chinese browser intent into executable contract JSON, beyond memorizing the training format?
 
-The current answer is conservative. The Qwen2.5-7B LoRA path runs on the private A100 environment. The latest current evidence is Contract V2 projection blocked evidence: the step-matched canonical-slot SFT ablation used the same optimizer-step budget for Control and Treatment and remained mixed / inconclusive; the following offline Contract V2 projection failed closed because current raw prediction / gold contract artifacts are missing. The next action is not another small canonical-candidate loop, DPO, or Contract V2 implementation. It is to recover or commit public-safe current step-matched raw artifacts, then rerun the same bounded projection evaluation.
+The current answer is conservative. The Qwen2.5-7B LoRA path runs on the private A100 environment. The latest current evidence is step-matched projection input recovery: the prior Contract V2 projection failed closed because current raw prediction / gold contract artifacts were missing; those public-safe Control/Treatment dev/test predictions and dev/test gold contracts are now recovered and reproduce the committed aggregate metrics. The next action is not another small canonical-candidate loop, DPO, or Contract V2 implementation. It is to rerun the same bounded projection evaluation with the recovered inputs.
 
 ## TL;DR
 
@@ -21,7 +21,7 @@ The current answer is conservative. The Qwen2.5-7B LoRA path runs on the private
 - Output: strict-schema browser task contract JSON.
 - Data: the current formal public sample boundary is `public-sample-20260619T090925Z`, with 247 seeds, 696 SFT rows, and 2100 DPO preference pairs, split as train/dev/test = 282/207/207. The old 77-seed / 231-SFT / 661-DPO boundary is historical.
 - Model path: Qwen2.5-7B-Instruct + LoRA. Training and prediction evidence comes from a private A100 runtime; weights and adapters are not committed.
-- Latest public evidence: [`contract-v2-projection`](reports/public-sample/contract-v2-projection/decision.md) is the current blocked projection evidence; its source boundary is [`step-matched-canonical-slot-ablation`](reports/public-sample/step-matched-canonical-slot-ablation/decision.md).
+- Latest public evidence: [`step-matched-canonical-slot-ablation/raw-inputs`](reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/recovery-summary.md) recovers the current step-matched projection inputs; the prior [`contract-v2-projection`](reports/public-sample/contract-v2-projection/decision.md) remains blocked projection evidence.
 - Boundary: this repo proves that the data/training/prediction/eval path is real; it does not claim stable canonical-slot benefit, held-out recovery, production readiness, private-corpus generalization, live-browser benchmark gains, or a released checkpoint.
 
 ## Current Snapshot
@@ -32,13 +32,13 @@ The current answer is conservative. The Qwen2.5-7B LoRA path runs on the private
 | Public split | current: train 282 / dev 207 / test 207; historical: train 93 / dev 69 / test 69 |
 | Base model | Qwen/Qwen2.5-7B-Instruct |
 | Adapter state | step-matched Control / Treatment private A100 adapters observed, not released |
-| Latest evidence | Contract V2 projection blocked evidence |
+| Latest evidence | Step-matched projection input recovery |
 | Optimizer-step budget | Control and Treatment both use 3132 optimizer steps |
 | Strict exact match | Control dev 0.8357 / test 0.7778; Treatment dev 0.8357 / test 0.7923 |
 | Executable pass | Control dev 0.8551 / test 0.8213; Treatment dev 0.8647 / test 0.8164 |
-| Projection decision | `PROJECTION_BLOCKED_OR_INVALID` |
-| Interpretation | mixed / inconclusive source ablation; projection metrics unavailable because current raw predictions/gold contracts are missing |
-| Next bounded action | recover or commit public-safe current step-matched raw prediction/gold artifacts, then rerun the same projection evaluation |
+| Projection decision | previous projection remains `PROJECTION_BLOCKED_OR_INVALID`; recovered inputs are `RECOVERED_FROM_EXISTING_ARTIFACTS` |
+| Interpretation | mixed / inconclusive source ablation; raw projection inputs are now recovered, but Contract V2 projection metrics have not been rerun |
+| Next bounded action | rerun the same bounded projection evaluation with recovered step-matched inputs |
 
 ## Positioning
 
@@ -155,7 +155,8 @@ Prediction-only private runs should write sanitized public-sample outputs and me
 
 | Evidence | What it proves | What it does not prove |
 | --- | --- | --- |
-| [`contract-v2-projection`](reports/public-sample/contract-v2-projection/decision.md) | Current blocked projection evidence: latest step-matched aggregate artifacts exist, but current raw Control/Treatment dev/test predictions and gold contracts are missing | V2 exact gain, executable gain, renderer coverage, failure-contribution percentages, Contract V2 implementation readiness |
+| [`step-matched-canonical-slot-ablation/raw-inputs`](reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/recovery-summary.md) | Current raw-input recovery: original step-matched Control/Treatment dev/test predictions and dev/test gold contracts are public-safe, boundary-verified, and reproduce committed aggregate metrics | Contract V2 projection gain, V2 renderer coverage, Contract V2 implementation readiness, retraining justification |
+| [`contract-v2-projection`](reports/public-sample/contract-v2-projection/decision.md) | Prior blocked projection evidence: latest step-matched aggregate artifacts existed, but current raw Control/Treatment dev/test predictions and gold contracts were not yet committed | V2 exact gain, executable gain, renderer coverage, failure-contribution percentages, Contract V2 implementation readiness |
 | [`step-matched-canonical-slot-ablation`](reports/public-sample/step-matched-canonical-slot-ablation/decision.md) | Current step-matched Control / Treatment SFT ablation using the same 3132 optimizer-step budget; mixed / inconclusive result with no stable broad canonical-slot benefit | DPO justification, more small-candidate-loop approval, held-out recovery, model recovery, checkpoint release, production readiness |
 | [`a100-formal-public-heldout-prediction`](reports/public-sample/a100-formal-public-heldout-prediction/report.md) | Historical formal public manifest prediction-only dev/test evidence: JSON validity 1.0000, strict exact dev 0.3043 / test 0.2899 | Current snapshot, held-out recovery, model recovery, checkpoint release, production readiness |
 | [`a100-merged-slot-value-adapter-restore`](reports/public-sample/a100-merged-slot-value-adapter-restore/report.md) | The private 7B adapter prerequisite was available/regenerated on A100 | Model recovery, checkpoint release, public adapter availability |
@@ -173,7 +174,7 @@ The latest step-matched ablation therefore reads as:
 - Control / Treatment used the same 3132 optimizer-step budget;
 - dev strict exact did not move, test strict exact improved by 0.0145, but test executable pass declined by 0.0048 and strict slot F1 declined by 0.0032;
 - the result is mixed / inconclusive and does not prove stable, general canonical-slot-data benefit;
-- the attempted projection could not answer the architectural question because the current raw step-matched prediction and gold contracts are not committed.
+- the prior attempted projection could not answer the architectural question because the current raw step-matched prediction and gold contracts were not committed; the new raw-input recovery fixes that input gap but has not rerun projection metrics.
 
 ## Normalized Command Target Policy
 
@@ -181,11 +182,11 @@ The latest step-matched ablation therefore reads as:
 
 ## Recommended Next Stage
 
-The next useful action is not another broad rerun, small canonical-candidate loop, DPO, immediate retraining, or Contract V2 implementation. The blocked projection evidence first calls for raw-artifact recovery:
+The next useful action is not another broad rerun, small canonical-candidate loop, DPO, immediate retraining, or Contract V2 implementation. Raw-artifact recovery is now complete under [`raw-inputs`](reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/recovery-summary.md), so the next bounded stage is projection rerun only:
 
-1. recover or commit public-safe current step-matched Control/Treatment dev/test raw prediction contracts;
-2. recover or commit the aligned current dev/test gold contract JSONL files;
-3. rerun the same `design-and-evaluate-contract-v2-projection` evaluation without using older non-step-matched predictions;
+1. use the recovered public-safe current step-matched Control/Treatment dev/test prediction contracts;
+2. use the aligned current dev/test gold contract JSONL files;
+3. rerun the same bounded projection evaluation without using older non-step-matched predictions;
 4. only then decide whether Contract V2 implementation is justified or whether the slot bottleneck persists.
 
 ## Validation

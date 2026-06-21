@@ -1,0 +1,70 @@
+{
+  "adapter_evidence": {
+    "control": {
+      "adapter_release_status": "not_released",
+      "arm": "control",
+      "base_model": "Qwen/Qwen2.5-7B-Instruct",
+      "effective_batch_size": 1,
+      "observed_optimizer_steps": 3132,
+      "target_tokens_seen_status": "estimated_from_label_tokens_and_step_budget",
+      "training_manifest_id": "public-sample-20260617T152259Z",
+      "training_rows_used": 261,
+      "training_status": "training_completed"
+    },
+    "treatment": {
+      "adapter_release_status": "not_released",
+      "arm": "treatment",
+      "base_model": "Qwen/Qwen2.5-7B-Instruct",
+      "effective_batch_size": 1,
+      "observed_optimizer_steps": 3132,
+      "target_tokens_seen_status": "estimated_from_label_tokens_and_step_budget",
+      "training_manifest_id": "public-sample-20260619T090925Z",
+      "training_rows_used": 282,
+      "training_status": "training_completed"
+    }
+  },
+  "blocking_reasons": [],
+  "change_id": "recover-step-matched-projection-inputs",
+  "comparison_allowed": true,
+  "config_match": true,
+  "control_adapter_verified": true,
+  "control_gold_ids_match": true,
+  "control_treatment_ids_match": true,
+  "dev_gold_hash_match": true,
+  "evaluator_match": true,
+  "input_hash_match": true,
+  "prompt_match": true,
+  "rejected_substitutes": [
+    "aggregate_metrics",
+    "paired_row_summary",
+    "family_level_delta",
+    "bootstrap_output",
+    "old_canonical_slot_paired_sft_ablation_predictions",
+    "inferred_or_repaired_predictions"
+  ],
+  "splits": {
+    "dev": {
+      "blocking_reasons": [],
+      "expected_gold_hash": "6086ab1aacafec12c1219e3e6353beb93caecc22dab22a2e283f992b710a8d5b",
+      "gold_hash": "6086ab1aacafec12c1219e3e6353beb93caecc22dab22a2e283f992b710a8d5b",
+      "gold_hash_match": true,
+      "heldout_boundary_equal_by_git_refs": true,
+      "input_hash": "5ce0bdacab45c743fa21a071f1a70aa910e7f993309daec067ecee82e0a8e678",
+      "row_count": 207,
+      "sample_id_hash": "053b9242e4129b73d3b710955848a4687ca9b8bc56168c2f6ba4e4b66167294f"
+    },
+    "test": {
+      "blocking_reasons": [],
+      "expected_gold_hash": "593f7d167e5698ee3687c2177bba7731cf91740f2d623b7c8966b4063855bc2c",
+      "gold_hash": "593f7d167e5698ee3687c2177bba7731cf91740f2d623b7c8966b4063855bc2c",
+      "gold_hash_match": true,
+      "heldout_boundary_equal_by_git_refs": true,
+      "input_hash": "084643e77bd6fa8cfb312bccba73f8bfc8aaa107a951d9dce3b755dc8b5d55d5",
+      "row_count": 207,
+      "sample_id_hash": "f66e9a9de8f86e54d227ecc7e1d5288d0387764d26facc757dd0c1625176ccc9"
+    }
+  },
+  "test_gold_hash_match": true,
+  "treatment_adapter_verified": true,
+  "treatment_gold_ids_match": true
+}

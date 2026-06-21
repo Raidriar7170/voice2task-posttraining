@@ -1,0 +1,14 @@
+{
+  "findings": [],
+  "generated_at": "2026-06-21T03:59:09.315051+00:00",
+  "max_public_jsonl_rows": 5000,
+  "ok": true,
+  "scanned_paths": [
+    "README.md",
+    "README_en.md",
+    "CONTEXT.md",
+    "openspec/changes/recover-step-matched-projection-inputs",
+    "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs",
+    "docs/human-briefs/2026-06-21-recover-step-matched-projection-inputs.html"
+  ]
+}
