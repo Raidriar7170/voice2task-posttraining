@@ -64,6 +64,19 @@
       "superseded_by": null
     },
     {
+      "id": "copy-backed-slot-verification-slice",
+      "status": "CURRENT",
+      "phase": "implement-copy-backed-slot-verification-slice",
+      "path": "reports/public-sample/copy-backed-slot-verification-slice/summary.json",
+      "manifest_id": "public-sample-20260619T090925Z",
+      "model_run_id": "step-matched-canonical-slot-ablation-20260620T000000Z",
+      "boundary": "Offline sidecar-only verifier over recovered step-matched contracts; enabled task-scoped query/field/target only; action disabled.",
+      "summary": "Decision COPY_SLICE_READY_FOR_SHADOW_INTEGRATION; gold unique verified span rate 86.38%; Control/Treatment source-verified prediction rate over eligible events 87.44%; provenance false accepts 0; silent fallbacks 0; V1 evaluator metric delta 0.",
+      "conclusion": "Source provenance evidence only; next recommended bounded change is integrate-copy-backed-slot-verification-shadow-mode; no training, prediction rerun, schema/runtime migration, evaluator relaxation, action enablement, or model improvement claim.",
+      "current_claim_allowed": true,
+      "superseded_by": null
+    },
+    {
       "id": "contract-v2-projection-rerun",
       "status": "CURRENT",
       "phase": "rerun-contract-v2-projection-with-recovered-inputs",

@@ -1,0 +1,227 @@
+{
+  "action_analysis": {
+    "enabled": false,
+    "exclusion_reason": "Action semantics are tied to blocked/clarify/safety contexts and are analysis-only in this slice.",
+    "gold_event_count": 57,
+    "out_of_scope_prediction_count": 114,
+    "prediction_event_count": 114,
+    "source_verified_prediction_count": 0,
+    "verification_enabled": false
+  },
+  "cannot_claim": [
+    "source-backed provenance is task correctness",
+    "slot accuracy improved",
+    "executable pass improved",
+    "model quality improved",
+    "training target changed",
+    "BrowserTaskContract V1 migrated",
+    "ContractCoreV2 changed",
+    "runtime or shadow integration exists",
+    "action verification is enabled",
+    "production or safety readiness",
+    "held-out recovery",
+    "live browser improvement"
+  ],
+  "change_id": "implement-copy-backed-slot-verification-slice",
+  "claims": {
+    "action_enabled": false,
+    "adapter_or_checkpoint_release": false,
+    "contract_core_v2_changed": false,
+    "data_mutation_performed": false,
+    "evaluator_relaxation_performed": false,
+    "executable_quality_improvement_claim": false,
+    "model_improvement_claim": false,
+    "prediction_rerun_performed": false,
+    "production_readiness_claim": false,
+    "runtime_integration_performed": false,
+    "schema_migration_performed": false,
+    "slot_performance_improvement_claim": false,
+    "training_performed": false
+  },
+  "closeout_answers": {
+    "control_treatment_source_verified_prediction_rate": 0.8744186046511628,
+    "copy_strategy_candidate_coverage": 0.5732484076433121,
+    "current_cannot_claim": [
+      "source-backed provenance is task correctness",
+      "slot accuracy improved",
+      "executable pass improved",
+      "model quality improved",
+      "training target changed",
+      "BrowserTaskContract V1 migrated",
+      "ContractCoreV2 changed",
+      "runtime or shadow integration exists",
+      "action verification is enabled",
+      "production or safety readiness",
+      "held-out recovery",
+      "live browser improvement"
+    ],
+    "duplicate_ambiguity_rate": 0.0,
+    "enabled_task_scoped_triples": [
+      "extract:extract_page:target",
+      "form_fill:fill_form:field",
+      "search:search_web:query"
+    ],
+    "final_decision_label": "COPY_SLICE_READY_FOR_SHADOW_INTEGRATION",
+    "gold_unique_exact_span_rate": 0.863849765258216,
+    "gold_unique_normalized_span_rate": 0.0,
+    "provenance_false_accept_count_is_zero": true,
+    "silent_fallback_count_is_zero": true,
+    "source_verified_and_gold_correct_rate": 0.9228723404255319,
+    "source_verified_but_gold_mismatch_rate": 0.07712765957446809,
+    "span_not_found_rate": 0.13615023474178403,
+    "strategy_assignment_rate": 1.0,
+    "unique_next_change": "integrate-copy-backed-slot-verification-shadow-mode",
+    "v1_evaluator_zero_delta": true,
+    "why_action_not_enabled": "Action semantics are tied to blocked/clarify/safety contexts and are analysis-only in this slice."
+  },
+  "decision_label": "COPY_SLICE_READY_FOR_SHADOW_INTEGRATION",
+  "deterministic_rerun_rate": 1.0,
+  "enabled_scope": {
+    "action_enabled": false,
+    "policy_version": "copy-backed-slot-verification-slice-v1",
+    "slot_paths": [
+      "field",
+      "query",
+      "target"
+    ],
+    "task_scoped_triples": [
+      "extract:extract_page:target",
+      "form_fill:fill_form:field",
+      "search:search_web:query"
+    ]
+  },
+  "evidence_kind": "offline_copy_backed_slot_verification_slice",
+  "gates": {
+    "action_enabled": false,
+    "deterministic_rerun_rate": 1.0,
+    "enabled_task_scoped_triples": [
+      "extract:extract_page:target",
+      "form_fill:fill_form:field",
+      "search:search_web:query"
+    ],
+    "gold_unique_verified_span_rate_at_or_above_threshold": true,
+    "leak_scan_clean": true,
+    "provenance_false_accept_count": 0,
+    "silent_fallback_count": 0,
+    "source_span_roundtrip_pass_rate": 1.0,
+    "v1_evaluator_metric_delta_zero": true
+  },
+  "generated_at": "2026-06-22",
+  "gold_verification": {
+    "duplicate_span_ambiguity_count": 0,
+    "duplicate_span_ambiguity_rate": 0.0,
+    "eligible_copy_event_count": 213,
+    "fail_closed_count": 29,
+    "fail_closed_rate": 0.13615023474178403,
+    "invalid_input_count": 0,
+    "out_of_scope_count": 0,
+    "span_not_found_count": 29,
+    "span_not_found_rate": 0.13615023474178403,
+    "status_counts": {
+      "NOT_FOUND": 29,
+      "VERIFIED_EXACT_UNIQUE": 184
+    },
+    "unique_exact_span_count": 184,
+    "unique_exact_span_rate": 0.863849765258216,
+    "unique_normalized_span_count": 0,
+    "unique_normalized_span_rate": 0.0,
+    "unique_verified_span_count": 184,
+    "unique_verified_span_rate": 0.863849765258216,
+    "unsupported_value_type_count": 0
+  },
+  "historical_design_metrics": {
+    "copy_strategy_candidate_count": 270,
+    "copy_strategy_candidate_coverage": 0.5732484076433121,
+    "renamed_from": {
+      "copy_strategy_candidate_coverage": "copy_backed_coverage/copy_backed_rate",
+      "strategy_assignment_rate": "overall_representation_coverage"
+    },
+    "strategy_assigned_event_count": 471,
+    "strategy_assignment_rate": 1.0
+  },
+  "input_boundary": {
+    "approved_inputs": [
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs",
+      "reports/public-sample/hybrid-slot-representation-v1",
+      "reports/public-sample/slot-error-mechanism-analysis",
+      "reports/public-sample/internal-contract-v2-core/summary.json",
+      "data/public-samples/manifest_public_sample.json"
+    ],
+    "blocking_reasons": [],
+    "change_id": "implement-copy-backed-slot-verification-slice",
+    "decision_label": "COPY_SLICE_INPUT_BOUNDARY_PASSED",
+    "external_schema": "BrowserTaskContract V1",
+    "formal_manifest_id": "public-sample-20260619T090925Z",
+    "hybrid_design_decision_label": "HYBRID_DESIGN_READY_COPY_SLICE_FIRST",
+    "metric_reproduction_status": "reproduced",
+    "raw_file_hashes": {
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/artifact-manifest.json": "531c58434f2e7896a3db3d7a2455a642112e0090076ff241000a7dfe0adcf2d3",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/boundary-verification.json": "1c769cc80530c5d8107cd53094bd1a0f10bc45a76aa3ee6b5b51b69e32b67b26",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/control/dev_predictions.jsonl": "a379d4f60878193cd19e10d42a934be0ef65a8eab6a1cc70ada0299ef1835ced",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/control/test_predictions.jsonl": "8fa809c505006845a08d2af0de5968d294a520ec35c51aec801f55e945efd080",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/gold/dev_gold.jsonl": "60909be7ce43b8682082355550efe3864fe600c458f540ee2c475a3fc602b085",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/gold/test_gold.jsonl": "7b97f67ec5b0ef19c652d3d3edb7ada9296c88fe1e67f3b400ca84d2c12fe5f2",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/metric-reproduction.json": "6243ce82d295504c643a50d7b435f2553a69d27a62f8fc525928b778a597539b",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/treatment/dev_predictions.jsonl": "972f6dcea10046b6bf0eedf1286588955c2c1942344f3a32fcb72711a95289cf",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/treatment/test_predictions.jsonl": "9e93e8f53860f8018c28fdc709571983a41832411a240374e7d1f5faee18e94d"
+    },
+    "raw_inputs_dir": "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs",
+    "slot_analysis_decision_label": "MIXED_SLOT_REPRESENTATION_REQUIRED",
+    "training_target_changed": false
+  },
+  "prediction_verification": {
+    "duplicate_span_ambiguity_count": 0,
+    "duplicate_span_ambiguity_rate": 0.0,
+    "eligible_prediction_event_count": 430,
+    "fail_closed_count": 566,
+    "fail_closed_rate": 0.6008492569002123,
+    "invalid_input_count": 0,
+    "out_of_scope_count": 512,
+    "prediction_slot_event_count": 942,
+    "source_verified_and_gold_correct_count": 347,
+    "source_verified_and_gold_correct_rate": 0.9228723404255319,
+    "source_verified_gold_mismatch_count": 29,
+    "source_verified_gold_mismatch_rate": 0.07712765957446809,
+    "source_verified_prediction_count": 376,
+    "source_verified_prediction_rate": 0.8744186046511628,
+    "span_not_found_count": 54,
+    "span_not_found_rate": 0.05732484076433121,
+    "status_counts": {
+      "NOT_FOUND": 54,
+      "OUT_OF_SCOPE": 512,
+      "VERIFIED_EXACT_UNIQUE": 376
+    },
+    "unique_exact_span_count": 376,
+    "unique_exact_span_rate": 0.3991507430997877,
+    "unique_normalized_span_count": 0,
+    "unique_normalized_span_rate": 0.0,
+    "unique_verified_span_count": 376,
+    "unique_verified_span_rate": 0.3991507430997877,
+    "unsupported_value_type_count": 0
+  },
+  "provenance_false_accept_count": 0,
+  "recommended_next_change": {
+    "change_id": "integrate-copy-backed-slot-verification-shadow-mode",
+    "scope": "Integrate the verifier in shadow mode only, with sidecar comparison and no runtime enforcement unless separately approved.",
+    "why_next": "The offline slice proves deterministic source-span provenance for enabled query/field/target scopes without mutating V1 predictions or evaluator behavior."
+  },
+  "silent_fallback_count": 0,
+  "source_span_roundtrip": {
+    "roundtrip_pass_count": 560,
+    "roundtrip_pass_rate": 1.0,
+    "verified_span_count": 560
+  },
+  "v1_evaluator_metric_delta": {
+    "basis": "sidecar_only_no_prediction_gold_schema_or_evaluator_mutation",
+    "metric_deltas": {
+      "exact_match": 0.0,
+      "executable_pass_rate": 0.0,
+      "route_accuracy": 0.0,
+      "slot_accuracy": 0.0,
+      "task_type_accuracy": 0.0
+    },
+    "metric_reproduction_status": "reproduced",
+    "raw_input_hashes_preserved": true,
+    "zero_delta": true
+  }
+}

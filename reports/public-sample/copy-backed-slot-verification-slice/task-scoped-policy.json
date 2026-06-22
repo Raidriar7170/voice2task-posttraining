@@ -1,0 +1,130 @@
+{
+  "action_policy": {
+    "enabled": false,
+    "reason": "Action remains disabled because its meaning depends on blocked/clarify/safety semantics; this phase records analysis only."
+  },
+  "change_id": "implement-copy-backed-slot-verification-slice",
+  "enabled_triples": [
+    "extract:extract_page:target",
+    "form_fill:fill_form:field",
+    "search:search_web:query"
+  ],
+  "historical_design_metrics": {
+    "copy_strategy_candidate_count": 270,
+    "copy_strategy_candidate_coverage": 0.5732484076433121,
+    "renamed_from": {
+      "copy_strategy_candidate_coverage": "copy_backed_coverage/copy_backed_rate",
+      "strategy_assignment_rate": "overall_representation_coverage"
+    },
+    "strategy_assigned_event_count": 471,
+    "strategy_assignment_rate": 1.0
+  },
+  "policy_rows": [
+    {
+      "confidence_level": "HIGH",
+      "duplicate_span_ambiguity_count": 0,
+      "enabled": false,
+      "evidence_reference": "reports/public-sample/slot-error-mechanism-analysis/slot-profile.json#action",
+      "example_sample_id": "family-blocked_payment-dev-1",
+      "exclusion_reason": "slot_path_not_enabled_in_this_slice; action_semantics_depend_on_blocked_clarify_safety_contexts",
+      "fallback_behavior": "fail_closed_or_unresolved_when_span_not_verified",
+      "gold_unique_exact_span_count": 46,
+      "gold_unique_normalized_span_count": 0,
+      "gold_unique_verified_span_count": 46,
+      "gold_unique_verified_span_rate": 0.8070175438596491,
+      "policy_version": "copy-backed-slot-verification-slice-v1",
+      "representation_strategy": "copy",
+      "route": "deny",
+      "sample_count": 57,
+      "scope_key": "blocked:deny:action",
+      "slot_path": "action",
+      "span_not_found_count": 11,
+      "task_type": "blocked",
+      "unsupported_value_type_count": 0,
+      "verification_enabled": false
+    },
+    {
+      "confidence_level": "MEDIUM",
+      "duplicate_span_ambiguity_count": 0,
+      "enabled": true,
+      "evidence_reference": "reports/public-sample/slot-error-mechanism-analysis/slot-profile.json#target",
+      "example_sample_id": "family-extract-dev-1",
+      "exclusion_reason": null,
+      "fallback_behavior": "fail_closed_or_unresolved_when_span_not_verified",
+      "gold_unique_exact_span_count": 59,
+      "gold_unique_normalized_span_count": 0,
+      "gold_unique_verified_span_count": 59,
+      "gold_unique_verified_span_rate": 0.855072463768116,
+      "policy_version": "copy-backed-slot-verification-slice-v1",
+      "representation_strategy": "copy",
+      "route": "extract_page",
+      "sample_count": 69,
+      "scope_key": "extract:extract_page:target",
+      "slot_path": "target",
+      "span_not_found_count": 10,
+      "task_type": "extract",
+      "unsupported_value_type_count": 0,
+      "verification_enabled": true
+    },
+    {
+      "confidence_level": "HIGH",
+      "duplicate_span_ambiguity_count": 0,
+      "enabled": true,
+      "evidence_reference": "reports/public-sample/slot-error-mechanism-analysis/slot-profile.json#field",
+      "example_sample_id": "family-confirmation-dev-1",
+      "exclusion_reason": null,
+      "fallback_behavior": "fail_closed_or_unresolved_when_span_not_verified",
+      "gold_unique_exact_span_count": 78,
+      "gold_unique_normalized_span_count": 0,
+      "gold_unique_verified_span_count": 78,
+      "gold_unique_verified_span_rate": 0.896551724137931,
+      "policy_version": "copy-backed-slot-verification-slice-v1",
+      "representation_strategy": "copy",
+      "route": "fill_form",
+      "sample_count": 87,
+      "scope_key": "form_fill:fill_form:field",
+      "slot_path": "field",
+      "span_not_found_count": 9,
+      "task_type": "form_fill",
+      "unsupported_value_type_count": 0,
+      "verification_enabled": true
+    },
+    {
+      "confidence_level": "HIGH",
+      "duplicate_span_ambiguity_count": 0,
+      "enabled": true,
+      "evidence_reference": "reports/public-sample/slot-error-mechanism-analysis/slot-profile.json#query",
+      "example_sample_id": "family-search-dev-1",
+      "exclusion_reason": null,
+      "fallback_behavior": "fail_closed_or_unresolved_when_span_not_verified",
+      "gold_unique_exact_span_count": 47,
+      "gold_unique_normalized_span_count": 0,
+      "gold_unique_verified_span_count": 47,
+      "gold_unique_verified_span_rate": 0.8245614035087719,
+      "policy_version": "copy-backed-slot-verification-slice-v1",
+      "representation_strategy": "copy",
+      "route": "search_web",
+      "sample_count": 57,
+      "scope_key": "search:search_web:query",
+      "slot_path": "query",
+      "span_not_found_count": 10,
+      "task_type": "search",
+      "unsupported_value_type_count": 0,
+      "verification_enabled": true
+    }
+  ],
+  "policy_version": "copy-backed-slot-verification-slice-v1",
+  "thresholds": {
+    "allowed_confidence_levels": [
+      "HIGH",
+      "MEDIUM"
+    ],
+    "enabled_slot_paths": [
+      "field",
+      "query",
+      "target"
+    ],
+    "min_copyable_rate": 0.7,
+    "min_sample_count": 10
+  }
+}

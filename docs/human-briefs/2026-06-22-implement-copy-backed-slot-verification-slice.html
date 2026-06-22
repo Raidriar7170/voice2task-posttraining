@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Copy-backed Slot Verification Slice Human Brief</title>
+  <style>
+    :root { color-scheme: light; --ink:#18212f; --muted:#5f6b7a; --line:#d9e0e8; --bg:#f7f9fb; --panel:#ffffff; --accent:#0b6e69; --warn:#9a5b00; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--ink); background: var(--bg); }
+    main { max-width: 1040px; margin: 0 auto; padding: 32px 20px 48px; }
+    h1 { margin: 0 0 12px; font-size: 28px; letter-spacing: 0; }
+    h2 { margin: 28px 0 12px; font-size: 18px; }
+    p, li { line-height: 1.62; }
+    code { background: #edf2f7; border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; font-size: 0.92em; }
+    .lead { font-size: 18px; line-height: 1.65; }
+    .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 18px 0; }
+    .metric { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
+    .metric strong { display: block; font-size: 22px; margin-bottom: 4px; }
+    .metric span { color: var(--muted); font-size: 13px; }
+    .status { display: inline-block; border: 1px solid #9ec7c3; color: var(--accent); border-radius: 999px; padding: 4px 10px; font-weight: 650; font-size: 13px; }
+    .note { border-left: 4px solid var(--warn); background: #fff8e8; padding: 12px 14px; }
+    ul { padding-left: 20px; }
+    a { color: var(--accent); }
+    @media (max-width: 760px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  </style>
+</head>
+<body>
+  <main>
+    <span class="status">implementation phase</span>
+    <h1>Copy-backed Slot Verification Slice</h1>
+    <p class="lead">一句话结论：本阶段完成离线、系统所有、fail-closed 的 source-span verification 垂直切片；最终 decision 为 <code>COPY_SLICE_READY_FOR_SHADOW_INTEGRATION</code>，唯一推荐下一步是 <code>integrate-copy-backed-slot-verification-shadow-mode</code>。</p>
+
+    <div class="grid">
+      <div class="metric"><strong>3</strong><span>enabled task-scoped triples</span></div>
+      <div class="metric"><strong>86.38%</strong><span>gold unique verified span rate</span></div>
+      <div class="metric"><strong>87.44%</strong><span>eligible prediction source-verified rate</span></div>
+      <div class="metric"><strong>0</strong><span>false accepts / silent fallbacks</span></div>
+    </div>
+
+    <h2>当前状态</h2>
+    <p>本阶段已生成正式报告和 sidecar。OpenSpec change 将归档并同步长效 spec；权威证据仍是 <code>reports/public-sample/copy-backed-slot-verification-slice/summary.json</code>、<code>verification-audit.json</code>、<code>task-scoped-policy.json</code> 与 OpenSpec archive。</p>
+
+    <h2>本阶段改变了什么</h2>
+    <ul>
+      <li>新增 verifier 模块：<code>src/voice2task/copy_backed_slot_verification.py</code>，支持 exact unique 和 bounded normalized unique source span。</li>
+      <li>新增只读报告脚本：<code>scripts/run_copy_backed_slot_verification_slice.py</code>。</li>
+      <li>启用的 task-scoped triples 只有 <code>extract:extract_page:target</code>、<code>form_fill:fill_form:field</code>、<code>search:search_web:query</code>。</li>
+      <li><code>action</code> 保持 disabled / analysis-only，不产生 verified provenance，不作为 acceptance gate。</li>
+      <li>生成 <code>verification-sidecars.jsonl</code>；不写回预测、不改 gold、不改 V1 evaluator。</li>
+    </ul>
+
+    <h2>关键文件</h2>
+    <ul>
+      <li><code>docs/copy-backed-slot-verification.md</code></li>
+      <li><code>reports/public-sample/copy-backed-slot-verification-slice/summary.json</code></li>
+      <li><code>reports/public-sample/copy-backed-slot-verification-slice/task-scoped-policy.json</code></li>
+      <li><code>reports/public-sample/copy-backed-slot-verification-slice/verification-audit.json</code></li>
+      <li><code>reports/public-sample/copy-backed-slot-verification-slice/verification-sidecars.jsonl</code></li>
+      <li><code>tests/test_copy_backed_slot_verification.py</code></li>
+    </ul>
+
+    <h2>核心指标</h2>
+    <ul>
+      <li><code>strategy_assignment_rate</code>：1.000000；这是从 historic <code>overall_representation_coverage</code> 重命名而来，不是 verified span rate。</li>
+      <li><code>copy_strategy_candidate_coverage</code>：0.573248；这是从 historic copy-backed strategy candidate coverage 重命名而来。</li>
+      <li>Gold unique exact span rate：0.863850；normalized unique span rate：0.000000。</li>
+      <li>Duplicate ambiguity rate：0.000000；span not-found rate：0.136150。</li>
+      <li>Source-verified-and-gold-correct rate：0.922872；source-verified-but-gold-mismatch rate：0.077128。</li>
+      <li>V1 evaluator metric delta：0；source span roundtrip pass rate：1.000000。</li>
+    </ul>
+
+    <h2>验证结果</h2>
+    <ul>
+      <li><code>PYTHONPATH=src pytest -q tests/test_copy_backed_slot_verification.py</code>：5 passed。</li>
+      <li>完整验证将在归档前重新运行：<code>PYTHONPATH=src pytest -q</code>、<code>ruff</code>、<code>openspec validate --all --strict</code>、truth-surface check、<code>git diff --check</code>、public leak scan。</li>
+    </ul>
+
+    <h2>剩余风险</h2>
+    <p class="note">source-backed provenance 不是 correctness。当前不能宣称 slot accuracy 提升、executable pass 提升、模型质量提升、runtime/shadow integration 已存在、action verification 已启用、production readiness、safety readiness、held-out recovery 或 live-browser improvement。</p>
+
+    <h2>推荐下一步</h2>
+    <p>停止在本阶段。唯一推荐 next change：<code>integrate-copy-backed-slot-verification-shadow-mode</code>。下一阶段也应保持 bounded：先 shadow sidecar，不做 runtime enforcement、action enablement、训练、数据扩展、schema migration、ContractCoreV2 修改或 evaluator 修改。</p>
+  </main>
+</body>
+</html>

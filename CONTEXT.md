@@ -36,6 +36,8 @@ The internal-core recommendation `analyze-slot-error-mechanisms-and-design-slot-
 
 The follow-up `design-hybrid-slot-representation-v1` is now completed as design-only evidence under `reports/public-sample/hybrid-slot-representation-v1/summary.json`. Decision: `HYBRID_DESIGN_READY_COPY_SLICE_FIRST`. HybridSlotValue is proposed with model-authored `value` and system-derived `value_type`, `representation_kind`, `source_span`, `normalization_rule`, `verification_status`, `provenance`, and `fallback_behavior`. Source spans use Unicode character offsets with start inclusive and end exclusive. Feasibility coverage is 100.00%; copy-backed coverage is 57.32%; bounded structured coverage is 31.21%; unresolved coverage is 11.46%; current predictions are deterministically verifiable at 51.80% and fail-closed at 48.20%. This does not implement the hybrid representation, migrate V1 schema, change ContractCoreV2, change evaluators, rerun predictions, train, or claim model/executable improvement.
 
+The follow-up `implement-copy-backed-slot-verification-slice` is now completed as offline sidecar-only evidence under `reports/public-sample/copy-backed-slot-verification-slice/summary.json`. Decision: `COPY_SLICE_READY_FOR_SHADOW_INTEGRATION`. Enabled task-scoped triples are `extract:extract_page:target`, `form_fill:fill_form:field`, and `search:search_web:query`; `action` remains disabled and analysis-only. Gold unique verified span rate is 86.38%; Control/Treatment source-verified prediction rate over eligible events is 87.44%; source-verified-and-gold-correct rate is 92.29%; source-verified-but-gold-mismatch rate is 7.71%. Provenance false accepts, silent fallbacks, and V1 evaluator metric deltas are all 0. This does not change predictions, gold contracts, BrowserTaskContract V1, ContractCoreV2, evaluators, training targets, model weights, prompts, runtime behavior, or action semantics.
+
 ## 6. Current Claim Boundaries
 
 Current evidence cannot claim model improvement. It cannot claim executable quality improvement. It cannot claim production readiness. It cannot claim safety readiness. It cannot claim held-out recovery. It cannot claim live-browser benchmark gain. It cannot claim checkpoint release. It cannot claim adapter release. It cannot claim DPO justification. It cannot claim another canonical-candidate loop.
@@ -44,9 +46,9 @@ Do not merge metrics across manifests. Do not treat JSON validity, executable sm
 
 ## 7. Current Recommended Next Change
 
-The single recommended next technical change is `implement-copy-backed-slot-verification-slice`. It should be a bounded implementation slice unless explicitly expanded: implement verifier-owned source-span/provenance for high-copyability `query`, `field`, `target`, and `action` paths while BrowserTaskContract V1 remains the external schema.
+The single recommended next technical change is `integrate-copy-backed-slot-verification-shadow-mode`. It should be a bounded shadow-mode slice unless explicitly expanded: attach the verifier to eligible `query`, `field`, and `target` predictions as sidecar-only diagnostics, compare with existing reports, and keep BrowserTaskContract V1 as the external schema.
 
-Do not automatically implement the full hybrid system, train, expand data, build a challenge set, modify schema, modify ContractCoreV2, change evaluators, or claim model/executable improvement.
+Do not automatically implement runtime enforcement, action enablement, the full hybrid system, training, data expansion, a challenge set, schema changes, ContractCoreV2 changes, evaluator changes, prediction repair, or model/executable improvement claims.
 
 ## 8. Evidence Index Link
 

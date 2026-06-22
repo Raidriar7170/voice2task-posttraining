@@ -1,0 +1,259 @@
+{
+  "action_analysis": {
+    "enabled": false,
+    "exclusion_reason": "Action semantics are tied to blocked/clarify/safety contexts and are analysis-only in this slice.",
+    "gold_event_count": 57,
+    "out_of_scope_prediction_count": 114,
+    "prediction_event_count": 114,
+    "source_verified_prediction_count": 0,
+    "verification_enabled": false
+  },
+  "change_id": "implement-copy-backed-slot-verification-slice",
+  "generated_at": "2026-06-22",
+  "gold_verification": {
+    "duplicate_span_ambiguity_count": 0,
+    "duplicate_span_ambiguity_rate": 0.0,
+    "eligible_copy_event_count": 213,
+    "fail_closed_count": 29,
+    "fail_closed_rate": 0.13615023474178403,
+    "invalid_input_count": 0,
+    "out_of_scope_count": 0,
+    "span_not_found_count": 29,
+    "span_not_found_rate": 0.13615023474178403,
+    "status_counts": {
+      "NOT_FOUND": 29,
+      "VERIFIED_EXACT_UNIQUE": 184
+    },
+    "unique_exact_span_count": 184,
+    "unique_exact_span_rate": 0.863849765258216,
+    "unique_normalized_span_count": 0,
+    "unique_normalized_span_rate": 0.0,
+    "unique_verified_span_count": 184,
+    "unique_verified_span_rate": 0.863849765258216,
+    "unsupported_value_type_count": 0
+  },
+  "input_boundary": {
+    "approved_inputs": [
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs",
+      "reports/public-sample/hybrid-slot-representation-v1",
+      "reports/public-sample/slot-error-mechanism-analysis",
+      "reports/public-sample/internal-contract-v2-core/summary.json",
+      "data/public-samples/manifest_public_sample.json"
+    ],
+    "blocking_reasons": [],
+    "change_id": "implement-copy-backed-slot-verification-slice",
+    "decision_label": "COPY_SLICE_INPUT_BOUNDARY_PASSED",
+    "external_schema": "BrowserTaskContract V1",
+    "formal_manifest_id": "public-sample-20260619T090925Z",
+    "hybrid_design_decision_label": "HYBRID_DESIGN_READY_COPY_SLICE_FIRST",
+    "metric_reproduction_status": "reproduced",
+    "raw_file_hashes": {
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/artifact-manifest.json": "531c58434f2e7896a3db3d7a2455a642112e0090076ff241000a7dfe0adcf2d3",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/boundary-verification.json": "1c769cc80530c5d8107cd53094bd1a0f10bc45a76aa3ee6b5b51b69e32b67b26",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/control/dev_predictions.jsonl": "a379d4f60878193cd19e10d42a934be0ef65a8eab6a1cc70ada0299ef1835ced",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/control/test_predictions.jsonl": "8fa809c505006845a08d2af0de5968d294a520ec35c51aec801f55e945efd080",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/gold/dev_gold.jsonl": "60909be7ce43b8682082355550efe3864fe600c458f540ee2c475a3fc602b085",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/gold/test_gold.jsonl": "7b97f67ec5b0ef19c652d3d3edb7ada9296c88fe1e67f3b400ca84d2c12fe5f2",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/metric-reproduction.json": "6243ce82d295504c643a50d7b435f2553a69d27a62f8fc525928b778a597539b",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/treatment/dev_predictions.jsonl": "972f6dcea10046b6bf0eedf1286588955c2c1942344f3a32fcb72711a95289cf",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/treatment/test_predictions.jsonl": "9e93e8f53860f8018c28fdc709571983a41832411a240374e7d1f5faee18e94d"
+    },
+    "raw_inputs_dir": "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs",
+    "slot_analysis_decision_label": "MIXED_SLOT_REPRESENTATION_REQUIRED",
+    "training_target_changed": false
+  },
+  "policy": {
+    "action_policy": {
+      "enabled": false,
+      "reason": "Action remains disabled because its meaning depends on blocked/clarify/safety semantics; this phase records analysis only."
+    },
+    "change_id": "implement-copy-backed-slot-verification-slice",
+    "enabled_triples": [
+      "extract:extract_page:target",
+      "form_fill:fill_form:field",
+      "search:search_web:query"
+    ],
+    "historical_design_metrics": {
+      "copy_strategy_candidate_count": 270,
+      "copy_strategy_candidate_coverage": 0.5732484076433121,
+      "renamed_from": {
+        "copy_strategy_candidate_coverage": "copy_backed_coverage/copy_backed_rate",
+        "strategy_assignment_rate": "overall_representation_coverage"
+      },
+      "strategy_assigned_event_count": 471,
+      "strategy_assignment_rate": 1.0
+    },
+    "policy_rows": [
+      {
+        "confidence_level": "HIGH",
+        "duplicate_span_ambiguity_count": 0,
+        "enabled": false,
+        "evidence_reference": "reports/public-sample/slot-error-mechanism-analysis/slot-profile.json#action",
+        "example_sample_id": "family-blocked_payment-dev-1",
+        "exclusion_reason": "slot_path_not_enabled_in_this_slice; action_semantics_depend_on_blocked_clarify_safety_contexts",
+        "fallback_behavior": "fail_closed_or_unresolved_when_span_not_verified",
+        "gold_unique_exact_span_count": 46,
+        "gold_unique_normalized_span_count": 0,
+        "gold_unique_verified_span_count": 46,
+        "gold_unique_verified_span_rate": 0.8070175438596491,
+        "policy_version": "copy-backed-slot-verification-slice-v1",
+        "representation_strategy": "copy",
+        "route": "deny",
+        "sample_count": 57,
+        "scope_key": "blocked:deny:action",
+        "slot_path": "action",
+        "span_not_found_count": 11,
+        "task_type": "blocked",
+        "unsupported_value_type_count": 0,
+        "verification_enabled": false
+      },
+      {
+        "confidence_level": "MEDIUM",
+        "duplicate_span_ambiguity_count": 0,
+        "enabled": true,
+        "evidence_reference": "reports/public-sample/slot-error-mechanism-analysis/slot-profile.json#target",
+        "example_sample_id": "family-extract-dev-1",
+        "exclusion_reason": null,
+        "fallback_behavior": "fail_closed_or_unresolved_when_span_not_verified",
+        "gold_unique_exact_span_count": 59,
+        "gold_unique_normalized_span_count": 0,
+        "gold_unique_verified_span_count": 59,
+        "gold_unique_verified_span_rate": 0.855072463768116,
+        "policy_version": "copy-backed-slot-verification-slice-v1",
+        "representation_strategy": "copy",
+        "route": "extract_page",
+        "sample_count": 69,
+        "scope_key": "extract:extract_page:target",
+        "slot_path": "target",
+        "span_not_found_count": 10,
+        "task_type": "extract",
+        "unsupported_value_type_count": 0,
+        "verification_enabled": true
+      },
+      {
+        "confidence_level": "HIGH",
+        "duplicate_span_ambiguity_count": 0,
+        "enabled": true,
+        "evidence_reference": "reports/public-sample/slot-error-mechanism-analysis/slot-profile.json#field",
+        "example_sample_id": "family-confirmation-dev-1",
+        "exclusion_reason": null,
+        "fallback_behavior": "fail_closed_or_unresolved_when_span_not_verified",
+        "gold_unique_exact_span_count": 78,
+        "gold_unique_normalized_span_count": 0,
+        "gold_unique_verified_span_count": 78,
+        "gold_unique_verified_span_rate": 0.896551724137931,
+        "policy_version": "copy-backed-slot-verification-slice-v1",
+        "representation_strategy": "copy",
+        "route": "fill_form",
+        "sample_count": 87,
+        "scope_key": "form_fill:fill_form:field",
+        "slot_path": "field",
+        "span_not_found_count": 9,
+        "task_type": "form_fill",
+        "unsupported_value_type_count": 0,
+        "verification_enabled": true
+      },
+      {
+        "confidence_level": "HIGH",
+        "duplicate_span_ambiguity_count": 0,
+        "enabled": true,
+        "evidence_reference": "reports/public-sample/slot-error-mechanism-analysis/slot-profile.json#query",
+        "example_sample_id": "family-search-dev-1",
+        "exclusion_reason": null,
+        "fallback_behavior": "fail_closed_or_unresolved_when_span_not_verified",
+        "gold_unique_exact_span_count": 47,
+        "gold_unique_normalized_span_count": 0,
+        "gold_unique_verified_span_count": 47,
+        "gold_unique_verified_span_rate": 0.8245614035087719,
+        "policy_version": "copy-backed-slot-verification-slice-v1",
+        "representation_strategy": "copy",
+        "route": "search_web",
+        "sample_count": 57,
+        "scope_key": "search:search_web:query",
+        "slot_path": "query",
+        "span_not_found_count": 10,
+        "task_type": "search",
+        "unsupported_value_type_count": 0,
+        "verification_enabled": true
+      }
+    ],
+    "policy_version": "copy-backed-slot-verification-slice-v1",
+    "thresholds": {
+      "allowed_confidence_levels": [
+        "HIGH",
+        "MEDIUM"
+      ],
+      "enabled_slot_paths": [
+        "field",
+        "query",
+        "target"
+      ],
+      "min_copyable_rate": 0.7,
+      "min_sample_count": 10
+    }
+  },
+  "policy_status_counts": {
+    "extract:extract_page:target": {
+      "NOT_FOUND": 10,
+      "VERIFIED_EXACT_UNIQUE": 59
+    },
+    "form_fill:fill_form:field": {
+      "NOT_FOUND": 9,
+      "VERIFIED_EXACT_UNIQUE": 78
+    },
+    "search:search_web:query": {
+      "NOT_FOUND": 10,
+      "VERIFIED_EXACT_UNIQUE": 47
+    }
+  },
+  "prediction_status_by_arm": {
+    "control": {
+      "NOT_FOUND": 31,
+      "OUT_OF_SCOPE": 256,
+      "VERIFIED_EXACT_UNIQUE": 185
+    },
+    "treatment": {
+      "NOT_FOUND": 23,
+      "OUT_OF_SCOPE": 256,
+      "VERIFIED_EXACT_UNIQUE": 191
+    }
+  },
+  "prediction_verification": {
+    "duplicate_span_ambiguity_count": 0,
+    "duplicate_span_ambiguity_rate": 0.0,
+    "eligible_prediction_event_count": 430,
+    "fail_closed_count": 566,
+    "fail_closed_rate": 0.6008492569002123,
+    "invalid_input_count": 0,
+    "out_of_scope_count": 512,
+    "prediction_slot_event_count": 942,
+    "source_verified_and_gold_correct_count": 347,
+    "source_verified_and_gold_correct_rate": 0.9228723404255319,
+    "source_verified_gold_mismatch_count": 29,
+    "source_verified_gold_mismatch_rate": 0.07712765957446809,
+    "source_verified_prediction_count": 376,
+    "source_verified_prediction_rate": 0.8744186046511628,
+    "span_not_found_count": 54,
+    "span_not_found_rate": 0.05732484076433121,
+    "status_counts": {
+      "NOT_FOUND": 54,
+      "OUT_OF_SCOPE": 512,
+      "VERIFIED_EXACT_UNIQUE": 376
+    },
+    "unique_exact_span_count": 376,
+    "unique_exact_span_rate": 0.3991507430997877,
+    "unique_normalized_span_count": 0,
+    "unique_normalized_span_rate": 0.0,
+    "unique_verified_span_count": 376,
+    "unique_verified_span_rate": 0.3991507430997877,
+    "unsupported_value_type_count": 0
+  },
+  "provenance_false_accept_count": 0,
+  "sidecar_count": 942,
+  "silent_fallback_count": 0,
+  "source_span_roundtrip": {
+    "roundtrip_pass_count": 560,
+    "roundtrip_pass_rate": 1.0,
+    "verified_span_count": 560
+  }
+}
