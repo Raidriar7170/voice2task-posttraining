@@ -1,0 +1,255 @@
+{
+  "cannot_claim": [
+    "slot accuracy improved",
+    "executable pass improved",
+    "span extraction works in production",
+    "hybrid representation is implemented",
+    "new training target is active",
+    "V1 schema has migrated",
+    "production or safety readiness",
+    "held-out recovery",
+    "live browser improvement"
+  ],
+  "change_id": "design-hybrid-slot-representation-v1",
+  "claims": {
+    "adapter_or_checkpoint_release": false,
+    "contract_core_v2_changed": false,
+    "data_mutation_performed": false,
+    "evaluator_relaxation_performed": false,
+    "executable_quality_improvement_claim": false,
+    "model_improvement_claim": false,
+    "prediction_rerun_performed": false,
+    "production_readiness_claim": false,
+    "runtime_integration_performed": false,
+    "schema_migration_performed": false,
+    "slot_performance_improvement_claim": false,
+    "training_performed": false
+  },
+  "coverage": {
+    "bounded_structured_coverage": 147,
+    "bounded_structured_rate": 0.31210191082802546,
+    "copy_backed_coverage": 270,
+    "copy_backed_rate": 0.5732484076433121,
+    "copy_normalize_possible_count": 8,
+    "copy_normalize_possible_rate": 0.016985138004246284,
+    "enum_classification_coverage": 0,
+    "enum_classification_rate": 0.0,
+    "limited_free_generation_coverage": 0,
+    "limited_free_generation_rate": 0.0,
+    "overall_representation_coverage": 1.0,
+    "task_schema_constrained_coverage": 0,
+    "task_schema_constrained_rate": 0.0,
+    "unresolved_coverage": 54,
+    "unresolved_rate": 0.11464968152866242
+  },
+  "decision_label": "HYBRID_DESIGN_READY_COPY_SLICE_FIRST",
+  "evidence_kind": "design_only_hybrid_slot_representation_v1",
+  "fallback_next_change": {
+    "change_id": "implement-task-specific-slot-schema-validator",
+    "scope": "Low-risk validator-only slice for required/optional/forbidden slot keys after the copy verifier if copy ambiguity blocks implementation.",
+    "why_fallback": "Key-boundary errors are not the largest residual, but a validator can be implemented without changing model targets or strict historical evaluator semantics."
+  },
+  "hybrid_slot_value": {
+    "fields": [
+      {
+        "description": "V1-compatible slot value or bounded structured value authored by the model.",
+        "name": "value",
+        "owner": "model"
+      },
+      {
+        "description": "Coarse type derived from the value: text, number, boolean, object, list, null, or unknown.",
+        "name": "value_type",
+        "owner": "system"
+      },
+      {
+        "description": "Primary representation strategy selected from evidence and task scope.",
+        "name": "representation_kind",
+        "owner": "system"
+      },
+      {
+        "description": "Optional verifier-owned source slice containing start, end, text, and source_text_hash.",
+        "name": "source_span",
+        "owner": "system"
+      },
+      {
+        "description": "Optional allowlisted deterministic normalization rule applied after source back-slice validation.",
+        "name": "normalization_rule",
+        "owner": "system"
+      },
+      {
+        "description": "Verifier result: verified, unsupported, or unresolved.",
+        "name": "verification_status",
+        "owner": "system"
+      },
+      {
+        "description": "Verifier provenance: source_verified, deterministic_derived, schema_constrained, structured_generated, free_generated, or unknown.",
+        "name": "provenance",
+        "owner": "system"
+      },
+      {
+        "description": "Fail-closed outcome: emit_v1_value, fail_closed, clarify, diagnostic_only, or resolver_required.",
+        "name": "fallback_behavior",
+        "owner": "system"
+      }
+    ],
+    "name": "HybridSlotValue",
+    "provenance_values": [
+      "source_verified",
+      "deterministic_derived",
+      "schema_constrained",
+      "structured_generated",
+      "free_generated",
+      "unknown"
+    ],
+    "representation_kinds": [
+      "copy",
+      "copy_then_normalize",
+      "enum",
+      "task_schema_constrained",
+      "bounded_structured",
+      "limited_free_generation",
+      "unresolved"
+    ],
+    "source_span_contains": [
+      "start",
+      "end",
+      "text",
+      "source_text_hash"
+    ],
+    "status": "internal_design_only_not_implemented_schema",
+    "verification_statuses": [
+      "verified",
+      "unsupported",
+      "unresolved"
+    ]
+  },
+  "input_boundary": {
+    "blocking_reasons": [],
+    "change_id": "design-hybrid-slot-representation-v1",
+    "contract_core_v2_changed": false,
+    "contract_core_v2_scope": "internal_core_and_envelope_boundary_only",
+    "decision_label": "HYBRID_DESIGN_INPUT_BOUNDARY_PASSED",
+    "external_schema": "BrowserTaskContract V1",
+    "metric_reproduction_status": "reproduced",
+    "recovered_prediction_inputs_available": true,
+    "slot_analysis_decision_label": "MIXED_SLOT_REPRESENTATION_REQUIRED",
+    "source_boundary": {
+      "approved_raw_inputs": "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs",
+      "blocking_reasons": [],
+      "control_treatment_ids_match": true,
+      "decision_label": "SLOT_ANALYSIS_INPUT_BOUNDARY_PASSED",
+      "gold_ids_match": true,
+      "metric_reproduction_status": "reproduced",
+      "prediction_contract_used_for_analysis": true,
+      "projection_inputs_ready": true,
+      "raw_model_output_used_for_analysis": false,
+      "recovered_provenance_valid": true,
+      "recovery_method": "recovered_from_existing_artifacts",
+      "splits": {
+        "dev": {
+          "control_row_count": 207,
+          "row_count": 207,
+          "sample_ids_match": true,
+          "treatment_row_count": 207
+        },
+        "test": {
+          "control_row_count": 207,
+          "row_count": 207,
+          "sample_ids_match": true,
+          "treatment_row_count": 207
+        }
+      },
+      "superseded_adapter_outputs_used": false
+    },
+    "training_target_changed": false
+  },
+  "model_target_recommendation": {
+    "answer": "模型不需要直接输出 offsets；V1 推荐模型输出 value，由系统验证并附加 source span。",
+    "comparison": [
+      {
+        "chinese_asr_stability": "highest; value text survives minor transcript formatting changes better than offsets",
+        "current_7b_fit": "best fit because current model already emits V1 slot values",
+        "duplicate_text_risk": "system must fail closed or request disambiguation when multiple identical spans exist",
+        "json_complexity": "low",
+        "learning_difficulty": "lowest for current V1-style generative target",
+        "name": "model_outputs_value_system_verifies_span",
+        "option": "A",
+        "recommendation": "primary",
+        "v1_compatibility": "best; no target migration required",
+        "verifiability": "high when deterministic verifier can attach a unique span; ambiguous duplicates remain unresolved"
+      },
+      {
+        "chinese_asr_stability": "medium; snippets can drift with ASR punctuation or spacing",
+        "current_7b_fit": "usable only as a narrowed fallback",
+        "duplicate_text_risk": "higher than value-only unless candidate context is added",
+        "json_complexity": "medium",
+        "learning_difficulty": "medium",
+        "name": "model_outputs_candidate_source_snippet_system_resolves_offset",
+        "option": "B",
+        "recommendation": "fallback_for_approved_copy_heavy_slots",
+        "v1_compatibility": "requires additional internal candidate pointer metadata",
+        "verifiability": "medium; snippet remains untrusted until exact offset validation succeeds"
+      },
+      {
+        "chinese_asr_stability": "lowest; offsets are brittle under transcript edits",
+        "current_7b_fit": "poor without a new target and focused training",
+        "duplicate_text_risk": "low if offsets are correct, but correctness is hard to learn",
+        "json_complexity": "high",
+        "learning_difficulty": "highest for current 7B generative model",
+        "name": "model_outputs_start_end_offsets",
+        "option": "C",
+        "recommendation": "rejected_for_v1",
+        "v1_compatibility": "weak; requires target migration",
+        "verifiability": "high after output, but invalid offsets are common failure modes"
+      }
+    ],
+    "fallback": "model_outputs_candidate_source_snippet_system_resolves_offset",
+    "primary": "model_outputs_value_system_verifies_span",
+    "rejected": "model_outputs_start_end_offsets"
+  },
+  "prediction_verification": {
+    "currently_fail_closed_prediction_count_estimate": 454,
+    "currently_fail_closed_prediction_rate": 0.4819532908704883,
+    "currently_verifiable_prediction_count_estimate": 488,
+    "currently_verifiable_prediction_rate": 0.5180467091295117,
+    "partial_span_rate_from_slot_analysis": 0.1602972399150743,
+    "source_supported_rate_from_slot_analysis": 0.5180467091295117,
+    "unsupported_by_source_rate_from_slot_analysis": 0.321656050955414
+  },
+  "recommended_next_change": {
+    "acceptance_criteria": [
+      "No training, data mutation, evaluator relaxation, or V1 schema migration.",
+      "Source spans use half-open Unicode offsets and exact back-slice validation.",
+      "Provenance and verification_status are system-derived only.",
+      "Unsupported or ambiguous spans fail closed or become unresolved."
+    ],
+    "change_id": "implement-copy-backed-slot-verification-slice",
+    "scope": "Implement only the verifier-owned copy-backed span/provenance slice for high-copyability slot paths while keeping BrowserTaskContract V1 external serialization unchanged.",
+    "target_slot_paths": [
+      "query",
+      "field",
+      "target",
+      "action"
+    ],
+    "why_first": [
+      "These paths have high observed copyability and concrete partial/copy residuals.",
+      "The slice can be evaluated offline on current prediction artifacts without training.",
+      "It adds fail-closed verifier-owned metadata without changing the external V1 schema."
+    ]
+  },
+  "source_span_semantics": {
+    "allows_discontiguous_span": false,
+    "allows_similarity_only": false,
+    "end": "exclusive",
+    "offset_unit": "unicode_character",
+    "requires_exact_back_slice": true,
+    "requires_source_text_hash": true,
+    "source_basis": "original_input_text_or_fixed_sanitized_transcript",
+    "start": "inclusive"
+  },
+  "why_not_full_hybrid_system_now": [
+    "The design mixes copy verification, key validation, URL resolver policy, and bounded generation; implementing all at once would change multiple contracts at once.",
+    "URL and ambiguity/reason substructures still need narrower verifier and resolver evidence.",
+    "A copy-backed slice gives the clearest offline fail-closed evaluation without training or external schema migration."
+  ]
+}

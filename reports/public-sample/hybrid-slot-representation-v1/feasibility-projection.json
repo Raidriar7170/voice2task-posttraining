@@ -1,0 +1,57 @@
+{
+  "change_id": "design-hybrid-slot-representation-v1",
+  "coverage": {
+    "bounded_structured_coverage": 147,
+    "bounded_structured_rate": 0.31210191082802546,
+    "copy_backed_coverage": 270,
+    "copy_backed_rate": 0.5732484076433121,
+    "copy_normalize_possible_count": 8,
+    "copy_normalize_possible_rate": 0.016985138004246284,
+    "enum_classification_coverage": 0,
+    "enum_classification_rate": 0.0,
+    "limited_free_generation_coverage": 0,
+    "limited_free_generation_rate": 0.0,
+    "overall_representation_coverage": 1.0,
+    "task_schema_constrained_coverage": 0,
+    "task_schema_constrained_rate": 0.0,
+    "unresolved_coverage": 54,
+    "unresolved_rate": 0.11464968152866242
+  },
+  "does_not_mutate_predictions": true,
+  "does_not_recalculate_model_success_metrics": true,
+  "evidence_kind": "read_only_hybrid_slot_representation_feasibility_projection",
+  "gold_slot_event_count": 471,
+  "prediction_slot_event_count": 942,
+  "prediction_verification": {
+    "currently_fail_closed_prediction_count_estimate": 454,
+    "currently_fail_closed_prediction_rate": 0.4819532908704883,
+    "currently_verifiable_prediction_count_estimate": 488,
+    "currently_verifiable_prediction_rate": 0.5180467091295117,
+    "partial_span_rate_from_slot_analysis": 0.1602972399150743,
+    "source_supported_rate_from_slot_analysis": 0.5180467091295117,
+    "unsupported_by_source_rate_from_slot_analysis": 0.321656050955414
+  },
+  "projection_is_not_model_improvement": true,
+  "representation_event_counts": {
+    "bounded_structured": 147,
+    "copy": 270,
+    "unresolved": 54
+  },
+  "slot_path_distribution": {
+    "action": 57,
+    "ambiguity": 87,
+    "field": 87,
+    "query": 57,
+    "reason": 60,
+    "target": 69,
+    "url": 54
+  },
+  "task_family_distribution": {
+    "blocked:deny": 117,
+    "clarify:clarify": 402,
+    "extract:extract_page": 126,
+    "form_fill:fill_form": 234,
+    "navigate:open_url": 54,
+    "search:search_web": 57
+  }
+}

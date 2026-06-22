@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hybrid Slot Representation V1 Human Brief</title>
+  <style>
+    :root { color-scheme: light; --ink:#18212f; --muted:#5f6b7a; --line:#d9e0e8; --bg:#f7f9fb; --panel:#ffffff; --accent:#0b6e69; --warn:#9a5b00; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--ink); background: var(--bg); }
+    main { max-width: 1040px; margin: 0 auto; padding: 32px 20px 48px; }
+    h1 { margin: 0 0 12px; font-size: 28px; letter-spacing: 0; }
+    h2 { margin: 28px 0 12px; font-size: 18px; }
+    p, li { line-height: 1.62; }
+    code { background: #edf2f7; border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; font-size: 0.92em; }
+    .lead { font-size: 18px; line-height: 1.65; }
+    .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 18px 0; }
+    .metric { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
+    .metric strong { display: block; font-size: 22px; margin-bottom: 4px; }
+    .metric span { color: var(--muted); font-size: 13px; }
+    .status { display: inline-block; border: 1px solid #9ec7c3; color: var(--accent); border-radius: 999px; padding: 4px 10px; font-weight: 650; font-size: 13px; }
+    .note { border-left: 4px solid var(--warn); background: #fff8e8; padding: 12px 14px; }
+    ul { padding-left: 20px; }
+    a { color: var(--accent); }
+    @media (max-width: 760px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  </style>
+</head>
+<body>
+  <main>
+    <span class="status">archived design-only phase</span>
+    <h1>Hybrid Slot Representation V1</h1>
+    <p class="lead">一句话结论：本阶段只完成内部 hybrid slot representation 设计和只读 feasibility projection，最终 decision 为 <code>HYBRID_DESIGN_READY_COPY_SLICE_FIRST</code>；唯一推荐下一阶段是 <code>implement-copy-backed-slot-verification-slice</code>。</p>
+
+    <div class="grid">
+      <div class="metric"><strong>57.32%</strong><span>copy-backed coverage</span></div>
+      <div class="metric"><strong>31.21%</strong><span>bounded structured coverage</span></div>
+      <div class="metric"><strong>11.46%</strong><span>unresolved coverage</span></div>
+      <div class="metric"><strong>51.80%</strong><span>current predictions verifiable</span></div>
+    </div>
+
+    <h2>当前状态</h2>
+    <p>OpenSpec change 已归档；长效 spec 已同步到 <code>openspec/specs/hybrid-slot-representation-v1/spec.md</code>。本阶段没有训练、没有 prediction rerun、没有 schema/runtime/evaluator/ContractCoreV2 改动。</p>
+
+    <h2>本阶段改变了什么</h2>
+    <ul>
+      <li>新增只读 design/projection 脚本：<code>scripts/design_hybrid_slot_representation_v1.py</code>。</li>
+      <li>定义 <code>HybridSlotValue</code> proposed fields：<code>value</code> 由模型生成；<code>value_type</code>、<code>representation_kind</code>、<code>source_span</code>、<code>normalization_rule</code>、<code>verification_status</code>、<code>provenance</code>、<code>fallback_behavior</code> 由系统推导。</li>
+      <li>定义 source span：基于原始输入或固定 sanitized transcript，Unicode character offset，start inclusive，end exclusive，必须 exact back-slice 并保存 <code>source_text_hash</code>。</li>
+      <li>生成 slot-path matrix：<code>query</code>/<code>field</code>/<code>target</code>/<code>action</code> 走 copy；<code>ambiguity</code>/<code>reason</code> 走 bounded structured；<code>url</code> 先 unresolved / resolver-required。</li>
+    </ul>
+
+    <h2>关键文件</h2>
+    <ul>
+      <li><code>docs/hybrid-slot-representation-v1.md</code></li>
+      <li><code>reports/public-sample/hybrid-slot-representation-v1/summary.json</code></li>
+      <li><code>reports/public-sample/hybrid-slot-representation-v1/representation-matrix.json</code></li>
+      <li><code>reports/public-sample/hybrid-slot-representation-v1/feasibility-projection.json</code></li>
+      <li><code>reports/public-sample/hybrid-slot-representation-v1/recommended-next-change.md</code></li>
+      <li><code>tests/test_hybrid_slot_representation_v1.py</code></li>
+    </ul>
+
+    <h2>验证结果</h2>
+    <ul>
+      <li><code>PYTHONPATH=src pytest -q tests/test_hybrid_slot_representation_v1.py</code>：6 passed。</li>
+      <li><code>PYTHONPATH=src pytest -q</code>：558 passed。</li>
+      <li><code>PYTHONPATH=src ruff check src tests scripts/design_hybrid_slot_representation_v1.py</code>：passed。</li>
+      <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：8 passed。</li>
+      <li><code>python scripts/check_current_truth_surface.py</code> 与 <code>git diff --check</code>：passed。</li>
+      <li>public leak scan：覆盖新 report、docs、OpenSpec archive、script、tests 和 Human Brief，结果 passed。</li>
+    </ul>
+
+    <h2>剩余风险</h2>
+    <p class="note">这不是 slot accuracy、executable pass、held-out recovery 或 production readiness 证据。Hybrid representation 尚未实现；URL resolver、ambiguity/reason bounded taxonomy 和 copy span verifier 都必须在后续更小 change 中分别处理。</p>
+
+    <h2>推荐下一步</h2>
+    <p>停止在本阶段。唯一推荐 next change：<code>implement-copy-backed-slot-verification-slice</code>。不要自动实现整个 hybrid system、训练、扩数据、修改 V1 schema、修改 ContractCoreV2 或建立 challenge set。</p>
+  </main>
+</body>
+</html>

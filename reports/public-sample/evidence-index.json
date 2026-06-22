@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-21",
+  "generated_at": "2026-06-22",
   "project": "Voice2Task Post-Training",
   "allowed_statuses": [
     "CURRENT",
@@ -46,7 +46,20 @@
       "model_run_id": "step-matched-canonical-slot-ablation-20260620T000000Z",
       "boundary": "Recovered step-matched Control/Treatment prediction contracts and gold contracts; read-only slot-level analysis.",
       "summary": "Decision MIXED_SLOT_REPRESENTATION_REQUIRED; exact/normalized source-copyable gold slots 50.53%; typed-derivable slots 0.00%; generation-required slots 49.47%; prediction unsupported-by-source 32.17%.",
-      "conclusion": "Analysis/design evidence only; next recommended bounded change is design-hybrid-slot-representation-v1; no training, prediction rerun, evaluator relaxation, schema/runtime migration, or model improvement claim.",
+      "conclusion": "Analysis/design evidence only; led to the completed hybrid representation design; no training, prediction rerun, evaluator relaxation, schema/runtime migration, or model improvement claim.",
+      "current_claim_allowed": true,
+      "superseded_by": null
+    },
+    {
+      "id": "hybrid-slot-representation-v1",
+      "status": "CURRENT",
+      "phase": "design-hybrid-slot-representation-v1",
+      "path": "reports/public-sample/hybrid-slot-representation-v1/summary.json",
+      "manifest_id": "public-sample-20260619T090925Z",
+      "model_run_id": "step-matched-canonical-slot-ablation-20260620T000000Z",
+      "boundary": "Design-only Hybrid Slot Representation V1 over recovered step-matched slot analysis artifacts.",
+      "summary": "Decision HYBRID_DESIGN_READY_COPY_SLICE_FIRST; overall representation coverage 100.00%; copy-backed coverage 57.32%; bounded structured coverage 31.21%; unresolved coverage 11.46%; current predictions deterministically verifiable at 51.80% and fail-closed at 48.20%.",
+      "conclusion": "Design-only evidence; next recommended bounded change is implement-copy-backed-slot-verification-slice; no training, prediction rerun, schema/runtime migration, evaluator relaxation, or model improvement claim.",
       "current_claim_allowed": true,
       "superseded_by": null
     },
