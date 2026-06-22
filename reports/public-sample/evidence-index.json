@@ -76,21 +76,34 @@
       "current_claim_allowed": true,
       "superseded_by": null
     },
-    {
-      "id": "copy-backed-verification-shadow-mode",
-      "status": "CURRENT",
-      "phase": "integrate-copy-backed-slot-verification-shadow-mode",
-      "path": "reports/public-sample/copy-backed-verification-shadow-mode/summary.json",
-      "manifest_id": "public-sample-20260619T090925Z",
-      "model_run_id": "step-matched-canonical-slot-ablation-20260620T000000Z",
-      "boundary": "Offline shadow sidecars over recovered step-matched Control/Treatment prediction contracts; one sidecar per prediction contract; no enforcement.",
-      "summary": "Decision SHADOW_MODE_READY_FOR_REVIEW; 828/828 prediction contracts have sidecars; source-verified prediction count 376; source-verified-and-gold-correct 347; source-verified-but-gold-mismatch 29; enforcement enabled 0; action source-verified 0; V1 evaluator metric delta 0.",
-      "conclusion": "Shadow provenance evidence only; next recommended bounded change is review-copy-backed-shadow-mode-before-runtime-wiring; no runtime enforcement, action enablement, training, prediction rerun, evaluator relaxation, schema migration, or model improvement claim.",
-      "current_claim_allowed": true,
-      "superseded_by": null
-    },
-    {
-      "id": "contract-v2-projection-rerun",
+        {
+            "id": "copy-backed-verification-shadow-mode",
+            "status": "CURRENT",
+            "phase": "integrate-copy-backed-slot-verification-shadow-mode",
+            "path": "reports/public-sample/copy-backed-verification-shadow-mode/summary.json",
+            "manifest_id": "public-sample-20260619T090925Z",
+            "model_run_id": "step-matched-canonical-slot-ablation-20260620T000000Z",
+            "boundary": "Offline shadow sidecars over recovered step-matched Control/Treatment prediction contracts; one sidecar per prediction contract; no enforcement.",
+            "summary": "Decision SHADOW_MODE_READY_FOR_REVIEW; 828/828 prediction contracts have sidecars; source-verified prediction count 376; source-verified-and-gold-correct 347; source-verified-but-gold-mismatch 29; enforcement enabled 0; action source-verified 0; V1 evaluator metric delta 0.",
+            "conclusion": "Shadow provenance evidence only; next recommended bounded change is review-copy-backed-shadow-mode-before-runtime-wiring; no runtime enforcement, action enablement, training, prediction rerun, evaluator relaxation, schema migration, or model improvement claim.",
+            "current_claim_allowed": true,
+            "superseded_by": null
+        },
+        {
+            "id": "copy-backed-shadow-mode-review",
+            "status": "CURRENT",
+            "phase": "review-copy-backed-shadow-mode-before-runtime-wiring",
+            "path": "reports/public-sample/copy-backed-shadow-mode-review/summary.json",
+            "manifest_id": "public-sample-20260619T090925Z",
+            "model_run_id": "step-matched-canonical-slot-ablation-20260620T000000Z",
+            "boundary": "Review-and-hardening evidence that splits gold-free OnlineShadowSidecar rows from offline EvaluationAudit rows before any prediction-pipeline shadow hook.",
+            "summary": "Decision SHADOW_INTERFACE_READY_FOR_PREDICTION_HOOK; 828/828 online sidecars have no gold fields; 942 audit rows; trusted exact rate 87.44%; eligible verification failure rate 12.56%; false accepts, silent fallbacks, contract mutations, runtime deltas, action trusted, and normalized trusted all 0.",
+            "conclusion": "Interface evidence only; next recommended bounded change is integrate-copy-backed-verification-prediction-shadow-hook; no runtime enforcement, action enablement, evaluator change, prediction repair, training, or model improvement claim.",
+            "current_claim_allowed": true,
+            "superseded_by": null
+        },
+        {
+            "id": "contract-v2-projection-rerun",
       "status": "CURRENT",
       "phase": "rerun-contract-v2-projection-with-recovered-inputs",
       "path": "reports/public-sample/contract-v2-projection/rerun-with-recovered-inputs/summary.json",

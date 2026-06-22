@@ -1,0 +1,186 @@
+{
+  "cannot_claim": [
+    "online prediction hook exists",
+    "runtime enforcement exists",
+    "action verification is enabled",
+    "source-backed provenance is task correctness",
+    "slot accuracy improved",
+    "executable pass improved",
+    "model quality improved",
+    "prediction repair occurred",
+    "training target changed",
+    "BrowserTaskContract V1 migrated",
+    "ContractCoreV2 changed",
+    "production or safety readiness",
+    "live browser improvement"
+  ],
+  "change_id": "review-copy-backed-shadow-mode-before-runtime-wiring",
+  "claims": {
+    "action_enabled": false,
+    "contract_core_v2_changed": false,
+    "evaluator_changed": false,
+    "model_or_prediction_changed": false,
+    "online_prediction_hook_implemented": false,
+    "production_readiness_claim": false,
+    "runtime_enforcement_enabled": false,
+    "runtime_wiring_implemented": false,
+    "training_performed": false
+  },
+  "decision_label": "SHADOW_INTERFACE_READY_FOR_PREDICTION_HOOK",
+  "deterministic_replay_hashes": {
+    "first_hash": "cadaba1b7bfb4e46ccfeea443090be32800e7d69b2d4f479775bb44e3eccf2d1",
+    "match": true,
+    "second_hash": "cadaba1b7bfb4e46ccfeea443090be32800e7d69b2d4f479775bb44e3eccf2d1"
+  },
+  "evaluation_audit_count": 942,
+  "evidence_kind": "copy_backed_shadow_interface_review",
+  "gates": {
+    "action_trusted_count": 0,
+    "contract_mutation_count": 0,
+    "deterministic_rerun_rate": 1.0,
+    "leak_scan_clean": true,
+    "normalized_trusted_count": 0,
+    "policy_hash_fixed": true,
+    "provenance_false_accept_count": 0,
+    "runtime_decision_delta_count": 0,
+    "silent_fallback_count": 0,
+    "trusted_exact_only": true,
+    "v1_evaluator_metric_delta_zero": true
+  },
+  "generated_at": "2026-06-22",
+  "input_boundary": {
+    "approved_inputs": [
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs",
+      "reports/public-sample/copy-backed-slot-verification-slice",
+      "reports/public-sample/copy-backed-verification-shadow-mode",
+      "configs/copy-backed-scope-policy-v1.json"
+    ],
+    "blocking_reasons": [],
+    "change_id": "review-copy-backed-shadow-mode-before-runtime-wiring",
+    "decision_label": "SHADOW_REVIEW_INPUT_BOUNDARY_PASSED",
+    "policy_validation": {
+      "action_enabled": false,
+      "blocking_reasons": [],
+      "computed_evidence_hash": "803555ea5a64bb3535951b14d603ab98cb541255258625fd94d6c406e0f4525c",
+      "computed_policy_hash": "5dc14efb8ded13dc048ddb067c7c63a1a62b6c03896950e861303973d505cbc7",
+      "disabled_triples": [
+        "blocked:deny:action"
+      ],
+      "enabled_triples": [
+        "search:search_web:query",
+        "form_fill:fill_form:field",
+        "extract:extract_page:target"
+      ],
+      "normalized_trusted": false,
+      "ok": true,
+      "policy_hash": "5dc14efb8ded13dc048ddb067c7c63a1a62b6c03896950e861303973d505cbc7",
+      "policy_id": "copy-backed-scope-policy-v1",
+      "policy_version": "1.0.0"
+    },
+    "shadow_boundary": {
+      "action_enabled": false,
+      "approved_inputs": [
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs",
+        "reports/public-sample/copy-backed-slot-verification-slice"
+      ],
+      "blocking_reasons": [],
+      "change_id": "integrate-copy-backed-slot-verification-shadow-mode",
+      "copy_slice_decision_label": "COPY_SLICE_READY_FOR_SHADOW_INTEGRATION",
+      "copy_slice_dir": "reports/public-sample/copy-backed-slot-verification-slice",
+      "current_raw_file_hashes": {
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/artifact-manifest.json": "531c58434f2e7896a3db3d7a2455a642112e0090076ff241000a7dfe0adcf2d3",
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/boundary-verification.json": "1c769cc80530c5d8107cd53094bd1a0f10bc45a76aa3ee6b5b51b69e32b67b26",
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/control/dev_predictions.jsonl": "a379d4f60878193cd19e10d42a934be0ef65a8eab6a1cc70ada0299ef1835ced",
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/control/test_predictions.jsonl": "8fa809c505006845a08d2af0de5968d294a520ec35c51aec801f55e945efd080",
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/gold/dev_gold.jsonl": "60909be7ce43b8682082355550efe3864fe600c458f540ee2c475a3fc602b085",
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/gold/test_gold.jsonl": "7b97f67ec5b0ef19c652d3d3edb7ada9296c88fe1e67f3b400ca84d2c12fe5f2",
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/metric-reproduction.json": "6243ce82d295504c643a50d7b435f2553a69d27a62f8fc525928b778a597539b",
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/treatment/dev_predictions.jsonl": "972f6dcea10046b6bf0eedf1286588955c2c1942344f3a32fcb72711a95289cf",
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/treatment/test_predictions.jsonl": "9e93e8f53860f8018c28fdc709571983a41832411a240374e7d1f5faee18e94d"
+      },
+      "decision_label": "SHADOW_MODE_INPUT_BOUNDARY_PASSED",
+      "enabled_task_scoped_triples": [
+        "extract:extract_page:target",
+        "form_fill:fill_form:field",
+        "search:search_web:query"
+      ],
+      "expected_raw_file_hashes": {
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/artifact-manifest.json": "531c58434f2e7896a3db3d7a2455a642112e0090076ff241000a7dfe0adcf2d3",
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/boundary-verification.json": "1c769cc80530c5d8107cd53094bd1a0f10bc45a76aa3ee6b5b51b69e32b67b26",
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/control/dev_predictions.jsonl": "a379d4f60878193cd19e10d42a934be0ef65a8eab6a1cc70ada0299ef1835ced",
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/control/test_predictions.jsonl": "8fa809c505006845a08d2af0de5968d294a520ec35c51aec801f55e945efd080",
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/gold/dev_gold.jsonl": "60909be7ce43b8682082355550efe3864fe600c458f540ee2c475a3fc602b085",
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/gold/test_gold.jsonl": "7b97f67ec5b0ef19c652d3d3edb7ada9296c88fe1e67f3b400ca84d2c12fe5f2",
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/metric-reproduction.json": "6243ce82d295504c643a50d7b435f2553a69d27a62f8fc525928b778a597539b",
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/treatment/dev_predictions.jsonl": "972f6dcea10046b6bf0eedf1286588955c2c1942344f3a32fcb72711a95289cf",
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/treatment/test_predictions.jsonl": "9e93e8f53860f8018c28fdc709571983a41832411a240374e7d1f5faee18e94d"
+      },
+      "raw_input_hashes_preserved": true,
+      "v1_evaluator_metric_delta_zero": true
+    }
+  },
+  "metrics": {
+    "action_trusted_count": 0,
+    "ambiguous_count": 0,
+    "contract_mutation_count": 0,
+    "eligible_slot_event_count": 430,
+    "eligible_verification_failure_count": 54,
+    "eligible_verification_failure_rate": 0.12558139534883722,
+    "global_non_verified_count": 566,
+    "global_non_verified_rate": 0.6008492569002123,
+    "legacy_global_non_verified_rate": 0.6008492569002123,
+    "normalized_candidate_count": 0,
+    "normalized_candidate_rate": 0.0,
+    "normalized_trusted_count": 0,
+    "not_found_count": 54,
+    "out_of_scope_count": 512,
+    "out_of_scope_rate": 0.5435244161358811,
+    "provenance_false_accept_count": 0,
+    "runtime_decision_delta_count": 0,
+    "silent_fallback_count": 0,
+    "source_verified_and_gold_correct_count": 347,
+    "source_verified_and_gold_correct_rate": 0.9228723404255319,
+    "source_verified_gold_mismatch_count": 29,
+    "source_verified_gold_mismatch_rate": 0.07712765957446809,
+    "status_counts": {
+      "NOT_FOUND": 54,
+      "OUT_OF_SCOPE": 512,
+      "VERIFIED_EXACT_UNIQUE": 376
+    },
+    "total_slot_event_count": 942,
+    "trusted_exact_count": 376,
+    "trusted_exact_rate": 0.8744186046511628,
+    "v1_evaluator_metric_delta": {
+      "metric_deltas": {
+        "exact_match": 0.0,
+        "executable_pass_rate": 0.0,
+        "route_accuracy": 0.0,
+        "slot_accuracy": 0.0,
+        "task_type_accuracy": 0.0
+      },
+      "zero_delta": true
+    }
+  },
+  "online_sidecar_count": 828,
+  "policy": {
+    "action_enabled": false,
+    "disabled_triples": [
+      "blocked:deny:action"
+    ],
+    "enabled_triples": [
+      "search:search_web:query",
+      "form_fill:fill_form:field",
+      "extract:extract_page:target"
+    ],
+    "evidence_hash": "803555ea5a64bb3535951b14d603ab98cb541255258625fd94d6c406e0f4525c",
+    "normalized_trusted": false,
+    "policy_hash": "5dc14efb8ded13dc048ddb067c7c63a1a62b6c03896950e861303973d505cbc7",
+    "policy_id": "copy-backed-scope-policy-v1",
+    "policy_version": "1.0.0"
+  },
+  "prediction_contract_count": 828,
+  "recommended_next_change": {
+    "change_id": "integrate-copy-backed-verification-prediction-shadow-hook",
+    "scope": "Attach the gold-free OnlineShadowSidecar to the prediction pipeline in shadow mode only, still with no runtime enforcement."
+  }
+}

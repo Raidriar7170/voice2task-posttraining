@@ -1,0 +1,63 @@
+{
+  "benchmark_kind": "local_cpu_microbenchmark_not_production_slo",
+  "duplicate_span_fixture": {
+    "expected_status": "AMBIGUOUS_MULTIPLE_MATCHES",
+    "input_char_count": 8,
+    "status": "AMBIGUOUS_MULTIPLE_MATCHES"
+  },
+  "exact_unique_span_lookup": {
+    "max_ms": 0.0019168946892023087,
+    "mean_ms": 0.0017261147149838507,
+    "measured_iterations": 80,
+    "p50_ms": 0.001708976924419403,
+    "p95_ms": 0.001750071533024311,
+    "p99_ms": 0.0018330756574869156,
+    "total_duration_ms": 0.1413749996572733,
+    "warmup_iterations": 5
+  },
+  "full_span_validation": {
+    "max_ms": 0.000583939254283905,
+    "mean_ms": 0.0005041612894274294,
+    "measured_iterations": 80,
+    "p50_ms": 0.000500003807246685,
+    "p95_ms": 0.0005420297384262085,
+    "p99_ms": 0.0005828915163874626,
+    "total_duration_ms": 0.043082982301712036,
+    "warmup_iterations": 5
+  },
+  "hardware": "generic_local_cpu_process",
+  "long_chinese_input": {
+    "exact_lookup": {
+      "max_ms": 0.02516701351851225,
+      "mean_ms": 0.0025386310881003737,
+      "measured_iterations": 80,
+      "p50_ms": 0.0021670712158083916,
+      "p95_ms": 0.0024170149117708206,
+      "p99_ms": 0.005207955837249756,
+      "total_duration_ms": 0.20745792426168919,
+      "warmup_iterations": 5
+    },
+    "input_char_count": 238
+  },
+  "policy_lookup": {
+    "max_ms": 0.0003330642357468605,
+    "mean_ms": 4.794128471985459e-05,
+    "measured_iterations": 80,
+    "p50_ms": 4.202593117952347e-05,
+    "p95_ms": 8.300412446260452e-05,
+    "p99_ms": 0.0002080341801047325,
+    "total_duration_ms": 0.009167008101940155,
+    "warmup_iterations": 5
+  },
+  "sample_count": 80,
+  "sidecar_serialization": {
+    "max_ms": 0.00666698906570673,
+    "mean_ms": 0.005356357723940164,
+    "measured_iterations": 80,
+    "p50_ms": 0.005249981768429279,
+    "p95_ms": 0.006249989382922649,
+    "p99_ms": 0.006624963134527206,
+    "total_duration_ms": 0.43158303014934063,
+    "warmup_iterations": 5
+  }
+}

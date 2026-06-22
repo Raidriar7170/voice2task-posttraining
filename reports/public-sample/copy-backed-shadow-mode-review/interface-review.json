@@ -1,0 +1,49 @@
+{
+  "change_id": "review-copy-backed-shadow-mode-before-runtime-wiring",
+  "evaluation_audit_isolated": true,
+  "evaluation_audit_unit": "one_per_prediction_slot_event",
+  "full_span_gate": {
+    "requires_candidate_span_count_one": true,
+    "requires_current_input_hash": true,
+    "requires_exact_back_slice": true,
+    "requires_policy_enabled": true,
+    "requires_valid_offsets": true
+  },
+  "normalized_status_handling": {
+    "VERIFIED_NORMALIZED_UNIQUE": "candidate_provenance_only_not_trusted",
+    "collision_risks_ignored": [
+      "A/B_vs_AB",
+      "1.2_vs_12",
+      "field_punctuation",
+      "url_or_version_punctuation",
+      "query_entity_punctuation"
+    ],
+    "normalized_trusted_count": 0,
+    "semantic_alias_embedding_llm": false
+  },
+  "online_generation_has_no_gold_parameter": true,
+  "online_sidecar_has_no_gold_fields": true,
+  "online_sidecar_unit": "one_per_prediction_contract",
+  "policy_validation": {
+    "action_enabled": false,
+    "blocking_reasons": [],
+    "computed_evidence_hash": "803555ea5a64bb3535951b14d603ab98cb541255258625fd94d6c406e0f4525c",
+    "computed_policy_hash": "5dc14efb8ded13dc048ddb067c7c63a1a62b6c03896950e861303973d505cbc7",
+    "disabled_triples": [
+      "blocked:deny:action"
+    ],
+    "enabled_triples": [
+      "search:search_web:query",
+      "form_fill:fill_form:field",
+      "extract:extract_page:target"
+    ],
+    "normalized_trusted": false,
+    "ok": true,
+    "policy_hash": "5dc14efb8ded13dc048ddb067c7c63a1a62b6c03896950e861303973d505cbc7",
+    "policy_id": "copy-backed-scope-policy-v1",
+    "policy_version": "1.0.0"
+  },
+  "trusted_statuses": [
+    "VERIFIED_EXACT_UNIQUE"
+  ]
+}

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Copy-backed Shadow Interface Review Human Brief</title>
+  <style>
+    :root { color-scheme: light; --ink:#18212f; --muted:#5f6b7a; --line:#d9e0e8; --bg:#f7f9fb; --panel:#ffffff; --accent:#0b6e69; --warn:#9a5b00; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--ink); background: var(--bg); }
+    main { max-width: 1040px; margin: 0 auto; padding: 32px 20px 48px; }
+    h1 { margin: 0 0 12px; font-size: 28px; letter-spacing: 0; }
+    h2 { margin: 28px 0 12px; font-size: 18px; }
+    p, li { line-height: 1.62; }
+    code { background: #edf2f7; border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; font-size: 0.92em; }
+    .lead { font-size: 18px; line-height: 1.65; }
+    .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 18px 0; }
+    .metric { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
+    .metric strong { display: block; font-size: 22px; margin-bottom: 4px; }
+    .metric span { color: var(--muted); font-size: 13px; }
+    .status { display: inline-block; border: 1px solid #9ec7c3; color: var(--accent); border-radius: 999px; padding: 4px 10px; font-weight: 650; font-size: 13px; }
+    .note { border-left: 4px solid var(--warn); background: #fff8e8; padding: 12px 14px; }
+    ul { padding-left: 20px; }
+    a { color: var(--accent); }
+    @media (max-width: 760px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  </style>
+</head>
+<body>
+  <main>
+    <span class="status">review-and-hardening phase</span>
+    <h1>Copy-backed Shadow Interface Review</h1>
+    <p class="lead">一句话结论：本阶段把 shadow sidecar 拆成 gold-free 的 <code>OnlineShadowSidecar</code> 和离线 <code>EvaluationAudit</code>，最终 decision 为 <code>SHADOW_INTERFACE_READY_FOR_PREDICTION_HOOK</code>；唯一推荐下一步是 shadow-only 的 <code>integrate-copy-backed-verification-prediction-shadow-hook</code>，仍不包含 runtime enforcement。</p>
+
+    <div class="grid">
+      <div class="metric"><strong>828/828</strong><span>gold-free online sidecars</span></div>
+      <div class="metric"><strong>942</strong><span>offline audit slot rows</span></div>
+      <div class="metric"><strong>87.44%</strong><span>trusted exact rate over eligible</span></div>
+      <div class="metric"><strong>0</strong><span>false accepts / silent fallbacks</span></div>
+    </div>
+
+    <h2>当前状态</h2>
+    <p>状态：completed review。权威证据是 <code>reports/public-sample/copy-backed-shadow-mode-review/summary.json</code>、<code>interface-review.json</code>、<code>per-scope-metrics.json</code>、<code>latency-benchmark.json</code>、两份 JSONL，以及 OpenSpec archive。</p>
+
+    <h2>本阶段改变了什么</h2>
+    <ul>
+      <li>新增冻结策略 <code>configs/copy-backed-scope-policy-v1.json</code>，policy hash 为 <code>5dc14efb8ded13dc048ddb067c7c63a1a62b6c03896950e861303973d505cbc7</code>。</li>
+      <li>新增接口模块 <code>src/voice2task/copy_backed_shadow_interface.py</code>，online sidecar 生成函数不接受 gold/evaluator 参数。</li>
+      <li>新增 review replay 脚本 <code>scripts/review_copy_backed_shadow_mode_before_runtime_wiring.py</code>，重新生成 sidecar/audit，而不是转换旧 sidecar。</li>
+      <li>trusted provenance 只允许 <code>VERIFIED_EXACT_UNIQUE</code>，normalized unique 仅为 candidate provenance。</li>
+      <li><code>action</code> 保持 disabled；normalized trusted、action trusted、runtime delta、contract mutation 全部为 0。</li>
+    </ul>
+
+    <h2>关键文件</h2>
+    <ul>
+      <li><code>docs/copy-backed-shadow-interface.md</code></li>
+      <li><code>reports/public-sample/copy-backed-shadow-mode-review/summary.json</code></li>
+      <li><code>reports/public-sample/copy-backed-shadow-mode-review/online-shadow-sidecars.jsonl</code></li>
+      <li><code>reports/public-sample/copy-backed-shadow-mode-review/evaluation-audits.jsonl</code></li>
+      <li><code>tests/test_copy_backed_shadow_interface_review.py</code></li>
+    </ul>
+
+    <h2>核心指标</h2>
+    <ul>
+      <li>Total slot events：942；eligible slot events：430；out-of-scope rate：54.35%。</li>
+      <li>Trusted exact count：376；trusted exact rate：87.44%。</li>
+      <li>Eligible verification failure count：54；failure rate：12.56%。</li>
+      <li>Trusted exact and gold-correct：347；trusted exact but gold-mismatch：29；mismatch rate：7.71%。</li>
+      <li>Deterministic rerun rate：1.0；V1 evaluator metric delta：0；leak scan clean：true。</li>
+    </ul>
+
+    <h2>验证命令</h2>
+    <ul>
+      <li><code>pytest -q tests/test_copy_backed_shadow_interface_review.py</code></li>
+      <li><code>python scripts/review_copy_backed_shadow_mode_before_runtime_wiring.py</code></li>
+      <li>最终收口还会跑完整 <code>pytest</code>、<code>ruff</code>、OpenSpec strict validate、JSON/schema/leak scan 和 <code>git diff --check</code>。</li>
+    </ul>
+
+    <h2>剩余风险</h2>
+    <p class="note">这个阶段只证明接口边界可以进入下一步 shadow hook 设计，不证明 online hook 已经存在，不证明 runtime enforcement、安全策略、action verification、slot accuracy、executable pass、模型质量、production readiness 或 live-browser improvement。</p>
+
+    <h2>推荐下一步</h2>
+    <p>下一步只应执行 <code>integrate-copy-backed-verification-prediction-shadow-hook</code>：把 gold-free online sidecar 接到 prediction pipeline 的 shadow path；仍然不做 enforcement、action enablement、evaluator change、prediction repair 或训练。</p>
+  </main>
+</body>
+</html>

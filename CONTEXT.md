@@ -40,6 +40,8 @@ The follow-up `implement-copy-backed-slot-verification-slice` is now completed a
 
 The follow-up `integrate-copy-backed-slot-verification-shadow-mode` is now completed as offline shadow sidecar evidence under `reports/public-sample/copy-backed-verification-shadow-mode/summary.json`. Decision: `SHADOW_MODE_READY_FOR_REVIEW`. It writes one shadow sidecar per current Control/Treatment prediction contract: 828/828 sidecars, attachment rate 1.0. Enabled slot diagnostics remain task-scoped `query`/`field`/`target`; source-verified prediction count is 376, source-verified-and-gold-correct count is 347, and source-verified-but-gold-mismatch count is 29. `action` remains disabled with 114 disabled diagnostics and 0 source-verified action cases. Enforcement enabled count is 0, raw input hashes are preserved, deterministic rerun rate is 1.0, and V1 evaluator metric deltas remain 0. This is not runtime enforcement and is not task correctness.
 
+The follow-up `review-copy-backed-shadow-mode-before-runtime-wiring` is now completed as review-and-hardening evidence under `reports/public-sample/copy-backed-shadow-mode-review/summary.json`. Decision: `SHADOW_INTERFACE_READY_FOR_PREDICTION_HOOK`. It freezes `copy-backed-scope-policy-v1` with policy hash `5dc14efb8ded13dc048ddb067c7c63a1a62b6c03896950e861303973d505cbc7`, splits gold-free `OnlineShadowSidecar` rows from offline `EvaluationAudit` rows, and keeps trusted provenance exact-only. Online sidecars cover 828/828 prediction contracts; evaluation audits cover 942 slot events. Trusted exact rate is 87.44% over 430 eligible events, eligible verification failure rate is 12.56%, out-of-scope rate is 54.35% over all slot events, and trusted-exact gold mismatch rate is 7.71%. Normalized trusted count, action trusted count, provenance false accepts, silent fallbacks, contract mutations, runtime decision deltas, and V1 evaluator metric deltas are all 0. This approves only a future prediction-pipeline shadow hook proposal, not runtime enforcement.
+
 ## 6. Current Claim Boundaries
 
 Current evidence cannot claim model improvement. It cannot claim executable quality improvement. It cannot claim production readiness. It cannot claim safety readiness. It cannot claim held-out recovery. It cannot claim live-browser benchmark gain. It cannot claim checkpoint release. It cannot claim adapter release. It cannot claim DPO justification. It cannot claim another canonical-candidate loop.
@@ -48,7 +50,7 @@ Do not merge metrics across manifests. Do not treat JSON validity, executable sm
 
 ## 7. Current Recommended Next Change
 
-The single recommended next technical change is `review-copy-backed-shadow-mode-before-runtime-wiring`. It should be a bounded review phase unless explicitly expanded: inspect the shadow-mode evidence, sidecar schema, false-accept/silent-fallback gates, action exclusion, and claim boundaries before any runtime-wiring proposal.
+The single recommended next technical change is `integrate-copy-backed-verification-prediction-shadow-hook`. It should be a bounded shadow-only hook phase: attach the gold-free `OnlineShadowSidecar` to the prediction pipeline without runtime enforcement, action enablement, evaluator changes, prediction repair, or model/executable improvement claims.
 
 Do not automatically implement runtime enforcement, action enablement, the full hybrid system, training, data expansion, a challenge set, schema changes, ContractCoreV2 changes, evaluator changes, prediction repair, browser automation, or model/executable improvement claims.
 
