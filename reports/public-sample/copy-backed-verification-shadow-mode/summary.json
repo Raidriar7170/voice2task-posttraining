@@ -1,0 +1,220 @@
+{
+  "action_shadow": {
+    "diagnostic_count": 114,
+    "enabled": false,
+    "source_verified_count": 0,
+    "status": "disabled_analysis_only"
+  },
+  "cannot_claim": [
+    "source-backed provenance is task correctness",
+    "shadow mode is runtime enforcement",
+    "slot accuracy improved",
+    "executable pass improved",
+    "model quality improved",
+    "training target changed",
+    "BrowserTaskContract V1 migrated",
+    "ContractCoreV2 changed",
+    "action verification is enabled",
+    "production or safety readiness",
+    "held-out recovery",
+    "live browser improvement"
+  ],
+  "change_id": "integrate-copy-backed-slot-verification-shadow-mode",
+  "claims": {
+    "action_enabled": false,
+    "adapter_or_checkpoint_release": false,
+    "contract_core_v2_changed": false,
+    "data_mutation_performed": false,
+    "evaluator_relaxation_performed": false,
+    "executable_quality_improvement_claim": false,
+    "model_improvement_claim": false,
+    "prediction_rerun_performed": false,
+    "production_readiness_claim": false,
+    "runtime_enforcement_enabled": false,
+    "runtime_integration_performed": false,
+    "schema_migration_performed": false,
+    "slot_performance_improvement_claim": false,
+    "training_performed": false
+  },
+  "compatibility": {
+    "change_id": "integrate-copy-backed-slot-verification-shadow-mode",
+    "generated_at": "2026-06-22",
+    "input_boundary": {
+      "action_enabled": false,
+      "approved_inputs": [
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs",
+        "reports/public-sample/copy-backed-slot-verification-slice"
+      ],
+      "blocking_reasons": [],
+      "change_id": "integrate-copy-backed-slot-verification-shadow-mode",
+      "copy_slice_decision_label": "COPY_SLICE_READY_FOR_SHADOW_INTEGRATION",
+      "copy_slice_dir": "reports/public-sample/copy-backed-slot-verification-slice",
+      "current_raw_file_hashes": {
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/artifact-manifest.json": "531c58434f2e7896a3db3d7a2455a642112e0090076ff241000a7dfe0adcf2d3",
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/boundary-verification.json": "1c769cc80530c5d8107cd53094bd1a0f10bc45a76aa3ee6b5b51b69e32b67b26",
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/control/dev_predictions.jsonl": "a379d4f60878193cd19e10d42a934be0ef65a8eab6a1cc70ada0299ef1835ced",
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/control/test_predictions.jsonl": "8fa809c505006845a08d2af0de5968d294a520ec35c51aec801f55e945efd080",
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/gold/dev_gold.jsonl": "60909be7ce43b8682082355550efe3864fe600c458f540ee2c475a3fc602b085",
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/gold/test_gold.jsonl": "7b97f67ec5b0ef19c652d3d3edb7ada9296c88fe1e67f3b400ca84d2c12fe5f2",
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/metric-reproduction.json": "6243ce82d295504c643a50d7b435f2553a69d27a62f8fc525928b778a597539b",
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/treatment/dev_predictions.jsonl": "972f6dcea10046b6bf0eedf1286588955c2c1942344f3a32fcb72711a95289cf",
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/treatment/test_predictions.jsonl": "9e93e8f53860f8018c28fdc709571983a41832411a240374e7d1f5faee18e94d"
+      },
+      "decision_label": "SHADOW_MODE_INPUT_BOUNDARY_PASSED",
+      "enabled_task_scoped_triples": [
+        "extract:extract_page:target",
+        "form_fill:fill_form:field",
+        "search:search_web:query"
+      ],
+      "expected_raw_file_hashes": {
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/artifact-manifest.json": "531c58434f2e7896a3db3d7a2455a642112e0090076ff241000a7dfe0adcf2d3",
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/boundary-verification.json": "1c769cc80530c5d8107cd53094bd1a0f10bc45a76aa3ee6b5b51b69e32b67b26",
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/control/dev_predictions.jsonl": "a379d4f60878193cd19e10d42a934be0ef65a8eab6a1cc70ada0299ef1835ced",
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/control/test_predictions.jsonl": "8fa809c505006845a08d2af0de5968d294a520ec35c51aec801f55e945efd080",
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/gold/dev_gold.jsonl": "60909be7ce43b8682082355550efe3864fe600c458f540ee2c475a3fc602b085",
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/gold/test_gold.jsonl": "7b97f67ec5b0ef19c652d3d3edb7ada9296c88fe1e67f3b400ca84d2c12fe5f2",
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/metric-reproduction.json": "6243ce82d295504c643a50d7b435f2553a69d27a62f8fc525928b778a597539b",
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/treatment/dev_predictions.jsonl": "972f6dcea10046b6bf0eedf1286588955c2c1942344f3a32fcb72711a95289cf",
+        "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/treatment/test_predictions.jsonl": "9e93e8f53860f8018c28fdc709571983a41832411a240374e7d1f5faee18e94d"
+      },
+      "raw_input_hashes_preserved": true,
+      "v1_evaluator_metric_delta_zero": true
+    },
+    "prediction_contract_count": 828,
+    "previous_copy_slice": {
+      "decision_label": "COPY_SLICE_READY_FOR_SHADOW_INTEGRATION",
+      "enabled_task_scoped_triples": [
+        "extract:extract_page:target",
+        "form_fill:fill_form:field",
+        "search:search_web:query"
+      ],
+      "source_verified_prediction_count": 376,
+      "source_verified_prediction_rate": 0.8744186046511628
+    },
+    "raw_input_hashes_preserved": true,
+    "shadow_sidecar_count": 828,
+    "sidecar_attachment_rate": 1.0,
+    "sidecar_schema": {
+      "contract_mutation_allowed": false,
+      "evaluator_input_allowed": false,
+      "required_fields": [
+        "sample_id",
+        "split",
+        "run_role",
+        "shadow_mode_enabled",
+        "enforcement_enabled",
+        "prediction_contract_hash",
+        "input_hash",
+        "slot_diagnostics"
+      ],
+      "unit": "one_row_per_split_sample_run_role_prediction_contract"
+    },
+    "v1_evaluator_metric_delta": {
+      "basis": "shadow_sidecar_only_no_prediction_gold_schema_or_evaluator_mutation",
+      "metric_deltas": {
+        "exact_match": 0.0,
+        "executable_pass_rate": 0.0,
+        "route_accuracy": 0.0,
+        "slot_accuracy": 0.0,
+        "task_type_accuracy": 0.0
+      },
+      "zero_delta": true
+    }
+  },
+  "decision_label": "SHADOW_MODE_READY_FOR_REVIEW",
+  "deterministic_rerun_rate": 1.0,
+  "enabled_scope": {
+    "action_enabled": false,
+    "slot_paths": [
+      "field",
+      "query",
+      "target"
+    ],
+    "task_scoped_triples": [
+      "extract:extract_page:target",
+      "form_fill:fill_form:field",
+      "search:search_web:query"
+    ]
+  },
+  "evidence_kind": "copy_backed_verification_shadow_mode",
+  "gates": {
+    "action_source_verified_count": 0,
+    "deterministic_rerun_rate": 1.0,
+    "enforcement_enabled_count": 0,
+    "leak_scan_clean": true,
+    "provenance_false_accept_count": 0,
+    "raw_input_hashes_preserved": true,
+    "sidecar_attachment_rate": 1.0,
+    "silent_fallback_count": 0,
+    "v1_evaluator_metric_delta_zero": true
+  },
+  "generated_at": "2026-06-22",
+  "input_boundary": {
+    "action_enabled": false,
+    "approved_inputs": [
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs",
+      "reports/public-sample/copy-backed-slot-verification-slice"
+    ],
+    "blocking_reasons": [],
+    "change_id": "integrate-copy-backed-slot-verification-shadow-mode",
+    "copy_slice_decision_label": "COPY_SLICE_READY_FOR_SHADOW_INTEGRATION",
+    "copy_slice_dir": "reports/public-sample/copy-backed-slot-verification-slice",
+    "current_raw_file_hashes": {
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/artifact-manifest.json": "531c58434f2e7896a3db3d7a2455a642112e0090076ff241000a7dfe0adcf2d3",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/boundary-verification.json": "1c769cc80530c5d8107cd53094bd1a0f10bc45a76aa3ee6b5b51b69e32b67b26",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/control/dev_predictions.jsonl": "a379d4f60878193cd19e10d42a934be0ef65a8eab6a1cc70ada0299ef1835ced",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/control/test_predictions.jsonl": "8fa809c505006845a08d2af0de5968d294a520ec35c51aec801f55e945efd080",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/gold/dev_gold.jsonl": "60909be7ce43b8682082355550efe3864fe600c458f540ee2c475a3fc602b085",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/gold/test_gold.jsonl": "7b97f67ec5b0ef19c652d3d3edb7ada9296c88fe1e67f3b400ca84d2c12fe5f2",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/metric-reproduction.json": "6243ce82d295504c643a50d7b435f2553a69d27a62f8fc525928b778a597539b",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/treatment/dev_predictions.jsonl": "972f6dcea10046b6bf0eedf1286588955c2c1942344f3a32fcb72711a95289cf",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/treatment/test_predictions.jsonl": "9e93e8f53860f8018c28fdc709571983a41832411a240374e7d1f5faee18e94d"
+    },
+    "decision_label": "SHADOW_MODE_INPUT_BOUNDARY_PASSED",
+    "enabled_task_scoped_triples": [
+      "extract:extract_page:target",
+      "form_fill:fill_form:field",
+      "search:search_web:query"
+    ],
+    "expected_raw_file_hashes": {
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/artifact-manifest.json": "531c58434f2e7896a3db3d7a2455a642112e0090076ff241000a7dfe0adcf2d3",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/boundary-verification.json": "1c769cc80530c5d8107cd53094bd1a0f10bc45a76aa3ee6b5b51b69e32b67b26",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/control/dev_predictions.jsonl": "a379d4f60878193cd19e10d42a934be0ef65a8eab6a1cc70ada0299ef1835ced",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/control/test_predictions.jsonl": "8fa809c505006845a08d2af0de5968d294a520ec35c51aec801f55e945efd080",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/gold/dev_gold.jsonl": "60909be7ce43b8682082355550efe3864fe600c458f540ee2c475a3fc602b085",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/gold/test_gold.jsonl": "7b97f67ec5b0ef19c652d3d3edb7ada9296c88fe1e67f3b400ca84d2c12fe5f2",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/metric-reproduction.json": "6243ce82d295504c643a50d7b435f2553a69d27a62f8fc525928b778a597539b",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/treatment/dev_predictions.jsonl": "972f6dcea10046b6bf0eedf1286588955c2c1942344f3a32fcb72711a95289cf",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/treatment/test_predictions.jsonl": "9e93e8f53860f8018c28fdc709571983a41832411a240374e7d1f5faee18e94d"
+    },
+    "raw_input_hashes_preserved": true,
+    "v1_evaluator_metric_delta_zero": true
+  },
+  "recommended_next_change": {
+    "change_id": "review-copy-backed-shadow-mode-before-runtime-wiring",
+    "scope": "Review the shadow-mode evidence before any narrower runtime-wiring proposal; no enforcement is approved by this phase.",
+    "why_next": "Shadow sidecars attach deterministically to every current prediction contract while preserving V1 evaluator behavior."
+  },
+  "shadow_metrics": {
+    "action_disabled_diagnostic_count": 114,
+    "enabled_slot_diagnostic_count": 430,
+    "enforcement_enabled_count": 0,
+    "fail_closed_count": 566,
+    "fail_closed_rate": 0.6008492569002123,
+    "out_of_scope_diagnostic_count": 512,
+    "provenance_false_accept_count": 0,
+    "silent_fallback_count": 0,
+    "slot_diagnostic_count": 942,
+    "source_verified_and_gold_correct_count": 347,
+    "source_verified_and_gold_correct_rate": 0.9228723404255319,
+    "source_verified_gold_mismatch_count": 29,
+    "source_verified_gold_mismatch_rate": 0.07712765957446809,
+    "source_verified_prediction_count": 376,
+    "source_verified_prediction_rate": 0.8744186046511628
+  },
+  "sidecar_attachment": {
+    "prediction_contract_count": 828,
+    "shadow_sidecar_count": 828,
+    "sidecar_attachment_rate": 1.0
+  }
+}

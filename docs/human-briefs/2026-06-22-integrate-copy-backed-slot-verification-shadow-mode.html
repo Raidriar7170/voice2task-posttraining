@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Copy-backed Verification Shadow Mode Human Brief</title>
+  <style>
+    :root { color-scheme: light; --ink:#18212f; --muted:#5f6b7a; --line:#d9e0e8; --bg:#f7f9fb; --panel:#ffffff; --accent:#0b6e69; --warn:#9a5b00; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--ink); background: var(--bg); }
+    main { max-width: 1040px; margin: 0 auto; padding: 32px 20px 48px; }
+    h1 { margin: 0 0 12px; font-size: 28px; letter-spacing: 0; }
+    h2 { margin: 28px 0 12px; font-size: 18px; }
+    p, li { line-height: 1.62; }
+    code { background: #edf2f7; border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; font-size: 0.92em; }
+    .lead { font-size: 18px; line-height: 1.65; }
+    .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 18px 0; }
+    .metric { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
+    .metric strong { display: block; font-size: 22px; margin-bottom: 4px; }
+    .metric span { color: var(--muted); font-size: 13px; }
+    .status { display: inline-block; border: 1px solid #9ec7c3; color: var(--accent); border-radius: 999px; padding: 4px 10px; font-weight: 650; font-size: 13px; }
+    .note { border-left: 4px solid var(--warn); background: #fff8e8; padding: 12px 14px; }
+    ul { padding-left: 20px; }
+    a { color: var(--accent); }
+    @media (max-width: 760px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  </style>
+</head>
+<body>
+  <main>
+    <span class="status">shadow-mode phase</span>
+    <h1>Copy-backed Verification Shadow Mode</h1>
+    <p class="lead">一句话结论：本阶段把 copy-backed verifier 接入为离线 shadow sidecar，每个当前 Control/Treatment prediction contract 都有一个 sidecar；最终 decision 为 <code>SHADOW_MODE_READY_FOR_REVIEW</code>，唯一推荐下一步是 <code>review-copy-backed-shadow-mode-before-runtime-wiring</code>。</p>
+
+    <div class="grid">
+      <div class="metric"><strong>828/828</strong><span>prediction contracts with sidecars</span></div>
+      <div class="metric"><strong>376</strong><span>source-verified predictions</span></div>
+      <div class="metric"><strong>0</strong><span>enforcement enabled count</span></div>
+      <div class="metric"><strong>0</strong><span>action source-verified count</span></div>
+    </div>
+
+    <h2>当前状态</h2>
+    <p>本阶段生成 shadow-mode evidence surface。权威证据是 <code>reports/public-sample/copy-backed-verification-shadow-mode/summary.json</code>、<code>shadow-compatibility.json</code>、<code>shadow-sidecars.jsonl</code> 和 OpenSpec archive。</p>
+
+    <h2>本阶段改变了什么</h2>
+    <ul>
+      <li>新增只读 shadow-mode 脚本：<code>scripts/run_copy_backed_verification_shadow_mode.py</code>。</li>
+      <li>每个 <code>split/sample_id/run_role</code> prediction contract 输出一个 sidecar，嵌套 <code>slot_diagnostics</code>。</li>
+      <li>复用上一阶段 verifier 和 task-scoped policy；没有新增 normalization、semantic resolver、LLM judge 或 prediction repair。</li>
+      <li><code>query</code>/<code>field</code>/<code>target</code> 仍是唯一 enabled slot paths；<code>action</code> 仍 disabled。</li>
+      <li>sidecar 只作为诊断证据，不写回 V1 contract，不进入 evaluator，不启用 runtime enforcement。</li>
+    </ul>
+
+    <h2>关键文件</h2>
+    <ul>
+      <li><code>docs/copy-backed-verification-shadow-mode.md</code></li>
+      <li><code>reports/public-sample/copy-backed-verification-shadow-mode/summary.json</code></li>
+      <li><code>reports/public-sample/copy-backed-verification-shadow-mode/shadow-compatibility.json</code></li>
+      <li><code>reports/public-sample/copy-backed-verification-shadow-mode/shadow-sidecars.jsonl</code></li>
+      <li><code>tests/test_copy_backed_verification_shadow_mode.py</code></li>
+    </ul>
+
+    <h2>核心指标</h2>
+    <ul>
+      <li>Sidecar attachment rate：1.000000。</li>
+      <li>Enabled slot diagnostics：430；source-verified prediction count：376；source-verified rate：0.874419。</li>
+      <li>Source-verified-and-gold-correct：347；source-verified-but-gold-mismatch：29。</li>
+      <li>Action disabled diagnostics：114；action source-verified count：0。</li>
+      <li>Raw input hashes preserved：true；V1 evaluator zero delta：true；deterministic rerun rate：1.000000。</li>
+    </ul>
+
+    <h2>验证计划</h2>
+    <ul>
+      <li><code>PYTHONPATH=src pytest -q tests/test_copy_backed_verification_shadow_mode.py</code>：focused TDD suite。</li>
+      <li>归档后完整验证：<code>PYTHONPATH=src pytest -q</code>、<code>ruff</code>、<code>openspec validate --all --strict</code>、truth-surface check、JSON validation、leak scan、<code>git diff --check</code>。</li>
+    </ul>
+
+    <h2>剩余风险</h2>
+    <p class="note">shadow mode 不是 enforcement；source-backed provenance 不是 correctness。当前不能宣称 slot accuracy 提升、executable pass 提升、模型质量提升、runtime enforcement、action verification、production readiness、safety readiness、held-out recovery 或 live-browser improvement。</p>
+
+    <h2>推荐下一步</h2>
+    <p>停止在本阶段。唯一推荐 next change：<code>review-copy-backed-shadow-mode-before-runtime-wiring</code>。下一阶段也应先 review evidence，不自动做 runtime wiring、enforcement、action enablement、training、schema/evaluator change 或 prediction repair。</p>
+  </main>
+</body>
+</html>

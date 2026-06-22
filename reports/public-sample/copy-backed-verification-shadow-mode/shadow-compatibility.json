@@ -1,0 +1,87 @@
+{
+  "change_id": "integrate-copy-backed-slot-verification-shadow-mode",
+  "decision_label": "SHADOW_MODE_READY_FOR_REVIEW",
+  "deterministic_rerun_rate": 1.0,
+  "generated_at": "2026-06-22",
+  "input_boundary": {
+    "action_enabled": false,
+    "approved_inputs": [
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs",
+      "reports/public-sample/copy-backed-slot-verification-slice"
+    ],
+    "blocking_reasons": [],
+    "change_id": "integrate-copy-backed-slot-verification-shadow-mode",
+    "copy_slice_decision_label": "COPY_SLICE_READY_FOR_SHADOW_INTEGRATION",
+    "copy_slice_dir": "reports/public-sample/copy-backed-slot-verification-slice",
+    "current_raw_file_hashes": {
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/artifact-manifest.json": "531c58434f2e7896a3db3d7a2455a642112e0090076ff241000a7dfe0adcf2d3",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/boundary-verification.json": "1c769cc80530c5d8107cd53094bd1a0f10bc45a76aa3ee6b5b51b69e32b67b26",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/control/dev_predictions.jsonl": "a379d4f60878193cd19e10d42a934be0ef65a8eab6a1cc70ada0299ef1835ced",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/control/test_predictions.jsonl": "8fa809c505006845a08d2af0de5968d294a520ec35c51aec801f55e945efd080",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/gold/dev_gold.jsonl": "60909be7ce43b8682082355550efe3864fe600c458f540ee2c475a3fc602b085",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/gold/test_gold.jsonl": "7b97f67ec5b0ef19c652d3d3edb7ada9296c88fe1e67f3b400ca84d2c12fe5f2",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/metric-reproduction.json": "6243ce82d295504c643a50d7b435f2553a69d27a62f8fc525928b778a597539b",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/treatment/dev_predictions.jsonl": "972f6dcea10046b6bf0eedf1286588955c2c1942344f3a32fcb72711a95289cf",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/treatment/test_predictions.jsonl": "9e93e8f53860f8018c28fdc709571983a41832411a240374e7d1f5faee18e94d"
+    },
+    "decision_label": "SHADOW_MODE_INPUT_BOUNDARY_PASSED",
+    "enabled_task_scoped_triples": [
+      "extract:extract_page:target",
+      "form_fill:fill_form:field",
+      "search:search_web:query"
+    ],
+    "expected_raw_file_hashes": {
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/artifact-manifest.json": "531c58434f2e7896a3db3d7a2455a642112e0090076ff241000a7dfe0adcf2d3",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/boundary-verification.json": "1c769cc80530c5d8107cd53094bd1a0f10bc45a76aa3ee6b5b51b69e32b67b26",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/control/dev_predictions.jsonl": "a379d4f60878193cd19e10d42a934be0ef65a8eab6a1cc70ada0299ef1835ced",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/control/test_predictions.jsonl": "8fa809c505006845a08d2af0de5968d294a520ec35c51aec801f55e945efd080",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/gold/dev_gold.jsonl": "60909be7ce43b8682082355550efe3864fe600c458f540ee2c475a3fc602b085",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/gold/test_gold.jsonl": "7b97f67ec5b0ef19c652d3d3edb7ada9296c88fe1e67f3b400ca84d2c12fe5f2",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/metric-reproduction.json": "6243ce82d295504c643a50d7b435f2553a69d27a62f8fc525928b778a597539b",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/treatment/dev_predictions.jsonl": "972f6dcea10046b6bf0eedf1286588955c2c1942344f3a32fcb72711a95289cf",
+      "reports/public-sample/step-matched-canonical-slot-ablation/raw-inputs/treatment/test_predictions.jsonl": "9e93e8f53860f8018c28fdc709571983a41832411a240374e7d1f5faee18e94d"
+    },
+    "raw_input_hashes_preserved": true,
+    "v1_evaluator_metric_delta_zero": true
+  },
+  "prediction_contract_count": 828,
+  "previous_copy_slice": {
+    "decision_label": "COPY_SLICE_READY_FOR_SHADOW_INTEGRATION",
+    "enabled_task_scoped_triples": [
+      "extract:extract_page:target",
+      "form_fill:fill_form:field",
+      "search:search_web:query"
+    ],
+    "source_verified_prediction_count": 376,
+    "source_verified_prediction_rate": 0.8744186046511628
+  },
+  "raw_input_hashes_preserved": true,
+  "shadow_sidecar_count": 828,
+  "sidecar_attachment_rate": 1.0,
+  "sidecar_schema": {
+    "contract_mutation_allowed": false,
+    "evaluator_input_allowed": false,
+    "required_fields": [
+      "sample_id",
+      "split",
+      "run_role",
+      "shadow_mode_enabled",
+      "enforcement_enabled",
+      "prediction_contract_hash",
+      "input_hash",
+      "slot_diagnostics"
+    ],
+    "unit": "one_row_per_split_sample_run_role_prediction_contract"
+  },
+  "v1_evaluator_metric_delta": {
+    "basis": "shadow_sidecar_only_no_prediction_gold_schema_or_evaluator_mutation",
+    "metric_deltas": {
+      "exact_match": 0.0,
+      "executable_pass_rate": 0.0,
+      "route_accuracy": 0.0,
+      "slot_accuracy": 0.0,
+      "task_type_accuracy": 0.0
+    },
+    "zero_delta": true
+  }
+}
