@@ -1,0 +1,7 @@
+{
+  "benchmark_kind": "challenge_prediction_latency",
+  "canonical_prediction_hook_evaluated": false,
+  "local_report_generation_overhead_ms": 0.000167,
+  "production_slo_claim": false,
+  "status": "blocked_missing_loadable_frozen_adapters"
+}

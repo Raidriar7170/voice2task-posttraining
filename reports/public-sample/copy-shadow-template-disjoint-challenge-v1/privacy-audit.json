@@ -1,0 +1,14 @@
+{
+  "audit_kind": "copy_shadow_template_disjoint_privacy",
+  "gold_fields_in_online_sidecars": false,
+  "leak_scan": {
+    "findings": [],
+    "ok": true
+  },
+  "private_paths_in_reports": false,
+  "public_safe": true,
+  "real_pii_expected": false,
+  "retains_full_input_text_in_sidecars": false,
+  "retains_raw_model_output_in_sidecars": false,
+  "synthetic_pii_rows": 9
+}

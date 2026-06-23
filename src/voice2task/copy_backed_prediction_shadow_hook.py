@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Protocol
 
 from voice2task.copy_backed_shadow_interface import (
+    compute_policy_hash,
     generate_online_shadow_sidecar,
     load_scope_policy,
     stable_hash,
@@ -28,6 +29,17 @@ class PredictionShadowHookConfig:
     retain_input_text: bool = False
     retain_raw_model_output: bool = False
     fail_isolated: bool = True
+
+
+@dataclass(frozen=True)
+class PredictionShadowPolicySnapshot:
+    policy: dict[str, Any]
+    policy_path: Path
+    policy_id: str
+    policy_version: str
+    policy_hash: str
+    policy_start_hash: str
+    policy_loaded_once: bool = True
 
 
 @dataclass(frozen=True)
@@ -108,6 +120,9 @@ def run_prediction_shadow_hook(
     config: PredictionShadowHookConfig,
     request_id: str,
     sink: ShadowSink | None = None,
+    policy_snapshot: PredictionShadowPolicySnapshot | None = None,
+    policy_error_code: str | None = None,
+    sidecar_path_conflict: bool = False,
 ) -> PredictionShadowHookOutcome:
     started = time.perf_counter()
     if not config.enabled:
@@ -115,6 +130,25 @@ def run_prediction_shadow_hook(
             "SKIPPED_DISABLED",
             sidecar=None,
             sidecar_write_status="disabled",
+            started=started,
+        )
+    config_error_code = prediction_shadow_config_error_code(config)
+    if config_error_code is not None:
+        return _outcome(
+            "SHADOW_CONFIG_INVALID_ISOLATED",
+            sidecar=None,
+            error_code=config_error_code,
+            sidecar_write_status="disabled",
+            exception_isolated=True,
+            started=started,
+        )
+    if sidecar_path_conflict:
+        return _outcome(
+            "SHADOW_SINK_PATH_CONFLICT_ISOLATED",
+            sidecar=None,
+            error_code="sidecar_path_conflicts_with_primary_artifact",
+            sidecar_write_status="disabled",
+            exception_isolated=True,
             started=started,
         )
     if not isinstance(source_text, str) or not source_text:
@@ -126,23 +160,24 @@ def run_prediction_shadow_hook(
             exception_isolated=True,
             started=started,
         )
+    if policy_error_code is not None:
+        return _outcome(
+            "SHADOW_POLICY_INVALID",
+            sidecar=None,
+            error_code=policy_error_code,
+            sidecar_write_status="disabled",
+            exception_isolated=True,
+            started=started,
+        )
     try:
-        policy = load_scope_policy(_required_policy_path(config))
-        policy_validation = validate_scope_policy(policy)
+        if policy_snapshot is None:
+            policy_snapshot = load_prediction_shadow_policy_snapshot(config, loaded_once=False)
+        policy = policy_snapshot.policy
     except Exception:
         return _outcome(
             "SHADOW_POLICY_INVALID",
             sidecar=None,
             error_code="policy_load_or_validation_failed",
-            sidecar_write_status="disabled",
-            exception_isolated=True,
-            started=started,
-        )
-    if not policy_validation.get("ok"):
-        return _outcome(
-            "SHADOW_POLICY_INVALID",
-            sidecar=None,
-            error_code="policy_validation_failed",
             sidecar_write_status="disabled",
             exception_isolated=True,
             started=started,
@@ -164,6 +199,8 @@ def run_prediction_shadow_hook(
             prediction_contract=parsed_prediction,
             request_id=request_id,
             scope_policy=policy,
+            policy_loaded_once=policy_snapshot.policy_loaded_once,
+            policy_start_hash=policy_snapshot.policy_start_hash,
             retain_span_text=config.retain_span_text,
             started=started,
         )
@@ -226,6 +263,7 @@ def summarize_prediction_shadow_outcomes(
     outcomes: list[PredictionShadowHookOutcome],
     *,
     enabled: bool,
+    policy_snapshot: PredictionShadowPolicySnapshot | None = None,
 ) -> dict[str, Any]:
     hook_status_counts: dict[str, int] = {}
     error_code_counts: dict[str, int] = {}
@@ -235,7 +273,7 @@ def summarize_prediction_shadow_outcomes(
         if outcome.error_code:
             error_code_counts[outcome.error_code] = error_code_counts.get(outcome.error_code, 0) + 1
         sidecar_write_statuses.add(outcome.sidecar_write_status)
-    return {
+    summary: dict[str, Any] = {
         "enabled": enabled,
         "hook_version": HOOK_VERSION,
         "sidecar_version": SIDECAR_VERSION,
@@ -250,7 +288,75 @@ def summarize_prediction_shadow_outcomes(
         "gold_fields_absent": True,
         "contract_mutated": False,
         "runtime_decision_changed": False,
+        "path_conflict_count": hook_status_counts.get("SHADOW_SINK_PATH_CONFLICT_ISOLATED", 0),
     }
+    if policy_snapshot is not None:
+        policy_end_hash = _current_policy_end_hash(policy_snapshot.policy_path)
+        summary.update(
+            {
+                "policy_loaded_once": policy_snapshot.policy_loaded_once,
+                "policy_id": policy_snapshot.policy_id,
+                "policy_version": policy_snapshot.policy_version,
+                "policy_hash": policy_snapshot.policy_hash,
+                "policy_start_hash": policy_snapshot.policy_start_hash,
+                "policy_end_hash": policy_end_hash,
+                "policy_drift_detected": policy_end_hash != policy_snapshot.policy_start_hash,
+            }
+        )
+    return summary
+
+
+def prediction_shadow_config_error_code(config: PredictionShadowHookConfig) -> str | None:
+    if config.retain_input_text:
+        return "reserved_config_non_default:retain_input_text"
+    if config.retain_raw_model_output:
+        return "reserved_config_non_default:retain_raw_model_output"
+    if config.fail_isolated is not True:
+        return "reserved_config_non_default:fail_isolated"
+    return None
+
+
+def load_prediction_shadow_policy_snapshot(
+    config: PredictionShadowHookConfig,
+    *,
+    loaded_once: bool = True,
+) -> PredictionShadowPolicySnapshot:
+    policy_path = _required_policy_path(config)
+    policy = load_scope_policy(policy_path)
+    policy_validation = validate_scope_policy(policy)
+    if not policy_validation.get("ok"):
+        raise ValueError("copy-backed shadow policy validation failed")
+    policy_hash = str(policy_validation["policy_hash"])
+    return PredictionShadowPolicySnapshot(
+        policy=policy,
+        policy_path=policy_path,
+        policy_id=str(policy_validation["policy_id"]),
+        policy_version=str(policy_validation["policy_version"]),
+        policy_hash=policy_hash,
+        policy_start_hash=str(policy_validation["computed_policy_hash"]),
+        policy_loaded_once=loaded_once,
+    )
+
+
+def sidecar_path_conflicts(sidecar_output_path: Path | None, reserved_artifact_paths: list[Path]) -> bool:
+    if sidecar_output_path is None:
+        return False
+    sidecar_path = _canonical_path(sidecar_output_path)
+    return any(sidecar_path == _canonical_path(path) for path in reserved_artifact_paths)
+
+
+def _canonical_path(path: Path) -> Path:
+    return path.expanduser().resolve(strict=False)
+
+
+def _current_policy_end_hash(path: Path) -> str | None:
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
+        return None
+    if not isinstance(raw, dict):
+        return None
+    return compute_policy_hash(raw)
 
 
 def _resolve_path(value: Any, *, base_dir: Path, fallback_to_cwd: bool = False) -> Path | None:
@@ -302,6 +408,8 @@ def _build_prediction_sidecar(
     prediction_contract: dict[str, Any],
     request_id: str,
     scope_policy: dict[str, Any],
+    policy_loaded_once: bool,
+    policy_start_hash: str,
     retain_span_text: bool,
     started: float,
 ) -> dict[str, Any]:
@@ -323,6 +431,8 @@ def _build_prediction_sidecar(
         "policy_id": scope_policy["policy_id"],
         "policy_version": scope_policy["policy_version"],
         "policy_hash": scope_policy["policy_hash"],
+        "policy_loaded_once": policy_loaded_once,
+        "policy_start_hash": policy_start_hash,
         "hook_status": "COMPLETED",
         "slot_diagnostics": diagnostics,
         "contract_mutated": False,

@@ -1,0 +1,36 @@
+{
+  "accepted": true,
+  "audit_kind": "template_disjoint_public_sample_audit",
+  "existing_slot_value_stripped_signature_count": 621,
+  "existing_template_signature_count": 1063,
+  "llm_judge_used": false,
+  "max_observed": {
+    "char_3gram_jaccard": 0.076923,
+    "normalized_edit_similarity": 0.222222
+  },
+  "near_duplicate_rows_rejected": 0,
+  "overlap_counts": {
+    "exact_input_text": 0,
+    "sample_id": 0,
+    "slot_value_stripped_signature": 0,
+    "template_signature": 0
+  },
+  "row_count": 120,
+  "source_files_compared": [
+    "data/public-samples/canonical_slot_boundary_seed_candidates.jsonl",
+    "data/public-samples/current_retry_confirmation_preservation_seed_candidates.jsonl",
+    "data/public-samples/dpo_public_sample.jsonl",
+    "data/public-samples/family_stratified_generalization_seed_candidates.jsonl",
+    "data/public-samples/form_fill_confirmation_marker_extension_seed_candidates.jsonl",
+    "data/public-samples/form_fill_remediation_seed_candidates.jsonl",
+    "data/public-samples/scaled_clarify_slot_boundary_seed_candidates.jsonl",
+    "data/public-samples/scaled_public_sample_seed_candidates.jsonl",
+    "data/public-samples/seed_traces.jsonl",
+    "data/public-samples/sft_public_sample.jsonl",
+    "data/public-samples/slot_value_generalization_seed_candidates.jsonl"
+  ],
+  "thresholds": {
+    "char_3gram_jaccard_max": 0.8,
+    "normalized_edit_similarity_max": 0.85
+  }
+}

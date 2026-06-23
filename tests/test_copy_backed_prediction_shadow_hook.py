@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from voice2task import copy_backed_prediction_shadow_hook as shadow_hook
 from voice2task import training
 from voice2task.evaluation import load_predictions
 from voice2task.io import read_json
@@ -219,6 +220,165 @@ def test_prediction_shadow_hook_accepts_repo_relative_policy_path_from_external_
 
     assert metadata["copy_backed_shadow"]["hook_status_counts"]["COMPLETED"] == 4
     assert metadata["copy_backed_shadow"]["sidecar_write_status"] == "written"
+
+
+def test_prediction_shadow_hook_rejects_reserved_config_values_without_writing_sidecar(tmp_path: Path) -> None:
+    from voice2task.copy_backed_prediction_shadow_hook import PredictionShadowHookConfig, run_prediction_shadow_hook
+
+    cases = [
+        ("retain_input_text", {"retain_input_text": True}),
+        ("retain_raw_model_output", {"retain_raw_model_output": True}),
+        ("fail_isolated", {"fail_isolated": False}),
+    ]
+    for field_name, overrides in cases:
+        sidecar_path = tmp_path / f"{field_name}.jsonl"
+        outcome = run_prediction_shadow_hook(
+            source_text="帮我搜索北京天气",
+            prediction=_contract("search", "search_web", {"query": "北京天气"}),
+            config=PredictionShadowHookConfig(
+                enabled=True,
+                policy_path=POLICY_PATH,
+                sidecar_output_path=sidecar_path,
+                **overrides,
+            ),
+            request_id=f"reserved-{field_name}",
+        )
+
+        assert outcome.hook_status == "SHADOW_CONFIG_INVALID_ISOLATED"
+        assert outcome.error_code == f"reserved_config_non_default:{field_name}"
+        assert outcome.sidecar is None
+        assert outcome.sidecar_write_status == "disabled"
+        assert outcome.main_prediction_unchanged is True
+        assert outcome.exception_isolated is True
+        assert not sidecar_path.exists()
+
+
+def test_prediction_shadow_hook_loads_policy_once_per_prediction_export_and_records_freeze_metadata(
+    monkeypatch: Any,
+    tmp_path: Path,
+) -> None:
+    manifest = _write_manifest(tmp_path)
+    sidecar_path = tmp_path / "jsonl" / "copy-shadow.jsonl"
+    config_path = _write_config(
+        tmp_path / "jsonl",
+        {
+            "enabled": True,
+            "policy_path": POLICY_PATH.as_posix(),
+            "sidecar_output_path": sidecar_path.as_posix(),
+            "retain_span_text": False,
+            "retain_input_text": False,
+            "retain_raw_model_output": False,
+            "fail_isolated": True,
+        },
+    )
+    real_load_scope_policy = shadow_hook.load_scope_policy
+    load_calls: list[Path] = []
+
+    def counted_load_scope_policy(path: Path) -> dict[str, Any]:
+        load_calls.append(path)
+        return real_load_scope_policy(path)
+
+    monkeypatch.setattr(shadow_hook, "load_scope_policy", counted_load_scope_policy)
+
+    metadata = run_sft_prediction_export(
+        config_path,
+        manifest,
+        tmp_path / "jsonl" / "predictions.jsonl",
+        dry_run=False,
+        fixture_mode=True,
+    )
+
+    hook_summary = metadata["copy_backed_shadow"]
+    assert len(load_calls) == 1
+    assert hook_summary["policy_loaded_once"] is True
+    assert hook_summary["policy_id"] == "copy-backed-scope-policy-v1"
+    assert hook_summary["policy_version"] == "1.0.0"
+    assert hook_summary["policy_hash"] == "5dc14efb8ded13dc048ddb067c7c63a1a62b6c03896950e861303973d505cbc7"
+    assert hook_summary["policy_start_hash"] == hook_summary["policy_hash"]
+    assert hook_summary["policy_end_hash"] == hook_summary["policy_hash"]
+    assert hook_summary["policy_drift_detected"] is False
+    sidecars = _jsonl_rows(sidecar_path)
+    assert len(sidecars) == 4
+    assert {sidecar["policy_hash"] for sidecar in sidecars} == {hook_summary["policy_hash"]}
+    assert all(sidecar["policy_loaded_once"] is True for sidecar in sidecars)
+
+
+def test_prediction_shadow_hook_records_policy_drift_without_mutating_predictions(
+    monkeypatch: Any,
+    tmp_path: Path,
+) -> None:
+    manifest = _write_manifest(tmp_path)
+    config_path = _write_config(
+        tmp_path / "jsonl",
+        {
+            "enabled": True,
+            "policy_path": POLICY_PATH.as_posix(),
+            "sidecar_output_path": (tmp_path / "jsonl" / "copy-shadow.jsonl").as_posix(),
+            "retain_span_text": False,
+            "retain_input_text": False,
+            "retain_raw_model_output": False,
+            "fail_isolated": True,
+        },
+    )
+    monkeypatch.setattr(shadow_hook, "_current_policy_end_hash", lambda path: "drifted-policy-hash", raising=False)
+
+    disabled_config = _write_config(tmp_path / "disabled")
+    disabled_output = tmp_path / "disabled" / "predictions.jsonl"
+    drift_output = tmp_path / "jsonl" / "predictions.jsonl"
+    run_sft_prediction_export(disabled_config, manifest, disabled_output, dry_run=False, fixture_mode=True)
+    metadata = run_sft_prediction_export(config_path, manifest, drift_output, dry_run=False, fixture_mode=True)
+
+    hook_summary = metadata["copy_backed_shadow"]
+    assert disabled_output.read_bytes() == drift_output.read_bytes()
+    assert hook_summary["policy_loaded_once"] is True
+    assert hook_summary["policy_start_hash"] == "5dc14efb8ded13dc048ddb067c7c63a1a62b6c03896950e861303973d505cbc7"
+    assert hook_summary["policy_end_hash"] == "drifted-policy-hash"
+    assert hook_summary["policy_drift_detected"] is True
+    assert hook_summary["main_prediction_unchanged"] is True
+
+
+def test_prediction_shadow_hook_isolates_sidecar_path_conflicts_with_primary_prediction_artifacts(
+    tmp_path: Path,
+) -> None:
+    manifest = _write_manifest(tmp_path)
+    disabled_config = _write_config(tmp_path / "disabled")
+    disabled_output = tmp_path / "disabled" / "predictions.jsonl"
+    run_sft_prediction_export(disabled_config, manifest, disabled_output, dry_run=False, fixture_mode=True)
+    reserved_paths = {
+        "prediction_output": tmp_path / "jsonl" / "predictions.jsonl",
+        "prediction_metadata": tmp_path / "jsonl" / "prediction_metadata.json",
+        "prompt_snapshot": tmp_path / "jsonl" / "prompt_snapshot.json",
+        "raw_decoded_summary": tmp_path / "jsonl" / "raw_decoded_summary.jsonl",
+        "generation_trace": tmp_path / "jsonl" / "generation_trace.jsonl",
+    }
+
+    for name, sidecar_path in reserved_paths.items():
+        run_dir = tmp_path / f"conflict-{name}"
+        output = run_dir / "predictions.jsonl"
+        configured_sidecar = run_dir / sidecar_path.name
+        config_path = _write_config(
+            run_dir,
+            {
+                "enabled": True,
+                "policy_path": POLICY_PATH.as_posix(),
+                "sidecar_output_path": configured_sidecar.as_posix(),
+                "retain_span_text": False,
+                "retain_input_text": False,
+                "retain_raw_model_output": False,
+                "fail_isolated": True,
+            },
+        )
+
+        metadata = run_sft_prediction_export(config_path, manifest, output, dry_run=False, fixture_mode=True)
+
+        assert output.read_bytes() == disabled_output.read_bytes()
+        hook_summary = metadata["copy_backed_shadow"]
+        assert hook_summary["hook_status_counts"] == {"SHADOW_SINK_PATH_CONFLICT_ISOLATED": 4}
+        assert hook_summary["error_code_counts"] == {"sidecar_path_conflicts_with_primary_artifact": 4}
+        assert hook_summary["sidecar_write_status"] == "disabled"
+        assert hook_summary["path_conflict_count"] == 4
+        assert hook_summary["main_prediction_unchanged"] is True
+        assert "COMPLETED" not in hook_summary["hook_status_counts"]
 
 
 def test_prediction_shadow_report_scans_complete_output_bundle(monkeypatch: Any, tmp_path: Path) -> None:

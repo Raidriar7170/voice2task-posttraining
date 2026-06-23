@@ -14,8 +14,11 @@ from typing import Any, cast
 
 from voice2task.copy_backed_prediction_shadow_hook import (
     PredictionShadowHookOutcome,
+    load_prediction_shadow_policy_snapshot,
+    prediction_shadow_config_error_code,
     run_prediction_shadow_hook,
     shadow_config_from_mapping,
+    sidecar_path_conflicts,
     summarize_prediction_shadow_outcomes,
 )
 from voice2task.formatting import (
@@ -1007,6 +1010,19 @@ def _run_copy_backed_prediction_shadow_hook(
         return summarize_prediction_shadow_outcomes([], enabled=False)
     row_by_id = {row.id: row for row in rows}
     outcomes: list[PredictionShadowHookOutcome] = []
+    reserved_artifact_paths = [
+        output_path,
+        output_path.parent / "prediction_metadata.json",
+        *_prediction_sidecar_paths(output_path).values(),
+    ]
+    path_conflict = sidecar_path_conflicts(hook_config.sidecar_output_path, reserved_artifact_paths)
+    policy_snapshot = None
+    policy_error_code = None
+    if prediction_shadow_config_error_code(hook_config) is None and not path_conflict:
+        try:
+            policy_snapshot = load_prediction_shadow_policy_snapshot(hook_config)
+        except Exception:
+            policy_error_code = "policy_load_or_validation_failed"
     for record in read_jsonl(output_path):
         row_id = str(record.get("id", ""))
         source_row = row_by_id.get(row_id)
@@ -1016,9 +1032,12 @@ def _run_copy_backed_prediction_shadow_hook(
                 prediction=record.get("prediction"),
                 config=hook_config,
                 request_id=row_id,
+                policy_snapshot=policy_snapshot,
+                policy_error_code=policy_error_code,
+                sidecar_path_conflict=path_conflict,
             )
         )
-    return summarize_prediction_shadow_outcomes(outcomes, enabled=True)
+    return summarize_prediction_shadow_outcomes(outcomes, enabled=True, policy_snapshot=policy_snapshot)
 
 
 def _sha256_text(text: str) -> str:

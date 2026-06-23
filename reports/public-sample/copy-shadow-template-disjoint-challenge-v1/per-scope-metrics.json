@@ -1,0 +1,38 @@
+{
+  "metrics": {
+    "blocked:deny:action": {
+      "challenge_row_count": 30,
+      "high_risk_false_trust_count": null,
+      "observed_prediction_count": 0,
+      "scope_expected_enabled": false,
+      "trusted_gold_correct_rate": null,
+      "trusted_gold_mismatch_rate": null
+    },
+    "extract:extract_page:target": {
+      "challenge_row_count": 30,
+      "high_risk_false_trust_count": null,
+      "observed_prediction_count": 0,
+      "scope_expected_enabled": true,
+      "trusted_gold_correct_rate": null,
+      "trusted_gold_mismatch_rate": null
+    },
+    "form_fill:fill_form:field": {
+      "challenge_row_count": 30,
+      "high_risk_false_trust_count": null,
+      "observed_prediction_count": 0,
+      "scope_expected_enabled": true,
+      "trusted_gold_correct_rate": null,
+      "trusted_gold_mismatch_rate": null
+    },
+    "search:search_web:query": {
+      "challenge_row_count": 30,
+      "high_risk_false_trust_count": null,
+      "observed_prediction_count": 0,
+      "scope_expected_enabled": true,
+      "trusted_gold_correct_rate": null,
+      "trusted_gold_mismatch_rate": null
+    }
+  },
+  "metrics_kind": "blocked_expected_scope_metrics",
+  "observed_metrics_status": "blocked_missing_loadable_frozen_adapters"
+}

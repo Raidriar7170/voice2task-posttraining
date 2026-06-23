@@ -1,0 +1,72 @@
+{
+  "action_enabled": false,
+  "audit_kind": "copy_shadow_template_disjoint_policy_freeze",
+  "enabled_triples_changed": false,
+  "expected_policy_hash": "5dc14efb8ded13dc048ddb067c7c63a1a62b6c03896950e861303973d505cbc7",
+  "normalized_trusted": false,
+  "policy_drift_detected": false,
+  "policy_end_hash": "5dc14efb8ded13dc048ddb067c7c63a1a62b6c03896950e861303973d505cbc7",
+  "policy_end_validation": {
+    "action_enabled": false,
+    "blocking_reasons": [],
+    "computed_policy_hash": "5dc14efb8ded13dc048ddb067c7c63a1a62b6c03896950e861303973d505cbc7",
+    "disabled_row_set_matches_disabled_triples": true,
+    "disabled_triples": [
+      "blocked:deny:action"
+    ],
+    "enabled_disabled_overlap": [],
+    "enabled_row_set_matches_enabled_triples": true,
+    "enabled_triples": [
+      "search:search_web:query",
+      "form_fill:fill_form:field",
+      "extract:extract_page:target"
+    ],
+    "normalized_trusted": false,
+    "ok": true,
+    "policy_hash": "5dc14efb8ded13dc048ddb067c7c63a1a62b6c03896950e861303973d505cbc7",
+    "policy_id": "copy-backed-scope-policy-v1",
+    "policy_version": "1.0.0",
+    "scope_row_keys": [
+      "search:search_web:query",
+      "form_fill:fill_form:field",
+      "extract:extract_page:target",
+      "blocked:deny:action"
+    ],
+    "scope_row_keys_match_policy_sets": true
+  },
+  "policy_hash": "5dc14efb8ded13dc048ddb067c7c63a1a62b6c03896950e861303973d505cbc7",
+  "policy_id": "copy-backed-scope-policy-v1",
+  "policy_loaded_once": true,
+  "policy_modified": false,
+  "policy_path": "configs/copy-backed-scope-policy-v1.json",
+  "policy_start_hash": "5dc14efb8ded13dc048ddb067c7c63a1a62b6c03896950e861303973d505cbc7",
+  "policy_validation": {
+    "action_enabled": false,
+    "blocking_reasons": [],
+    "computed_policy_hash": "5dc14efb8ded13dc048ddb067c7c63a1a62b6c03896950e861303973d505cbc7",
+    "disabled_row_set_matches_disabled_triples": true,
+    "disabled_triples": [
+      "blocked:deny:action"
+    ],
+    "enabled_disabled_overlap": [],
+    "enabled_row_set_matches_enabled_triples": true,
+    "enabled_triples": [
+      "search:search_web:query",
+      "form_fill:fill_form:field",
+      "extract:extract_page:target"
+    ],
+    "normalized_trusted": false,
+    "ok": true,
+    "policy_hash": "5dc14efb8ded13dc048ddb067c7c63a1a62b6c03896950e861303973d505cbc7",
+    "policy_id": "copy-backed-scope-policy-v1",
+    "policy_version": "1.0.0",
+    "scope_row_keys": [
+      "search:search_web:query",
+      "form_fill:fill_form:field",
+      "extract:extract_page:target",
+      "blocked:deny:action"
+    ],
+    "scope_row_keys_match_policy_sets": true
+  },
+  "policy_version": "1.0.0"
+}

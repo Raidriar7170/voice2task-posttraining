@@ -1,0 +1,137 @@
+{
+  "metrics": {
+    "asr_style_noise": {
+      "challenge_row_count": 9,
+      "high_risk_false_trust_count": null,
+      "observed_prediction_count": 0,
+      "status": "blocked_missing_loadable_frozen_adapters"
+    },
+    "duplicate_exact": {
+      "challenge_row_count": 9,
+      "high_risk_false_trust_count": null,
+      "observed_prediction_count": 0,
+      "status": "blocked_missing_loadable_frozen_adapters"
+    },
+    "exact_unique": {
+      "challenge_row_count": 9,
+      "high_risk_false_trust_count": null,
+      "observed_prediction_count": 0,
+      "status": "blocked_missing_loadable_frozen_adapters"
+    },
+    "invalid_unparseable_output_fault_injection": {
+      "challenge_row_count": 6,
+      "high_risk_false_trust_count": null,
+      "observed_prediction_count": 0,
+      "status": "blocked_missing_loadable_frozen_adapters"
+    },
+    "long_input": {
+      "challenge_row_count": 9,
+      "high_risk_false_trust_count": null,
+      "observed_prediction_count": 0,
+      "status": "blocked_missing_loadable_frozen_adapters"
+    },
+    "multiple_entity_distractor": {
+      "challenge_row_count": 9,
+      "high_risk_false_trust_count": null,
+      "observed_prediction_count": 0,
+      "status": "blocked_missing_loadable_frozen_adapters"
+    },
+    "negative_condition:asr_style_noise": {
+      "challenge_row_count": 3,
+      "high_risk_false_trust_count": null,
+      "observed_prediction_count": 0,
+      "status": "blocked_missing_loadable_frozen_adapters"
+    },
+    "negative_condition:duplicate_exact": {
+      "challenge_row_count": 3,
+      "high_risk_false_trust_count": null,
+      "observed_prediction_count": 0,
+      "status": "blocked_missing_loadable_frozen_adapters"
+    },
+    "negative_condition:exact_unique": {
+      "challenge_row_count": 3,
+      "high_risk_false_trust_count": null,
+      "observed_prediction_count": 0,
+      "status": "blocked_missing_loadable_frozen_adapters"
+    },
+    "negative_condition:long_input": {
+      "challenge_row_count": 3,
+      "high_risk_false_trust_count": null,
+      "observed_prediction_count": 0,
+      "status": "blocked_missing_loadable_frozen_adapters"
+    },
+    "negative_condition:multiple_entity_distractor": {
+      "challenge_row_count": 3,
+      "high_risk_false_trust_count": null,
+      "observed_prediction_count": 0,
+      "status": "blocked_missing_loadable_frozen_adapters"
+    },
+    "negative_condition:normalization_candidate": {
+      "challenge_row_count": 3,
+      "high_risk_false_trust_count": null,
+      "observed_prediction_count": 0,
+      "status": "blocked_missing_loadable_frozen_adapters"
+    },
+    "negative_condition:normalization_collision": {
+      "challenge_row_count": 3,
+      "high_risk_false_trust_count": null,
+      "observed_prediction_count": 0,
+      "status": "blocked_missing_loadable_frozen_adapters"
+    },
+    "negative_condition:partial_span_trap": {
+      "challenge_row_count": 3,
+      "high_risk_false_trust_count": null,
+      "observed_prediction_count": 0,
+      "status": "blocked_missing_loadable_frozen_adapters"
+    },
+    "negative_condition:source_absent": {
+      "challenge_row_count": 3,
+      "high_risk_false_trust_count": null,
+      "observed_prediction_count": 0,
+      "status": "blocked_missing_loadable_frozen_adapters"
+    },
+    "negative_condition:synthetic_pii": {
+      "challenge_row_count": 3,
+      "high_risk_false_trust_count": null,
+      "observed_prediction_count": 0,
+      "status": "blocked_missing_loadable_frozen_adapters"
+    },
+    "normalization_candidate": {
+      "challenge_row_count": 9,
+      "high_risk_false_trust_count": null,
+      "observed_prediction_count": 0,
+      "status": "blocked_missing_loadable_frozen_adapters"
+    },
+    "normalization_collision": {
+      "challenge_row_count": 9,
+      "high_risk_false_trust_count": null,
+      "observed_prediction_count": 0,
+      "status": "blocked_missing_loadable_frozen_adapters"
+    },
+    "out_of_scope_action": {
+      "challenge_row_count": 30,
+      "high_risk_false_trust_count": null,
+      "observed_prediction_count": 0,
+      "status": "blocked_missing_loadable_frozen_adapters"
+    },
+    "partial_span_trap": {
+      "challenge_row_count": 9,
+      "high_risk_false_trust_count": null,
+      "observed_prediction_count": 0,
+      "status": "blocked_missing_loadable_frozen_adapters"
+    },
+    "source_absent": {
+      "challenge_row_count": 9,
+      "high_risk_false_trust_count": null,
+      "observed_prediction_count": 0,
+      "status": "blocked_missing_loadable_frozen_adapters"
+    },
+    "synthetic_pii": {
+      "challenge_row_count": 9,
+      "high_risk_false_trust_count": null,
+      "observed_prediction_count": 0,
+      "status": "blocked_missing_loadable_frozen_adapters"
+    }
+  },
+  "metrics_kind": "blocked_expected_condition_metrics"
+}

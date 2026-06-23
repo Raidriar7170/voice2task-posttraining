@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Copy Shadow Template-Disjoint Challenge V1</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1f2933;
+      --muted: #52606d;
+      --line: #d9e2ec;
+      --panel: #f8fafc;
+      --accent: #0b6e69;
+      --warn: #a85500;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: #ffffff;
+      line-height: 1.55;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 36px 22px 48px;
+    }
+    header {
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 18px;
+      margin-bottom: 22px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      letter-spacing: 0;
+    }
+    h2 {
+      margin: 28px 0 10px;
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+    p {
+      margin: 8px 0;
+    }
+    .status {
+      display: inline-block;
+      border: 1px solid #f0b36a;
+      color: var(--warn);
+      background: #fff8ed;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 13px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 10px;
+      margin: 14px 0;
+    }
+    .metric {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .metric strong {
+      display: block;
+      color: var(--accent);
+      font-size: 22px;
+      line-height: 1.2;
+    }
+    ul {
+      padding-left: 20px;
+    }
+    a {
+      color: var(--accent);
+    }
+    code {
+      background: #eef2f7;
+      padding: 1px 4px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>模板分离 Copy Shadow 挑战集 V1</h1>
+      <span class="status">CHALLENGE_EVALUATION_BLOCKED</span>
+      <p>结论：挑战集和审计已冻结，hook 加固已完成；由于本地没有可加载且身份可验证的 frozen adapter，本阶段没有运行观察性挑战推理。</p>
+    </header>
+
+    <section>
+      <h2>当前状态</h2>
+      <div class="grid">
+        <div class="metric"><strong>120</strong>公开安全挑战行</div>
+        <div class="metric"><strong>30 x 3</strong>启用 scope 平衡覆盖</div>
+        <div class="metric"><strong>30</strong>禁用 action 负控行</div>
+        <div class="metric"><strong>0</strong>样本、输入、模板重叠</div>
+      </div>
+    </section>
+
+    <section>
+      <h2>本阶段变更</h2>
+      <ul>
+        <li>加固 prediction shadow hook：拒绝保留原输入、保留 raw model output、关闭 fail-isolated 的误导性配置。</li>
+        <li>每次 prediction run 只加载一次 frozen <code>copy-backed-scope-policy-v1</code>，并记录 start/end hash 与 drift 状态。</li>
+        <li>隔离 sidecar sink 与 prediction output、metadata、prompt snapshot、raw decoded summary、generation trace 的路径冲突。</li>
+        <li>生成 <code>copy-shadow-template-disjoint-challenge-v1</code> 及完整 blocked report bundle。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>关键文件</h2>
+      <ul>
+        <li><a href="../../data/public-samples/copy-shadow-template-disjoint-challenge-v1.jsonl">挑战集 JSONL</a></li>
+        <li><a href="../../reports/public-sample/copy-shadow-template-disjoint-challenge-v1/challenge-summary.json">challenge-summary.json</a></li>
+        <li><a href="../../reports/public-sample/copy-shadow-template-disjoint-challenge-v1/blocked.json">blocked.json</a></li>
+        <li><a href="../copy-shadow-template-disjoint-challenge.md">说明文档</a></li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>验证结果</h2>
+      <p>已通过 focused hook tests、challenge generation tests，并成功运行挑战集生成命令。最终全量验证以终端输出为准。</p>
+    </section>
+
+    <section>
+      <h2>不要过度声称</h2>
+      <ul>
+        <li>没有训练，没有 adapter/checkpoint 发布。</li>
+        <li>没有 policy、enabled triple、prompt、decoding、evaluator、schema、runtime 或 action 变更。</li>
+        <li>没有证明 frozen policy 在模板分离挑战上的模型推理泛化。</li>
+        <li>没有 runtime enforcement、production readiness 或 safety readiness 结论。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>建议下一步</h2>
+      <p>先解决 frozen adapter 的身份可验证和本地可加载问题，再用同一个 frozen challenge 走 canonical prediction hook；不要在本阶段伪造 predictions 或训练替代 adapter。</p>
+    </section>
+  </main>
+</body>
+</html>

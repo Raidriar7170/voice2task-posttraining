@@ -1,0 +1,61 @@
+{
+  "challenge_hash": "12eccdd54b2c89f1127ec23f18d7179e1ebaacb1a644ae5ca1a14b3309f11324",
+  "challenge_id": "copy-shadow-template-disjoint-challenge-v1",
+  "challenge_path": "data/public-samples/copy-shadow-template-disjoint-challenge-v1.jsonl",
+  "challenge_version": "copy-shadow-template-disjoint-challenge-v1",
+  "change_id": "evaluate-frozen-copy-shadow-policy-on-template-disjoint-challenge-set",
+  "condition_counts": {
+    "asr_style_noise": 9,
+    "duplicate_exact": 9,
+    "exact_unique": 9,
+    "invalid_unparseable_output_fault_injection": 6,
+    "long_input": 9,
+    "multiple_entity_distractor": 9,
+    "negative_condition:asr_style_noise": 3,
+    "negative_condition:duplicate_exact": 3,
+    "negative_condition:exact_unique": 3,
+    "negative_condition:long_input": 3,
+    "negative_condition:multiple_entity_distractor": 3,
+    "negative_condition:normalization_candidate": 3,
+    "negative_condition:normalization_collision": 3,
+    "negative_condition:partial_span_trap": 3,
+    "negative_condition:source_absent": 3,
+    "negative_condition:synthetic_pii": 3,
+    "normalization_candidate": 9,
+    "normalization_collision": 9,
+    "out_of_scope_action": 30,
+    "partial_span_trap": 9,
+    "scope:blocked:deny:action": 30,
+    "scope:extract:extract_page:target": 30,
+    "scope:form_fill:fill_form:field": 30,
+    "scope:search:search_web:query": 30,
+    "source_absent": 9,
+    "synthetic_pii": 9
+  },
+  "expected_gold_verification_class_counts": {
+    "AMBIGUOUS_MULTIPLE_MATCHES": 27,
+    "NOT_FOUND": 9,
+    "OUT_OF_SCOPE": 30,
+    "VERIFIED_EXACT_UNIQUE": 45,
+    "VERIFIED_NORMALIZED_UNIQUE": 9
+  },
+  "manifest_kind": "copy_shadow_template_disjoint_challenge_manifest",
+  "policy": {
+    "policy_hash": "5dc14efb8ded13dc048ddb067c7c63a1a62b6c03896950e861303973d505cbc7",
+    "policy_id": "copy-backed-scope-policy-v1",
+    "policy_version": "1.0.0"
+  },
+  "public_safe": true,
+  "row_count": 120,
+  "scope_counts": {
+    "disabled": {
+      "blocked:deny:action": 30
+    },
+    "enabled": {
+      "extract:extract_page:target": 30,
+      "form_fill:fill_form:field": 30,
+      "search:search_web:query": 30
+    }
+  },
+  "template_disjoint_audit_passed": true
+}

@@ -1,0 +1,232 @@
+{
+  "action_enabled": false,
+  "adapter_discovery": {
+    "candidates": [
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-canonical-slot-paired-control-dev-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-canonical-slot-paired-control-test-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-canonical-slot-paired-treatment-dev-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-canonical-slot-paired-treatment-test-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-compact-query-exact-match-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-current-canonical-boundary-dev-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-current-canonical-boundary-test-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-current-manifest-tiny-overfit-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-current-tiny-adapter-heldout-dev-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-current-tiny-adapter-heldout-test-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-current-train-split-retry-dev-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-current-train-split-retry-test-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-extract-price-canonical-wording-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-extract-price-contract-residual-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-form-fill-remediation-v3-dev-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-form-fill-remediation-v3-test-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-formal-public-heldout-dev-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-formal-public-heldout-test-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-hardened-canonical-policy-dev-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-hardened-canonical-policy-test-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-hardened-canonical-policy-train-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-merged-slot-value-heldout-dev-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-merged-slot-value-heldout-test-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-merged-slot-value-heldout-train-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-prediction-public-smoke.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-public-heldout-dev-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-public-heldout-residual-repair-dev-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-public-heldout-residual-repair-test-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-public-heldout-residual-repair-train-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-public-heldout-test-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-scaled-public-sample-current-123-adapter-dev-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-scaled-public-sample-current-123-adapter-test-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-slot-value-candidate-probe-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-step-matched-canonical-slot-control-dev-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-step-matched-canonical-slot-control-test-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-step-matched-canonical-slot-treatment-dev-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-step-matched-canonical-slot-treatment-test-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-targeted-family-coverage-dev-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-targeted-family-coverage-test-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-targeted-family-coverage-train-prediction.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-a100-train-split-overfit-diagnostic.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-current-runtime-label-provenance-check.json",
+        "status": "unresolved_template"
+      },
+      {
+        "adapter_path_public": "<a100_project_root>",
+        "config": "configs/sft-runtime-label-provenance-prep.json",
+        "status": "unresolved_template"
+      }
+    ],
+    "loadable_frozen_adapters_available": false,
+    "verified_adapter_count": 0
+  },
+  "canonical_prediction_hook_evaluated": false,
+  "decision": "CHALLENGE_EVALUATION_BLOCKED",
+  "fabricated_predictions": false,
+  "normalized_trusted_enabled": false,
+  "policy_modified": false,
+  "reason": "missing_loadable_frozen_adapters",
+  "runtime_enforcement_enabled": false,
+  "training_run": false
+}
