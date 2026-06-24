@@ -4,7 +4,13 @@ import importlib.util
 import json
 from pathlib import Path
 
-from voice2task.copy_backed_slot_verification import CopyBackedScope, verify_copy_backed_value
+from voice2task.copy_backed_slot_verification import (
+    AMBIGUOUS_NORMALIZATION_COLLISION,
+    NORMALIZATION_COLLISION_RULE,
+    CopyBackedScope,
+    audit_normalized_equivalent_collision,
+    verify_copy_backed_value,
+)
 from voice2task.leak_scan import scan_paths
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -66,6 +72,37 @@ def test_bounded_normalized_match_maps_back_to_original_source_span() -> None:
     assert "请查询ａｂｃ １２３的状态"[result.source_span.start : result.source_span.end] == "ａｂｃ １２３"
     assert date_alias.status == "NOT_FOUND"
     assert semantic_alias.status == "NOT_FOUND"
+
+
+def test_raw_exact_unique_can_be_downgraded_by_normalized_equivalent_collision() -> None:
+    audit = audit_normalized_equivalent_collision("A/B", "主片段 A/B，归一等价候选 AB。")
+
+    assert audit.status == AMBIGUOUS_NORMALIZATION_COLLISION
+    assert audit.raw_exact_span_count == 1
+    assert audit.normalized_equivalent_span_count == 2
+    assert audit.source_attested_exact is False
+    assert audit.fail_closed is True
+    assert audit.normalization_rule == NORMALIZATION_COLLISION_RULE
+
+
+def test_normalized_equivalent_collision_detector_covers_punctuation_cases() -> None:
+    examples = [
+        ("1.2", "版本 1.2 旁边还有 12。"),
+        ("C++", "语言 C++ 旁边还有 C。"),
+        ("v1.2", "版本 v1.2 旁边还有 v12。"),
+        ("example.com/a", "链接 example.com/a 旁边还有 examplecoma。"),
+        ("a.b@example.com", "邮箱 a.b@example.com 旁边还有 abexamplecom。"),
+    ]
+
+    for value, source_text in examples:
+        audit = audit_normalized_equivalent_collision(value, source_text)
+
+        assert audit.status == AMBIGUOUS_NORMALIZATION_COLLISION
+        assert audit.raw_exact_span_count == 1
+        assert audit.normalized_equivalent_span_count >= 2
+        assert audit.source_attested_exact is False
+        assert audit.fail_closed is True
+        assert audit.ambiguous_mapping is True
 
 
 def test_report_builds_task_scoped_policy_and_preserves_historical_metric_names(tmp_path: Path) -> None:

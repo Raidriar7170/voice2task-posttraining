@@ -1,0 +1,77 @@
+{
+  "extract:extract_page:target": {
+    "adapter_role_distribution": {
+      "treatment": 3
+    },
+    "condition_tag_distribution": {},
+    "gold_correct_count": 3,
+    "gold_correct_rate": 1.0,
+    "gold_mismatch_count": 0,
+    "gold_mismatch_rate": 0.0,
+    "mechanism_counts": {},
+    "normalization_collision_count": 0,
+    "partial_or_overlong_count": 0,
+    "policy_v2_proposal_status": "OBSERVE_ENABLED",
+    "review_note": "Extract target had no gold mismatch in this fixture, but sample support is small and remains observe-only.",
+    "scope_key": "extract:extract_page:target",
+    "source_absent_substitution_count": 0,
+    "source_attested_count": 3,
+    "wrong_entity_count": 0
+  },
+  "form_fill:fill_form:field": {
+    "adapter_role_distribution": {
+      "control": 18,
+      "treatment": 13
+    },
+    "condition_tag_distribution": {
+      "multiple_entity_distractor": 1,
+      "normalization_candidate": 3,
+      "normalization_collision": 6,
+      "scope:form_fill:fill_form:field": 13,
+      "source_absent": 3
+    },
+    "gold_correct_count": 18,
+    "gold_correct_rate": 0.5806451612903226,
+    "gold_mismatch_count": 13,
+    "gold_mismatch_rate": 0.41935483870967744,
+    "mechanism_counts": {
+      "CHALLENGE_FIXTURE_OR_GOLD_AMBIGUITY": 3,
+      "NORMALIZATION_EQUIVALENCE_COLLISION": 6,
+      "SOURCE_ABSENT_SUBSTITUTION": 3,
+      "WRONG_ENTITY_SELECTION": 1
+    },
+    "normalization_collision_count": 6,
+    "partial_or_overlong_count": 0,
+    "policy_v2_proposal_status": "PROPOSE_DISABLE",
+    "review_note": "Field slots mix field names, values, and DOM/schema resolution risk; exact text copy alone is too weak for further integration without policy-v2 scope reduction.",
+    "scope_key": "form_fill:fill_form:field",
+    "source_absent_substitution_count": 3,
+    "source_attested_count": 31,
+    "wrong_entity_count": 1
+  },
+  "search:search_web:query": {
+    "adapter_role_distribution": {
+      "control": 15,
+      "treatment": 15
+    },
+    "condition_tag_distribution": {
+      "partial_span_trap": 3,
+      "scope:search:search_web:query": 3
+    },
+    "gold_correct_count": 27,
+    "gold_correct_rate": 0.9,
+    "gold_mismatch_count": 3,
+    "gold_mismatch_rate": 0.1,
+    "mechanism_counts": {
+      "OVERLONG_SOURCE_SPAN": 3
+    },
+    "normalization_collision_count": 0,
+    "partial_or_overlong_count": 3,
+    "policy_v2_proposal_status": "OBSERVE_LIMITED",
+    "review_note": "Search query scope has partial-span mismatch risk; observe-only can continue only with explicit guards.",
+    "scope_key": "search:search_web:query",
+    "source_absent_substitution_count": 0,
+    "source_attested_count": 30,
+    "wrong_entity_count": 0
+  }
+}

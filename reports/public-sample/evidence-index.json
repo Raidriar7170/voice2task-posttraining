@@ -116,16 +116,29 @@
       "superseded_by": null
     },
     {
-      "id": "copy-shadow-template-disjoint-challenge-v1",
-      "status": "BLOCKED",
-      "phase": "evaluate-frozen-copy-shadow-policy-on-template-disjoint-challenge-set",
-      "path": "reports/public-sample/copy-shadow-template-disjoint-challenge-v1/challenge-summary.json",
+      "id": "copy-shadow-template-disjoint-challenge-v1-adapter-evaluation",
+      "status": "CURRENT",
+      "phase": "recover-and-run-frozen-adapter-challenge-evaluation",
+      "path": "reports/public-sample/copy-shadow-template-disjoint-challenge-v1/adapter-evaluation/challenge-evaluation-summary.json",
       "manifest_id": "copy-shadow-template-disjoint-challenge-v1",
-      "model_run_id": null,
-      "boundary": "Frozen public-safe template-disjoint challenge v1 with 120 rows; no loadable frozen adapter identity.",
-      "summary": "Decision CHALLENGE_EVALUATION_BLOCKED; 120 challenge rows frozen, template-disjoint audit passed, but observed challenge inference was not run because no local identity-verifiable frozen adapter was loadable.",
-      "conclusion": "Blocked challenge evidence only; no current model metrics, no frozen-policy generalization claim, no training, no policy change, and no runtime enforcement.",
-      "current_claim_allowed": false,
+      "model_run_id": "step-matched-canonical-slot-ablation-20260620T000000Z",
+      "boundary": "Frozen public-safe template-disjoint challenge v1 over content-hash verified recovered Control/Treatment step-matched adapters; observe-only sidecar hook.",
+      "summary": "Decision CHALLENGE_V1_HOOK_UNSAFE_OR_INVALID; 6 Control/Treatment prediction runs; output and parsed-contract invariance across hook modes; 252 offline audit rows; source-absent false trust 3, normalization-collision false trust 6, partial-span false trust 3; no enforcement.",
+      "conclusion": "Verifier adversarial fixture evidence only; source provenance is not semantic correctness, execution eligibility, model quality, safety readiness, production readiness, or naturalistic generalization.",
+      "current_claim_allowed": true,
+      "superseded_by": null
+    },
+    {
+      "id": "copy-shadow-false-trust-diagnosis",
+      "status": "CURRENT",
+      "phase": "diagnose-copy-shadow-false-trust-before-naturalistic-v2",
+      "path": "reports/public-sample/copy-shadow-false-trust-diagnosis/summary.json",
+      "manifest_id": "copy-shadow-template-disjoint-challenge-v1",
+      "model_run_id": "step-matched-canonical-slot-ablation-20260620T000000Z",
+      "boundary": "Offline false-trust diagnosis over committed challenge rows, predictions, sidecars, audits, hook-safety audit, prediction-run audit, and frozen policy v1.",
+      "summary": "Decision SOURCE_ATTESTATION_HARDENED_SCOPE_REDUCTION_REQUIRED; 16 source-attested-but-gold-mismatch cases; 6 normalized-equivalent collision downgrades; post-diagnosis source_attested_exact 58; execution eligible 0.",
+      "conclusion": "Source-attestation semantics are source-only; form_fill field proposes disable, search query limited observe, extract target observe-only; next recommended change is design-copy-shadow-scope-policy-v2; no training, prediction rerun, policy v2 creation, naturalistic challenge v2, runtime enforcement, action enablement, normalized trusted provenance, or model improvement claim.",
+      "current_claim_allowed": true,
       "superseded_by": null
     },
     {
@@ -179,6 +192,19 @@
       "conclusion": "Blocked evidence preserved; replaced by recovered-input rerun.",
       "current_claim_allowed": false,
       "superseded_by": "contract-v2-projection-rerun"
+    },
+    {
+      "id": "copy-shadow-template-disjoint-challenge-v1-blocked",
+      "status": "BLOCKED",
+      "phase": "evaluate-frozen-copy-shadow-policy-on-template-disjoint-challenge-set",
+      "path": "reports/public-sample/copy-shadow-template-disjoint-challenge-v1/challenge-summary.json",
+      "manifest_id": "copy-shadow-template-disjoint-challenge-v1",
+      "model_run_id": null,
+      "boundary": "Frozen public-safe template-disjoint challenge v1 with 120 rows before recovered adapter identity was available.",
+      "summary": "Blocked before recovered adapter evaluation; challenge and policy freeze evidence only.",
+      "conclusion": "Blocked challenge evidence preserved; superseded by recovered adapter evaluation and false-trust diagnosis. No current model metrics, training, policy change, or runtime enforcement.",
+      "current_claim_allowed": false,
+      "superseded_by": "copy-shadow-template-disjoint-challenge-v1-adapter-evaluation"
     },
     {
       "id": "canonical-slot-paired-sft-ablation",

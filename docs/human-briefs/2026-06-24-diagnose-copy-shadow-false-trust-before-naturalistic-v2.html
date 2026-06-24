@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Copy-shadow false-trust diagnosis</title>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #1f2933; background: #f7f8f5; }
+    main { max-width: 980px; margin: 0 auto; padding: 40px 24px 56px; }
+    header { border-left: 6px solid #b45309; padding: 8px 0 8px 18px; margin-bottom: 28px; }
+    h1 { margin: 0 0 10px; font-size: 30px; line-height: 1.2; }
+    h2 { margin-top: 28px; font-size: 18px; }
+    p, li { line-height: 1.65; }
+    code { background: #ece7dc; padding: 2px 5px; border-radius: 4px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+    .card { background: #ffffff; border: 1px solid #dde1d8; border-radius: 8px; padding: 14px 16px; }
+    .metric { font-size: 24px; font-weight: 700; color: #92400e; }
+    table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #dde1d8; }
+    th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #e5e7df; vertical-align: top; }
+    th { background: #ece7dc; }
+    a { color: #1d4ed8; }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Copy-shadow false-trust 诊断</h1>
+    <p>结论：source attestation 已重新定义为 source-only；当前阶段要求 scope reduction，不能进入自然语言 v2 或 runtime enforcement。</p>
+  </header>
+
+  <section>
+    <h2>当前状态</h2>
+    <p><code>SOURCE_ATTESTATION_HARDENED_SCOPE_REDUCTION_REQUIRED</code>。本阶段已生成诊断报告；OpenSpec apply 仍需最终验证和归档。</p>
+  </section>
+
+  <section class="grid">
+    <div class="card"><div class="metric">16</div><p>source-attested 但 gold mismatch 的样本数。</p></div>
+    <div class="card"><div class="metric">6</div><p>normalized-equivalent collision 被降级。</p></div>
+    <div class="card"><div class="metric">0</div><p>execution eligible、action trusted、normalized trusted 均为 0。</p></div>
+    <div class="card"><div class="metric">58</div><p>post-diagnosis source_attested_exact 计数。</p></div>
+  </section>
+
+  <section>
+    <h2>本阶段改变</h2>
+    <ul>
+      <li>新增离线诊断模块和 CLI，只读取已提交的 challenge rows、predictions、sidecars、audits、policy v1 和 summary。</li>
+      <li>将历史 <code>trusted_provenance</code> 限定为兼容别名，新 artifact 使用 <code>source_attested_exact</code>。</li>
+      <li>新增 normalized-equivalent collision audit：raw exact unique 但 normalized candidate 多于一个时 fail-closed。</li>
+      <li>生成 public-safe ledger、per-scope risk review、sidecar v2 semantics、summary 和 next-change 建议。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Scope Proposal</h2>
+    <table>
+      <thead><tr><th>Scope</th><th>Proposal</th><th>原因</th></tr></thead>
+      <tbody>
+        <tr><td><code>form_fill:fill_form:field</code></td><td><code>PROPOSE_DISABLE</code></td><td>13 个 mismatch，包含 source-absent、normalization collision、wrong entity/fixture ambiguity。</td></tr>
+        <tr><td><code>search:search_web:query</code></td><td><code>OBSERVE_LIMITED</code></td><td>3 个 partial/overlong span mismatch，需要 guard 后才能继续观察。</td></tr>
+        <tr><td><code>extract:extract_page:target</code></td><td><code>OBSERVE_ENABLED</code></td><td>当前 fixture 没有 gold mismatch，但样本量小，仍是 observe-only。</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>关键文件</h2>
+    <ul>
+      <li><a href="../../reports/public-sample/copy-shadow-false-trust-diagnosis/summary.json">summary.json</a></li>
+      <li><a href="../../reports/public-sample/copy-shadow-false-trust-diagnosis/false-trust-case-ledger.jsonl">false-trust-case-ledger.jsonl</a></li>
+      <li><a href="../../reports/public-sample/copy-shadow-false-trust-diagnosis/per-scope-risk-review.json">per-scope-risk-review.json</a></li>
+      <li><a href="../copy-shadow-source-attestation-boundary.md">copy-shadow-source-attestation-boundary.md</a></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>不要过度声称</h2>
+    <p>本阶段不是训练、不是 prediction rerun、不是 policy v2、不是 naturalistic challenge v2、不是 runtime enforcement，也不证明模型改进、slot accuracy、生产就绪或安全就绪。</p>
+  </section>
+
+  <section>
+    <h2>建议下一步</h2>
+    <p><code>design-copy-shadow-scope-policy-v2</code>。只做 policy-v2 scope reduction/review，不要直接启用 enforcement 或 normalized trusted provenance。</p>
+  </section>
+</main>
+</body>
+</html>

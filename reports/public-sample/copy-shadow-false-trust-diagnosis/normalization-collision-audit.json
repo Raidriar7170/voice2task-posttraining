@@ -1,0 +1,70 @@
+{
+  "audit_kind": "normalized_equivalent_collision_audit",
+  "downgrade_count": 6,
+  "events": [
+    {
+      "adapter_role": "control",
+      "challenge_id": "copy-shadow-template-disjoint-challenge-v1-037",
+      "execution_eligible": false,
+      "normalization_rule": "nfkc_casefold_strip_space_punct_symbol",
+      "scope_key": "form_fill:fill_form:field",
+      "slot_path": "field",
+      "source_attested_exact": false,
+      "status": "AMBIGUOUS_NORMALIZATION_COLLISION"
+    },
+    {
+      "adapter_role": "control",
+      "challenge_id": "copy-shadow-template-disjoint-challenge-v1-047",
+      "execution_eligible": false,
+      "normalization_rule": "nfkc_casefold_strip_space_punct_symbol",
+      "scope_key": "form_fill:fill_form:field",
+      "slot_path": "field",
+      "source_attested_exact": false,
+      "status": "AMBIGUOUS_NORMALIZATION_COLLISION"
+    },
+    {
+      "adapter_role": "control",
+      "challenge_id": "copy-shadow-template-disjoint-challenge-v1-057",
+      "execution_eligible": false,
+      "normalization_rule": "nfkc_casefold_strip_space_punct_symbol",
+      "scope_key": "form_fill:fill_form:field",
+      "slot_path": "field",
+      "source_attested_exact": false,
+      "status": "AMBIGUOUS_NORMALIZATION_COLLISION"
+    },
+    {
+      "adapter_role": "treatment",
+      "challenge_id": "copy-shadow-template-disjoint-challenge-v1-037",
+      "execution_eligible": false,
+      "normalization_rule": "nfkc_casefold_strip_space_punct_symbol",
+      "scope_key": "form_fill:fill_form:field",
+      "slot_path": "field",
+      "source_attested_exact": false,
+      "status": "AMBIGUOUS_NORMALIZATION_COLLISION"
+    },
+    {
+      "adapter_role": "treatment",
+      "challenge_id": "copy-shadow-template-disjoint-challenge-v1-047",
+      "execution_eligible": false,
+      "normalization_rule": "nfkc_casefold_strip_space_punct_symbol",
+      "scope_key": "form_fill:fill_form:field",
+      "slot_path": "field",
+      "source_attested_exact": false,
+      "status": "AMBIGUOUS_NORMALIZATION_COLLISION"
+    },
+    {
+      "adapter_role": "treatment",
+      "challenge_id": "copy-shadow-template-disjoint-challenge-v1-057",
+      "execution_eligible": false,
+      "normalization_rule": "nfkc_casefold_strip_space_punct_symbol",
+      "scope_key": "form_fill:fill_form:field",
+      "slot_path": "field",
+      "source_attested_exact": false,
+      "status": "AMBIGUOUS_NORMALIZATION_COLLISION"
+    }
+  ],
+  "execution_eligible_count": 0,
+  "normalization_rule": "nfkc_casefold_strip_space_punct_symbol",
+  "normalized_trusted_provenance_enabled": false,
+  "raw_exact_source_attested_events_checked": 64
+}

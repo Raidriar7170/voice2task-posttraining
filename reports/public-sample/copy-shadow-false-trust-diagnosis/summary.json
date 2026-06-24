@@ -1,0 +1,54 @@
+{
+  "adapter_identity_status": "verified",
+  "case_ledger_count": 16,
+  "challenge_hash": "12eccdd54b2c89f1127ec23f18d7179e1ebaacb1a644ae5ca1a14b3309f11324",
+  "change_id": "diagnose-copy-shadow-false-trust-before-naturalistic-v2",
+  "claims": {
+    "challenge_modified": false,
+    "historical_sidecars_modified": false,
+    "model_improvement_claim": false,
+    "normalized_trusted_provenance_enabled": false,
+    "policy_v1_modified": false,
+    "prediction_rerun": false,
+    "production_readiness_claim": false,
+    "runtime_enforcement_enabled": false,
+    "training_run": false
+  },
+  "decision_label": "SOURCE_ATTESTATION_HARDENED_SCOPE_REDUCTION_REQUIRED",
+  "evaluation_audit_count": 252,
+  "evidence_kind": "copy_shadow_false_trust_diagnosis",
+  "execution_eligible_count": 0,
+  "historical_trusted_provenance_alias": "deprecated_compatibility_input_only",
+  "input_boundary_ok": true,
+  "mechanism_counts": {
+    "CHALLENGE_FIXTURE_OR_GOLD_AMBIGUITY": 3,
+    "NORMALIZATION_EQUIVALENCE_COLLISION": 6,
+    "OVERLONG_SOURCE_SPAN": 3,
+    "SOURCE_ABSENT_SUBSTITUTION": 3,
+    "WRONG_ENTITY_SELECTION": 1
+  },
+  "normalization_collision_downgrade_count": 6,
+  "online_semantic_correctness": "unknown",
+  "per_scope_policy_v2_proposal": {
+    "extract:extract_page:target": "OBSERVE_ENABLED",
+    "form_fill:fill_form:field": "PROPOSE_DISABLE",
+    "search:search_web:query": "OBSERVE_LIMITED"
+  },
+  "policy_hash": "5dc14efb8ded13dc048ddb067c7c63a1a62b6c03896950e861303973d505cbc7",
+  "post_diagnosis_gold_mismatch_still_requires_offline_review": 10,
+  "post_diagnosis_source_attested_exact_count": 58,
+  "recommended_next_change": "design-copy-shadow-scope-policy-v2",
+  "row_count": 120,
+  "sidecar_v2_source_field": "source_attested_exact",
+  "source_attested_exact_input_count": 64,
+  "source_attested_gold_correct_count": 48,
+  "source_attested_gold_mismatch_count": 16,
+  "source_evaluation_change": "recover-and-run-frozen-adapter-challenge-evaluation",
+  "source_evaluation_decision": "CHALLENGE_V1_HOOK_UNSAFE_OR_INVALID",
+  "technical_gate_counts": {
+    "action_trusted_count": 0,
+    "normalized_trusted_count": 0,
+    "provenance_false_accept_count": 0,
+    "runtime_decision_delta_count": 0
+  }
+}
