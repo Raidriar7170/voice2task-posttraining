@@ -128,7 +128,7 @@ def classify_mismatch_mechanism(
     if not span_attested or "span_attestation_failure" in tag_set:
         primary = "TECHNICAL_SPAN_ATTESTATION_FAILURE"
     elif "wrong_scope" in tag_set or slot_path == "action":
-        primary = "WRONG_SLOT_OR_SCOPE"
+        primary = "WRONG_SLOT_OR_SCOPE_SELECTION"
     elif "source_absent" in tag_set:
         primary = "SOURCE_ABSENT_SUBSTITUTION"
     elif normalized_collision or "normalization_collision" in tag_set:
@@ -136,7 +136,7 @@ def classify_mismatch_mechanism(
     elif "duplicate_exact" in tag_set:
         primary = "DUPLICATE_CONTEXT_DISAMBIGUATION_FAILURE"
     elif "multiple_entity_distractor" in tag_set:
-        primary = "WRONG_ENTITY_SELECTION"
+        primary = "WRONG_ENTITY_FROM_SOURCE"
     elif "gold_ambiguous" in tag_set:
         primary = "CHALLENGE_FIXTURE_OR_GOLD_AMBIGUITY"
     elif not isinstance(predicted_value, str) or not isinstance(gold_value, str):
@@ -553,7 +553,7 @@ def _build_case_ledger(inputs: dict[str, Any], source_attested_events: list[dict
                     mechanism["primary_mechanism"]
                 ),
                 "task_level_semantic_check_required": mechanism["primary_mechanism"]
-                in {"WRONG_ENTITY_SELECTION", "GENERATED_VALUE_MISMATCH", "UNCLASSIFIED_SEMANTIC_MISMATCH"},
+                in {"WRONG_ENTITY_FROM_SOURCE", "GENERATED_VALUE_MISMATCH", "UNCLASSIFIED_SEMANTIC_MISMATCH"},
                 "scope_policy_implication": _scope_policy_implication(str(audit.get("scope_key"))),
                 "normalized_collision_status": collision.status,
                 "normalization_rule": collision.normalization_rule,
@@ -602,7 +602,7 @@ def _build_per_scope_review(
             "normalization_collision_count": mechanism_counts["NORMALIZATION_EQUIVALENCE_COLLISION"],
             "partial_or_overlong_count": mechanism_counts["OVERLONG_SOURCE_SPAN"]
             + mechanism_counts["UNDERSPECIFIED_PARTIAL_SPAN"],
-            "wrong_entity_count": mechanism_counts["WRONG_ENTITY_SELECTION"],
+            "wrong_entity_count": mechanism_counts["WRONG_ENTITY_FROM_SOURCE"],
             "adapter_role_distribution": dict(sorted(role_by_scope[scope].items())),
             "condition_tag_distribution": _condition_counts(cases),
             "mechanism_counts": dict(sorted(mechanism_counts.items())),

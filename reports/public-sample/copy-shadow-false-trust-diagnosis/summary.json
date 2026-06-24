@@ -25,7 +25,7 @@
     "NORMALIZATION_EQUIVALENCE_COLLISION": 6,
     "OVERLONG_SOURCE_SPAN": 3,
     "SOURCE_ABSENT_SUBSTITUTION": 3,
-    "WRONG_ENTITY_SELECTION": 1
+    "WRONG_ENTITY_FROM_SOURCE": 1
   },
   "normalization_collision_downgrade_count": 6,
   "online_semantic_correctness": "unknown",

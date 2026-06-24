@@ -38,7 +38,7 @@
       "CHALLENGE_FIXTURE_OR_GOLD_AMBIGUITY": 3,
       "NORMALIZATION_EQUIVALENCE_COLLISION": 6,
       "SOURCE_ABSENT_SUBSTITUTION": 3,
-      "WRONG_ENTITY_SELECTION": 1
+      "WRONG_ENTITY_FROM_SOURCE": 1
     },
     "normalization_collision_count": 6,
     "partial_or_overlong_count": 0,

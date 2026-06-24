@@ -48,6 +48,7 @@ def test_diagnosis_recomputes_committed_false_trust_boundary() -> None:
         "SOURCE_ABSENT_SUBSTITUTION",
         "NORMALIZATION_EQUIVALENCE_COLLISION",
         "OVERLONG_SOURCE_SPAN",
+        "WRONG_ENTITY_FROM_SOURCE",
     }
     assert diagnosis["per_scope_risk_review"]["form_fill:fill_form:field"]["gold_mismatch_count"] == 13
     assert diagnosis["per_scope_risk_review"]["search:search_web:query"]["gold_mismatch_count"] == 3
@@ -101,7 +102,7 @@ def test_mechanism_classifier_covers_supported_taxonomy() -> None:
         (["normalization_collision"], "A-B", "AB", "A B and A-B", "field", "NORMALIZATION_EQUIVALENCE_COLLISION"),
         (["partial_span_trap"], "topic extended", "topic", "topic extended", "query", "OVERLONG_SOURCE_SPAN"),
         ([], "topic", "topic extended", "topic extended", "query", "UNDERSPECIFIED_PARTIAL_SPAN"),
-        (["wrong_scope"], "foo", "bar", "foo", "action", "WRONG_SLOT_OR_SCOPE"),
+        (["wrong_scope"], "foo", "bar", "foo", "action", "WRONG_SLOT_OR_SCOPE_SELECTION"),
         (["duplicate_exact"], "foo", "bar", "foo and foo", "field", "DUPLICATE_CONTEXT_DISAMBIGUATION_FAILURE"),
         ([], "foo", "bar", "foo", "field", "GENERATED_VALUE_MISMATCH"),
         (["gold_ambiguous"], "A B", "AB", "A B", "field", "CHALLENGE_FIXTURE_OR_GOLD_AMBIGUITY"),
