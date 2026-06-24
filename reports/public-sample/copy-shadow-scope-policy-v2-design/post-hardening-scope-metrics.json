@@ -1,0 +1,171 @@
+{
+  "extract:extract_page:target": {
+    "action_attested_count": 0,
+    "adapter_gap": null,
+    "adapter_role_correct_rates": {
+      "treatment": 1.0
+    },
+    "adapter_role_counts": {
+      "treatment": 3
+    },
+    "available_adapter_roles": [
+      "treatment"
+    ],
+    "canonical_string_mismatch_count": 0,
+    "condition_max_share": 0.0,
+    "condition_tag_distribution": {},
+    "correct_rate": 1.0,
+    "evidence_sufficiency": {
+      "adapter_max_share": 1.0,
+      "adapter_overdependence": true,
+      "condition_max_share": 0.0,
+      "condition_overdependence": false,
+      "min_available_adapter_count": 3,
+      "only_one_adapter_role": true,
+      "sample_count_below_20": true
+    },
+    "execution_eligible_count": 0,
+    "fixture_evidence_independent": true,
+    "gold_correct_count": 3,
+    "high_downstream_misuse_risk": false,
+    "high_risk_mismatch_count": 0,
+    "high_risk_mismatch_rate": 0.0,
+    "mechanism_counts": {},
+    "mixed_incompatible_slot_semantics": false,
+    "no_engineering_value": false,
+    "normalization_collision_count": 0,
+    "normalized_attested_count": 0,
+    "policy_v1_enabled": true,
+    "scope_key": "extract:extract_page:target",
+    "scope_policy_violation_count": 0,
+    "technical_false_accept_count": 0,
+    "total_attested_count": 3,
+    "true_gold_or_fixture_ambiguity_count": 0,
+    "unresolved_semantic_boundary": false,
+    "wilson_95": {
+      "lower": 0.43849391955098227,
+      "upper": 1.0,
+      "width": 0.5615060804490177
+    }
+  },
+  "form_fill:fill_form:field": {
+    "action_attested_count": 0,
+    "adapter_gap": 0.20512820512820507,
+    "adapter_role_correct_rates": {
+      "control": 0.6666666666666666,
+      "treatment": 0.46153846153846156
+    },
+    "adapter_role_counts": {
+      "control": 18,
+      "treatment": 13
+    },
+    "available_adapter_roles": [
+      "control",
+      "treatment"
+    ],
+    "canonical_string_mismatch_count": 3,
+    "condition_max_share": 0.5,
+    "condition_tag_distribution": {
+      "multiple_entity_distractor": 1,
+      "normalization_candidate": 3,
+      "normalization_collision": 6,
+      "scope:form_fill:fill_form:field": 13,
+      "source_absent": 3
+    },
+    "correct_rate": 0.5806451612903226,
+    "evidence_sufficiency": {
+      "adapter_max_share": 0.5806451612903226,
+      "adapter_overdependence": false,
+      "condition_max_share": 0.5,
+      "condition_overdependence": false,
+      "min_available_adapter_count": 13,
+      "only_one_adapter_role": false,
+      "sample_count_below_20": false
+    },
+    "execution_eligible_count": 0,
+    "fixture_evidence_independent": true,
+    "gold_correct_count": 18,
+    "high_downstream_misuse_risk": false,
+    "high_risk_mismatch_count": 5,
+    "high_risk_mismatch_rate": 0.16129032258064516,
+    "mechanism_counts": {
+      "CANONICAL_STRING_MISMATCH": 3,
+      "NORMALIZATION_EQUIVALENCE_COLLISION": 6,
+      "SOURCE_ABSENT_SUBSTITUTION": 3,
+      "WRONG_ENTITY_FROM_SOURCE": 1
+    },
+    "mixed_incompatible_slot_semantics": false,
+    "no_engineering_value": false,
+    "normalization_collision_count": 6,
+    "normalized_attested_count": 0,
+    "policy_v1_enabled": true,
+    "scope_key": "form_fill:fill_form:field",
+    "scope_policy_violation_count": 0,
+    "technical_false_accept_count": 0,
+    "total_attested_count": 31,
+    "true_gold_or_fixture_ambiguity_count": 0,
+    "unresolved_semantic_boundary": false,
+    "wilson_95": {
+      "lower": 0.40765964352020967,
+      "upper": 0.7358469692645074,
+      "width": 0.32818732574429776
+    }
+  },
+  "search:search_web:query": {
+    "action_attested_count": 0,
+    "adapter_gap": 0.19999999999999996,
+    "adapter_role_correct_rates": {
+      "control": 1.0,
+      "treatment": 0.8
+    },
+    "adapter_role_counts": {
+      "control": 15,
+      "treatment": 15
+    },
+    "available_adapter_roles": [
+      "control",
+      "treatment"
+    ],
+    "canonical_string_mismatch_count": 0,
+    "condition_max_share": 0.5,
+    "condition_tag_distribution": {
+      "partial_span_trap": 3,
+      "scope:search:search_web:query": 3
+    },
+    "correct_rate": 0.9,
+    "evidence_sufficiency": {
+      "adapter_max_share": 0.5,
+      "adapter_overdependence": false,
+      "condition_max_share": 0.5,
+      "condition_overdependence": false,
+      "min_available_adapter_count": 15,
+      "only_one_adapter_role": false,
+      "sample_count_below_20": false
+    },
+    "execution_eligible_count": 0,
+    "fixture_evidence_independent": true,
+    "gold_correct_count": 27,
+    "high_downstream_misuse_risk": false,
+    "high_risk_mismatch_count": 3,
+    "high_risk_mismatch_rate": 0.1,
+    "mechanism_counts": {
+      "OVERLONG_SOURCE_SPAN": 3
+    },
+    "mixed_incompatible_slot_semantics": false,
+    "no_engineering_value": false,
+    "normalization_collision_count": 0,
+    "normalized_attested_count": 0,
+    "policy_v1_enabled": true,
+    "scope_key": "search:search_web:query",
+    "scope_policy_violation_count": 0,
+    "technical_false_accept_count": 0,
+    "total_attested_count": 30,
+    "true_gold_or_fixture_ambiguity_count": 0,
+    "unresolved_semantic_boundary": false,
+    "wilson_95": {
+      "lower": 0.7437855868473339,
+      "upper": 0.9654007400402839,
+      "width": 0.22161515319295
+    }
+  }
+}

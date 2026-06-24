@@ -85,12 +85,13 @@ Recomputed counts:
 
 Per-scope proposal:
 
-- `form_fill:fill_form:field`: `PROPOSE_DISABLE`
-- `search:search_web:query`: `OBSERVE_LIMITED`
-- `extract:extract_page:target`: `OBSERVE_ENABLED`
+- Diagnosis-layer status: `DEFER_TO_DESIGN_COPY_SHADOW_SCOPE_POLICY_V2`
+- Deterministic Policy V2 design: `form_fill:fill_form:field` -> `PROPOSE_DISABLE`
+- Deterministic Policy V2 design: `search:search_web:query` -> `OBSERVE_LIMITED`
+- Deterministic Policy V2 design: `extract:extract_page:target` -> `INSUFFICIENT_EVIDENCE`
 
 Recommended next change:
-`design-copy-shadow-scope-policy-v2`
+`review-and-freeze-copy-shadow-policy-v2-before-naturalistic-challenge`
 
 This recommendation is a proposal boundary only. It does not create policy v2,
 naturalistic challenge v2, runtime enforcement, training, data expansion,

@@ -1,0 +1,36 @@
+{
+  "action_attested_count": 0,
+  "challenge_hash": "12eccdd54b2c89f1127ec23f18d7179e1ebaacb1a644ae5ca1a14b3309f11324",
+  "change_id": "design-copy-shadow-scope-policy-v2",
+  "claims": {
+    "challenge_modified": false,
+    "historical_sidecars_modified": false,
+    "model_improvement_claim": false,
+    "normalized_trusted_provenance_enabled": false,
+    "policy_v1_modified": false,
+    "prediction_rerun": false,
+    "production_readiness_claim": false,
+    "runtime_enforcement_enabled": false,
+    "safety_readiness_claim": false,
+    "training_run": false
+  },
+  "decision_gate_version": "copy-shadow-scope-policy-v2-gates-2026-06-24",
+  "decision_label": "POLICY_V2_SCOPE_REDUCTION_READY_FOR_REVIEW",
+  "diagnosis_artifact_hash": "55bfc3a3c7c574e41e6be30677552cb671bf624a8834a49759566e4b4450a7ee",
+  "evidence_kind": "copy_shadow_scope_policy_v2_design",
+  "execution_eligible_count": 0,
+  "input_boundary_ok": true,
+  "normalized_attested_count": 0,
+  "proposed_policy_path": "configs/copy-backed-scope-policy-v2.proposed.json",
+  "recommended_next_change": "review-and-freeze-copy-shadow-policy-v2-before-naturalistic-challenge",
+  "report_dir": "reports/public-sample/copy-shadow-scope-policy-v2-design",
+  "scope_status_counts": {
+    "INSUFFICIENT_EVIDENCE": 1,
+    "OBSERVE_LIMITED": 1,
+    "PROPOSE_DISABLE": 1
+  },
+  "source_policy_v1_hash": "5dc14efb8ded13dc048ddb067c7c63a1a62b6c03896950e861303973d505cbc7",
+  "source_policy_v1_id": "copy-backed-scope-policy-v1",
+  "taxonomy_fixture_guided_row_count": 16,
+  "technical_false_accept_count": 0
+}

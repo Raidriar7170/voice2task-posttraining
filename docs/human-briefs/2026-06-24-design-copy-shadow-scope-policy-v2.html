@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Policy V2 设计简报</title>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #172033; background: #f6f7f9; }
+    main { max-width: 920px; margin: 0 auto; padding: 32px 20px 48px; }
+    h1 { font-size: 28px; margin: 0 0 8px; letter-spacing: 0; }
+    h2 { font-size: 15px; margin: 24px 0 10px; letter-spacing: 0; }
+    p, li { font-size: 14px; line-height: 1.65; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; background: #eef1f5; padding: 2px 5px; border-radius: 4px; }
+    .lede { font-size: 16px; margin: 0; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-top: 14px; }
+    .item { background: #fff; border: 1px solid #dfe3ea; border-radius: 8px; padding: 14px; }
+    .label { color: #5e6878; font-size: 12px; margin-bottom: 4px; }
+    .value { font-weight: 650; }
+    a { color: #2456a6; text-decoration: none; }
+    ul { padding-left: 18px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Copy-shadow Policy V2 设计简报</h1>
+    <p class="lede">结论：当前设计已达到 <code>POLICY_V2_SCOPE_REDUCTION_READY_FOR_REVIEW</code>，但仍只是 inactive proposal，不是运行时策略。</p>
+
+    <section class="grid" aria-label="status">
+      <div class="item"><div class="label">阶段状态</div><div class="value">needs review</div></div>
+      <div class="item"><div class="label">技术 false accept</div><div class="value">0</div></div>
+      <div class="item"><div class="label">execution eligible</div><div class="value">0</div></div>
+      <div class="item"><div class="label">下一步</div><div class="value">review and freeze before naturalistic challenge</div></div>
+    </section>
+
+    <h2>本阶段变化</h2>
+    <ul>
+      <li>新增确定性 gate engine：按 scope 计算 Wilson 区间、adapter balance、high-risk mismatch、技术门禁和最终状态。</li>
+      <li>将旧的 fixture/gold ambiguity 拆分为 <code>CANONICAL_STRING_MISMATCH</code> 与 <code>TRUE_GOLD_OR_FIXTURE_AMBIGUITY</code>。</li>
+      <li>写出 inactive 的 <code>configs/copy-backed-scope-policy-v2.proposed.json</code>。</li>
+    </ul>
+
+    <h2>Scope 结论</h2>
+    <ul>
+      <li><code>form_fill:fill_form:field</code>：<code>PROPOSE_DISABLE</code></li>
+      <li><code>search:search_web:query</code>：<code>OBSERVE_LIMITED</code></li>
+      <li><code>extract:extract_page:target</code>：<code>INSUFFICIENT_EVIDENCE</code></li>
+    </ul>
+
+    <h2>关键证据</h2>
+    <ul>
+      <li><a href="../../reports/public-sample/copy-shadow-scope-policy-v2-design/summary.md">summary.md</a></li>
+      <li><a href="../../reports/public-sample/copy-shadow-scope-policy-v2-design/post-hardening-scope-metrics.json">post-hardening-scope-metrics.json</a></li>
+      <li><a href="../../reports/public-sample/copy-shadow-scope-policy-v2-design/taxonomy-migration.json">taxonomy-migration.json</a></li>
+      <li><a href="../../configs/copy-backed-scope-policy-v2.proposed.json">copy-backed-scope-policy-v2.proposed.json</a></li>
+    </ul>
+
+    <h2>不要夸大的边界</h2>
+    <p>这不是 Policy V1 修改，不是 challenge/prediction/sidecar/evaluator/prompt/decoding/runtime hook 改动，不是训练，不是模型提升，不是 action eligibility，不是 normalized trust，也不是 production 或 safety readiness 证明。</p>
+  </main>
+</body>
+</html>

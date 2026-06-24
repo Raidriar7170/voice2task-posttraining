@@ -1,0 +1,296 @@
+{
+  "fixture_guided_row_count": 16,
+  "migrated_mechanism_counts": {
+    "CANONICAL_STRING_MISMATCH": 3,
+    "NORMALIZATION_EQUIVALENCE_COLLISION": 6,
+    "OVERLONG_SOURCE_SPAN": 3,
+    "SOURCE_ABSENT_SUBSTITUTION": 3,
+    "WRONG_ENTITY_FROM_SOURCE": 1
+  },
+  "migrated_rows": [
+    {
+      "adapter_role": "control",
+      "attribution_mode": "fixture_guided",
+      "attribution_source": "fixture_tag_plus_deterministic_relation",
+      "challenge_id": "copy-shadow-template-disjoint-challenge-v1-033",
+      "condition_tags_used": [
+        "scope:form_fill:fill_form:field",
+        "source_absent"
+      ],
+      "deterministic_checks_used": [
+        "predicted_value_source_membership"
+      ],
+      "manual_review_required": true,
+      "primary_mechanism": "SOURCE_ABSENT_SUBSTITUTION",
+      "scope_key": "form_fill:fill_form:field"
+    },
+    {
+      "adapter_role": "control",
+      "attribution_mode": "fixture_guided",
+      "attribution_source": "fixture_tag_plus_deterministic_relation",
+      "challenge_id": "copy-shadow-template-disjoint-challenge-v1-037",
+      "condition_tags_used": [
+        "normalization_collision",
+        "scope:form_fill:fill_form:field"
+      ],
+      "deterministic_checks_used": [
+        "normalized_collision_audit",
+        "normalized_value_equivalence",
+        "predicted_value_source_membership"
+      ],
+      "manual_review_required": false,
+      "primary_mechanism": "NORMALIZATION_EQUIVALENCE_COLLISION",
+      "scope_key": "form_fill:fill_form:field"
+    },
+    {
+      "adapter_role": "control",
+      "attribution_mode": "fixture_guided",
+      "attribution_source": "fixture_tag_plus_deterministic_relation",
+      "challenge_id": "copy-shadow-template-disjoint-challenge-v1-043",
+      "condition_tags_used": [
+        "scope:form_fill:fill_form:field",
+        "source_absent"
+      ],
+      "deterministic_checks_used": [
+        "predicted_value_source_membership"
+      ],
+      "manual_review_required": true,
+      "primary_mechanism": "SOURCE_ABSENT_SUBSTITUTION",
+      "scope_key": "form_fill:fill_form:field"
+    },
+    {
+      "adapter_role": "control",
+      "attribution_mode": "fixture_guided",
+      "attribution_source": "fixture_tag_plus_deterministic_relation",
+      "challenge_id": "copy-shadow-template-disjoint-challenge-v1-047",
+      "condition_tags_used": [
+        "normalization_collision",
+        "scope:form_fill:fill_form:field"
+      ],
+      "deterministic_checks_used": [
+        "normalized_collision_audit",
+        "normalized_value_equivalence",
+        "predicted_value_source_membership"
+      ],
+      "manual_review_required": false,
+      "primary_mechanism": "NORMALIZATION_EQUIVALENCE_COLLISION",
+      "scope_key": "form_fill:fill_form:field"
+    },
+    {
+      "adapter_role": "control",
+      "attribution_mode": "fixture_guided",
+      "attribution_source": "fixture_tag_plus_deterministic_relation",
+      "challenge_id": "copy-shadow-template-disjoint-challenge-v1-053",
+      "condition_tags_used": [
+        "scope:form_fill:fill_form:field",
+        "source_absent"
+      ],
+      "deterministic_checks_used": [
+        "predicted_value_source_membership"
+      ],
+      "manual_review_required": true,
+      "primary_mechanism": "SOURCE_ABSENT_SUBSTITUTION",
+      "scope_key": "form_fill:fill_form:field"
+    },
+    {
+      "adapter_role": "control",
+      "attribution_mode": "fixture_guided",
+      "attribution_source": "fixture_tag_plus_deterministic_relation",
+      "challenge_id": "copy-shadow-template-disjoint-challenge-v1-057",
+      "condition_tags_used": [
+        "normalization_collision",
+        "scope:form_fill:fill_form:field"
+      ],
+      "deterministic_checks_used": [
+        "normalized_collision_audit",
+        "normalized_value_equivalence",
+        "predicted_value_source_membership"
+      ],
+      "manual_review_required": false,
+      "primary_mechanism": "NORMALIZATION_EQUIVALENCE_COLLISION",
+      "scope_key": "form_fill:fill_form:field"
+    },
+    {
+      "adapter_role": "treatment",
+      "attribution_mode": "fixture_guided",
+      "attribution_source": "fixture_tag_plus_deterministic_relation",
+      "challenge_id": "copy-shadow-template-disjoint-challenge-v1-005",
+      "condition_tags_used": [
+        "partial_span_trap",
+        "scope:search:search_web:query"
+      ],
+      "deterministic_checks_used": [
+        "predicted_value_source_membership",
+        "span_prefix_relation"
+      ],
+      "manual_review_required": false,
+      "primary_mechanism": "OVERLONG_SOURCE_SPAN",
+      "scope_key": "search:search_web:query"
+    },
+    {
+      "adapter_role": "treatment",
+      "attribution_mode": "fixture_guided",
+      "attribution_source": "fixture_tag_plus_deterministic_relation",
+      "challenge_id": "copy-shadow-template-disjoint-challenge-v1-015",
+      "condition_tags_used": [
+        "partial_span_trap",
+        "scope:search:search_web:query"
+      ],
+      "deterministic_checks_used": [
+        "predicted_value_source_membership",
+        "span_prefix_relation"
+      ],
+      "manual_review_required": false,
+      "primary_mechanism": "OVERLONG_SOURCE_SPAN",
+      "scope_key": "search:search_web:query"
+    },
+    {
+      "adapter_role": "treatment",
+      "attribution_mode": "fixture_guided",
+      "attribution_source": "fixture_tag_plus_deterministic_relation",
+      "challenge_id": "copy-shadow-template-disjoint-challenge-v1-025",
+      "condition_tags_used": [
+        "partial_span_trap",
+        "scope:search:search_web:query"
+      ],
+      "deterministic_checks_used": [
+        "predicted_value_source_membership",
+        "span_prefix_relation"
+      ],
+      "manual_review_required": false,
+      "primary_mechanism": "OVERLONG_SOURCE_SPAN",
+      "scope_key": "search:search_web:query"
+    },
+    {
+      "adapter_role": "treatment",
+      "attribution_mode": "fixture_guided",
+      "attribution_source": "fixture_tag_plus_deterministic_relation",
+      "challenge_id": "copy-shadow-template-disjoint-challenge-v1-036",
+      "condition_tags_used": [
+        "normalization_candidate",
+        "scope:form_fill:fill_form:field"
+      ],
+      "deterministic_checks_used": [
+        "normalized_value_equivalence"
+      ],
+      "manual_review_required": false,
+      "primary_mechanism": "CANONICAL_STRING_MISMATCH",
+      "scope_key": "form_fill:fill_form:field"
+    },
+    {
+      "adapter_role": "treatment",
+      "attribution_mode": "fixture_guided",
+      "attribution_source": "fixture_tag_plus_deterministic_relation",
+      "challenge_id": "copy-shadow-template-disjoint-challenge-v1-037",
+      "condition_tags_used": [
+        "normalization_collision",
+        "scope:form_fill:fill_form:field"
+      ],
+      "deterministic_checks_used": [
+        "normalized_collision_audit",
+        "normalized_value_equivalence",
+        "predicted_value_source_membership"
+      ],
+      "manual_review_required": false,
+      "primary_mechanism": "NORMALIZATION_EQUIVALENCE_COLLISION",
+      "scope_key": "form_fill:fill_form:field"
+    },
+    {
+      "adapter_role": "treatment",
+      "attribution_mode": "fixture_guided",
+      "attribution_source": "fixture_tag_plus_deterministic_relation",
+      "challenge_id": "copy-shadow-template-disjoint-challenge-v1-044",
+      "condition_tags_used": [
+        "multiple_entity_distractor",
+        "scope:form_fill:fill_form:field"
+      ],
+      "deterministic_checks_used": [
+        "predicted_value_source_membership"
+      ],
+      "manual_review_required": true,
+      "primary_mechanism": "WRONG_ENTITY_FROM_SOURCE",
+      "scope_key": "form_fill:fill_form:field"
+    },
+    {
+      "adapter_role": "treatment",
+      "attribution_mode": "fixture_guided",
+      "attribution_source": "fixture_tag_plus_deterministic_relation",
+      "challenge_id": "copy-shadow-template-disjoint-challenge-v1-046",
+      "condition_tags_used": [
+        "normalization_candidate",
+        "scope:form_fill:fill_form:field"
+      ],
+      "deterministic_checks_used": [
+        "normalized_value_equivalence"
+      ],
+      "manual_review_required": false,
+      "primary_mechanism": "CANONICAL_STRING_MISMATCH",
+      "scope_key": "form_fill:fill_form:field"
+    },
+    {
+      "adapter_role": "treatment",
+      "attribution_mode": "fixture_guided",
+      "attribution_source": "fixture_tag_plus_deterministic_relation",
+      "challenge_id": "copy-shadow-template-disjoint-challenge-v1-047",
+      "condition_tags_used": [
+        "normalization_collision",
+        "scope:form_fill:fill_form:field"
+      ],
+      "deterministic_checks_used": [
+        "normalized_collision_audit",
+        "normalized_value_equivalence",
+        "predicted_value_source_membership"
+      ],
+      "manual_review_required": false,
+      "primary_mechanism": "NORMALIZATION_EQUIVALENCE_COLLISION",
+      "scope_key": "form_fill:fill_form:field"
+    },
+    {
+      "adapter_role": "treatment",
+      "attribution_mode": "fixture_guided",
+      "attribution_source": "fixture_tag_plus_deterministic_relation",
+      "challenge_id": "copy-shadow-template-disjoint-challenge-v1-056",
+      "condition_tags_used": [
+        "normalization_candidate",
+        "scope:form_fill:fill_form:field"
+      ],
+      "deterministic_checks_used": [
+        "normalized_value_equivalence"
+      ],
+      "manual_review_required": false,
+      "primary_mechanism": "CANONICAL_STRING_MISMATCH",
+      "scope_key": "form_fill:fill_form:field"
+    },
+    {
+      "adapter_role": "treatment",
+      "attribution_mode": "fixture_guided",
+      "attribution_source": "fixture_tag_plus_deterministic_relation",
+      "challenge_id": "copy-shadow-template-disjoint-challenge-v1-057",
+      "condition_tags_used": [
+        "normalization_collision",
+        "scope:form_fill:fill_form:field"
+      ],
+      "deterministic_checks_used": [
+        "normalized_collision_audit",
+        "normalized_value_equivalence",
+        "predicted_value_source_membership"
+      ],
+      "manual_review_required": false,
+      "primary_mechanism": "NORMALIZATION_EQUIVALENCE_COLLISION",
+      "scope_key": "form_fill:fill_form:field"
+    }
+  ],
+  "migration_kind": "copy_shadow_false_trust_taxonomy_policy_v2",
+  "original_mechanism_counts": {
+    "CANONICAL_STRING_MISMATCH": 3,
+    "NORMALIZATION_EQUIVALENCE_COLLISION": 6,
+    "OVERLONG_SOURCE_SPAN": 3,
+    "SOURCE_ABSENT_SUBSTITUTION": 3,
+    "WRONG_ENTITY_FROM_SOURCE": 1
+  },
+  "source_mechanism": "CHALLENGE_FIXTURE_OR_GOLD_AMBIGUITY",
+  "target_mechanisms": [
+    "CANONICAL_STRING_MISMATCH",
+    "TRUE_GOLD_OR_FIXTURE_AMBIGUITY"
+  ]
+}

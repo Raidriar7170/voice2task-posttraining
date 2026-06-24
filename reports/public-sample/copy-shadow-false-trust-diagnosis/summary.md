@@ -15,8 +15,10 @@ This is an offline, public-safe re-audit of committed challenge artifacts. It do
 
 ## Policy-v2 proposal
 
-- `search:search_web:query`: `OBSERVE_LIMITED`
-- `form_fill:fill_form:field`: `PROPOSE_DISABLE`
-- `extract:extract_page:target`: `OBSERVE_ENABLED`
+- `search:search_web:query`: `DEFER_TO_DESIGN_COPY_SHADOW_SCOPE_POLICY_V2`
+- `form_fill:fill_form:field`: `DEFER_TO_DESIGN_COPY_SHADOW_SCOPE_POLICY_V2`
+- `extract:extract_page:target`: `DEFER_TO_DESIGN_COPY_SHADOW_SCOPE_POLICY_V2`
+
+Legacy diagnosis policy-v2 statuses are deferred to the deterministic `design-copy-shadow-scope-policy-v2` gate.
 
 Recommended next change: `design-copy-shadow-scope-policy-v2`.

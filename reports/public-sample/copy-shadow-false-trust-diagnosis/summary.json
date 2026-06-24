@@ -21,7 +21,7 @@
   "historical_trusted_provenance_alias": "deprecated_compatibility_input_only",
   "input_boundary_ok": true,
   "mechanism_counts": {
-    "CHALLENGE_FIXTURE_OR_GOLD_AMBIGUITY": 3,
+    "CANONICAL_STRING_MISMATCH": 3,
     "NORMALIZATION_EQUIVALENCE_COLLISION": 6,
     "OVERLONG_SOURCE_SPAN": 3,
     "SOURCE_ABSENT_SUBSTITUTION": 3,
@@ -30,10 +30,11 @@
   "normalization_collision_downgrade_count": 6,
   "online_semantic_correctness": "unknown",
   "per_scope_policy_v2_proposal": {
-    "extract:extract_page:target": "OBSERVE_ENABLED",
-    "form_fill:fill_form:field": "PROPOSE_DISABLE",
-    "search:search_web:query": "OBSERVE_LIMITED"
+    "extract:extract_page:target": "DEFER_TO_DESIGN_COPY_SHADOW_SCOPE_POLICY_V2",
+    "form_fill:fill_form:field": "DEFER_TO_DESIGN_COPY_SHADOW_SCOPE_POLICY_V2",
+    "search:search_web:query": "DEFER_TO_DESIGN_COPY_SHADOW_SCOPE_POLICY_V2"
   },
+  "per_scope_policy_v2_proposal_deferred_to": "design-copy-shadow-scope-policy-v2",
   "policy_hash": "5dc14efb8ded13dc048ddb067c7c63a1a62b6c03896950e861303973d505cbc7",
   "post_diagnosis_gold_mismatch_still_requires_offline_review": 10,
   "post_diagnosis_source_attested_exact_count": 58,

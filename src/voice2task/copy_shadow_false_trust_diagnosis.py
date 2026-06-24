@@ -41,6 +41,7 @@ DECISION_BLOCKED_INVALID_INPUT = "FALSE_TRUST_DIAGNOSIS_BLOCKED_INVALID_INPUT"
 DECISION_INCONSISTENT_ARTIFACTS = "FALSE_TRUST_DIAGNOSIS_INCONSISTENT_ARTIFACTS"
 
 NORMALIZATION_RULE = NORMALIZATION_COLLISION_RULE
+POLICY_V2_STATUS_DEFERRED = "DEFER_TO_DESIGN_COPY_SHADOW_SCOPE_POLICY_V2"
 
 
 def run_copy_shadow_false_trust_diagnosis(
@@ -124,6 +125,10 @@ def classify_mismatch_mechanism(
 ) -> dict[str, Any]:
     tag_set = {str(tag) for tag in condition_tags}
     secondary: list[str] = []
+    fixture_guided_attribution: dict[str, Any] | None = None
+    normalized_value_equivalent = isinstance(predicted_value, str) and isinstance(gold_value, str) and (
+        normalize_copy_text(predicted_value) == normalize_copy_text(gold_value)
+    )
 
     if not span_attested or "span_attestation_failure" in tag_set:
         primary = "TECHNICAL_SPAN_ATTESTATION_FAILURE"
@@ -137,17 +142,23 @@ def classify_mismatch_mechanism(
         primary = "DUPLICATE_CONTEXT_DISAMBIGUATION_FAILURE"
     elif "multiple_entity_distractor" in tag_set:
         primary = "WRONG_ENTITY_FROM_SOURCE"
-    elif "gold_ambiguous" in tag_set:
-        primary = "CHALLENGE_FIXTURE_OR_GOLD_AMBIGUITY"
+    elif "gold_ambiguous" in tag_set or normalized_value_equivalent:
+        fixture_guided_attribution = _fixture_guided_attribution(
+            condition_tags=tag_set,
+            predicted_value=predicted_value,
+            gold_value=gold_value,
+            source_text=source_text,
+            primary_mechanism=None,
+            normalized_collision=normalized_collision,
+            span_attested=span_attested,
+        )
+        primary = str(fixture_guided_attribution["primary_mechanism"])
     elif not isinstance(predicted_value, str) or not isinstance(gold_value, str):
         primary = "UNCLASSIFIED_SEMANTIC_MISMATCH"
     elif "partial_span_trap" in tag_set and predicted_value.startswith(gold_value):
         primary = "OVERLONG_SOURCE_SPAN"
     elif "partial_span_trap" in tag_set or gold_value.startswith(predicted_value):
         primary = "UNDERSPECIFIED_PARTIAL_SPAN"
-    elif normalize_copy_text(predicted_value) == normalize_copy_text(gold_value):
-        primary = "CHALLENGE_FIXTURE_OR_GOLD_AMBIGUITY"
-        secondary.append("NORMALIZED_GOLD_EQUIVALENT_STRING_MISMATCH")
     elif predicted_value in source_text:
         primary = "GENERATED_VALUE_MISMATCH"
     else:
@@ -160,16 +171,88 @@ def classify_mismatch_mechanism(
             and primary != "OVERLONG_SOURCE_SPAN"
         ):
             secondary.append("OVERLONG_SOURCE_SPAN")
-        if (
-            gold_value.startswith(predicted_value)
-            and predicted_value != gold_value
-            and primary != "UNDERSPECIFIED_PARTIAL_SPAN"
-        ):
+        if predicted_value in gold_value and predicted_value != gold_value and primary != "UNDERSPECIFIED_PARTIAL_SPAN":
             secondary.append("UNDERSPECIFIED_PARTIAL_SPAN")
+
+    result = {
+        "primary_mechanism": primary,
+        "secondary_mechanisms": sorted(set(secondary)),
+    }
+    if fixture_guided_attribution is None:
+        fixture_guided_attribution = _fixture_guided_attribution(
+            condition_tags=tag_set,
+            predicted_value=predicted_value,
+            gold_value=gold_value,
+            source_text=source_text,
+            primary_mechanism=primary,
+            normalized_collision=normalized_collision,
+            span_attested=span_attested,
+        )
+    result.update({key: value for key, value in fixture_guided_attribution.items() if key != "primary_mechanism"})
+    return result
+
+
+def _fixture_guided_attribution(
+    *,
+    condition_tags: set[str],
+    predicted_value: Any,
+    gold_value: Any,
+    source_text: str,
+    primary_mechanism: str | None,
+    normalized_collision: bool,
+    span_attested: bool,
+) -> dict[str, Any]:
+    deterministic_checks: list[str] = []
+    normalized_value_equivalent = isinstance(predicted_value, str) and isinstance(gold_value, str) and (
+        normalize_copy_text(predicted_value) == normalize_copy_text(gold_value)
+    )
+    if normalized_value_equivalent:
+        deterministic_checks.append("normalized_value_equivalence")
+    if normalized_collision:
+        deterministic_checks.append("normalized_collision_audit")
+    if not span_attested:
+        deterministic_checks.append("span_attestation_failure")
+    if isinstance(predicted_value, str) and isinstance(gold_value, str):
+        has_prefix_relation = predicted_value.startswith(gold_value) or gold_value.startswith(predicted_value)
+        if predicted_value != gold_value and has_prefix_relation:
+            deterministic_checks.append("span_prefix_relation")
+        if predicted_value and predicted_value in source_text:
+            deterministic_checks.append("predicted_value_source_membership")
+
+    if primary_mechanism is None and normalized_value_equivalent:
+        source = "fixture_tag_plus_deterministic_relation" if condition_tags else "deterministic_relation"
+        primary = "CANONICAL_STRING_MISMATCH"
+        manual_review_required = False
+    elif primary_mechanism is None:
+        source = "reviewed_fixture_ambiguity"
+        primary = "TRUE_GOLD_OR_FIXTURE_AMBIGUITY"
+        manual_review_required = True
+    else:
+        primary = primary_mechanism
+        if primary == "TRUE_GOLD_OR_FIXTURE_AMBIGUITY":
+            source = "reviewed_fixture_ambiguity"
+        elif condition_tags and deterministic_checks:
+            source = "fixture_tag_plus_deterministic_relation"
+        elif condition_tags:
+            source = "fixture_tag"
+        else:
+            source = "deterministic_relation"
+        manual_review_required = primary in {
+            "TRUE_GOLD_OR_FIXTURE_AMBIGUITY",
+            "WRONG_ENTITY_FROM_SOURCE",
+            "SOURCE_ABSENT_SUBSTITUTION",
+            "WRONG_SLOT_OR_SCOPE_SELECTION",
+            "GENERATED_VALUE_MISMATCH",
+            "UNCLASSIFIED_SEMANTIC_MISMATCH",
+        }
 
     return {
         "primary_mechanism": primary,
-        "secondary_mechanisms": sorted(set(secondary)),
+        "attribution_mode": "fixture_guided",
+        "attribution_source": source,
+        "condition_tags_used": sorted(condition_tags),
+        "deterministic_checks_used": sorted(set(deterministic_checks)),
+        "manual_review_required": manual_review_required,
     }
 
 
@@ -525,41 +608,47 @@ def _build_case_ledger(inputs: dict[str, Any], source_attested_events: list[dict
             span_attested=source_attested_input,
         )
         span = diagnostic.get("source_span") if isinstance(diagnostic, dict) else None
-        ledger.append(
-            {
-                "challenge_id": sample_id,
-                "adapter_role": role,
-                "task_type": prediction["prediction"].get("task_type"),
-                "route": prediction["prediction"].get("route"),
-                "slot_path": slot_path,
-                "scope_key": audit.get("scope_key"),
-                "condition_tags": row.get("provenance", {}).get("condition_tags", []),
-                "predicted_value": predicted_value,
-                "gold_value": gold_value,
-                "predicted_value_hash": stable_hash(predicted_value),
-                "gold_value_hash": stable_hash(gold_value),
-                "source_span_offsets": _span_offsets(span),
-                "source_span_hash": span.get("span_hash") if isinstance(span, dict) else None,
-                "historical_trusted_provenance": True,
-                "source_attested_exact_input": source_attested_input,
-                "source_attested_exact": source_attested_exact,
-                "semantic_correctness": "offline_gold_mismatch",
-                "execution_eligible": False,
-                "primary_mechanism": mechanism["primary_mechanism"],
-                "secondary_mechanisms": mechanism["secondary_mechanisms"],
-                "online_detectability": _online_detectability(mechanism["primary_mechanism"]),
-                "offline_gold_required": True,
-                "deterministic_mitigation_possible": _deterministic_mitigation_possible(
-                    mechanism["primary_mechanism"]
-                ),
-                "task_level_semantic_check_required": mechanism["primary_mechanism"]
-                in {"WRONG_ENTITY_FROM_SOURCE", "GENERATED_VALUE_MISMATCH", "UNCLASSIFIED_SEMANTIC_MISMATCH"},
-                "scope_policy_implication": _scope_policy_implication(str(audit.get("scope_key"))),
-                "normalized_collision_status": collision.status,
-                "normalization_rule": collision.normalization_rule,
-                "sanitized_example": _sanitized_example(source_text, predicted_value, gold_value),
-            }
-        )
+        ledger_row = {
+            "challenge_id": sample_id,
+            "adapter_role": role,
+            "task_type": prediction["prediction"].get("task_type"),
+            "route": prediction["prediction"].get("route"),
+            "slot_path": slot_path,
+            "scope_key": audit.get("scope_key"),
+            "condition_tags": row.get("provenance", {}).get("condition_tags", []),
+            "predicted_value": predicted_value,
+            "gold_value": gold_value,
+            "predicted_value_hash": stable_hash(predicted_value),
+            "gold_value_hash": stable_hash(gold_value),
+            "source_span_offsets": _span_offsets(span),
+            "source_span_hash": span.get("span_hash") if isinstance(span, dict) else None,
+            "historical_trusted_provenance": True,
+            "source_attested_exact_input": source_attested_input,
+            "source_attested_exact": source_attested_exact,
+            "semantic_correctness": "offline_gold_mismatch",
+            "execution_eligible": False,
+            "primary_mechanism": mechanism["primary_mechanism"],
+            "secondary_mechanisms": mechanism["secondary_mechanisms"],
+            "online_detectability": _online_detectability(mechanism["primary_mechanism"]),
+            "offline_gold_required": True,
+            "deterministic_mitigation_possible": _deterministic_mitigation_possible(mechanism["primary_mechanism"]),
+            "task_level_semantic_check_required": mechanism["primary_mechanism"]
+            in {"WRONG_ENTITY_FROM_SOURCE", "GENERATED_VALUE_MISMATCH", "UNCLASSIFIED_SEMANTIC_MISMATCH"},
+            "scope_policy_implication": _scope_policy_implication(str(audit.get("scope_key"))),
+            "normalized_collision_status": collision.status,
+            "normalization_rule": collision.normalization_rule,
+            "sanitized_example": _sanitized_example(source_text, predicted_value, gold_value),
+        }
+        for key in (
+            "attribution_mode",
+            "attribution_source",
+            "condition_tags_used",
+            "deterministic_checks_used",
+            "manual_review_required",
+        ):
+            if key in mechanism:
+                ledger_row[key] = mechanism[key]
+        ledger.append(ledger_row)
     return sorted(ledger, key=lambda row: (row["adapter_role"], row["challenge_id"], row["slot_path"]))
 
 
@@ -606,7 +695,8 @@ def _build_per_scope_review(
             "adapter_role_distribution": dict(sorted(role_by_scope[scope].items())),
             "condition_tag_distribution": _condition_counts(cases),
             "mechanism_counts": dict(sorted(mechanism_counts.items())),
-            "policy_v2_proposal_status": _policy_v2_status(scope, mismatch_count, mechanism_counts),
+            "policy_v2_proposal_status": POLICY_V2_STATUS_DEFERRED,
+            "policy_v2_proposal_deferred_to": "design-copy-shadow-scope-policy-v2",
             "review_note": _scope_review_note(scope),
         }
     return review
@@ -654,17 +744,8 @@ def _build_summary(
 ) -> dict[str, Any]:
     observed = _recomputed_observed_counts(inputs["audits"])
     downgrade_count = collision_audit["downgrade_count"]
-    form_status = per_scope["form_fill:fill_form:field"]["policy_v2_proposal_status"]
-    search_status = per_scope["search:search_web:query"]["policy_v2_proposal_status"]
-    if form_status == "PROPOSE_DISABLE" or search_status == "PROPOSE_DISABLE":
-        decision = DECISION_SCOPE_REDUCTION_REQUIRED
-        next_change = "design-copy-shadow-scope-policy-v2"
-    elif all(row["policy_v2_proposal_status"] == "PROPOSE_DISABLE" for row in per_scope.values()):
-        decision = DECISION_NO_FURTHER_INTEGRATION
-        next_change = None
-    else:
-        decision = DECISION_POLICY_V2_REVIEW_READY
-        next_change = "review-and-freeze-copy-shadow-policy-v2-before-naturalistic-challenge"
+    decision = DECISION_SCOPE_REDUCTION_REQUIRED
+    next_change = "design-copy-shadow-scope-policy-v2"
 
     return {
         "change_id": CHANGE_ID,
@@ -696,6 +777,7 @@ def _build_summary(
         "per_scope_policy_v2_proposal": {
             scope: item["policy_v2_proposal_status"] for scope, item in per_scope.items()
         },
+        "per_scope_policy_v2_proposal_deferred_to": "design-copy-shadow-scope-policy-v2",
         "technical_gate_counts": {
             "action_trusted_count": boundary["action_trusted_count"],
             "normalized_trusted_count": boundary["normalized_trusted_count"],
@@ -773,12 +855,17 @@ def _online_detectability(primary_mechanism: str) -> str:
         return "deterministic_source_only_collision_audit"
     if primary_mechanism == "TECHNICAL_SPAN_ATTESTATION_FAILURE":
         return "deterministic_source_span_validation"
+    if primary_mechanism == "CANONICAL_STRING_MISMATCH":
+        return "fixture_guided_deterministic_relation_only"
+    if primary_mechanism == "TRUE_GOLD_OR_FIXTURE_AMBIGUITY":
+        return "requires_fixture_or_gold_review"
     return "requires_offline_gold_or_task_semantic_check"
 
 
 def _deterministic_mitigation_possible(primary_mechanism: str) -> bool:
     return primary_mechanism in {
         "NORMALIZATION_EQUIVALENCE_COLLISION",
+        "CANONICAL_STRING_MISMATCH",
         "OVERLONG_SOURCE_SPAN",
         "UNDERSPECIFIED_PARTIAL_SPAN",
         "TECHNICAL_SPAN_ATTESTATION_FAILURE",
@@ -807,18 +894,6 @@ def _condition_counts(cases: list[dict[str, Any]]) -> dict[str, int]:
     for row in cases:
         counts.update(str(tag) for tag in row.get("condition_tags", []))
     return dict(sorted(counts.items()))
-
-
-def _policy_v2_status(scope: str, mismatch_count: int, mechanism_counts: Counter[str]) -> str:
-    if scope == "form_fill:fill_form:field" and mismatch_count:
-        return "PROPOSE_DISABLE"
-    if scope == "search:search_web:query" and mismatch_count:
-        return "OBSERVE_LIMITED"
-    if scope == "extract:extract_page:target":
-        return "OBSERVE_ENABLED"
-    if mismatch_count:
-        return "OBSERVE_LIMITED"
-    return "OBSERVE_ENABLED"
 
 
 def _scope_review_note(scope: str) -> str:
@@ -857,7 +932,8 @@ def _empty_scope_review() -> dict[str, dict[str, Any]]:
             "source_attested_count": 0,
             "gold_correct_count": 0,
             "gold_mismatch_count": 0,
-            "policy_v2_proposal_status": "INSUFFICIENT_EVIDENCE",
+            "policy_v2_proposal_status": POLICY_V2_STATUS_DEFERRED,
+            "policy_v2_proposal_deferred_to": "design-copy-shadow-scope-policy-v2",
         }
         for scope in EXPECTED_SCOPES
     }
@@ -937,6 +1013,9 @@ def _summary_markdown(diagnosis: dict[str, Any]) -> str:
                 f"- `{scope}`: `{status}`"
                 for scope, status in summary["per_scope_policy_v2_proposal"].items()
             ],
+            "",
+            "Legacy diagnosis policy-v2 statuses are deferred to the deterministic "
+            "`design-copy-shadow-scope-policy-v2` gate.",
             "",
             f"Recommended next change: `{summary['recommended_next_change']}`.",
             "",

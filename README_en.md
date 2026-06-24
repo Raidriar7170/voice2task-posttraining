@@ -19,7 +19,7 @@ Voice2Task Post-Training is an evidence-first project for Chinese voice-to-brows
 | Evaluation | Schema validity, strict contract exact match, slot-level analysis, and step-matched ablation |
 | Current conclusion | Training gains remain mixed and statistically inconclusive; provenance verification remains observe-only. No model-improvement, executable-quality, safety-readiness, or production-readiness claim is made. |
 | Contract V2 status | Projection decision is `PARTIAL_SCHEMA_BENEFIT`; derived-field-only strict failures are 14.65%, normalized-command-only strict failures are 14.65%, and core slot failures remain 68.79% of V1 strict failures. |
-| Copy-shadow status | Challenge v1 is an adversarial verifier fixture, not a naturalistic benchmark. False-trust diagnosis is `SOURCE_ATTESTATION_HARDENED_SCOPE_REDUCTION_REQUIRED`; source-attested-but-gold-mismatch count is 16, normalization-collision downgrades are 6, and execution-eligible count is 0. |
+| Copy-shadow status | Challenge v1 is an adversarial verifier fixture, not a naturalistic benchmark. False-trust diagnosis is `SOURCE_ATTESTATION_HARDENED_SCOPE_REDUCTION_REQUIRED`; Policy V2 design is `POLICY_V2_SCOPE_REDUCTION_READY_FOR_REVIEW`; source-attested-but-gold-mismatch count is 16, normalization-collision downgrades are 6, and execution-eligible count is 0. |
 
 [Detailed current status and evidence ->](docs/current-status.md)
 

@@ -49,10 +49,33 @@ def test_diagnosis_recomputes_committed_false_trust_boundary() -> None:
         "NORMALIZATION_EQUIVALENCE_COLLISION",
         "OVERLONG_SOURCE_SPAN",
         "WRONG_ENTITY_FROM_SOURCE",
+        "CANONICAL_STRING_MISMATCH",
     }
+    fixture_guided = [
+        row for row in diagnosis["case_ledger"] if row["primary_mechanism"] == "CANONICAL_STRING_MISMATCH"
+    ]
+    assert len(fixture_guided) == 3
+    assert {row["attribution_mode"] for row in fixture_guided} == {"fixture_guided"}
+    assert {row["attribution_source"] for row in fixture_guided} == {"fixture_tag_plus_deterministic_relation"}
+    assert all(row["condition_tags_used"] for row in fixture_guided)
+    assert all("normalized_value_equivalence" in row["deterministic_checks_used"] for row in fixture_guided)
+    assert all(row["manual_review_required"] is False for row in fixture_guided)
+    assert all(row["attribution_mode"] == "fixture_guided" for row in diagnosis["case_ledger"])
+    assert all("attribution_source" in row for row in diagnosis["case_ledger"])
+    assert all("condition_tags_used" in row for row in diagnosis["case_ledger"])
+    assert all("deterministic_checks_used" in row for row in diagnosis["case_ledger"])
+    assert all("manual_review_required" in row for row in diagnosis["case_ledger"])
     assert diagnosis["per_scope_risk_review"]["form_fill:fill_form:field"]["gold_mismatch_count"] == 13
     assert diagnosis["per_scope_risk_review"]["search:search_web:query"]["gold_mismatch_count"] == 3
     assert diagnosis["per_scope_risk_review"]["extract:extract_page:target"]["gold_mismatch_count"] == 0
+    assert set(summary["per_scope_policy_v2_proposal"].values()) == {
+        "DEFER_TO_DESIGN_COPY_SHADOW_SCOPE_POLICY_V2"
+    }
+    assert summary["per_scope_policy_v2_proposal_deferred_to"] == "design-copy-shadow-scope-policy-v2"
+    assert all(
+        row["policy_v2_proposal_status"] == "DEFER_TO_DESIGN_COPY_SHADOW_SCOPE_POLICY_V2"
+        for row in diagnosis["per_scope_risk_review"].values()
+    )
 
 
 def test_invalid_input_boundary_writes_blocked_report(tmp_path: Path) -> None:
@@ -69,6 +92,15 @@ def test_invalid_input_boundary_writes_blocked_report(tmp_path: Path) -> None:
     assert blocked["prediction_rerun"] is False
     assert blocked["historical_artifacts_modified"] is False
     assert sorted(path.name for path in (tmp_path / "diagnosis").iterdir()) == ["blocked.json"]
+    assert set(result["per_scope_risk_review"]) == {
+        "extract:extract_page:target",
+        "form_fill:fill_form:field",
+        "search:search_web:query",
+    }
+    assert all(
+        row["policy_v2_proposal_status"] == "DEFER_TO_DESIGN_COPY_SHADOW_SCOPE_POLICY_V2"
+        for row in result["per_scope_risk_review"].values()
+    )
 
 
 def test_diagnosis_report_writes_bounded_public_safe_bundle(tmp_path: Path) -> None:
@@ -105,7 +137,8 @@ def test_mechanism_classifier_covers_supported_taxonomy() -> None:
         (["wrong_scope"], "foo", "bar", "foo", "action", "WRONG_SLOT_OR_SCOPE_SELECTION"),
         (["duplicate_exact"], "foo", "bar", "foo and foo", "field", "DUPLICATE_CONTEXT_DISAMBIGUATION_FAILURE"),
         ([], "foo", "bar", "foo", "field", "GENERATED_VALUE_MISMATCH"),
-        (["gold_ambiguous"], "A B", "AB", "A B", "field", "CHALLENGE_FIXTURE_OR_GOLD_AMBIGUITY"),
+        (["gold_ambiguous"], "A B", "AB", "A B", "field", "CANONICAL_STRING_MISMATCH"),
+        (["gold_ambiguous"], "字段甲", "字段乙", "字段甲", "field", "TRUE_GOLD_OR_FIXTURE_AMBIGUITY"),
         (["span_attestation_failure"], "foo", "bar", "foo", "field", "TECHNICAL_SPAN_ATTESTATION_FAILURE"),
         ([], None, "bar", "foo", "field", "UNCLASSIFIED_SEMANTIC_MISMATCH"),
     ]
