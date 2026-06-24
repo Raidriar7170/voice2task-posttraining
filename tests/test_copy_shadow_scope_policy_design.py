@@ -50,7 +50,7 @@ def _metric(
     no_engineering_value: bool = False,
     high_downstream_misuse_risk: bool = False,
     condition_max_share: float = 0.5,
-    fixture_evidence_independent: bool = True,
+    fixture_evidence_sufficient_for_gate: bool = True,
 ) -> dict:
     control_count = total // 2 if control is None else control
     treatment_count = total - control_count if treatment is None else treatment
@@ -76,7 +76,7 @@ def _metric(
         "no_engineering_value": no_engineering_value,
         "high_downstream_misuse_risk": high_downstream_misuse_risk,
         "condition_max_share": condition_max_share,
-        "fixture_evidence_independent": fixture_evidence_independent,
+        "fixture_evidence_sufficient_for_gate": fixture_evidence_sufficient_for_gate,
         "available_adapter_roles": ["control", "treatment"],
         "policy_v1_enabled": True,
     }
@@ -104,9 +104,9 @@ def test_gate_status_thresholds_are_ordered_and_deterministic() -> None:
     assert compute_gate_status(_metric(total=40, correct=39, high_risk=0, condition_max_share=0.95)) == (
         "INSUFFICIENT_EVIDENCE"
     )
-    assert compute_gate_status(_metric(total=40, correct=39, high_risk=0, fixture_evidence_independent=False)) == (
-        "INSUFFICIENT_EVIDENCE"
-    )
+    assert compute_gate_status(
+        _metric(total=40, correct=39, high_risk=0, fixture_evidence_sufficient_for_gate=False)
+    ) == "INSUFFICIENT_EVIDENCE"
 
 
 def test_gate_status_disables_on_policy_technical_and_semantic_failures() -> None:
@@ -250,13 +250,26 @@ def test_compute_scope_metrics_from_committed_artifacts_post_hardening() -> None
     assert search["correct_rate"] == pytest.approx(0.9)
     assert search["wilson_95"]["lower"] < 0.75
     assert search["high_risk_mismatch_count"] == 3
+    assert search["condition_max_share"] == pytest.approx(1.0)
+    assert search["evidence_condition_tag_distribution"] == {"partial_span_trap": 3}
     assert form["total_attested_count"] == 31
     assert form["high_risk_mismatch_count"] == 5
     assert form["canonical_string_mismatch_count"] == 3
+    assert form["condition_max_share"] == pytest.approx(6 / 13)
+    assert form["evidence_condition_tag_distribution"] == {
+        "multiple_entity_distractor": 1,
+        "normalization_candidate": 3,
+        "normalization_collision": 6,
+        "source_absent": 3,
+    }
     assert extract["total_attested_count"] == 3
     assert extract["adapter_role_counts"] == {"treatment": 3}
     assert extract["evidence_sufficiency"]["only_one_adapter_role"] is True
     assert all(row["policy_v1_enabled"] is True for row in metrics.values())
+    assert all(row["policy_gate_deterministic"] is True for row in metrics.values())
+    assert all(row["attribution_mode"] == "fixture_guided" for row in metrics.values())
+    assert all(row["fixture_independent_evidence"] is False for row in metrics.values())
+    assert all("fixture_evidence_independent" not in row for row in metrics.values())
 
 
 def test_run_design_recomputes_committed_policy_v2_scope_decisions_without_mutating_v1() -> None:
@@ -276,11 +289,12 @@ def test_run_design_recomputes_committed_policy_v2_scope_decisions_without_mutat
     assert result["summary"]["normalized_attested_count"] == 0
     assert result["summary"]["execution_eligible_count"] == 0
     assert result["scope_decisions"]["form_fill:fill_form:field"]["final_status"] == "PROPOSE_DISABLE"
-    assert result["scope_decisions"]["search:search_web:query"]["final_status"] == "OBSERVE_LIMITED"
+    assert result["scope_decisions"]["search:search_web:query"]["final_status"] == "INSUFFICIENT_EVIDENCE"
     assert result["scope_decisions"]["extract:extract_page:target"]["final_status"] == "INSUFFICIENT_EVIDENCE"
     assert result["scope_decisions"]["extract:extract_page:target"]["original_gate_status"] == (
         "INSUFFICIENT_EVIDENCE"
     )
+    assert all(decision["reviewer_required"] is True for decision in result["scope_decisions"].values())
 
 
 def test_write_design_report_bundle_and_inactive_policy(tmp_path: Path) -> None:
@@ -315,6 +329,7 @@ def test_write_design_report_bundle_and_inactive_policy(tmp_path: Path) -> None:
     assert proposed["challenge_v1_hash"] == EXPECTED_CHALLENGE_HASH
     assert proposed["decision_gate_version"] == "copy-shadow-scope-policy-v2-gates-2026-06-24"
     assert proposed["scopes"]["form_fill:fill_form:field"]["final_status"] == "PROPOSE_DISABLE"
+    assert all(scope["reviewer_required"] is True for scope in proposed["scopes"].values())
     assert scan_paths([output_dir, proposed_policy_path]).ok
 
 
@@ -347,6 +362,10 @@ def test_committed_policy_v2_design_artifacts_are_current_and_review_only() -> N
     assert proposed["runtime_loaded"] is False
     assert proposed["enforcement_enabled"] is False
     assert proposed["source_policy_v1_hash"] == compute_policy_hash(policy_v1)
+    assert all(scope["reviewer_required"] is True for scope in proposed["scopes"].values())
+    assert proposed["scopes"]["search:search_web:query"]["final_status"] == "INSUFFICIENT_EVIDENCE"
+    assert proposed["scopes"]["search:search_web:query"]["metrics"]["condition_max_share"] == pytest.approx(1.0)
+    assert "fixture_evidence_independent" not in proposed["scopes"]["search:search_web:query"]["metrics"]
     assert summary["claims"] == {
         "training_run": False,
         "prediction_rerun": False,
@@ -360,3 +379,23 @@ def test_committed_policy_v2_design_artifacts_are_current_and_review_only() -> N
         "safety_readiness_claim": False,
     }
     assert scan_paths([DESIGN_DIR, POLICY_V2_PROPOSED_PATH, REPO_ROOT / "docs/copy-shadow-scope-policy-v2.md"]).ok
+
+
+def test_policy_v2_review_doc_explains_gate_and_scope_decisions() -> None:
+    text = (REPO_ROOT / "docs/copy-shadow-scope-policy-v2.md").read_text(encoding="utf-8")
+
+    for required in (
+        "Gate order",
+        "Wilson interval",
+        "Sample support",
+        "Adapter consistency",
+        "Fixture-guided attribution",
+        "Downward-only override",
+        "Why these scope statuses",
+        "Runtime boundary",
+        "form_fill:fill_form:field",
+        "search:search_web:query",
+        "extract:extract_page:target",
+        "runtime_loaded=false",
+    ):
+        assert required in text

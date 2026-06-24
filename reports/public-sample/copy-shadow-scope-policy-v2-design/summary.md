@@ -8,7 +8,7 @@ Policy V2 is proposal-only. It is inactive, not runtime loaded, not enforcement,
 
 - `extract:extract_page:target`: original `INSUFFICIENT_EVIDENCE`, final `INSUFFICIENT_EVIDENCE`
 - `form_fill:fill_form:field`: original `PROPOSE_DISABLE`, final `PROPOSE_DISABLE`
-- `search:search_web:query`: original `OBSERVE_LIMITED`, final `OBSERVE_LIMITED`
+- `search:search_web:query`: original `INSUFFICIENT_EVIDENCE`, final `INSUFFICIENT_EVIDENCE`
 
 ## Evidence
 

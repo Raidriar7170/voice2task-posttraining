@@ -273,7 +273,8 @@ def compute_scope_metrics(
         high_risk_count = _high_risk_mismatch_count(cases)
         mechanism_counts = Counter(str(row.get("primary_mechanism")) for row in cases)
         condition_counts = _condition_counts(cases)
-        max_condition_share = _max_share(condition_counts.values())
+        evidence_condition_counts = _evidence_condition_counts(cases)
+        max_condition_share = _max_share(evidence_condition_counts.values())
         adapter_gap = max(role_rates.values()) - min(role_rates.values()) if len(role_rates) >= 2 else None
         execution_eligible_count = sum(1 for row in cases if row.get("execution_eligible") is True)
         metrics[scope] = {
@@ -293,8 +294,13 @@ def compute_scope_metrics(
             "true_gold_or_fixture_ambiguity_count": mechanism_counts["TRUE_GOLD_OR_FIXTURE_AMBIGUITY"],
             "normalization_collision_count": mechanism_counts["NORMALIZATION_EQUIVALENCE_COLLISION"],
             "condition_tag_distribution": dict(sorted(condition_counts.items())),
+            "evidence_condition_tag_distribution": dict(sorted(evidence_condition_counts.items())),
+            "condition_max_share_excludes": ["scope:*"],
             "condition_max_share": max_condition_share,
-            "fixture_evidence_independent": True,
+            "policy_gate_deterministic": True,
+            "attribution_mode": "fixture_guided",
+            "fixture_independent_evidence": False,
+            "fixture_evidence_sufficient_for_gate": True,
             "technical_false_accept_count": int(
                 technical_gate_counts.get("provenance_false_accept_count")
                 or technical_gate_counts.get("technical_false_accept_count")
@@ -424,7 +430,7 @@ def _is_insufficient_evidence(metric: dict[str, Any], total: int, adapter_counts
     wilson_width = _number(metric.get("wilson_95", {}).get("width"))
     if wilson_width is not None and wilson_width > GATE_CONFIG["insufficient_evidence"]["max_wilson_width"]:
         return True
-    if metric.get("fixture_evidence_independent") is False:
+    if metric.get("fixture_evidence_sufficient_for_gate") is False:
         return True
     return False
 
@@ -523,6 +529,17 @@ def _condition_counts(cases: list[dict[str, Any]]) -> Counter[str]:
     return counts
 
 
+def _evidence_condition_counts(cases: list[dict[str, Any]]) -> Counter[str]:
+    counts: Counter[str] = Counter()
+    for row in cases:
+        counts.update(
+            str(tag)
+            for tag in row.get("condition_tags", [])
+            if not str(tag).startswith("scope:")
+        )
+    return counts
+
+
 def _evidence_sufficiency(total: int, role_counts: Counter[str], condition_max_share: float) -> dict[str, Any]:
     min_adapter = min(role_counts.values()) if role_counts else 0
     max_adapter_share = max(role_counts.values()) / total if total and role_counts else None
@@ -556,7 +573,7 @@ def _scope_decisions(metrics: dict[str, dict[str, Any]]) -> dict[str, dict[str, 
                 "reports/public-sample/copy-shadow-scope-policy-v2-design/"
                 f"post-hardening-scope-metrics.json#{scope}"
             ),
-            "reviewer_required": final_status in {"OBSERVE_ENABLED", "OBSERVE_LIMITED", "CANDIDATE_ONLY"},
+            "reviewer_required": True,
             "execution_eligible": False,
         }
     return decisions
@@ -672,6 +689,7 @@ def _proposed_policy(
                 "final_status": decisions[scope]["final_status"],
                 "override": decisions[scope]["override"],
                 "evidence_reference": decisions[scope]["evidence_reference"],
+                "reviewer_required": decisions[scope]["reviewer_required"],
                 "execution_eligible": False,
             }
             for scope in sorted(decisions)

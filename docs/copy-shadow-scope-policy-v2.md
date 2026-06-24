@@ -13,13 +13,80 @@ Authoritative generated artifacts:
 
 Current decision: `POLICY_V2_SCOPE_REDUCTION_READY_FOR_REVIEW`.
 
-Scope decisions:
+## Gate order
+
+The deterministic gate evaluates each scope in this order:
+
+1. Technical or policy failure -> `PROPOSE_DISABLE`
+2. Evidence insufficiency -> `INSUFFICIENT_EVIDENCE`
+3. Disable thresholds -> `PROPOSE_DISABLE`
+4. Observe-enabled thresholds -> `OBSERVE_ENABLED`
+5. Observe-limited thresholds -> `OBSERVE_LIMITED`
+6. Fallback -> `CANDIDATE_ONLY`
+
+This ordering is intentionally conservative. A scope can fail before accuracy
+thresholds if sample support, adapter balance, Wilson uncertainty, condition
+diversity, or fixture evidence is too weak for a review-ready decision.
+
+## Wilson interval
+
+The gate reports a Wilson 95 percent interval for the source-attested
+gold-correct rate. `OBSERVE_ENABLED` requires a lower bound of at least `0.75`;
+`OBSERVE_LIMITED` requires a lower bound of at least `0.60`. A wide Wilson
+interval is treated as evidence insufficiency even when the raw point estimate
+looks high.
+
+## Sample support
+
+`OBSERVE_ENABLED` requires at least 30 source-attested samples with at least 10
+Control and 10 Treatment samples. `OBSERVE_LIMITED` requires at least 20
+source-attested samples and at least 5 samples for each available adapter role.
+The `extract:extract_page:target` scope has only 3 Treatment samples, so it is
+not eligible for observe status even though those 3 are gold-correct.
+
+## Adapter consistency
+
+The gate computes per-adapter counts and correct rates. `OBSERVE_ENABLED`
+requires an adapter gap no larger than `0.10`; `OBSERVE_LIMITED` allows up to
+`0.25`. One-adapter evidence, too few samples for any available adapter, or
+large adapter imbalance is evidence-insufficient.
+
+## Fixture-guided attribution
+
+Mismatch mechanisms are attributed with `attribution_mode=fixture_guided`.
+The policy gate itself is deterministic (`policy_gate_deterministic=true`), but
+the evidence is not independent of challenge-fixture design:
+`fixture_independent_evidence=false`.
+
+Evidence-diversity metrics exclude structural `scope:*` tags. For example,
+`scope:search:search_web:query` identifies where a row belongs; it is not an
+adversarial condition. Only real condition tags such as `partial_span_trap`,
+`normalization_collision`, or `source_absent` are counted for
+`condition_max_share`.
+
+## Downward-only override
+
+Manual review may only move a scope to a more conservative status. Upward
+overrides are rejected. Every scope decision in the proposal has
+`reviewer_required=true` because disable, limited, and insufficient-evidence
+outcomes are policy decisions that should be confirmed before freeze.
+
+## Why these scope statuses
 
 - `form_fill:fill_form:field`: `PROPOSE_DISABLE`
-- `search:search_web:query`: `OBSERVE_LIMITED`
+  - Correct rate is below the disable threshold, with source-absent,
+    normalization-collision, canonical-string, and wrong-entity evidence.
+- `search:search_web:query`: `INSUFFICIENT_EVIDENCE`
+  - Raw correct rate is 0.90, but Wilson lower bound remains below the
+    observe-enabled threshold and all mismatch evidence comes from one true
+    adversarial condition after excluding `scope:*` tags.
 - `extract:extract_page:target`: `INSUFFICIENT_EVIDENCE`
+  - Only 3 source-attested samples are available, all from Treatment, so 3/3
+    correctness is not enough to enable or limit observe status.
 
-The proposal is inactive: `status=proposal`, `active=false`,
+## Runtime boundary
+
+The proposed policy is inactive: `status=proposal`, `active=false`,
 `runtime_loaded=false`, and `enforcement_enabled=false`.
 
 This phase does not modify Policy V1, challenge v1 rows or gold, predictions,

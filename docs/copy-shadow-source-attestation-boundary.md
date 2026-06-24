@@ -87,7 +87,7 @@ Per-scope proposal:
 
 - Diagnosis-layer status: `DEFER_TO_DESIGN_COPY_SHADOW_SCOPE_POLICY_V2`
 - Deterministic Policy V2 design: `form_fill:fill_form:field` -> `PROPOSE_DISABLE`
-- Deterministic Policy V2 design: `search:search_web:query` -> `OBSERVE_LIMITED`
+- Deterministic Policy V2 design: `search:search_web:query` -> `INSUFFICIENT_EVIDENCE`
 - Deterministic Policy V2 design: `extract:extract_page:target` -> `INSUFFICIENT_EVIDENCE`
 
 Recommended next change:

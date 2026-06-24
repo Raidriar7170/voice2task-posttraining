@@ -6,7 +6,7 @@
     "gate_version": "copy-shadow-scope-policy-v2-gates-2026-06-24",
     "original_gate_status": "INSUFFICIENT_EVIDENCE",
     "override": null,
-    "reviewer_required": false,
+    "reviewer_required": true,
     "scope_key": "extract:extract_page:target"
   },
   "form_fill:fill_form:field": {
@@ -16,15 +16,15 @@
     "gate_version": "copy-shadow-scope-policy-v2-gates-2026-06-24",
     "original_gate_status": "PROPOSE_DISABLE",
     "override": null,
-    "reviewer_required": false,
+    "reviewer_required": true,
     "scope_key": "form_fill:fill_form:field"
   },
   "search:search_web:query": {
     "evidence_reference": "reports/public-sample/copy-shadow-scope-policy-v2-design/post-hardening-scope-metrics.json#search:search_web:query",
     "execution_eligible": false,
-    "final_status": "OBSERVE_LIMITED",
+    "final_status": "INSUFFICIENT_EVIDENCE",
     "gate_version": "copy-shadow-scope-policy-v2-gates-2026-06-24",
-    "original_gate_status": "OBSERVE_LIMITED",
+    "original_gate_status": "INSUFFICIENT_EVIDENCE",
     "override": null,
     "reviewer_required": true,
     "scope_key": "search:search_web:query"

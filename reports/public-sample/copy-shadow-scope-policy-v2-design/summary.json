@@ -25,8 +25,7 @@
   "recommended_next_change": "review-and-freeze-copy-shadow-policy-v2-before-naturalistic-challenge",
   "report_dir": "reports/public-sample/copy-shadow-scope-policy-v2-design",
   "scope_status_counts": {
-    "INSUFFICIENT_EVIDENCE": 1,
-    "OBSERVE_LIMITED": 1,
+    "INSUFFICIENT_EVIDENCE": 2,
     "PROPOSE_DISABLE": 1
   },
   "source_policy_v1_hash": "5dc14efb8ded13dc048ddb067c7c63a1a62b6c03896950e861303973d505cbc7",
