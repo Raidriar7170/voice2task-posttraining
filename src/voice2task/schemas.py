@@ -159,9 +159,11 @@ class BrowserTaskContract:
     contract_version: str = "v1"
 
     def __post_init__(self) -> None:
-        if self.task_type not in TASK_TYPES:
+        task_type = _require_nonempty_string(self.task_type, "task_type")
+        route = _require_nonempty_string(self.route, "route")
+        if task_type not in TASK_TYPES:
             raise ValidationError(f"task_type must be one of {sorted(TASK_TYPES)}")
-        if self.route not in ROUTES:
+        if route not in ROUTES:
             raise ValidationError(f"route must be one of {sorted(ROUTES)}")
         if not isinstance(self.safety, dict):
             raise ValidationError("safety must be an object")
@@ -333,7 +335,7 @@ def validate_contract_status(value: Any) -> dict[str, Any]:
 
     try:
         candidate = as_contract(candidate_value)
-    except ValidationError as exc:
+    except (TypeError, ValidationError) as exc:
         status["validation_error"] = str(exc)
         return status
 

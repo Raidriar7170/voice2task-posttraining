@@ -261,6 +261,35 @@ def test_strict_contract_status_rejects_explicit_schema_violation_regressions(
     assert expected_error_fragment in str(status["validation_error"])
 
 
+@pytest.mark.parametrize(
+    ("field_name", "malformed_value"),
+    (
+        ("task_type", []),
+        ("task_type", {}),
+        ("route", []),
+        ("route", {}),
+    ),
+)
+def test_evaluator_handles_malformed_task_type_and_route_primitives_without_exception(
+    field_name: str,
+    malformed_value: object,
+) -> None:
+    rows = [_row("gold-1", "search_web", "天气")]
+    prediction = {
+        **rows[0].target_contract.to_dict(),
+        field_name: malformed_value,
+    }
+
+    status = validate_contract_status(prediction)
+    result = evaluate_predictions(rows, {"gold-1": prediction})
+
+    assert status["strict_schema_valid"] is False
+    assert result.metrics["json_parse_rate"] == 1.0
+    assert result.metrics["strict_schema_valid_rate"] == 0.0
+    assert result.metrics["semantic_contract_valid_rate"] == 0.0
+    assert result.metrics["contract_exact_match"] == 0.0
+
+
 def test_strict_contract_status_rejects_extra_top_level_fields_without_coercion() -> None:
     prediction = {
         **_row("gold-1", "search_web", "天气").target_contract.to_dict(),

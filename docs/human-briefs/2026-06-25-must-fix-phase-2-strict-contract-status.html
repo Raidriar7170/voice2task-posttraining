@@ -33,6 +33,7 @@
           <li>zero-support safety 指标改成 <code>null</code>：预测正例支持为 0 时 <code>safety_precision=null</code>，gold 正例支持为 0 时 <code>safety_recall=null</code>，并额外报告 <code>safety_tp/fp/fn</code> 与 support；report 聚合层不再把它们压回 <code>0.0</code>。</li>
           <li>layered residual diagnosis 保留显式命名的 permissive diagnostic parser，但 primary scoring 仍只认 strict parser。</li>
           <li>下游报告表格补齐 parse / strict schema / semantic / exact 的指标梯度，不再只展示旧的 <code>json_valid_rate</code> 兼容列。</li>
+          <li>最后 hardening 补上 malformed primitive 边界：<code>task_type</code> 和 <code>route</code> 必须先通过 string 类型检查，<code>[]</code> / <code>{}</code> 不再触发 <code>TypeError</code>。</li>
         </ul>
       </div>
       <div class="box">
@@ -54,8 +55,9 @@
 
     <h2>验证结果</h2>
     <ul>
-      <li><code>PYTHONPATH=src pytest -q tests/test_evaluator_reports.py tests/test_current_train_split_sft_retry_readiness.py tests/test_formal_public_heldout_prediction.py tests/test_hardened_canonical_policy_rerun.py</code>: passed, 79 tests.</li>
-      <li><code>PYTHONPATH=src pytest -q</code>: passed, 626 tests.</li>
+      <li><code>PYTHONPATH=src pytest -q tests/test_evaluator_reports.py::test_evaluator_handles_malformed_task_type_and_route_primitives_without_exception</code>: passed, 4 tests.</li>
+      <li><code>PYTHONPATH=src pytest -q tests/test_evaluator_reports.py tests/test_layered_evaluator_and_residual_diagnosis.py tests/test_current_train_split_sft_retry_readiness.py tests/test_formal_public_heldout_prediction.py tests/test_hardened_canonical_policy_rerun.py</code>: passed, 89 tests.</li>
+      <li><code>PYTHONPATH=src pytest -q</code>: passed, 630 tests.</li>
       <li><code>PYTHONPATH=src ruff check src tests</code>: passed.</li>
       <li><code>PYTHONPATH=src mypy src</code>: 39 errors, below the recorded 68-error baseline and none in this phase's changed files.</li>
       <li><code>openspec validate --all --strict</code>: passed, 11 specs.</li>
