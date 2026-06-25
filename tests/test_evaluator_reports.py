@@ -11,7 +11,8 @@ from voice2task.evaluation import (
 )
 from voice2task.io import write_jsonl
 from voice2task.reports import write_metrics_report
-from voice2task.schemas import BrowserTaskContract, SFTDatasetRow
+from voice2task.schemas import BrowserTaskContract, SFTDatasetRow, validate_contract_semantics, validate_contract_status
+from voice2task.training import _schema_guard_status
 
 
 def _row(row_id: str, route: str, query: str) -> SFTDatasetRow:
@@ -83,6 +84,160 @@ def test_evaluator_rejects_predictions_missing_required_contract_fields() -> Non
 
     assert result.metrics["json_valid_rate"] == 0.0
     assert result.failure_slices["schema"]["count"] == 1
+
+
+def test_contract_semantic_validator_flags_schema_valid_route_and_safety_drift() -> None:
+    prediction = BrowserTaskContract(
+        task_type="search",
+        route="open_url",
+        safety={"allow": True, "reason": "requires_confirmation"},
+        confirmation_required=True,
+        slots={"url": "https://example.com"},
+        normalized_command="搜索天气",
+    )
+
+    issues = validate_contract_semantics(prediction)
+
+    issue_keys = {(issue["field_path"], issue["issue_category"]) for issue in issues}
+    assert ("route", "task_route_mismatch") in issue_keys
+    assert ("safety.reason", "safety_reason_mismatch") in issue_keys
+    assert ("confirmation_required", "confirmation_policy_mismatch") in issue_keys
+    assert ("slots.query", "missing_required_slot") in issue_keys
+
+
+def test_contract_status_accepts_existing_v1_canonical_task_family_semantics() -> None:
+    contracts = [
+        BrowserTaskContract(
+            task_type="search",
+            route="search_web",
+            safety={"allow": True, "reason": "public_readonly"},
+            confirmation_required=False,
+            slots={"query": "天气"},
+            normalized_command="搜索天气",
+        ),
+        BrowserTaskContract(
+            task_type="navigate",
+            route="open_url",
+            safety={"allow": True, "reason": "public_readonly"},
+            confirmation_required=False,
+            slots={"url": "https://example.com"},
+            normalized_command="打开公开页面",
+        ),
+        BrowserTaskContract(
+            task_type="form_fill",
+            route="fill_form",
+            safety={"allow": True, "reason": "requires_confirmation"},
+            confirmation_required=True,
+            slots={"field": "公开字段"},
+            normalized_command="填写公开字段",
+        ),
+        BrowserTaskContract(
+            task_type="extract",
+            route="extract_page",
+            safety={"allow": True, "reason": "public_readonly"},
+            confirmation_required=False,
+            slots={"target": "价格"},
+            normalized_command="提取页面价格",
+        ),
+        BrowserTaskContract(
+            task_type="clarify",
+            route="clarify",
+            safety={"allow": True, "reason": "ambiguous_request"},
+            confirmation_required=True,
+            slots={"ambiguity": "目标不明确"},
+            normalized_command="请求澄清目标",
+        ),
+        BrowserTaskContract(
+            task_type="blocked",
+            route="deny",
+            safety={"allow": False, "reason": "unsafe_payment"},
+            confirmation_required=True,
+            slots={"reason": "payment_requires_user_control"},
+            normalized_command="拒绝代替用户付款",
+        ),
+        BrowserTaskContract(
+            task_type="blocked",
+            route="deny",
+            safety={"allow": False, "reason": "unsafe_payment"},
+            confirmation_required=False,
+            slots={"action": "退款确认", "reason": "refund_control"},
+            normalized_command="拒绝代替用户退款确认",
+        ),
+    ]
+
+    for contract in contracts:
+        status = validate_contract_status(contract.to_dict())
+        assert status["strict_schema_valid"] is True
+        assert status["semantic_valid"] is True
+        assert status["semantic_issues"] == []
+
+
+def test_strict_contract_status_rejects_extra_top_level_fields_without_coercion() -> None:
+    prediction = {
+        **_row("gold-1", "search_web", "天气").target_contract.to_dict(),
+        "debug_trace": "should not be silently dropped",
+    }
+
+    status = validate_contract_status(prediction)
+
+    assert status["strict_schema_valid"] is False
+    assert status["schema_valid"] is False
+    assert status["extra_top_level_fields"] == ["debug_trace"]
+    assert status["missing_required_fields"] == []
+    assert status["semantic_valid"] is False
+    assert status["semantic_evaluated"] is False
+
+
+def test_schema_guard_rejects_extra_top_level_fields_as_strict_schema_invalid() -> None:
+    prediction = {
+        **_row("gold-1", "search_web", "天气").target_contract.to_dict(),
+        "debug_trace": "should not be silently dropped",
+    }
+
+    status = _schema_guard_status(prediction)
+
+    assert status["schema_valid"] is False
+    assert status["strict_schema_valid"] is False
+    assert status["extra_top_level_fields"] == ["debug_trace"]
+    assert status["missing_required_fields"] == []
+
+
+def test_evaluator_rejects_extra_fields_for_strict_schema_and_exact_match() -> None:
+    rows = [_row("gold-1", "search_web", "天气")]
+    prediction = {
+        **rows[0].target_contract.to_dict(),
+        "debug_trace": "should not be silently dropped",
+    }
+
+    result = evaluate_predictions(rows, {"gold-1": prediction})
+
+    assert result.metrics["schema_valid_rate"] == 0.0
+    assert result.metrics["contract_semantic_valid_rate"] == 0.0
+    assert result.metrics["contract_exact_match"] == 0.0
+    assert result.failure_slices["schema"]["count"] == 1
+    assert result.failure_slices["semantic"]["count"] == 0
+
+
+def test_evaluator_reports_schema_valid_but_semantically_invalid_predictions_separately() -> None:
+    rows = [_row("gold-1", "search_web", "天气")]
+    schema_valid_but_semantically_invalid = {
+        **rows[0].target_contract.to_dict(),
+        "route": "open_url",
+        "safety": {"allow": True, "reason": "requires_confirmation"},
+        "confirmation_required": True,
+        "slots": {"url": "https://example.com"},
+    }
+
+    result = evaluate_predictions(rows, {"gold-1": schema_valid_but_semantically_invalid})
+
+    assert result.metrics["json_valid_rate"] == 1.0
+    assert result.metrics["schema_valid_rate"] == 1.0
+    assert result.metrics["contract_semantic_valid_rate"] == 0.0
+    assert result.metrics["contract_semantic_valid_count"] == 0.0
+    assert result.metrics["contract_exact_match"] == 0.0
+    assert result.failure_slices["schema"]["count"] == 0
+    assert result.failure_slices["semantic"]["count"] == 1
+    assert result.failure_slices["route"]["count"] == 1
 
 
 def test_schema_diagnostics_explain_contract_like_mismatches(tmp_path: Path) -> None:

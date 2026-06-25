@@ -18,6 +18,7 @@ from voice2task.schemas import (
     SFTDatasetRow,
     ValidationError,
     as_contract,
+    validate_contract_status,
 )
 
 REQUIRED_LAYERED_METRICS = (
@@ -115,6 +116,18 @@ def normalize_slot_value(value: Any) -> str:
 
 
 def _prediction_to_contract(value: Any) -> BrowserTaskContract | None:
+    try:
+        if isinstance(value, str):
+            value = json.loads(value)
+        status = validate_contract_status(value)
+        if not status["strict_schema_valid"]:
+            return None
+        return as_contract(value)
+    except (json.JSONDecodeError, TypeError, ValidationError):
+        return None
+
+
+def _prediction_to_core_contract(value: Any) -> BrowserTaskContract | None:
     try:
         if isinstance(value, str):
             value = json.loads(value)
@@ -486,7 +499,7 @@ def diagnose_residuals(
     for row in rows:
         gold = _contract_dict(row)
         raw_prediction = predictions.get(row.id)
-        predicted_contract = _prediction_to_contract(raw_prediction)
+        predicted_contract = _prediction_to_core_contract(raw_prediction)
         predicted_object = _parse_prediction_object(raw_prediction)
         raw_prediction_dict = predicted_object if isinstance(predicted_object, dict) else {}
         raw_extra_fields = set(raw_prediction_dict) - _CONTRACT_FIELDS

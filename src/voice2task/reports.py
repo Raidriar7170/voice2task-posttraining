@@ -6242,6 +6242,8 @@ def _public_metric_summary(evidence: dict[str, Any]) -> dict[str, dict[str, Any]
         "slot_f1",
         "slot_f1_soft",
         "json_valid_rate",
+        "schema_valid_rate",
+        "contract_semantic_valid_rate",
         "route_accuracy",
         "safety_recall",
     )
@@ -7173,6 +7175,8 @@ def _metric_summary_from_payload(payload: dict[str, Any]) -> dict[str, float]:
             "safety_recall",
             "confirmation_accuracy",
             "json_valid_rate",
+            "schema_valid_rate",
+            "contract_semantic_valid_rate",
         )
     }
 

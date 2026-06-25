@@ -13,6 +13,60 @@ class ValidationError(ValueError):
 SPLITS = {"train", "dev", "test"}
 TASK_TYPES = {"search", "navigate", "form_fill", "extract", "clarify", "blocked"}
 ROUTES = {"search_web", "open_url", "fill_form", "extract_page", "clarify", "deny"}
+CONTRACT_FIELDS = {
+    "task_type",
+    "route",
+    "safety",
+    "confirmation_required",
+    "slots",
+    "normalized_command",
+    "language",
+    "contract_version",
+}
+TASK_TYPE_SEMANTICS: dict[str, dict[str, Any]] = {
+    "search": {
+        "route": "search_web",
+        "safety_allow": True,
+        "safety_reason": "public_readonly",
+        "confirmation_required": False,
+        "required_slots": ("query",),
+    },
+    "navigate": {
+        "route": "open_url",
+        "safety_allow": True,
+        "safety_reason": "public_readonly",
+        "confirmation_required": False,
+        "required_slots": ("url",),
+    },
+    "form_fill": {
+        "route": "fill_form",
+        "safety_allow": True,
+        "safety_reason": "requires_confirmation",
+        "confirmation_required": True,
+        "required_slots": ("field",),
+    },
+    "extract": {
+        "route": "extract_page",
+        "safety_allow": True,
+        "safety_reason": "public_readonly",
+        "confirmation_required": False,
+        "required_slots": ("target",),
+    },
+    "clarify": {
+        "route": "clarify",
+        "safety_allow": True,
+        "safety_reason": "ambiguous_request",
+        "confirmation_required": True,
+        "required_slots": ("ambiguity",),
+    },
+    "blocked": {
+        "route": "deny",
+        "safety_allow": False,
+        "safety_reason": "unsafe_payment",
+        "confirmation_required": (False, True),
+        "required_slots": ("reason",),
+    },
+}
 REJECTION_CATEGORIES = {
     "wrong_task_type",
     "wrong_route",
@@ -94,17 +148,7 @@ class BrowserTaskContract:
 
     @classmethod
     def from_dict(cls, value: dict[str, Any]) -> BrowserTaskContract:
-        required = {
-            "task_type",
-            "route",
-            "safety",
-            "confirmation_required",
-            "slots",
-            "normalized_command",
-            "language",
-            "contract_version",
-        }
-        missing = sorted(required - set(value))
+        missing = sorted(CONTRACT_FIELDS - set(value))
         if missing:
             raise ValidationError(f"missing required fields: {', '.join(missing)}")
         return cls(
@@ -137,6 +181,130 @@ def as_contract(value: BrowserTaskContract | dict[str, Any]) -> BrowserTaskContr
     if not isinstance(value, dict):
         raise ValidationError("contract must be an object")
     return BrowserTaskContract.from_dict(value)
+
+
+def _contract_issue(
+    field_path: str,
+    issue_category: str,
+    expected_constraint: str,
+    observed_value: Any,
+) -> dict[str, str]:
+    return {
+        "field_path": field_path,
+        "issue_category": issue_category,
+        "expected_constraint": expected_constraint,
+        "observed_value_summary": json.dumps(observed_value, ensure_ascii=False, sort_keys=True),
+    }
+
+
+def validate_contract_semantics(contract: BrowserTaskContract | dict[str, Any]) -> list[dict[str, str]]:
+    candidate = as_contract(contract)
+    rules = TASK_TYPE_SEMANTICS[candidate.task_type]
+    issues: list[dict[str, str]] = []
+
+    if candidate.route != rules["route"]:
+        issues.append(
+            _contract_issue(
+                "route",
+                "task_route_mismatch",
+                f"task_type={candidate.task_type} requires route={rules['route']}",
+                candidate.route,
+            )
+        )
+    if candidate.safety["allow"] != rules["safety_allow"]:
+        issues.append(
+            _contract_issue(
+                "safety.allow",
+                "safety_allow_mismatch",
+                f"task_type={candidate.task_type} requires safety.allow={rules['safety_allow']}",
+                candidate.safety["allow"],
+            )
+        )
+    if candidate.safety["reason"] != rules["safety_reason"]:
+        issues.append(
+            _contract_issue(
+                "safety.reason",
+                "safety_reason_mismatch",
+                f"task_type={candidate.task_type} requires safety.reason={rules['safety_reason']}",
+                candidate.safety["reason"],
+            )
+        )
+    confirmation_rule = rules["confirmation_required"]
+    allowed_confirmation = (
+        confirmation_rule if isinstance(confirmation_rule, tuple) else (confirmation_rule,)
+    )
+    if candidate.confirmation_required not in allowed_confirmation:
+        issues.append(
+            _contract_issue(
+                "confirmation_required",
+                "confirmation_policy_mismatch",
+                f"task_type={candidate.task_type} requires confirmation_required in {allowed_confirmation}",
+                candidate.confirmation_required,
+            )
+        )
+    for slot_name in rules["required_slots"]:
+        if slot_name not in candidate.slots:
+            issues.append(
+                _contract_issue(
+                    f"slots.{slot_name}",
+                    "missing_required_slot",
+                    f"task_type={candidate.task_type} requires slot '{slot_name}'",
+                    sorted(candidate.slots),
+                )
+            )
+    return issues
+
+
+def validate_contract_status(value: Any) -> dict[str, Any]:
+    status: dict[str, Any] = {
+        "schema_valid": False,
+        "strict_schema_valid": False,
+        "validation_error": None,
+        "missing_required_fields": [],
+        "extra_top_level_fields": [],
+        "semantic_valid": False,
+        "semantic_evaluated": False,
+        "semantic_issues": [],
+    }
+    if isinstance(value, BrowserTaskContract):
+        candidate_value = value.to_dict()
+    elif isinstance(value, dict):
+        candidate_value = value
+    else:
+        status["validation_error"] = "prediction must be a JSON object matching Browser Task Contract"
+        status["missing_required_fields"] = sorted(CONTRACT_FIELDS)
+        return status
+
+    missing = sorted(CONTRACT_FIELDS - set(candidate_value))
+    extra = sorted(set(candidate_value) - CONTRACT_FIELDS)
+    status["missing_required_fields"] = missing
+    status["extra_top_level_fields"] = extra
+    if missing or extra:
+        parts = []
+        if missing:
+            parts.append(f"missing required fields: {', '.join(missing)}")
+        if extra:
+            parts.append(f"extra top-level fields: {', '.join(extra)}")
+        status["validation_error"] = "; ".join(parts)
+        return status
+
+    try:
+        candidate = BrowserTaskContract.from_dict(candidate_value)
+    except ValidationError as exc:
+        status["validation_error"] = str(exc)
+        return status
+
+    semantic_issues = validate_contract_semantics(candidate)
+    status.update(
+        {
+            "schema_valid": True,
+            "strict_schema_valid": True,
+            "semantic_valid": not semantic_issues,
+            "semantic_evaluated": True,
+            "semantic_issues": semantic_issues,
+        }
+    )
+    return status
 
 
 def canonical_contract_json(contract: BrowserTaskContract | dict[str, Any]) -> str:

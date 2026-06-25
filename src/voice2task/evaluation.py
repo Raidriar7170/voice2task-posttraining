@@ -29,6 +29,7 @@ from voice2task.schemas import (
     ValidationError,
     as_contract,
     canonical_contract_json,
+    validate_contract_status,
 )
 
 
@@ -71,11 +72,20 @@ def _prediction_to_contract(value: Any) -> BrowserTaskContract | None:
             parsed = json.loads(value)
         else:
             parsed = value
-        if not isinstance(parsed, dict):
+        status = validate_contract_status(parsed)
+        if not status["strict_schema_valid"]:
             return None
         return as_contract(parsed)
     except (json.JSONDecodeError, ValidationError, TypeError):
         return None
+
+
+def _prediction_contract_status(value: Any) -> dict[str, Any]:
+    try:
+        parsed = json.loads(value) if isinstance(value, str) else value
+    except json.JSONDecodeError:
+        parsed = value
+    return validate_contract_status(parsed)
 
 
 def _char_f1(a: str, b: str) -> float:
@@ -139,6 +149,7 @@ def _add_failure(failure_slices: dict[str, dict[str, Any]], category: str, row_i
 def evaluate_predictions(rows: list[SFTDatasetRow], predictions: dict[str, Any]) -> EvaluationResult:
     total = max(len(rows), 1)
     valid = 0
+    semantic_valid = 0
     task_type_matches = 0
     route_matches = 0
     confirmation_matches = 0
@@ -148,18 +159,24 @@ def evaluate_predictions(rows: list[SFTDatasetRow], predictions: dict[str, Any])
     safety_tp = safety_fp = safety_fn = 0
     failure_slices: dict[str, dict[str, Any]] = {
         category: {"count": 0, "examples": []}
-        for category in ("schema", "task_type", "route", "safety", "confirmation", "slot", "unknown")
+        for category in ("schema", "semantic", "task_type", "route", "safety", "confirmation", "slot", "unknown")
     }
 
     for row in rows:
         gold = as_contract(row.target_contract)
-        predicted = _prediction_to_contract(predictions.get(row.id))
+        raw_prediction = predictions.get(row.id)
+        prediction_status = _prediction_contract_status(raw_prediction)
+        predicted = _prediction_to_contract(raw_prediction)
         if predicted is None:
             _add_failure(failure_slices, "schema", row.id)
             slot_scores.append(0.0)
             slot_soft_scores.append(0.0)
             continue
         valid += 1
+        if prediction_status["semantic_valid"]:
+            semantic_valid += 1
+        else:
+            _add_failure(failure_slices, "semantic", row.id)
         if predicted.task_type == gold.task_type:
             task_type_matches += 1
         else:
@@ -196,6 +213,10 @@ def evaluate_predictions(rows: list[SFTDatasetRow], predictions: dict[str, Any])
     safety_recall = 1.0 if safety_tp + safety_fn == 0 else safety_tp / (safety_tp + safety_fn)
     metrics = {
         "json_valid_rate": valid / total,
+        "schema_valid_rate": valid / total,
+        "schema_valid_count": float(valid),
+        "contract_semantic_valid_rate": semantic_valid / total,
+        "contract_semantic_valid_count": float(semantic_valid),
         "task_type_accuracy": task_type_matches / total,
         "route_accuracy": route_matches / total,
         "safety_precision": safety_precision,

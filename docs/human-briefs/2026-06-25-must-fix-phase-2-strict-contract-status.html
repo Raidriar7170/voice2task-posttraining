@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Voice2Task Must Fix Phase 2</title>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #17212b; background: #f6f8fa; }
+    main { max-width: 920px; margin: 0 auto; padding: 32px 20px 48px; }
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    h2 { margin: 28px 0 10px; font-size: 18px; }
+    p, li { line-height: 1.6; }
+    code { background: #e9eef3; padding: 2px 5px; border-radius: 4px; }
+    .status { display: inline-block; margin: 8px 0 20px; padding: 4px 8px; border-radius: 4px; background: #dff3e4; color: #12612c; font-weight: 600; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+    .box { background: white; border: 1px solid #d8e0e8; border-radius: 6px; padding: 14px 16px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Must Fix Phase 2: strict contract status</h1>
+    <div class="status">Status: completed locally, validation passed</div>
+    <p><strong>结论：</strong>预测评测和 schema retry guard 现在共享同一套 strict contract status；额外顶层字段不再被静默丢弃，schema-valid 与 semantic-valid 指标也被分开记录。</p>
+
+    <section class="grid">
+      <div class="box">
+        <h2>本阶段改动</h2>
+        <ul>
+          <li>新增 <code>validate_contract_status</code> 和 <code>validate_contract_semantics</code>。</li>
+          <li>strict schema 明确拒绝 missing required fields 与 extra top-level fields。</li>
+          <li><code>evaluate_predictions</code> 新增 <code>schema_valid_rate</code> 与 <code>contract_semantic_valid_rate</code>。</li>
+          <li><code>_schema_guard_status</code> 复用 shared status，不再走独立宽松校验。</li>
+          <li>报告摘要纳入新增 strict/semantic 指标。</li>
+        </ul>
+      </div>
+      <div class="box">
+        <h2>关键文件</h2>
+        <ul>
+          <li><code>src/voice2task/schemas.py</code></li>
+          <li><code>src/voice2task/evaluation.py</code></li>
+          <li><code>src/voice2task/layered_evaluation.py</code></li>
+          <li><code>src/voice2task/training.py</code></li>
+          <li><code>src/voice2task/reports.py</code></li>
+          <li><code>tests/test_evaluator_reports.py</code></li>
+          <li><code>tests/test_a100_sft_prediction_smoke.py</code></li>
+          <li><code>tests/test_layered_evaluator_and_residual_diagnosis.py</code></li>
+        </ul>
+      </div>
+    </section>
+
+    <h2>验证结果</h2>
+    <ul>
+      <li><code>PYTHONPATH=src pytest -q</code>: passed, 613 tests.</li>
+      <li><code>PYTHONPATH=src ruff check src tests</code>: passed.</li>
+      <li><code>openspec validate --all --strict</code>: passed, 11 specs.</li>
+      <li><code>PYTHONPATH=src python scripts/check_current_truth_surface.py</code>: passed.</li>
+      <li><code>git diff --check</code>: passed.</li>
+    </ul>
+
+    <h2>Remaining Risks</h2>
+    <p>本阶段没有训练、没有 GPU 预测重跑、没有模型质量提升声明，也没有放宽 evaluator。semantic validation 只是规则一致性诊断，不是自然语言等价评分，也不证明 live browser task success。</p>
+
+    <h2>Next Step</h2>
+    <p>如果进入下一阶段，应保持 bounded scope：先确认 Phase 3 目标，再决定是否处理 lockbox/runtime provenance 或重新训练评估；不要把本阶段结果包装成 adapter recovery。</p>
+  </main>
+</body>
+</html>

@@ -41,12 +41,11 @@ from voice2task.schemas import (
     ROUTES,
     SECRET_RE,
     TASK_TYPES,
-    BrowserTaskContract,
     DPOPair,
     SFTDatasetRow,
-    ValidationError,
     as_contract,
     canonical_contract_json,
+    validate_contract_status,
 )
 
 
@@ -1324,25 +1323,7 @@ def _required_field_missing(prediction: Any) -> list[str]:
 
 
 def _schema_guard_status(prediction: Any) -> dict[str, Any]:
-    if not isinstance(prediction, dict):
-        return {
-            "schema_valid": False,
-            "validation_error": "prediction must be a JSON object matching Browser Task Contract",
-            "missing_required_fields": _required_field_missing(prediction),
-        }
-    try:
-        BrowserTaskContract.from_dict(prediction)
-    except ValidationError as exc:
-        return {
-            "schema_valid": False,
-            "validation_error": str(exc),
-            "missing_required_fields": _required_field_missing(prediction),
-        }
-    return {
-        "schema_valid": True,
-        "validation_error": None,
-        "missing_required_fields": [],
-    }
+    return validate_contract_status(prediction)
 
 
 def _schema_retry_prompt(prediction_input: PredictionInput, raw_prediction: Any, guard_status: dict[str, Any]) -> str:
@@ -1350,6 +1331,8 @@ def _schema_retry_prompt(prediction_input: PredictionInput, raw_prediction: Any,
         raise TypeError("schema retry prompt rendering requires PredictionInput")
     missing = guard_status.get("missing_required_fields", [])
     missing_text = ", ".join(str(field) for field in missing) if missing else "unknown"
+    extra = guard_status.get("extra_top_level_fields", [])
+    extra_text = ", ".join(str(field) for field in extra) if extra else "none"
     raw_summary = json.dumps(_sanitize_prediction_value(raw_prediction), ensure_ascii=False, sort_keys=True)
     canonical_skeleton = json.dumps(
         {
@@ -1368,6 +1351,8 @@ def _schema_retry_prompt(prediction_input: PredictionInput, raw_prediction: Any,
         [
             "你刚才输出的 JSON 不是合法 Browser Task Contract。",
             f"缺失字段: {missing_text}。",
+            f"额外顶层字段: {extra_text}。",
+            "如果存在额外顶层字段，必须删除；root object 只能包含规定的 8 个顶层字段。",
             f"合法 task_type enum: {', '.join(sorted(TASK_TYPES))}。",
             f"合法 route enum: {', '.join(sorted(ROUTES))}。",
             "请重新输出一个完整 Browser Task Contract JSON object，必须包含全部 8 个顶层字段：",

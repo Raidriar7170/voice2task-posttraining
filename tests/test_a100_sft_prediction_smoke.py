@@ -6872,6 +6872,7 @@ def test_schema_retry_prompt_declares_canonical_json_only_contract_shape() -> No
         "task_type": "search_web",
         "route": "/weather/query_weather_request",
         "safety": {"reason": "query_weather_request"},
+        "debug_trace": "extra field must be removed",
     }
 
     prompt = training._schema_retry_prompt(
@@ -6892,6 +6893,9 @@ def test_schema_retry_prompt_declares_canonical_json_only_contract_shape() -> No
     assert "不要 Markdown/code fences/prose" in prompt
     assert "route 是 enum，不是 URL/path" in prompt
     assert "task_type 不能使用 search_web、open_url、query_weather_request" in prompt
+    assert "额外顶层字段: debug_trace" in prompt
+    assert "必须删除" in prompt
+    assert "只能包含规定的 8 个顶层字段" in prompt
     assert "只输出一个 minified JSON object" in prompt
     assert "全部 8 个顶层字段必须都在同一个 root object 内" in prompt
     assert "不要在 normalized_command 之前提前关闭 root object" in prompt

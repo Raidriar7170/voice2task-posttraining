@@ -215,7 +215,7 @@ def test_residual_examples_redact_private_paths_tokens_and_ips(tmp_path: Path) -
     assert scan_paths([tmp_path / "residual-diagnosis"]).ok
 
 
-def test_schema_valid_raw_extra_field_is_diagnosed_as_extra_field() -> None:
+def test_raw_extra_field_is_strict_schema_invalid_and_diagnosed_as_extra_field() -> None:
     row = _row("extra-field", _contract(slots={"query": "天气"}))
     prediction = {
         **row.target_contract.to_dict(),
@@ -223,9 +223,15 @@ def test_schema_valid_raw_extra_field_is_diagnosed_as_extra_field() -> None:
     }
 
     strict = evaluate_predictions([row], {"extra-field": prediction})
+    layered = evaluate_layered_predictions([row], {"extra-field": prediction})
     diagnosis = diagnose_residuals([row], {"extra-field": prediction}, split="dev")
 
-    assert strict.metrics["contract_exact_match"] == 1.0
+    assert strict.metrics["schema_valid_rate"] == 0.0
+    assert strict.metrics["contract_exact_match"] == 0.0
+    assert strict.failure_slices["schema"]["count"] == 1
+    assert layered["metrics"]["schema_validity"] == 0.0
+    assert layered["summary"]["strict_pass"] == 0
+    assert layered["summary"]["strict_fail"] == 1
     assert diagnosis["summary"]["strict_pass"] == 0
     assert diagnosis["summary"]["strict_fail"] == 1
     assert diagnosis["summary"]["family_counts"]["extra_field"] == 1
