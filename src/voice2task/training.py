@@ -1333,6 +1333,7 @@ def _schema_retry_prompt(prediction_input: PredictionInput, raw_prediction: Any,
     missing_text = ", ".join(str(field) for field in missing) if missing else "unknown"
     extra = guard_status.get("extra_top_level_fields", [])
     extra_text = ", ".join(str(field) for field in extra) if extra else "none"
+    validation_error = str(guard_status.get("validation_error") or "unknown")
     raw_summary = json.dumps(_sanitize_prediction_value(raw_prediction), ensure_ascii=False, sort_keys=True)
     canonical_skeleton = json.dumps(
         {
@@ -1352,6 +1353,7 @@ def _schema_retry_prompt(prediction_input: PredictionInput, raw_prediction: Any,
             "你刚才输出的 JSON 不是合法 Browser Task Contract。",
             f"缺失字段: {missing_text}。",
             f"额外顶层字段: {extra_text}。",
+            f"schema 违规摘要: {validation_error}。",
             "如果存在额外顶层字段，必须删除；root object 只能包含规定的 8 个顶层字段。",
             f"合法 task_type enum: {', '.join(sorted(TASK_TYPES))}。",
             f"合法 route enum: {', '.join(sorted(ROUTES))}。",

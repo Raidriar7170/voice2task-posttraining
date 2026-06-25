@@ -23,6 +23,7 @@ CONTRACT_FIELDS = {
     "language",
     "contract_version",
 }
+SAFETY_FIELDS = {"allow", "reason"}
 TASK_TYPE_SEMANTICS: dict[str, dict[str, Any]] = {
     "search": {
         "route": "search_web",
@@ -115,6 +116,37 @@ def _require_nonempty_string(value: Any, field_name: str) -> str:
     return value
 
 
+def _field_diffs(value: dict[str, Any], expected_fields: set[str]) -> tuple[list[str], list[str]]:
+    missing = sorted(expected_fields - set(value))
+    extra = sorted(set(value) - expected_fields)
+    return missing, extra
+
+
+def _field_error_message(
+    *,
+    missing_fields: list[str] | None = None,
+    extra_fields: list[str] | None = None,
+    missing_safety_fields: list[str] | None = None,
+    extra_safety_fields: list[str] | None = None,
+) -> str:
+    parts: list[str] = []
+    if missing_fields:
+        parts.append(f"missing required fields: {', '.join(missing_fields)}")
+    if extra_fields:
+        parts.append(f"unexpected top-level fields: {', '.join(extra_fields)}")
+    if missing_safety_fields:
+        parts.append(
+            "missing required safety fields: "
+            + ", ".join(f"safety.{field_name}" for field_name in missing_safety_fields)
+        )
+    if extra_safety_fields:
+        parts.append(
+            "unexpected safety fields: "
+            + ", ".join(f"safety.{field_name}" for field_name in extra_safety_fields)
+        )
+    return "; ".join(parts)
+
+
 @dataclass(frozen=True)
 class BrowserTaskContract:
     task_type: str
@@ -133,6 +165,14 @@ class BrowserTaskContract:
             raise ValidationError(f"route must be one of {sorted(ROUTES)}")
         if not isinstance(self.safety, dict):
             raise ValidationError("safety must be an object")
+        missing_safety_fields, extra_safety_fields = _field_diffs(self.safety, SAFETY_FIELDS)
+        if missing_safety_fields or extra_safety_fields:
+            raise ValidationError(
+                _field_error_message(
+                    missing_safety_fields=missing_safety_fields,
+                    extra_safety_fields=extra_safety_fields,
+                )
+            )
         if not isinstance(self.safety.get("allow"), bool):
             raise ValidationError("safety.allow must be a boolean")
         _require_nonempty_string(self.safety.get("reason"), "safety.reason")
@@ -148,9 +188,9 @@ class BrowserTaskContract:
 
     @classmethod
     def from_dict(cls, value: dict[str, Any]) -> BrowserTaskContract:
-        missing = sorted(CONTRACT_FIELDS - set(value))
-        if missing:
-            raise ValidationError(f"missing required fields: {', '.join(missing)}")
+        missing, extra = _field_diffs(value, CONTRACT_FIELDS)
+        if missing or extra:
+            raise ValidationError(_field_error_message(missing_fields=missing, extra_fields=extra))
         return cls(
             task_type=value["task_type"],
             route=value["route"],
@@ -262,6 +302,7 @@ def validate_contract_status(value: Any) -> dict[str, Any]:
         "validation_error": None,
         "missing_required_fields": [],
         "extra_top_level_fields": [],
+        "unexpected_field_paths": [],
         "semantic_valid": False,
         "semantic_evaluated": False,
         "semantic_issues": [],
@@ -275,21 +316,23 @@ def validate_contract_status(value: Any) -> dict[str, Any]:
         status["missing_required_fields"] = sorted(CONTRACT_FIELDS)
         return status
 
-    missing = sorted(CONTRACT_FIELDS - set(candidate_value))
-    extra = sorted(set(candidate_value) - CONTRACT_FIELDS)
+    missing, extra = _field_diffs(candidate_value, CONTRACT_FIELDS)
     status["missing_required_fields"] = missing
     status["extra_top_level_fields"] = extra
+    status["unexpected_field_paths"] = list(extra)
     if missing or extra:
-        parts = []
-        if missing:
-            parts.append(f"missing required fields: {', '.join(missing)}")
-        if extra:
-            parts.append(f"extra top-level fields: {', '.join(extra)}")
-        status["validation_error"] = "; ".join(parts)
+        status["validation_error"] = _field_error_message(missing_fields=missing, extra_fields=extra)
         return status
 
+    safety = candidate_value.get("safety")
+    if isinstance(safety, dict):
+        _missing_safety, extra_safety = _field_diffs(safety, SAFETY_FIELDS)
+        status["unexpected_field_paths"] = [f"safety.{field_name}" for field_name in extra_safety]
+    else:
+        status["unexpected_field_paths"] = []
+
     try:
-        candidate = BrowserTaskContract.from_dict(candidate_value)
+        candidate = as_contract(candidate_value)
     except ValidationError as exc:
         status["validation_error"] = str(exc)
         return status

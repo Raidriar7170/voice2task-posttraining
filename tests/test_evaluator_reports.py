@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 
+import pytest
+
 from voice2task import evaluation, reports
 from voice2task.cli import eval as eval_cli
 from voice2task.evaluation import (
@@ -11,7 +13,14 @@ from voice2task.evaluation import (
 )
 from voice2task.io import write_jsonl
 from voice2task.reports import write_metrics_report
-from voice2task.schemas import BrowserTaskContract, SFTDatasetRow, validate_contract_semantics, validate_contract_status
+from voice2task.schemas import (
+    BrowserTaskContract,
+    SFTDatasetRow,
+    ValidationError,
+    as_contract,
+    validate_contract_semantics,
+    validate_contract_status,
+)
 from voice2task.training import _schema_guard_status
 
 
@@ -172,6 +181,86 @@ def test_contract_status_accepts_existing_v1_canonical_task_family_semantics() -
         assert status["semantic_issues"] == []
 
 
+@pytest.mark.parametrize(
+    ("prediction", "expected_error_fragment"),
+    (
+        (
+            {
+                **_row("gold-1", "search_web", "天气").target_contract.to_dict(),
+                "debug_trace": "should not be silently dropped",
+            },
+            "debug_trace",
+        ),
+        (
+            {
+                **_row("gold-1", "search_web", "天气").target_contract.to_dict(),
+                "safety": {"allow": True, "reason": "public_readonly", "debug": "trace"},
+            },
+            "safety.debug",
+        ),
+    ),
+)
+def test_as_contract_centrally_rejects_unknown_fields(
+    prediction: dict[str, object],
+    expected_error_fragment: str,
+) -> None:
+    with pytest.raises(ValidationError, match=expected_error_fragment):
+        as_contract(prediction)
+
+
+@pytest.mark.parametrize(
+    ("prediction", "expected_error_fragment"),
+    (
+        (
+            {
+                "task_type": "search",
+                "route": "search_web",
+                "safety": {"allow": True, "reason": "public_readonly"},
+                "normalized_command": "搜索天气",
+            },
+            "missing required fields",
+        ),
+        (
+            {
+                **_row("gold-1", "search_web", "天气").target_contract.to_dict(),
+                "route": "search",
+            },
+            "route must be one of",
+        ),
+        (
+            {
+                **_row("gold-1", "search_web", "天气").target_contract.to_dict(),
+                "confirmation_required": "false",
+            },
+            "confirmation_required must be a boolean",
+        ),
+        (
+            {
+                **_row("gold-1", "search_web", "天气").target_contract.to_dict(),
+                "slots": ["query", "天气"],
+            },
+            "slots must be an object",
+        ),
+        (
+            {
+                **_row("gold-1", "search_web", "天气").target_contract.to_dict(),
+                "safety": {"allow": True, "reason": "public_readonly", "debug": "trace"},
+            },
+            "safety.debug",
+        ),
+    ),
+)
+def test_strict_contract_status_rejects_explicit_schema_violation_regressions(
+    prediction: dict[str, object],
+    expected_error_fragment: str,
+) -> None:
+    status = validate_contract_status(prediction)
+
+    assert status["strict_schema_valid"] is False
+    assert status["schema_valid"] is False
+    assert expected_error_fragment in str(status["validation_error"])
+
+
 def test_strict_contract_status_rejects_extra_top_level_fields_without_coercion() -> None:
     prediction = {
         **_row("gold-1", "search_web", "天气").target_contract.to_dict(),
@@ -186,6 +275,44 @@ def test_strict_contract_status_rejects_extra_top_level_fields_without_coercion(
     assert status["missing_required_fields"] == []
     assert status["semantic_valid"] is False
     assert status["semantic_evaluated"] is False
+
+
+def test_evaluator_separates_parse_schema_semantic_and_exact_metric_layers() -> None:
+    rows = [
+        _row("exact", "search_web", "天气"),
+        _row("extra-field", "search_web", "机票"),
+        _row("semantic-contradiction", "search_web", "酒店"),
+        _row("wrapped", "search_web", "地图"),
+    ]
+    predictions = {
+        "exact": json.dumps(rows[0].target_contract.to_dict(), ensure_ascii=False),
+        "extra-field": json.dumps(
+            {
+                **rows[1].target_contract.to_dict(),
+                "debug_trace": "parsed object with extra field",
+            },
+            ensure_ascii=False,
+        ),
+        "semantic-contradiction": json.dumps(
+            {
+                **rows[2].target_contract.to_dict(),
+                "route": "open_url",
+                "safety": {"allow": True, "reason": "requires_confirmation"},
+                "confirmation_required": True,
+                "slots": {"url": "https://example.com"},
+            },
+            ensure_ascii=False,
+        ),
+        "wrapped": f"这是预测结果：{json.dumps(rows[3].target_contract.to_dict(), ensure_ascii=False)} 谢谢",
+    }
+
+    result = evaluate_predictions(rows, predictions)
+
+    assert result.metrics["json_parse_rate"] == 0.75
+    assert result.metrics["strict_schema_valid_rate"] == 0.5
+    assert result.metrics["semantic_contract_valid_rate"] == 0.25
+    assert result.metrics["contract_exact_match"] == 0.25
+    assert result.metrics["json_valid_rate"] == result.metrics["strict_schema_valid_rate"]
 
 
 def test_schema_guard_rejects_extra_top_level_fields_as_strict_schema_invalid() -> None:
@@ -211,11 +338,42 @@ def test_evaluator_rejects_extra_fields_for_strict_schema_and_exact_match() -> N
 
     result = evaluate_predictions(rows, {"gold-1": prediction})
 
-    assert result.metrics["schema_valid_rate"] == 0.0
-    assert result.metrics["contract_semantic_valid_rate"] == 0.0
+    assert result.metrics["json_parse_rate"] == 1.0
+    assert result.metrics["strict_schema_valid_rate"] == 0.0
+    assert result.metrics["semantic_contract_valid_rate"] == 0.0
     assert result.metrics["contract_exact_match"] == 0.0
     assert result.failure_slices["schema"]["count"] == 1
     assert result.failure_slices["semantic"]["count"] == 0
+
+
+@pytest.mark.parametrize(
+    "prediction",
+    (
+        (
+            'Here is the JSON: {"task_type":"search","route":"search_web","safety":{"allow":true,'
+            '"reason":"public_readonly"},"confirmation_required":false,"slots":{"query":"天气"},'
+            '"normalized_command":"搜索天气","language":"zh-CN","contract_version":"v1"}'
+        ),
+        (
+            '{"task_type":"search","route":"search_web","safety":{"allow":true,"reason":"public_readonly"},'
+            '"confirmation_required":false,"slots":{"query":"天气"},"normalized_command":"搜索天气",'
+            '"language":"zh-CN","contract_version":"v1"}'
+            '{"task_type":"search","route":"search_web","safety":{"allow":true,"reason":"public_readonly"},'
+            '"confirmation_required":false,"slots":{"query":"天气"},"normalized_command":"搜索天气",'
+            '"language":"zh-CN","contract_version":"v1"}'
+        ),
+    ),
+)
+def test_evaluator_rejects_non_single_root_json_object_strings_as_parse_invalid(prediction: str) -> None:
+    rows = [_row("gold-1", "search_web", "天气")]
+
+    result = evaluate_predictions(rows, {"gold-1": prediction})
+
+    assert result.metrics["json_parse_rate"] == 0.0
+    assert result.metrics["strict_schema_valid_rate"] == 0.0
+    assert result.metrics["semantic_contract_valid_rate"] == 0.0
+    assert result.metrics["contract_exact_match"] == 0.0
+    assert result.failure_slices["schema"]["count"] == 1
 
 
 def test_evaluator_reports_schema_valid_but_semantically_invalid_predictions_separately() -> None:
@@ -230,14 +388,53 @@ def test_evaluator_reports_schema_valid_but_semantically_invalid_predictions_sep
 
     result = evaluate_predictions(rows, {"gold-1": schema_valid_but_semantically_invalid})
 
-    assert result.metrics["json_valid_rate"] == 1.0
-    assert result.metrics["schema_valid_rate"] == 1.0
-    assert result.metrics["contract_semantic_valid_rate"] == 0.0
-    assert result.metrics["contract_semantic_valid_count"] == 0.0
+    assert result.metrics["json_parse_rate"] == 1.0
+    assert result.metrics["strict_schema_valid_rate"] == 1.0
+    assert result.metrics["semantic_contract_valid_rate"] == 0.0
+    assert result.metrics["semantic_contract_valid_count"] == 0.0
     assert result.metrics["contract_exact_match"] == 0.0
     assert result.failure_slices["schema"]["count"] == 0
     assert result.failure_slices["semantic"]["count"] == 1
     assert result.failure_slices["route"]["count"] == 1
+
+
+def test_zero_support_safety_metrics_return_none_and_preserve_support_counts() -> None:
+    rows = [_row("gold-1", "search_web", "天气")]
+
+    result = evaluate_predictions(rows, {"gold-1": rows[0].target_contract.to_dict()})
+
+    assert result.metrics["safety_precision"] is None
+    assert result.metrics["safety_recall"] is None
+    assert result.metrics["safety_tp"] == 0.0
+    assert result.metrics["safety_fp"] == 0.0
+    assert result.metrics["safety_fn"] == 0.0
+    assert result.metrics["safety_predicted_positive_support"] == 0.0
+    assert result.metrics["safety_gold_positive_support"] == 0.0
+
+
+def test_semantically_invalid_equal_prediction_and_gold_do_not_count_as_exact() -> None:
+    row = SFTDatasetRow(
+        id="semantic-invalid-equal",
+        split="test",
+        input_text="帮我搜索天气",
+        target_contract=BrowserTaskContract(
+            task_type="search",
+            route="open_url",
+            safety={"allow": True, "reason": "public_readonly"},
+            confirmation_required=False,
+            slots={"query": "天气"},
+            normalized_command="搜索天气",
+        ),
+        provenance={"source_id": "semantic-invalid-equal", "public_safe": True},
+    )
+
+    result = evaluate_predictions([row], {"semantic-invalid-equal": row.target_contract.to_dict()})
+
+    assert result.metrics["json_parse_rate"] == 1.0
+    assert result.metrics["strict_schema_valid_rate"] == 1.0
+    assert result.metrics["semantic_contract_valid_rate"] == 0.0
+    assert result.metrics["contract_exact_match"] == 0.0
+    assert result.failure_slices["semantic"]["count"] == 1
 
 
 def test_schema_diagnostics_explain_contract_like_mismatches(tmp_path: Path) -> None:
@@ -1687,5 +1884,52 @@ def test_write_metrics_report_outputs_json_and_markdown(tmp_path: Path) -> None:
     metrics = json.loads(paths["json"].read_text(encoding="utf-8"))
     markdown = paths["markdown"].read_text(encoding="utf-8")
     assert metrics["metrics"]["contract_exact_match"] == 1.0
+    assert metrics["metrics"]["safety_precision"] is None
+    assert metrics["metrics"]["safety_recall"] is None
     assert "Public sample metrics" in markdown
     assert "live-browser improvement" in markdown
+    assert "`safety_precision`: null" in markdown
+    assert "`safety_recall`: null" in markdown
+
+
+def test_report_metric_aggregation_preserves_none_safety_metrics_and_metric_ladder() -> None:
+    payload = {
+        "metrics": {
+            "json_parse_rate": 1.0,
+            "strict_schema_valid_rate": 1.0,
+            "semantic_contract_valid_rate": 1.0,
+            "contract_exact_match": 1.0,
+            "json_valid_rate": 1.0,
+            "slot_f1": 1.0,
+            "slot_f1_soft": 1.0,
+            "task_type_accuracy": 1.0,
+            "route_accuracy": 1.0,
+            "safety_precision": None,
+            "safety_recall": None,
+            "confirmation_accuracy": 1.0,
+        },
+        "failure_slices": {"schema": {"count": 0}},
+    }
+    summary = reports._metric_summary_from_payload(payload)
+    merged = reports._merged_split_result(
+        split="dev",
+        metrics_payload=payload,
+        prediction_metadata={"dataset_manifest_id": "manifest-1", "prediction_split": "dev", "prediction_count": 1},
+        public_manifest={"manifest_id": "manifest-1", "split_counts": {"dev": 1}},
+        metrics_path=Path("metrics.json"),
+        prediction_metadata_path=Path("prediction_metadata.json"),
+    )
+    delta = reports._metric_delta_summary(summary, summary)
+
+    assert summary["json_parse_rate"] == 1.0
+    assert summary["strict_schema_valid_rate"] == 1.0
+    assert summary["semantic_contract_valid_rate"] == 1.0
+    assert summary["safety_precision"] is None
+    assert summary["safety_recall"] is None
+    assert merged["json_parse_rate"] == 1.0
+    assert merged["strict_schema_valid_rate"] == 1.0
+    assert merged["semantic_contract_valid_rate"] == 1.0
+    assert merged["safety_precision"] is None
+    assert merged["safety_recall"] is None
+    assert delta["safety_precision"] is None
+    assert delta["safety_recall"] is None

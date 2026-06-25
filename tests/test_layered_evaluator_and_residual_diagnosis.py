@@ -226,7 +226,7 @@ def test_raw_extra_field_is_strict_schema_invalid_and_diagnosed_as_extra_field()
     layered = evaluate_layered_predictions([row], {"extra-field": prediction})
     diagnosis = diagnose_residuals([row], {"extra-field": prediction}, split="dev")
 
-    assert strict.metrics["schema_valid_rate"] == 0.0
+    assert strict.metrics["strict_schema_valid_rate"] == 0.0
     assert strict.metrics["contract_exact_match"] == 0.0
     assert strict.failure_slices["schema"]["count"] == 1
     assert layered["metrics"]["schema_validity"] == 0.0

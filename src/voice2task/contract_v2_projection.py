@@ -4,7 +4,7 @@ import hashlib
 import json
 import random
 from collections import Counter, defaultdict
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -544,12 +544,15 @@ def _load_split(raw_inputs_dir: Path, arm: str, split: str) -> tuple[list[SFTDat
     return rows, predictions
 
 
-def _original_metrics(rows: list[SFTDatasetRow], predictions: dict[str, dict[str, Any]]) -> dict[str, float]:
+def _original_metrics(rows: list[SFTDatasetRow], predictions: dict[str, dict[str, Any]]) -> dict[str, Any]:
     strict = evaluate_predictions(rows, predictions)
     layered = evaluate_layered_predictions(rows, predictions)
     layered_metrics = layered["metrics"]
     strict_metrics = strict.metrics
     return {
+        "json_parse_rate": strict_metrics["json_parse_rate"],
+        "strict_schema_valid_rate": strict_metrics["strict_schema_valid_rate"],
+        "semantic_contract_valid_rate": strict_metrics["semantic_contract_valid_rate"],
         "v1_contract_exact_match_strict": layered_metrics["contract_exact_match_strict"],
         "v1_executable_contract_pass_rate": layered_metrics["executable_contract_pass_rate"],
         "strict_slot_f1": strict_metrics["slot_f1"],
@@ -649,7 +652,7 @@ def _projection_metrics(rows: list[SFTDatasetRow], predictions: dict[str, dict[s
     l2 = sum(record["l2_exact"] for record in records)
     v1_exec = sum(record["v1_executable"] for record in records)
     v2_exec = sum(record["v2_executable"] for record in records)
-    metrics = {
+    metrics: dict[str, Any] = {
         **original,
         "v1_without_normalized_command_exact": _rate(l1, total),
         "v2_core_exact_match": _rate(l2, total),
@@ -876,7 +879,7 @@ def _renderer_report(all_metrics: dict[str, dict[str, dict[str, Any]]]) -> dict[
 
 
 def _family_level_projection_deltas(all_metrics: dict[str, dict[str, dict[str, Any]]]) -> dict[str, Any]:
-    result = {"evidence_kind": "family_level_projection_deltas", "by_arm_split": {}}
+    result: dict[str, Any] = {"evidence_kind": "family_level_projection_deltas", "by_arm_split": {}}
     for arm in ARMS:
         result["by_arm_split"][arm] = {}
         for split in SPLITS:
@@ -885,7 +888,7 @@ def _family_level_projection_deltas(all_metrics: dict[str, dict[str, dict[str, A
 
 
 def _bootstrap_analysis(all_metrics: dict[str, dict[str, dict[str, Any]]]) -> dict[str, Any]:
-    result = {
+    result: dict[str, Any] = {
         "evidence_kind": "contract_v2_projection_bootstrap_analysis",
         "seed": BOOTSTRAP_SEED,
         "iterations": BOOTSTRAP_ITERATIONS,
@@ -1072,7 +1075,7 @@ def _summary(
     }
     return {
         "evidence_kind": "contract_v2_projection_rerun_summary",
-        "generated_at": datetime.now(UTC).isoformat(),
+        "generated_at": datetime.now(timezone.utc).isoformat(),
         "decision_label": decision["decision_label"],
         "recommended_next_change": decision["recommended_next_change"],
         "source_boundary": boundary,

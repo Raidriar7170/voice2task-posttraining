@@ -4,7 +4,7 @@ import re
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from voice2task.evaluation import EvaluationResult
 from voice2task.io import write_json, write_jsonl
@@ -12,6 +12,14 @@ from voice2task.leak_scan import scan_paths
 from voice2task.schemas import PRIVATE_IP_RE, PRIVATE_PATH_RE, SECRET_RE
 
 PRIVATE_REPORT_PATH_RE = re.compile(r"(/(?:mnt/data|Users|root|tmp|private)/[^\s\"')]+|data/local-private/[^\s\"')]+)")
+
+
+def _format_metric_markdown_value(value: Any) -> str:
+    if value is None:
+        return "null"
+    if isinstance(value, int | float):
+        return f"{float(value):.4f}"
+    return str(value)
 
 
 def write_metrics_report(
@@ -35,7 +43,7 @@ def write_metrics_report(
         "",
     ]
     for name, value in sorted(result.metrics.items()):
-        lines.append(f"- `{name}`: {value:.4f}")
+        lines.append(f"- `{name}`: {_format_metric_markdown_value(value)}")
     lines.extend(["", "## Failure Slices", ""])
     for name, entry in sorted(result.failure_slices.items()):
         examples = ", ".join(entry["examples"]) if entry["examples"] else "none"
@@ -6238,12 +6246,13 @@ def _public_metric_summary(evidence: dict[str, Any]) -> dict[str, dict[str, Any]
         return {}
     metric_names = (
         "prediction_count",
+        "json_parse_rate",
         "contract_exact_match",
         "slot_f1",
         "slot_f1_soft",
         "json_valid_rate",
-        "schema_valid_rate",
-        "contract_semantic_valid_rate",
+        "strict_schema_valid_rate",
+        "semantic_contract_valid_rate",
         "route_accuracy",
         "safety_recall",
     )
@@ -6833,29 +6842,51 @@ def _baseline_split_results(baseline_evidence: dict[str, Any]) -> dict[str, dict
     }
 
 
+def _optional_metric_value(metrics_payload: dict[str, Any], name: str) -> float | None:
+    metrics = metrics_payload.get("metrics")
+    if not isinstance(metrics, dict):
+        return None
+    value = metrics.get(name)
+    return float(value) if isinstance(value, int | float) else None
+
+
+def _metric_delta_value(baseline_value: float | None, retry_value: float | None) -> float | None:
+    if baseline_value is None or retry_value is None:
+        return None
+    return retry_value - baseline_value
+
+
 def _split_metric_delta(
     split_results: dict[str, dict[str, Any]],
     baseline_results: dict[str, dict[str, Any]],
     metric_name: str,
-) -> dict[str, float]:
+) -> dict[str, float | None]:
     return {
-        split: float(split_results[split].get(metric_name, 0.0))
-        - float((baseline_results.get(split) or {}).get(metric_name, 0.0))
+        split: _metric_delta_value(
+            (baseline_results.get(split) or {}).get(metric_name)
+            if isinstance((baseline_results.get(split) or {}).get(metric_name), int | float)
+            else None,
+            (
+                split_results[split].get(metric_name)
+                if isinstance(split_results[split].get(metric_name), int | float)
+                else None
+            ),
+        )
         for split in ("dev", "test")
     }
 
 
 def _current_train_split_sft_retry_interpretation(
     split_results: dict[str, dict[str, Any]],
-    exact_delta: dict[str, float],
-    safety_delta: dict[str, float],
+    exact_delta: dict[str, float | None],
+    safety_delta: dict[str, float | None],
 ) -> str:
     heldout_exact = {split: float(split_results[split]["contract_exact_match"]) for split in ("dev", "test")}
     if all(value >= 1.0 for value in heldout_exact.values()):
         return "current_train_split_sft_retry_strict_exact_recovered"
-    if any(value < 0.0 for value in safety_delta.values()):
+    if any(value is not None and value < 0.0 for value in safety_delta.values()):
         return "current_train_split_sft_retry_safety_regressed"
-    if any(value > 0.0 for value in exact_delta.values()):
+    if any(value is not None and value > 0.0 for value in exact_delta.values()):
         return "current_train_split_sft_retry_partial_signal"
     return "current_train_split_sft_retry_no_strict_exact_recovery"
 
@@ -7020,17 +7051,22 @@ def write_current_train_split_sft_retry_report(
         "## Split Results",
         "",
         (
-            "| split | rows | contract_exact_match | slot_f1 | slot_f1_soft | "
-            "safety_recall | json_valid_rate | residual rows |"
+            "| split | rows | json_parse_rate | strict_schema_valid_rate | semantic_contract_valid_rate | "
+            "contract_exact_match | slot_f1 | slot_f1_soft | safety_recall | residual rows |"
         ),
-        "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+        "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
     for split in ("dev", "test"):
         result = safe_evidence["split_results"][split]
         lines.append(
-            f"| {split} | {result['prediction_count']} | {result['contract_exact_match']:.4f} | "
-            f"{result['slot_f1']:.4f} | {result['slot_f1_soft']:.4f} | "
-            f"{result['safety_recall']:.4f} | {result['json_valid_rate']:.4f} | "
+            f"| {split} | {result['prediction_count']} | "
+            f"{_format_metric_markdown_value(result['json_parse_rate'])} | "
+            f"{_format_metric_markdown_value(result['strict_schema_valid_rate'])} | "
+            f"{_format_metric_markdown_value(result['semantic_contract_valid_rate'])} | "
+            f"{_format_metric_markdown_value(result['contract_exact_match'])} | "
+            f"{_format_metric_markdown_value(result['slot_f1'])} | "
+            f"{_format_metric_markdown_value(result['slot_f1_soft'])} | "
+            f"{_format_metric_markdown_value(result['safety_recall'])} | "
             f"{result['residual_row_count']} |"
         )
     comparison = safe_evidence["comparison_to_current_baseline"]
@@ -7162,10 +7198,15 @@ def _validate_tradeoff_row_ids(
     return sorted(reference)
 
 
-def _metric_summary_from_payload(payload: dict[str, Any]) -> dict[str, float]:
+def _metric_summary_from_payload(payload: dict[str, Any]) -> dict[str, float | None]:
     return {
-        name: _metric_value(payload, name)
+        name: (
+            _optional_metric_value(payload, name)
+            if name in {"safety_precision", "safety_recall"}
+            else _metric_value(payload, name)
+        )
         for name in (
+            "json_parse_rate",
             "contract_exact_match",
             "slot_f1",
             "slot_f1_soft",
@@ -7175,18 +7216,18 @@ def _metric_summary_from_payload(payload: dict[str, Any]) -> dict[str, float]:
             "safety_recall",
             "confirmation_accuracy",
             "json_valid_rate",
-            "schema_valid_rate",
-            "contract_semantic_valid_rate",
+            "strict_schema_valid_rate",
+            "semantic_contract_valid_rate",
         )
     }
 
 
 def _metric_delta_summary(
-    baseline_metrics: dict[str, float],
-    retry_metrics: dict[str, float],
-) -> dict[str, float]:
+    baseline_metrics: dict[str, float | None],
+    retry_metrics: dict[str, float | None],
+) -> dict[str, float | None]:
     return {
-        name: retry_metrics.get(name, 0.0) - baseline_metrics.get(name, 0.0)
+        name: _metric_delta_value(baseline_metrics.get(name), retry_metrics.get(name))
         for name in sorted(set(baseline_metrics) | set(retry_metrics))
     }
 
@@ -7668,7 +7709,11 @@ def _collect_confirmation_regression_groups(
             gold = retry_gold[row_id].get("target_contract")
             baseline_prediction = baseline_predictions.get(row_id)
             retry_prediction = retry_predictions.get(row_id)
-            if not all(isinstance(item, dict) for item in (gold, baseline_prediction, retry_prediction)):
+            if (
+                not isinstance(gold, dict)
+                or not isinstance(baseline_prediction, dict)
+                or not isinstance(retry_prediction, dict)
+            ):
                 continue
             baseline_correct = baseline_prediction.get("confirmation_required") == gold.get("confirmation_required")
             retry_correct = retry_prediction.get("confirmation_required") == gold.get("confirmation_required")
@@ -8181,12 +8226,12 @@ def write_scaled_public_sample_and_tiered_eval_design_report(
             "current_train_rows": sft_split_counts.get("train") if isinstance(sft_split_counts, dict) else None,
             "target_seed_milestone": 240,
             "target_core_bucket_seed_rows_total": sum(
-                int(bucket["target_seed_rows"])
+                cast(int, bucket["target_seed_rows"])
                 for bucket in target_buckets
                 if bucket.get("counts_toward_target_seed_milestone", True)
             ),
             "target_overlay_seed_rows_total": sum(
-                int(bucket["target_seed_rows"])
+                cast(int, bucket["target_seed_rows"])
                 for bucket in target_buckets
                 if not bucket.get("counts_toward_target_seed_milestone", True)
             ),
@@ -8747,14 +8792,17 @@ def _merged_split_result(
     return {
         "prediction_split": split,
         "prediction_count": prediction_count,
+        "json_parse_rate": _metric_value(metrics_payload, "json_parse_rate"),
+        "strict_schema_valid_rate": _metric_value(metrics_payload, "strict_schema_valid_rate"),
+        "semantic_contract_valid_rate": _metric_value(metrics_payload, "semantic_contract_valid_rate"),
         "contract_exact_match": exact,
         "json_valid_rate": _metric_value(metrics_payload, "json_valid_rate"),
         "slot_f1": _metric_value(metrics_payload, "slot_f1"),
         "slot_f1_soft": _metric_value(metrics_payload, "slot_f1_soft"),
         "task_type_accuracy": _metric_value(metrics_payload, "task_type_accuracy"),
         "route_accuracy": _metric_value(metrics_payload, "route_accuracy"),
-        "safety_precision": _metric_value(metrics_payload, "safety_precision"),
-        "safety_recall": _metric_value(metrics_payload, "safety_recall"),
+        "safety_precision": _optional_metric_value(metrics_payload, "safety_precision"),
+        "safety_recall": _optional_metric_value(metrics_payload, "safety_recall"),
         "confirmation_accuracy": _metric_value(metrics_payload, "confirmation_accuracy"),
         "schema_invalid_prediction_count": _failure_slice_count(metrics_payload, "schema"),
         "residual_row_count": residual_rows,
@@ -8952,14 +9000,21 @@ def write_merged_slot_value_heldout_eval_report(
         "",
         "## Split Results",
         "",
-        "| split | rows | contract_exact_match | slot_f1 | json_valid_rate | residual rows |",
-        "| --- | ---: | ---: | ---: | ---: | ---: |",
+        (
+            "| split | rows | json_parse_rate | strict_schema_valid_rate | semantic_contract_valid_rate | "
+            "contract_exact_match | slot_f1 | residual rows |"
+        ),
+        "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
     for split in ("train", "dev", "test"):
         result = safe_evidence["split_results"][split]
         lines.append(
-            f"| {split} | {result['prediction_count']} | {result['contract_exact_match']:.4f} | "
-            f"{result['slot_f1']:.4f} | {result['json_valid_rate']:.4f} | {result['residual_row_count']} |"
+            f"| {split} | {result['prediction_count']} | "
+            f"{_format_metric_markdown_value(result['json_parse_rate'])} | "
+            f"{_format_metric_markdown_value(result['strict_schema_valid_rate'])} | "
+            f"{_format_metric_markdown_value(result['semantic_contract_valid_rate'])} | "
+            f"{_format_metric_markdown_value(result['contract_exact_match'])} | "
+            f"{_format_metric_markdown_value(result['slot_f1'])} | {result['residual_row_count']} |"
         )
     lines.extend(
         [
@@ -9176,16 +9231,24 @@ def write_formal_public_heldout_prediction_report(
                 "",
                 "## Split Results",
                 "",
-                "| split | rows | contract_exact_match | slot_f1 | slot_f1_soft | json_valid_rate | residual rows |",
-                "| --- | ---: | ---: | ---: | ---: | ---: | ---: |",
+                (
+                    "| split | rows | json_parse_rate | strict_schema_valid_rate | semantic_contract_valid_rate | "
+                    "contract_exact_match | slot_f1 | slot_f1_soft | residual rows |"
+                ),
+                "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
             ]
         )
         for split in ("dev", "test"):
             result = safe_evidence["split_results"][split]
             lines.append(
-                f"| {split} | {result['prediction_count']} | {result['contract_exact_match']:.4f} | "
-                f"{result['slot_f1']:.4f} | {result['slot_f1_soft']:.4f} | "
-                f"{result['json_valid_rate']:.4f} | {result['residual_row_count']} |"
+                f"| {split} | {result['prediction_count']} | "
+                f"{_format_metric_markdown_value(result['json_parse_rate'])} | "
+                f"{_format_metric_markdown_value(result['strict_schema_valid_rate'])} | "
+                f"{_format_metric_markdown_value(result['semantic_contract_valid_rate'])} | "
+                f"{_format_metric_markdown_value(result['contract_exact_match'])} | "
+                f"{_format_metric_markdown_value(result['slot_f1'])} | "
+                f"{_format_metric_markdown_value(result['slot_f1_soft'])} | "
+                f"{result['residual_row_count']} |"
             )
     if safe_evidence["comparison_boundary"]:
         boundary = safe_evidence["comparison_boundary"]
@@ -9505,22 +9568,28 @@ def write_hardened_canonical_policy_rerun_report(
                 "## Split Results",
                 "",
                 (
-                    "| split | rows | contract_exact_match | prior exact | delta | slot_f1 | "
-                    "json_valid_rate | residual rows | hardened prompt visible |"
+                    "| split | rows | json_parse_rate | strict_schema_valid_rate | semantic_contract_valid_rate | "
+                    "contract_exact_match | prior exact | delta | slot_f1 | residual rows | hardened prompt visible |"
                 ),
-                "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |",
+                "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |",
             ]
         )
         for split in ("train", "dev", "test"):
             result = safe_evidence["split_results"][split]
             policy = safe_evidence["prompt_policy_by_split"][split]
+            prior_exact = safe_evidence["comparison"]["prior_merged_slot_value_exact"].get(split, 0.0)
             delta = safe_evidence["comparison"]["hardened_canonical_policy_exact"][split] - safe_evidence["comparison"][
                 "prior_merged_slot_value_exact"
             ].get(split, 0.0)
             lines.append(
-                f"| {split} | {result['prediction_count']} | {result['contract_exact_match']:.4f} | "
-                f"{safe_evidence['comparison']['prior_merged_slot_value_exact'].get(split, 0.0):.4f} | "
-                f"{delta:.4f} | {result['slot_f1']:.4f} | {result['json_valid_rate']:.4f} | "
+                f"| {split} | {result['prediction_count']} | "
+                f"{_format_metric_markdown_value(result['json_parse_rate'])} | "
+                f"{_format_metric_markdown_value(result['strict_schema_valid_rate'])} | "
+                f"{_format_metric_markdown_value(result['semantic_contract_valid_rate'])} | "
+                f"{_format_metric_markdown_value(result['contract_exact_match'])} | "
+                f"{_format_metric_markdown_value(prior_exact)} | "
+                f"{_format_metric_markdown_value(delta)} | "
+                f"{_format_metric_markdown_value(result['slot_f1'])} | "
                 f"{result['residual_row_count']} | {policy['hardened_canonical_policy_visible']} |"
             )
     lines.extend(

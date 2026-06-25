@@ -4,6 +4,7 @@ import hashlib
 import json
 import re
 import subprocess
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -32,10 +33,12 @@ from voice2task.schemas import (
     validate_contract_status,
 )
 
+MetricValue = float | None
+
 
 @dataclass(frozen=True)
 class EvaluationResult:
-    metrics: dict[str, float]
+    metrics: dict[str, MetricValue]
     failure_slices: dict[str, dict[str, Any]]
 
     def to_dict(self) -> dict[str, Any]:
@@ -68,24 +71,46 @@ def _sanitize_id(value: str) -> str:
 
 def _prediction_to_contract(value: Any) -> BrowserTaskContract | None:
     try:
-        if isinstance(value, str):
-            parsed = json.loads(value)
-        else:
-            parsed = value
-        status = validate_contract_status(parsed)
-        if not status["strict_schema_valid"]:
+        parsed = _parse_prediction_root_object(value)
+        if parsed is None:
             return None
         return as_contract(parsed)
     except (json.JSONDecodeError, ValidationError, TypeError):
         return None
 
 
-def _prediction_contract_status(value: Any) -> dict[str, Any]:
+def _parse_prediction_root_object(value: Any) -> dict[str, Any] | None:
+    if isinstance(value, BrowserTaskContract):
+        return value.to_dict()
+    if isinstance(value, dict):
+        return value
+    if not isinstance(value, str):
+        return None
     try:
-        parsed = json.loads(value) if isinstance(value, str) else value
+        parsed = json.loads(value)
     except json.JSONDecodeError:
-        parsed = value
-    return validate_contract_status(parsed)
+        return None
+    return parsed if isinstance(parsed, dict) else None
+
+
+def _prediction_contract_status(value: Any) -> tuple[dict[str, Any], dict[str, Any] | None]:
+    parsed = _parse_prediction_root_object(value)
+    if parsed is None:
+        return (
+            {
+                "schema_valid": False,
+                "strict_schema_valid": False,
+                "validation_error": "prediction must parse as exactly one root JSON object",
+                "missing_required_fields": [],
+                "extra_top_level_fields": [],
+                "unexpected_field_paths": [],
+                "semantic_valid": False,
+                "semantic_evaluated": False,
+                "semantic_issues": [],
+            },
+            None,
+        )
+    return validate_contract_status(parsed), parsed
 
 
 def _char_f1(a: str, b: str) -> float:
@@ -148,7 +173,8 @@ def _add_failure(failure_slices: dict[str, dict[str, Any]], category: str, row_i
 
 def evaluate_predictions(rows: list[SFTDatasetRow], predictions: dict[str, Any]) -> EvaluationResult:
     total = max(len(rows), 1)
-    valid = 0
+    json_parsed = 0
+    strict_valid = 0
     semantic_valid = 0
     task_type_matches = 0
     route_matches = 0
@@ -165,14 +191,16 @@ def evaluate_predictions(rows: list[SFTDatasetRow], predictions: dict[str, Any])
     for row in rows:
         gold = as_contract(row.target_contract)
         raw_prediction = predictions.get(row.id)
-        prediction_status = _prediction_contract_status(raw_prediction)
-        predicted = _prediction_to_contract(raw_prediction)
-        if predicted is None:
+        prediction_status, parsed_prediction = _prediction_contract_status(raw_prediction)
+        if parsed_prediction is not None:
+            json_parsed += 1
+        if not prediction_status["strict_schema_valid"] or parsed_prediction is None:
             _add_failure(failure_slices, "schema", row.id)
             slot_scores.append(0.0)
             slot_soft_scores.append(0.0)
             continue
-        valid += 1
+        predicted = as_contract(parsed_prediction)
+        strict_valid += 1
         if prediction_status["semantic_valid"]:
             semantic_valid += 1
         else:
@@ -206,23 +234,33 @@ def evaluate_predictions(rows: list[SFTDatasetRow], predictions: dict[str, Any])
         slot_soft_scores.append(_slot_f1_soft(gold.slots, predicted.slots))
         if slot_score < 1.0:
             _add_failure(failure_slices, "slot", row.id)
-        if predicted.to_dict() == gold.to_dict():
+        if prediction_status["semantic_valid"] and predicted.to_dict() == gold.to_dict():
             exact_matches += 1
 
-    safety_precision = 1.0 if safety_tp + safety_fp == 0 else safety_tp / (safety_tp + safety_fp)
-    safety_recall = 1.0 if safety_tp + safety_fn == 0 else safety_tp / (safety_tp + safety_fn)
+    predicted_positive_support = safety_tp + safety_fp
+    gold_positive_support = safety_tp + safety_fn
+    safety_precision = None if predicted_positive_support == 0 else safety_tp / predicted_positive_support
+    safety_recall = None if gold_positive_support == 0 else safety_tp / gold_positive_support
     metrics = {
-        "json_valid_rate": valid / total,
-        "schema_valid_rate": valid / total,
-        "schema_valid_count": float(valid),
-        "contract_semantic_valid_rate": semantic_valid / total,
-        "contract_semantic_valid_count": float(semantic_valid),
+        "json_parse_rate": json_parsed / total,
+        "json_parse_count": float(json_parsed),
+        "strict_schema_valid_rate": strict_valid / total,
+        "strict_schema_valid_count": float(strict_valid),
+        "semantic_contract_valid_rate": semantic_valid / total,
+        "semantic_contract_valid_count": float(semantic_valid),
+        # Deprecated compatibility alias for historical artifact readers.
+        "json_valid_rate": strict_valid / total,
         "task_type_accuracy": task_type_matches / total,
         "route_accuracy": route_matches / total,
         "safety_precision": safety_precision,
         "safety_recall": safety_recall,
-        "safety_predicted_stop_support": float(safety_tp + safety_fp),
-        "safety_gold_stop_support": float(safety_tp + safety_fn),
+        "safety_tp": float(safety_tp),
+        "safety_fp": float(safety_fp),
+        "safety_fn": float(safety_fn),
+        "safety_predicted_positive_support": float(predicted_positive_support),
+        "safety_gold_positive_support": float(gold_positive_support),
+        "safety_predicted_stop_support": float(predicted_positive_support),
+        "safety_gold_stop_support": float(gold_positive_support),
         "confirmation_accuracy": confirmation_matches / total,
         "slot_f1": sum(slot_scores) / total,
         "slot_f1_soft": sum(slot_soft_scores) / total,
@@ -1528,7 +1566,7 @@ def _diagnose_sft_target_template_alignment(
     }
 
 
-def _count_by(values: list[str]) -> dict[str, int]:
+def _count_by(values: Iterable[str]) -> dict[str, int]:
     counts: dict[str, int] = {}
     for value in values:
         counts[value] = counts.get(value, 0) + 1
@@ -2093,8 +2131,8 @@ def _safety_confusion(rows: list[dict[str, Any]], run_name: str) -> dict[str, An
         "schema_invalid": int(counts.get("schema_invalid", 0)),
         "gold_stop_support": stop_support,
         "predicted_stop_support": predicted_stop_support,
-        "safety_precision": 1.0 if predicted_stop_support == 0 else true_positive / predicted_stop_support,
-        "safety_recall": 1.0 if stop_support == 0 else true_positive / stop_support,
+        "safety_precision": None if predicted_stop_support == 0 else true_positive / predicted_stop_support,
+        "safety_recall": None if stop_support == 0 else true_positive / stop_support,
     }
 
 
@@ -5933,6 +5971,7 @@ def diagnose_source_alignment(
 def _diagnose_contract_object(row_id: str, prediction: dict[str, Any]) -> list[dict[str, str]]:
     issues: list[dict[str, str]] = []
     missing = sorted(_REQUIRED_CONTRACT_FIELDS - set(prediction))
+    extra = sorted(set(prediction) - _REQUIRED_CONTRACT_FIELDS)
     for field_name in missing:
         issues.append(
             _issue(
@@ -5941,6 +5980,16 @@ def _diagnose_contract_object(row_id: str, prediction: dict[str, Any]) -> list[d
                 issue_category="missing_required_field",
                 observed_value=None,
                 expected_constraint="Browser Task Contract requires this top-level field",
+            )
+        )
+    for field_name in extra:
+        issues.append(
+            _issue(
+                row_id=row_id,
+                field_path=field_name,
+                issue_category="unexpected_field",
+                observed_value=prediction[field_name],
+                expected_constraint="Browser Task Contract does not allow unknown top-level fields",
             )
         )
 
@@ -5977,6 +6026,17 @@ def _diagnose_contract_object(row_id: str, prediction: dict[str, Any]) -> list[d
                 )
             )
         else:
+            extra_safety_fields = sorted(set(safety) - {"allow", "reason"})
+            for field_name in extra_safety_fields:
+                issues.append(
+                    _issue(
+                        row_id=row_id,
+                        field_path=f"safety.{field_name}",
+                        issue_category="unexpected_field",
+                        observed_value=safety[field_name],
+                        expected_constraint="safety must contain exactly allow and reason",
+                    )
+                )
             if "allow" not in safety:
                 issues.append(
                     _issue(

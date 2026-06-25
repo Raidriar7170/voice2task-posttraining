@@ -127,13 +127,32 @@ def _prediction_to_contract(value: Any) -> BrowserTaskContract | None:
         return None
 
 
-def _prediction_to_core_contract(value: Any) -> BrowserTaskContract | None:
+def _diagnostic_prediction_to_core_contract_permissive(value: Any) -> BrowserTaskContract | None:
     try:
         if isinstance(value, str):
             value = json.loads(value)
         if not isinstance(value, dict):
             return None
-        return as_contract(value)
+        required_fields = _CONTRACT_FIELDS
+        if any(field_name not in value for field_name in required_fields):
+            return None
+        safety = value.get("safety")
+        if not isinstance(safety, dict) or "allow" not in safety or "reason" not in safety:
+            return None
+        # Diagnostic-only permissive parser: keep extra-field evidence in raw objects
+        # while comparing the contract-like core fields for residual attribution.
+        return as_contract(
+            {
+                "task_type": value["task_type"],
+                "route": value["route"],
+                "safety": {"allow": safety["allow"], "reason": safety["reason"]},
+                "confirmation_required": value["confirmation_required"],
+                "slots": value["slots"],
+                "normalized_command": value["normalized_command"],
+                "language": value["language"],
+                "contract_version": value["contract_version"],
+            }
+        )
     except (json.JSONDecodeError, TypeError, ValidationError):
         return None
 
@@ -315,6 +334,8 @@ def evaluate_layered_predictions(rows: list[SFTDatasetRow], predictions: dict[st
     key_precision, key_recall, key_f1 = _micro_f1(gold_keys, predicted_keys)
     _exact_precision, _exact_recall, exact_f1 = _micro_f1(gold_exact_items, predicted_exact_items)
     _norm_precision, _norm_recall, normalized_f1 = _micro_f1(gold_normalized_items, predicted_normalized_items)
+    strict_exact_match = strict.metrics["contract_exact_match"]
+    assert strict_exact_match is not None
     metrics = {
         "schema_validity": schema_valid / total,
         "route_accuracy": route_matches / total,
@@ -330,15 +351,15 @@ def evaluate_layered_predictions(rows: list[SFTDatasetRow], predictions: dict[st
         "unsafe_false_positive_rate": _unsafe_rate(unsafe_fp, unsafe_safe_gold),
         "refusal_or_clarify_accuracy": _rate(refusal_or_clarify_matches, refusal_or_clarify_total),
         "executable_contract_pass_rate": executable_passes / total,
-        "contract_exact_match_strict": strict.metrics["contract_exact_match"],
+        "contract_exact_match_strict": strict_exact_match,
     }
     return {
         "evidence_kind": "layered_contract_evaluation",
         "summary": {
             "total": len(rows),
             "schema_valid": schema_valid,
-            "strict_pass": round(strict.metrics["contract_exact_match"] * len(rows)),
-            "strict_fail": len(rows) - round(strict.metrics["contract_exact_match"] * len(rows)),
+            "strict_pass": round(strict_exact_match * len(rows)),
+            "strict_fail": len(rows) - round(strict_exact_match * len(rows)),
             "unsafe_gold_support": unsafe_gold,
             "unsafe_safe_gold_support": unsafe_safe_gold,
             "unsafe_false_negative_count": unsafe_fn,
@@ -499,11 +520,19 @@ def diagnose_residuals(
     for row in rows:
         gold = _contract_dict(row)
         raw_prediction = predictions.get(row.id)
-        predicted_contract = _prediction_to_core_contract(raw_prediction)
+        predicted_contract = _diagnostic_prediction_to_core_contract_permissive(raw_prediction)
         predicted_object = _parse_prediction_object(raw_prediction)
+        strict_status = validate_contract_status(predicted_object) if isinstance(predicted_object, dict) else None
         raw_prediction_dict = predicted_object if isinstance(predicted_object, dict) else {}
         raw_extra_fields = set(raw_prediction_dict) - _CONTRACT_FIELDS
-        if predicted_contract is not None and predicted_contract.to_dict() == gold and not raw_extra_fields:
+        if (
+            predicted_contract is not None
+            and strict_status is not None
+            and strict_status.get("strict_schema_valid") is True
+            and strict_status.get("semantic_valid") is True
+            and predicted_contract.to_dict() == gold
+            and not raw_extra_fields
+        ):
             strict_pass += 1
             continue
 

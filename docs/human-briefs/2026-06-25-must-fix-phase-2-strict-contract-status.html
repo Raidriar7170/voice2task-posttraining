@@ -19,18 +19,20 @@
 <body>
   <main>
     <h1>Must Fix Phase 2: strict contract status</h1>
-    <div class="status">Status: completed locally, validation passed</div>
-    <p><strong>结论：</strong>预测评测和 schema retry guard 现在共享同一套 strict contract status；额外顶层字段不再被静默丢弃，schema-valid 与 semantic-valid 指标也被分开记录。</p>
+    <div class="status">Status: completed on branch, verification passed</div>
+    <p><strong>结论：</strong>Phase 2 现在完成了 strict parser/status 的收口：主评测先判断单一根 JSON 解析，再判断 strict schema，再判断 semantic contract，最后才允许 exact match；unknown nested fields 也会在中心化校验里直接失败。</p>
 
     <section class="grid">
       <div class="box">
         <h2>本阶段改动</h2>
         <ul>
-          <li>新增 <code>validate_contract_status</code> 和 <code>validate_contract_semantics</code>。</li>
-          <li>strict schema 明确拒绝 missing required fields 与 extra top-level fields。</li>
-          <li><code>evaluate_predictions</code> 新增 <code>schema_valid_rate</code> 与 <code>contract_semantic_valid_rate</code>。</li>
-          <li><code>_schema_guard_status</code> 复用 shared status，不再走独立宽松校验。</li>
-          <li>报告摘要纳入新增 strict/semantic 指标。</li>
+          <li><code>as_contract</code> / <code>BrowserTaskContract.from_dict</code> / <code>validate_contract_status</code> 统一走 strict unknown-field rejection，不再静默丢弃额外字段。</li>
+          <li><code>safety</code> 现在必须且只能包含 <code>{"allow","reason"}</code>；<code>safety.debug</code> 之类的 nested unknown key 会让 strict schema 直接失败。</li>
+          <li><code>evaluate_predictions</code> 明确拆成 <code>json_parse_rate</code>、<code>strict_schema_valid_rate</code>、<code>semantic_contract_valid_rate</code>、<code>contract_exact_match</code>；仅保留 <code>json_valid_rate</code> 作为兼容别名。</li>
+          <li><code>contract_exact_match</code> 只在 strict valid + semantic valid + canonical prediction==gold 时递增；语义矛盾但字符串相同的 contract 不再算 exact。</li>
+          <li>zero-support safety 指标改成 <code>null</code>：预测正例支持为 0 时 <code>safety_precision=null</code>，gold 正例支持为 0 时 <code>safety_recall=null</code>，并额外报告 <code>safety_tp/fp/fn</code> 与 support；report 聚合层不再把它们压回 <code>0.0</code>。</li>
+          <li>layered residual diagnosis 保留显式命名的 permissive diagnostic parser，但 primary scoring 仍只认 strict parser。</li>
+          <li>下游报告表格补齐 parse / strict schema / semantic / exact 的指标梯度，不再只展示旧的 <code>json_valid_rate</code> 兼容列。</li>
         </ul>
       </div>
       <div class="box">
@@ -41,6 +43,8 @@
           <li><code>src/voice2task/layered_evaluation.py</code></li>
           <li><code>src/voice2task/training.py</code></li>
           <li><code>src/voice2task/reports.py</code></li>
+          <li><code>src/voice2task/contract_core_v2.py</code></li>
+          <li><code>src/voice2task/contract_v2_projection.py</code></li>
           <li><code>tests/test_evaluator_reports.py</code></li>
           <li><code>tests/test_a100_sft_prediction_smoke.py</code></li>
           <li><code>tests/test_layered_evaluator_and_residual_diagnosis.py</code></li>
@@ -50,18 +54,20 @@
 
     <h2>验证结果</h2>
     <ul>
-      <li><code>PYTHONPATH=src pytest -q</code>: passed, 613 tests.</li>
+      <li><code>PYTHONPATH=src pytest -q tests/test_evaluator_reports.py tests/test_current_train_split_sft_retry_readiness.py tests/test_formal_public_heldout_prediction.py tests/test_hardened_canonical_policy_rerun.py</code>: passed, 79 tests.</li>
+      <li><code>PYTHONPATH=src pytest -q</code>: passed, 626 tests.</li>
       <li><code>PYTHONPATH=src ruff check src tests</code>: passed.</li>
+      <li><code>PYTHONPATH=src mypy src</code>: 39 errors, below the recorded 68-error baseline and none in this phase's changed files.</li>
       <li><code>openspec validate --all --strict</code>: passed, 11 specs.</li>
       <li><code>PYTHONPATH=src python scripts/check_current_truth_surface.py</code>: passed.</li>
       <li><code>git diff --check</code>: passed.</li>
     </ul>
 
     <h2>Remaining Risks</h2>
-    <p>本阶段没有训练、没有 GPU 预测重跑、没有模型质量提升声明，也没有放宽 evaluator。semantic validation 只是规则一致性诊断，不是自然语言等价评分，也不证明 live browser task success。</p>
+    <p>本阶段没有训练、没有 GPU 预测重跑、没有 lockbox 数据、没有启动 Phase 3，也没有放宽 evaluator。semantic validation 仍然只是规则一致性诊断，不是自然语言等价评分，也不证明 live browser task success。</p>
 
     <h2>Next Step</h2>
-    <p>如果进入下一阶段，应保持 bounded scope：先确认 Phase 3 目标，再决定是否处理 lockbox/runtime provenance 或重新训练评估；不要把本阶段结果包装成 adapter recovery。</p>
+    <p>下一步如果真的进入 Phase 3，应该先单独定义新 acceptance 和 public-claim boundary；不要把这次 Phase 2 的 strict-eval 修复包装成训练恢复或浏览器成功率提升。</p>
   </main>
 </body>
 </html>

@@ -4,7 +4,7 @@ import json
 from collections import Counter
 from collections.abc import Mapping
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any, Literal
@@ -25,11 +25,14 @@ from voice2task.schemas import (
 
 CORE_FIELDS = ("task_type", "route", "safety", "confirmation_required", "slots")
 ENVELOPE_FIELDS = ("normalized_command", "language", "contract_version")
-PROVENANCE_LEGACY_PRESERVED = "legacy_preserved"
-PROVENANCE_DETERMINISTIC_RENDERED = "deterministic_rendered"
-PROVENANCE_UNSUPPORTED = "unsupported"
+PROVENANCE_LEGACY_PRESERVED: Literal["legacy_preserved"] = "legacy_preserved"
+PROVENANCE_DETERMINISTIC_RENDERED: Literal["deterministic_rendered"] = "deterministic_rendered"
+PROVENANCE_UNSUPPORTED: Literal["unsupported"] = "unsupported"
 ENVELOPE_BUILD_MODES = ("preserve_legacy", "derive_display")
 EVALUATOR_REGRESSION_METRICS = (
+    "json_parse_rate",
+    "strict_schema_valid_rate",
+    "semantic_contract_valid_rate",
     "contract_exact_match_strict",
     "strict_slot_f1",
     "slot_value_exact_f1",
@@ -190,7 +193,7 @@ def validate_contract_core_v2(core: ContractCoreV2 | Mapping[str, Any]) -> Contr
 
 def project_v1_to_core_v2(v1_contract: BrowserTaskContract | Mapping[str, Any]) -> ContractCoreV2:
     try:
-        parsed = as_contract(v1_contract)
+        parsed = as_contract(v1_contract if isinstance(v1_contract, BrowserTaskContract) else dict(v1_contract))
     except (TypeError, ValidationError) as exc:
         raise ContractCoreV2Error(str(exc)) from exc
     return ContractCoreV2(
@@ -204,7 +207,7 @@ def project_v1_to_core_v2(v1_contract: BrowserTaskContract | Mapping[str, Any]) 
 
 def extract_v1_envelope_metadata(v1_contract: BrowserTaskContract | Mapping[str, Any]) -> ContractEnvelopeMetadata:
     try:
-        parsed = as_contract(v1_contract)
+        parsed = as_contract(v1_contract if isinstance(v1_contract, BrowserTaskContract) else dict(v1_contract))
     except (TypeError, ValidationError) as exc:
         raise ContractCoreV2Error(str(exc)) from exc
     return ContractEnvelopeMetadata(
@@ -271,8 +274,8 @@ def compare_v1_roundtrip(
     original: BrowserTaskContract | Mapping[str, Any],
     rebuilt: BrowserTaskContract | Mapping[str, Any],
 ) -> dict[str, Any]:
-    original_contract = as_contract(original)
-    rebuilt_contract = as_contract(rebuilt)
+    original_contract = as_contract(original if isinstance(original, BrowserTaskContract) else dict(original))
+    rebuilt_contract = as_contract(rebuilt if isinstance(rebuilt, BrowserTaskContract) else dict(rebuilt))
     original_dict = original_contract.to_dict()
     rebuilt_dict = rebuilt_contract.to_dict()
     roundtrip_exact = canonical_contract_json(original_contract) == canonical_contract_json(rebuilt_contract)
@@ -289,7 +292,7 @@ def compare_v1_roundtrip(
 
 
 def check_v1_core_compatibility(v1_contract: BrowserTaskContract | Mapping[str, Any]) -> dict[str, Any]:
-    base = {
+    base: dict[str, Any] = {
         "v1_valid": False,
         "core_valid": False,
         "roundtrip_exact": False,
@@ -508,10 +511,13 @@ def _roundtrip_prediction_contract(prediction: Any) -> Any:
         return prediction
 
 
-def _selected_metrics(rows: list[SFTDatasetRow], predictions: dict[str, Any]) -> dict[str, float]:
+def _selected_metrics(rows: list[SFTDatasetRow], predictions: dict[str, Any]) -> dict[str, Any]:
     strict = evaluate_predictions(rows, predictions)
     layered = evaluate_layered_predictions(rows, predictions)
     return {
+        "json_parse_rate": strict.metrics["json_parse_rate"],
+        "strict_schema_valid_rate": strict.metrics["strict_schema_valid_rate"],
+        "semantic_contract_valid_rate": strict.metrics["semantic_contract_valid_rate"],
         "contract_exact_match_strict": layered["metrics"]["contract_exact_match_strict"],
         "strict_slot_f1": strict.metrics["slot_f1"],
         "slot_value_exact_f1": layered["metrics"]["slot_value_exact_f1"],
@@ -576,7 +582,7 @@ def _summary(
 ) -> dict[str, Any]:
     return {
         "evidence_kind": "internal_contract_v2_core_summary",
-        "generated_at": datetime.now(UTC).isoformat(),
+        "generated_at": datetime.now(timezone.utc).isoformat(),
         "decision_label": decision_label,
         "default_external_schema": "BrowserTaskContract V1",
         "training_target_changed": False,
