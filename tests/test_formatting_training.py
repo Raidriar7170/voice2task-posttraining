@@ -142,6 +142,74 @@ def test_sft_prediction_prompt_uses_generation_prompt_without_gold_contract() ->
     assert [message["role"] for message in tokenizer.calls[0]["messages"]] == ["system", "user"]
 
 
+def test_sft_messages_reuse_prediction_messages_as_gold_free_prefix() -> None:
+    row = SFTDatasetRow(
+        id="sft-1",
+        split="train",
+        input_text="帮我处理这个公开页面",
+        target_contract=BrowserTaskContract(
+            task_type="search",
+            route="search_web",
+            safety={"allow": True, "reason": "public_readonly"},
+            confirmation_required=False,
+            slots={"query": "gold-only-token"},
+            normalized_command="搜索 gold-only-token",
+        ),
+        provenance={"source_id": "seed-1", "public_safe": True},
+    )
+
+    prediction_messages = formatting.format_sft_prompt_messages(formatting.PredictionInput.from_sft_row(row))
+    training_messages = formatting.format_sft_messages(row)
+
+    assert training_messages[:-1] == prediction_messages
+    assert training_messages[-1] == {
+        "role": "assistant",
+        "content": formatting.canonical_contract_json(row.target_contract),
+    }
+
+
+def test_sft_training_text_tokenized_prefix_matches_prediction_prompt() -> None:
+    row = SFTDatasetRow(
+        id="sft-1",
+        split="train",
+        input_text="帮我处理这个公开页面",
+        target_contract=BrowserTaskContract(
+            task_type="search",
+            route="search_web",
+            safety={"allow": True, "reason": "public_readonly"},
+            confirmation_required=False,
+            slots={"query": "gold-only-token"},
+            normalized_command="搜索 gold-only-token",
+        ),
+        provenance={"source_id": "seed-1", "public_safe": True},
+    )
+    training_tokenizer = _ChatTemplateTokenizer()
+    prediction_tokenizer = _ChatTemplateTokenizer()
+
+    training_text = formatting.format_sft_training_text(row, tokenizer=training_tokenizer)
+    prediction_prompt = formatting.format_sft_prediction_prompt(
+        formatting.PredictionInput.from_sft_row(row),
+        tokenizer=prediction_tokenizer,
+    )
+
+    assistant_target = formatting.canonical_contract_json(row.target_contract)
+    assert training_text.split(assistant_target, 1)[0] == prediction_prompt
+    assert training_tokenizer.calls == [
+        {
+            "messages": formatting.format_sft_messages(row),
+            "tokenize": False,
+            "add_generation_prompt": False,
+        }
+    ]
+    assert prediction_tokenizer.calls == [
+        {
+            "messages": formatting.format_sft_prompt_messages(formatting.PredictionInput.from_sft_row(row)),
+            "tokenize": False,
+            "add_generation_prompt": True,
+        }
+    ]
+
+
 def test_default_prediction_prompt_is_invariant_to_gold_contract_changes() -> None:
     input_text = "帮我处理这个页面"
     search_row = SFTDatasetRow(
@@ -384,20 +452,18 @@ def test_sft_prompts_expose_normalized_command_canonicalization_policy_without_g
     )
     summary = formatting.prompt_constraint_summary(prediction_prompt)
 
-    assert "Unified gold-free training policy" in training_text
-    assert "Use canonical Chinese normalized_command" in training_text
-    assert "not verbatim ASR" in training_text
-    assert "normalized_command 是 canonical Chinese intent phrase" in prediction_prompt
-    assert "不是 verbatim transcript 或 ASR text" in prediction_prompt
-    assert "search 信息查询用 `搜索` + 简洁查询词" in prediction_prompt
-    assert (
-        "示例 normalized_command(非样本答案): "
-        "搜索上海后天天气；打开帮助中心；填写昵称并确认；拒绝代替用户转账"
-    ) in prediction_prompt
-    assert "不是 evaluator normalization" in prediction_prompt
-    assert "contract_exact_match 仍然 strict" in prediction_prompt
-    assert "不做 semantic-equivalence scoring" in prediction_prompt
-    assert "prediction repair 或 re-score" in prediction_prompt
+    for text in (training_text, prediction_prompt):
+        assert "normalized_command 是 canonical Chinese intent phrase" in text
+        assert "不是 verbatim transcript 或 ASR text" in text
+        assert "search 信息查询用 `搜索` + 简洁查询词" in text
+        assert (
+            "示例 normalized_command(非样本答案): "
+            "搜索上海后天天气；打开帮助中心；填写昵称并确认；拒绝代替用户转账"
+        ) in text
+        assert "不是 evaluator normalization" in text
+        assert "contract_exact_match 仍然 strict" in text
+        assert "不做 semantic-equivalence scoring" in text
+        assert "prediction repair 或 re-score" in text
     assert "gold-weather-token" in training_text
     assert "gold-weather-token" not in prediction_prompt
     assert summary["normalized_command_canonical_policy_visible"] is True
@@ -427,13 +493,13 @@ def test_sft_prompts_expose_public_readonly_search_contract_policy_without_gold_
     )
     summary = formatting.prompt_constraint_summary()
 
-    assert "Unified gold-free training policy" in training_text
-    assert "search/search_web public_readonly query" in training_text
-    assert "do not choose the prompt from target_contract/task/route/slots" in training_text
     for text in (training_text, prediction_prompt):
         assert "只能输出一个 root JSON object" in text
         assert "全部 8 个顶层字段必须都在同一个 root object 内" in text
         assert "不要在 normalized_command 之前提前关闭 root object" in text
+        assert "public-readonly search contract policy" in text
+        assert 'task_type="search"' in text
+        assert 'route="search_web"' in text
         assert "北京 明天 天气" not in text
         assert '"contract_version"Required-field' not in text
         assert "falseCanonical valid" not in text
@@ -499,17 +565,16 @@ def test_sft_prompts_expose_public_extract_price_policy_without_gold_target() ->
     )
     summary = formatting.prompt_constraint_summary(prediction_prompt)
 
-    assert "Unified gold-free training policy" in training_text
-    assert "extract/extract_page public_readonly target" in training_text
-    assert "public-readonly extract-page contract policy" in prediction_prompt
-    assert 'task_type="extract"' in prediction_prompt
-    assert 'route="extract_page"' in prediction_prompt
-    assert 'safety.reason="public_readonly"' in prediction_prompt
-    assert "confirmation_required=false" in prediction_prompt
-    assert "slots.target" in prediction_prompt
-    assert "不要转成 search/search_web" in prediction_prompt
-    assert "不要用 slots.query 或 page_url 表达抽取目标" in prediction_prompt
-    assert "不是 evaluator normalization" in prediction_prompt
+    for text in (training_text, prediction_prompt):
+        assert "public-readonly extract-page contract policy" in text
+        assert 'task_type="extract"' in text
+        assert 'route="extract_page"' in text
+        assert 'safety.reason="public_readonly"' in text
+        assert "confirmation_required=false" in text
+        assert "slots.target" in text
+        assert "不要转成 search/search_web" in text
+        assert "不要用 slots.query 或 page_url 表达抽取目标" in text
+        assert "不是 evaluator normalization" in text
     assert "gold-price-token" in training_text
     assert "gold-price-token" not in prediction_prompt
     assert summary["public_readonly_extract_policy_visible"] is True
@@ -540,14 +605,13 @@ def test_sft_prompts_expose_public_extract_price_canonical_wording_without_gold_
     )
     summary = formatting.prompt_constraint_summary(prediction_prompt)
 
-    assert "Unified gold-free training policy" in training_text
-    assert "extract/extract_page public_readonly target" in training_text
-    assert "extract-price canonical wording policy" in prediction_prompt
-    assert "多少钱/标价/页面上的商品价格" in prediction_prompt
-    assert 'slots.target="商品价格"' in prediction_prompt
-    assert 'normalized_command="提取页面商品价格"' in prediction_prompt
-    assert "页面价格/标价/提取页面上的商品价格 是 strict-wrong" in prediction_prompt
-    assert "不是 evaluator normalization" in prediction_prompt
+    for text in (training_text, prediction_prompt):
+        assert "extract-price canonical wording policy" in text
+        assert "多少钱/标价/页面上的商品价格" in text
+        assert 'slots.target="商品价格"' in text
+        assert 'normalized_command="提取页面商品价格"' in text
+        assert "页面价格/标价/提取页面上的商品价格 是 strict-wrong" in text
+        assert "不是 evaluator normalization" in text
     assert "gold-price-token" in training_text
     assert "gold-price-token" not in prediction_prompt
     assert summary["extract_canonical_price_target_visible"] is True
@@ -597,29 +661,25 @@ def test_sft_prompts_expose_heldout_residual_repair_policy_without_gold_target()
     )
     summary = formatting.prompt_constraint_summary(prediction_prompt)
 
-    assert "Unified gold-free training policy" in training_text
-    assert "navigate/open_url public_readonly url" in training_text
-    assert "clarify/clarify ambiguous_request ambiguity" in training_text
-    assert "form_fill/fill_form requires_confirmation field" in training_text
-    assert "blocked/deny unsafe_payment reason" in training_text
-    assert "public navigation canonical policy" in prediction_prompt
-    assert 'task_type="navigate";route="open_url"' in prediction_prompt
-    assert 'safety.reason="public_readonly"' in prediction_prompt
-    assert 'route="open_url"' in prediction_prompt
-    assert "slots.url 必须使用 canonical URL" in prediction_prompt
-    assert "ambiguous clarify policy" in prediction_prompt
-    assert 'task_type="clarify";route="clarify"' in prediction_prompt
-    assert 'safety.reason="ambiguous_request"' in prediction_prompt
-    assert "form confirmation policy" in prediction_prompt
-    assert 'task_type="form_fill";route="fill_form"' in prediction_prompt
-    assert 'safety.reason="requires_confirmation"' in prediction_prompt
-    assert "confirmation_required=true" in prediction_prompt
-    assert "slots.field 保存字段名" in prediction_prompt
-    assert "unsafe payment block policy" in prediction_prompt
-    assert 'task_type="blocked";route="deny"' in prediction_prompt
-    assert 'safety.allow=false;safety.reason="unsafe_payment"' in prediction_prompt
-    assert "不是 evaluator normalization" in prediction_prompt
-    assert "prediction repair 或 re-score" in prediction_prompt
+    for text in (training_text, prediction_prompt):
+        assert "public navigation canonical policy" in text
+        assert 'task_type="navigate";route="open_url"' in text
+        assert 'safety.reason="public_readonly"' in text
+        assert 'route="open_url"' in text
+        assert "slots.url 必须使用 canonical URL" in text
+        assert "ambiguous clarify policy" in text
+        assert 'task_type="clarify";route="clarify"' in text
+        assert 'safety.reason="ambiguous_request"' in text
+        assert "form confirmation policy" in text
+        assert 'task_type="form_fill";route="fill_form"' in text
+        assert 'safety.reason="requires_confirmation"' in text
+        assert "confirmation_required=true" in text
+        assert "slots.field 保存字段名" in text
+        assert "unsafe payment block policy" in text
+        assert 'task_type="blocked";route="deny"' in text
+        assert 'safety.allow=false;safety.reason="unsafe_payment"' in text
+        assert "不是 evaluator normalization" in text
+        assert "prediction repair 或 re-score" in text
     assert "gold-field-token" in training_text
     assert "gold-field-token" not in prediction_prompt
     assert "填写 gold-field-token 并确认" not in prediction_prompt
@@ -673,9 +733,9 @@ def test_sft_prompts_expose_merged_residual_canonical_policy_without_gold_target
     summary = formatting.prompt_constraint_summary(prediction_prompt)
 
     for text in (clarify_training_text, blocked_training_text):
-        assert "Unified gold-free training policy" in text
-        assert "clarify/clarify ambiguous_request ambiguity" in text
-        assert "blocked/deny unsafe_payment reason" in text
+        assert "merged residual canonical policy" in text
+        assert 'normalized_command="拒绝代替用户付款"' in text
+        assert 'normalized_command="拒绝代替用户下单" 是 strict-wrong' in text
     for text in (clarify_prediction_prompt, blocked_prediction_prompt):
         assert "merged residual canonical policy" in text
         assert 'slots.ambiguity="目标不明确，未指定具体网站或页面"' in text
@@ -693,7 +753,7 @@ def test_sft_prompts_expose_merged_residual_canonical_policy_without_gold_target
     assert summary["unsafe_payment_canonical_command_visible"] is True
 
 
-def test_public_sample_sft_training_text_stays_within_runtime_sequence_budget() -> None:
+def test_public_sample_sft_training_messages_reuse_prediction_prefix_without_gold_routing() -> None:
     rows_path = Path("data/public-samples/sft_public_sample.jsonl")
     rows = [json.loads(line) for line in rows_path.read_text(encoding="utf-8").splitlines() if line.strip()]
 
@@ -706,7 +766,9 @@ def test_public_sample_sft_training_text_stays_within_runtime_sequence_budget() 
             provenance=payload["provenance"],
         )
 
-        assert len(formatting.format_sft_training_text(row, tokenizer=None)) <= 2048
+        assert formatting.format_sft_messages(row)[:-1] == formatting.format_sft_prompt_messages(
+            formatting.PredictionInput.from_sft_row(row)
+        )
 
 
 def test_public_sample_prediction_prompt_policy_examples_do_not_include_gold_targets() -> None:

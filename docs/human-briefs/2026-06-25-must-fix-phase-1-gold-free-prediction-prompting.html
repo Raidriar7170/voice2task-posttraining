@@ -19,15 +19,16 @@
 <body>
   <main>
     <h1>Must Fix Phase 1: Gold-free prediction prompting</h1>
-    <div class="status">Status: applying, validation passed locally</div>
-    <p><strong>结论：</strong>默认预测 prompt 已改为 <code>unified_gold_free_v1</code>，由 inference-only <code>PredictionInput</code> 渲染，不再通过 <code>target_contract</code>、任务类型、route 或 slots 选择系统 prompt。</p>
+    <div class="status">Status: completed, validation passed locally</div>
+    <p><strong>结论：</strong>默认预测 prompt 已改为 <code>unified_gold_free_v1</code>，由 inference-only <code>PredictionInput</code> 渲染；SFT 训练 messages 现在严格等于共享预测 messages 加 assistant gold target。</p>
 
     <section class="grid">
       <div class="box">
         <h2>本阶段改动</h2>
         <ul>
           <li>新增 <code>PredictionInput</code>，默认预测 renderer 拒绝 <code>SFTDatasetRow</code>。</li>
-          <li>训练 prompt 使用统一 gold-free 前缀；gold contract 仅作为 SFT assistant target。</li>
+          <li><code>format_sft_messages(row)[:-1]</code> 复用 <code>format_sft_prompt_messages(PredictionInput.from_sft_row(row))</code>。</li>
+          <li>gold contract 仅作为 SFT assistant target，不参与 system/user prompt 选择。</li>
           <li>预测 metadata 和 prompt snapshot 记录 <code>unified_gold_free_v1</code>。</li>
         </ul>
       </div>
@@ -38,13 +39,15 @@
           <li><code>src/voice2task/training.py</code></li>
           <li><code>src/voice2task/evaluation.py</code></li>
           <li><code>tests/test_formatting_training.py</code></li>
+          <li><code>tests/test_a100_sft_smoke.py</code></li>
+          <li><code>tests/test_evaluator_reports.py</code></li>
         </ul>
       </div>
     </section>
 
     <h2>验证结果</h2>
     <ul>
-      <li><code>PYTHONPATH=src pytest -q</code>: passed, 605 tests.</li>
+      <li><code>PYTHONPATH=src pytest -q</code>: passed, 607 tests.</li>
       <li><code>PYTHONPATH=src ruff check src tests</code>: passed.</li>
       <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>: passed, 11 specs.</li>
       <li><code>python scripts/check_current_truth_surface.py</code>: passed.</li>
@@ -53,7 +56,7 @@
     </ul>
 
     <h2>Remaining Risks</h2>
-    <p>本阶段不重跑 GPU 预测、不声明模型质量提升、不改评测指标。历史 fixture/oracle-style artifacts 仍只能作为显式诊断或管线验证证据。</p>
+    <p>本阶段不重跑 GPU 预测、不声明模型质量提升、不改评测指标。完整共享 prompt 比旧 compact training prompt 更长；后续重新训练必须显式确认序列预算，不能复用旧 2048 配置并假定可用。历史 fixture/oracle-style artifacts 仍只能作为显式诊断或管线验证证据。</p>
 
     <h2>Next Step</h2>
     <p>进入 Phase 2：严格 schema 与语义 contract validation；不要在 Phase 1 diff 中扩展到 lockbox 或 README 改写。</p>

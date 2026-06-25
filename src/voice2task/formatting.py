@@ -137,21 +137,9 @@ REPAIR_SYSTEM_PROMPT = SYSTEM_PROMPT
 PREDICTION_SYSTEM_PROMPT = f"{SYSTEM_PROMPT}{PREDICTION_OUTPUT_BOUNDARY_RULES}"
 EXTRACT_PREDICTION_SYSTEM_PROMPT = f"{EXTRACT_SYSTEM_PROMPT}{PREDICTION_OUTPUT_BOUNDARY_RULES}"
 REPAIR_PREDICTION_SYSTEM_PROMPT = f"{REPAIR_SYSTEM_PROMPT}{PREDICTION_OUTPUT_BOUNDARY_RULES}"
-UNIFIED_TRAINING_SYSTEM_PROMPT = (
-    f"{BASE_SYSTEM_PROMPT_PREFIX}"
-    "Unified gold-free training policy: do not choose the prompt from target_contract/task/route/slots. "
-    "Supported mappings: search/search_web public_readonly query; extract/extract_page public_readonly target; "
-    "navigate/open_url public_readonly url; clarify/clarify ambiguous_request ambiguity; "
-    "form_fill/fill_form requires_confirmation field; blocked/deny unsafe_payment reason. "
-    "Use canonical Chinese normalized_command, not verbatim ASR. "
-    "slots 必须是 JSON object，不是 array/list；"
-    f"{CONTRACT_REQUIRED_FIELD_SKELETON}"
-    f"{CONTRACT_OUTPUT_BOUNDARY_RULES}"
-    "禁 GUI 动作。"
-)
-TRAINING_SYSTEM_PROMPT = UNIFIED_TRAINING_SYSTEM_PROMPT
-EXTRACT_TRAINING_SYSTEM_PROMPT = UNIFIED_TRAINING_SYSTEM_PROMPT
-REPAIR_TRAINING_SYSTEM_PROMPT = UNIFIED_TRAINING_SYSTEM_PROMPT
+TRAINING_SYSTEM_PROMPT = PREDICTION_SYSTEM_PROMPT
+EXTRACT_TRAINING_SYSTEM_PROMPT = PREDICTION_SYSTEM_PROMPT
+REPAIR_TRAINING_SYSTEM_PROMPT = PREDICTION_SYSTEM_PROMPT
 
 FORMATTING_POLICY: dict[str, Any] = {
     "policy": "shared_contract_chat_template",
@@ -344,8 +332,7 @@ def _contract_json(contract: BrowserTaskContract | dict[str, Any]) -> str:
 
 def format_sft_messages(row: SFTDatasetRow) -> list[dict[str, str]]:
     return [
-        {"role": "system", "content": TRAINING_SYSTEM_PROMPT},
-        {"role": "user", "content": row.input_text},
+        *format_sft_prompt_messages(PredictionInput.from_sft_row(row)),
         {"role": "assistant", "content": canonical_contract_json(row.target_contract)},
     ]
 

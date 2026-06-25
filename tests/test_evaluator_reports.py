@@ -1207,8 +1207,8 @@ def test_source_diagnostics_include_sft_target_template_alignment_evidence(tmp_p
     alignment = diagnostics["sft_target_template_alignment"]
     assert alignment["summary"]["diagnostic_status"] == "public_safe_structural_evidence"
     assert alignment["summary"]["row_count"] == 1
-    assert alignment["summary"]["all_rows_share_system_user_prefix"] is False
-    assert alignment["summary"]["all_rows_share_core_system_user_prefix"] is False
+    assert alignment["summary"]["all_rows_share_system_user_prefix"] is True
+    assert alignment["summary"]["all_rows_share_core_system_user_prefix"] is True
     assert alignment["summary"]["all_prediction_prompts_include_prediction_output_boundary"] is True
     assert alignment["summary"]["all_training_text_contains_assistant_target"] is True
     assert alignment["summary"]["all_prediction_prompts_exclude_assistant_target"] is True
@@ -1242,8 +1242,8 @@ def test_source_diagnostics_include_sft_target_template_alignment_evidence(tmp_p
 
     row = alignment["rows"][0]
     assert row["row_id"] == "train-search"
-    assert row["same_system_user_prefix"] is False
-    assert row["same_core_system_user_prefix"] is False
+    assert row["same_system_user_prefix"] is True
+    assert row["same_core_system_user_prefix"] is True
     assert row["prediction_only_boundary_suffix_visible"] is True
     assert row["assistant_contract_target_in_training_text"] is True
     assert row["assistant_contract_target_in_prediction_prompt"] is False
