@@ -1,0 +1,135 @@
+{
+  "run_id": "lockbox-v1-final-sft-prep-20260626T175358Z",
+  "stage": "final_lockbox_evaluation_preparation",
+  "status": "trained_dev_smoke_completed_lockbox_not_run",
+  "lockbox_run_status": "not_run",
+  "lockbox_failure_inspection": false,
+  "git_commit": "3fb352b49a4dfbca891687a11703aa6521de4a55",
+  "data_freeze_commit": "3fb352b",
+  "train_dataset": {
+    "manifest_id": "public-sample-20260619T090925Z",
+    "manifest_path": "data/public-samples/manifest_public_sample.json",
+    "manifest_file_sha256": "f866c173795e97953b1dec85611b405867d0a29497910282f99d399f109cda95",
+    "sft_file_path": "data/public-samples/sft_public_sample.jsonl",
+    "sft_file_sha256": "4b677420f766555c04199f15f69f41f3b3ad36ad3cd5c33d2b40b0e3f8573587",
+    "train_split_canonical_sha256": "2dcc97a41f8c4417160e7ee5f5dc8de6e49410ffa7d2f43828dfb99b7bdba02d",
+    "hash_method": "SHA-256 over ordered train rows serialized as canonical JSON with sort_keys=true, separators=(',', ':'), UTF-8, newline-delimited",
+    "split_counts": {
+      "train": 282,
+      "dev": 207,
+      "test": 207
+    },
+    "training_policy": "existing public sample train split only; no new rows; no lockbox rows"
+  },
+  "lockbox": {
+    "path": "data/lockbox/lockbox-v1.jsonl",
+    "manifest_path": "data/lockbox/lockbox-v1.manifest.json",
+    "lockbox_hash": "06114cf3ad6029930284af5f2245fb2c4a8174fd35c6a1107f4c73482b555b33",
+    "evaluation_allowed_in_this_stage": false
+  },
+  "prompt_policy": "unified_gold_free_v1",
+  "base_model": {
+    "public_id": "Qwen/Qwen2.5-7B-Instruct",
+    "revision": "16c174980d8a1492910551634b4969e69cdc2444"
+  },
+  "sft_config": {
+    "trainer": "trl.SFTTrainer",
+    "seed": 7170,
+    "max_seq_length": 2048,
+    "num_train_epochs": 12,
+    "max_steps": 3132,
+    "per_device_train_batch_size": 1,
+    "gradient_accumulation_steps": 1,
+    "learning_rate": 0.00005,
+    "save_strategy": "no",
+    "lora": {
+      "r": 16,
+      "alpha": 32,
+      "dropout": 0.05,
+      "target_modules": [
+        "q_proj",
+        "k_proj",
+        "v_proj",
+        "o_proj"
+      ]
+    }
+  },
+  "decoding_config": {
+    "strategy": "greedy",
+    "do_sample": false,
+    "max_new_tokens": 256,
+    "schema_guard_enabled": true,
+    "schema_retry_enabled": true,
+    "schema_retry_max_attempts": 1,
+    "markdown_fence_suppression_enabled": true,
+    "schema_repair_applied": false,
+    "posthoc_prediction_repair": false
+  },
+  "evaluator": {
+    "version": "strict_contract_ladder_existing",
+    "command": "voice2task-eval metrics",
+    "metric_names": [
+      "json_parse_rate",
+      "json_parse_count",
+      "strict_schema_valid_rate",
+      "strict_schema_valid_count",
+      "semantic_contract_valid_rate",
+      "semantic_contract_valid_count",
+      "json_valid_rate",
+      "task_type_accuracy",
+      "route_accuracy",
+      "safety_precision",
+      "safety_recall",
+      "safety_tp",
+      "safety_fp",
+      "safety_fn",
+      "safety_predicted_positive_support",
+      "safety_gold_positive_support",
+      "safety_predicted_stop_support",
+      "safety_gold_stop_support",
+      "confirmation_accuracy",
+      "slot_f1",
+      "slot_f1_soft",
+      "contract_exact_match"
+    ]
+  },
+  "output_paths": {
+    "adapter_private": "<a100_project_root>/voice2task-lockbox-v1-final-sft-prep-20260626T175358Z/runs/final-sft/adapter",
+    "adapter_metadata_private": "<a100_project_root>/voice2task-lockbox-v1-final-sft-prep-20260626T175358Z/runs/final-sft/adapter_metadata.json",
+    "dev_smoke_predictions_private": "<a100_project_root>/voice2task-lockbox-v1-final-sft-prep-20260626T175358Z/evidence/dev-smoke/predictions.jsonl",
+    "dev_smoke_metrics_public": "reports/public-sample/lockbox-v1-final-sft-prep/dev-smoke/metrics.json",
+    "run_card_public": "reports/public-sample/lockbox-v1-final-sft-prep/final-run-card.json"
+  },
+  "adapter": {
+    "training_status": "training_completed",
+    "training_exit_code": 0,
+    "observed_optimizer_steps": 3132,
+    "adapter_reference": "<a100_project_root>/voice2task-lockbox-v1-final-sft-prep-20260626T175358Z/runs/final-sft/adapter",
+    "adapter_model_sha256": "d7722c2c11b08a848f4c3bb46c9088a26121e231fbaf18f8fb55eab7f3becfac",
+    "adapter_config_sha256": "75007a103ecbf2f61b66c3578535743b3e87f1106393edbd476632eb0e832d83",
+    "adapter_weights_copied_to_git": false
+  },
+  "smoke_plan": {
+    "split": "dev",
+    "rows": 24,
+    "source": "data/public-samples/sft_public_sample.jsonl dev split",
+    "lockbox_rows_used": 0,
+    "purpose": "pipeline and artifact schema smoke only; not final lockbox metrics"
+  },
+  "smoke_result": {
+    "status": "completed",
+    "prediction_status": "private_adapter_predictions_written",
+    "prediction_count": 24,
+    "metrics_path": "reports/public-sample/lockbox-v1-final-sft-prep/dev-smoke/metrics.json",
+    "metadata_path": "reports/public-sample/lockbox-v1-final-sft-prep/dev-smoke/prediction_metadata.json"
+  },
+  "forbidden_actions_observed": {
+    "lockbox_evaluation_run": false,
+    "lockbox_rows_modified": false,
+    "training_data_added": false,
+    "prompt_tuned_against_lockbox": false,
+    "dpo_or_grpo_started": false,
+    "readme_rewritten": false
+  },
+  "pending_updates": []
+}

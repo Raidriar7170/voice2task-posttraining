@@ -1,0 +1,69 @@
+{
+  "adapter_files": {
+    "README.md": {
+      "bytes": 5262,
+      "sha256": "088fc697ae52cb14f1e808e5c967c8be13cb0256da184ad882dd41ba8e95c617"
+    },
+    "adapter_config.json": {
+      "bytes": 1030,
+      "sha256": "75007a103ecbf2f61b66c3578535743b3e87f1106393edbd476632eb0e832d83"
+    },
+    "adapter_model.safetensors": {
+      "bytes": 40400200,
+      "sha256": "d7722c2c11b08a848f4c3bb46c9088a26121e231fbaf18f8fb55eab7f3becfac"
+    }
+  },
+  "adapter_reference": "<a100_project_root>/voice2task-lockbox-v1-final-sft-prep-20260626T175358Z/runs/final-sft/adapter",
+  "adapter_release_status": "not_released",
+  "artifact_policy": {
+    "adapter_weights_copied_to_git": false,
+    "private_paths_omitted": true,
+    "raw_training_log_copied_to_git": false
+  },
+  "base_model": "Qwen/Qwen2.5-7B-Instruct",
+  "base_model_revision": "16c174980d8a1492910551634b4969e69cdc2444",
+  "dataset_manifest_id": "public-sample-20260619T090925Z",
+  "dataset_manifest_path": "data/public-samples/manifest_public_sample.json",
+  "lockbox_run_status": "not_run",
+  "loss_mask_policy": {
+    "assistant_target": "browser_task_contract_json",
+    "full_text_causal_lm_labels": false,
+    "policy": "assistant_only_completion_only",
+    "prompt_label_id": -100,
+    "trainer_integration": "trl_sfttrainer_pretokenized_input_ids_attention_mask_labels"
+  },
+  "observed_optimizer_steps": 3132,
+  "prompt_policy": "unified_gold_free_v1",
+  "release_status": "not_released",
+  "run_id": "lockbox-v1-final-sft-prep-20260626T175358Z",
+  "stack": "transformers+peft+trl+pretokenized_assistant_only_labels",
+  "stage": "sft",
+  "train_result_metrics": {
+    "epoch": 11.106382978723405,
+    "total_flos": 1.4392387678147584e17,
+    "train_loss": 0.011293600058661207,
+    "train_runtime": 790.7011,
+    "train_samples_per_second": 3.961,
+    "train_steps_per_second": 3.961
+  },
+  "training_budget": {
+    "configured_max_steps": 3132,
+    "effective_batch_size": 1,
+    "gradient_accumulation_steps": 1,
+    "num_train_epochs": 12.0,
+    "observed_optimizer_steps": 3132,
+    "per_device_train_batch_size": 1,
+    "scheduler_max_steps": 3132,
+    "step_matched_not_token_matched": true,
+    "step_matching_unit": "optimizer_steps",
+    "target_tokens_per_single_pass": 16863,
+    "target_tokens_seen_estimate": 187287,
+    "target_tokens_seen_status": "estimated_from_label_tokens_and_step_budget",
+    "theoretical_examples_seen": 3132,
+    "train_row_count": 282
+  },
+  "training_exit_code": 0,
+  "training_rows_used": 282,
+  "training_split": "train",
+  "training_status": "training_completed"
+}

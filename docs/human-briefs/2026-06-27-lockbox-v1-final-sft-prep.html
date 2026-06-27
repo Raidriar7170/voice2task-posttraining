@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Voice2Task lockbox v1 final SFT prep</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; color: #17202a; background: #f7f8fa; }
+    main { max-width: 900px; margin: 0 auto; padding: 32px 20px 48px; }
+    h1 { font-size: 28px; margin: 0 0 8px; }
+    h2 { font-size: 18px; margin-top: 28px; }
+    .status { display: inline-block; padding: 4px 10px; border-radius: 6px; background: #e8f5ee; color: #17633a; font-weight: 600; }
+    section { background: #fff; border: 1px solid #e3e7ec; border-radius: 8px; padding: 18px 20px; margin-top: 16px; }
+    code { background: #eef2f6; border-radius: 4px; padding: 1px 4px; }
+    ul { margin: 8px 0 0 20px; padding: 0; }
+    li { margin: 6px 0; }
+    a { color: #1957a6; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Voice2Task lockbox v1 final SFT prep</h1>
+  <p><span class="status">已完成准备；lockbox 未运行</span></p>
+
+  <section>
+    <h2>一句话结论</h2>
+    <p>已用现有 public sample train split 训练 final SFT adapter，并只在非 lockbox dev-smoke 上验证预测/评估产物；最终 lockbox evaluation 仍未运行，也没有 lockbox 指标。</p>
+  </section>
+
+  <section>
+    <h2>本阶段做了什么</h2>
+    <ul>
+      <li>训练数据固定为 <code>public-sample-20260619T090925Z</code> 的 282 条 train rows。</li>
+      <li>prompt policy 固定为 <code>unified_gold_free_v1</code>。</li>
+      <li>训练 final LoRA adapter：Qwen2.5-7B、LoRA r16/alpha32/dropout0.05、seed 7170、3132 optimizer steps。</li>
+      <li>只跑了 24 条 public dev rows 的 smoke prediction/evaluation。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>关键证据</h2>
+    <ul>
+      <li>Run card: <a href="../../reports/public-sample/lockbox-v1-final-sft-prep/final-run-card.md">final-run-card.md</a></li>
+      <li>Adapter summary: <a href="../../reports/public-sample/lockbox-v1-final-sft-prep/adapter-training-summary.json">adapter-training-summary.json</a></li>
+      <li>Artifact verification: <a href="../../reports/public-sample/lockbox-v1-final-sft-prep/artifact-verification.json">artifact-verification.json</a></li>
+      <li>Dev-smoke metrics: <a href="../../reports/public-sample/lockbox-v1-final-sft-prep/dev-smoke/metrics.json">metrics.json</a></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>边界</h2>
+    <ul>
+      <li>没有运行 lockbox evaluation。</li>
+      <li>没有查看 lockbox failure。</li>
+      <li>没有修改 lockbox rows 或 manifest。</li>
+      <li>没有添加训练数据、DPO/GRPO、prompt tuning 或 README rewrite。</li>
+      <li>dev-smoke metrics 只证明 pipeline 产物结构可用，不是最终 lockbox 结果。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>验证</h2>
+    <ul>
+      <li><code>python -m json.tool</code> on generated JSON artifacts: pass</li>
+      <li><code>voice2task.leak_scan.scan_paths</code>: pass</li>
+      <li><code>PYTHONPATH=src python scripts/check_current_truth_surface.py</code>: pass</li>
+      <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>: pass</li>
+      <li><code>PYTHONPATH=src ruff check src tests</code>: pass</li>
+      <li><code>git diff --check</code>: pass</li>
+    </ul>
+  </section>
+</main>
+</body>
+</html>
