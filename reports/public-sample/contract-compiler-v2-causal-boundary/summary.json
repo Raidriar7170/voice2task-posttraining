@@ -1,0 +1,1165 @@
+{
+  "audit_status": "ARCHIVED",
+  "causal_estimands": {
+    "model_learning": {
+      "confounders": [
+        "spent_public_dev_test_reuse",
+        "cross_split_template_or_provenance_contamination",
+        "single_seed_or_unmatched_training",
+        "renderer_policy_mismatch",
+        "compiler_filled_metrics",
+        "prompt_or_decoding_change",
+        "evaluator_version_change",
+        "post_hoc_selection"
+      ],
+      "control": "matched_training_control_arm",
+      "denominators": {
+        "primary": "all_preregistered_eligible_families"
+      },
+      "eligible_population": "future_clean_family_level_evaluation_set",
+      "intervention": "matched_training_arm_with_predeclared_multi_seed_aggregation",
+      "invalid_or_unsupported_handling": "retain_as_failure_without_compiler_attribution",
+      "invariants": [
+        "matched_data_boundary_identity",
+        "eligible_evaluation_identity",
+        "row_and_order_identity",
+        "prompt_and_decoding_identity",
+        "compiler_policy_identity",
+        "evaluator_identity",
+        "optimization_budget_identity",
+        "no_prediction_repair"
+      ],
+      "matched_arm_requirements": [
+        "same_data_boundary",
+        "same_prompt_and_decoding",
+        "same_optimization_budget",
+        "same_compiler_policy",
+        "same_evaluator_version",
+        "same_eligible_evaluation_set"
+      ],
+      "negative_controls": [
+        "compiler_filled_fields",
+        "constant_fields",
+        "field_copying",
+        "evaluation_plumbing"
+      ],
+      "observation_unit": "one_preregistered_evaluation_family",
+      "outcomes": [
+        "family_level_model_authored_field_quality",
+        "uncertainty_and_guardrails"
+      ],
+      "status": "CAUSAL_IDENTIFICATION_BLOCKED",
+      "status_reasons": [
+        "public_dev_test_spent",
+        "one_look_lockbox_consumed",
+        "no_clean_matched_multi_seed_training_arms"
+      ]
+    },
+    "system_compiler": {
+      "confounders": [
+        "spent_public_dev_test_reuse",
+        "cross_split_template_or_provenance_contamination",
+        "single_seed_or_unmatched_training",
+        "renderer_policy_mismatch",
+        "compiler_filled_metrics",
+        "prompt_or_decoding_change",
+        "evaluator_version_change",
+        "post_hoc_selection"
+      ],
+      "control": "identity_or_preserve_legacy_over_identical_frozen_raw_core",
+      "denominators": {
+        "primary": "full_fixed_itt",
+        "secondary": "supported_only_diagnostic"
+      },
+      "effect_label_if_future_identified": "system_compiler_transformation_effect",
+      "eligible_population": "future_preregistered_clean_fixed_evaluation_population",
+      "intervention": "candidate_compiler_over_identical_frozen_raw_core",
+      "invalid_or_unsupported_handling": "count_as_primary_itt_failure",
+      "invariants": [
+        "raw_core_identity",
+        "row_and_order_identity",
+        "source_hash_identity",
+        "prompt_and_decoding_identity",
+        "evaluator_identity",
+        "no_prediction_repair"
+      ],
+      "matched_arm_requirements": [
+        "same_model_output",
+        "same_data",
+        "same_prompt_and_decoding",
+        "same_evaluator_version"
+      ],
+      "negative_controls": [
+        "constant_only",
+        "field_copy_only",
+        "policy_default_only",
+        "plumbing_only"
+      ],
+      "observation_unit": "one_frozen_raw_core_record",
+      "outcomes": [
+        "compiled_v1_strict_exact_itt",
+        "safety_and_slot_guardrails"
+      ],
+      "status": "CAUSAL_IDENTIFICATION_BLOCKED",
+      "status_reasons": [
+        "no_preregistered_clean_matched_compiler_comparison"
+      ]
+    }
+  },
+  "decoding_inventory": [
+    {
+      "classification": "PRESENT",
+      "control": "json_only_prompting",
+      "present": true,
+      "source_path": "src/voice2task/formatting.py",
+      "source_sha256": "a5933b89f9f9b43358619b15264047bc449a83dacadfc3e49db88d38d434a8f0",
+      "stable_identity": "PREDICTION_SYSTEM_PROMPT"
+    },
+    {
+      "classification": "PRESENT",
+      "control": "greedy_decoding",
+      "present": true,
+      "source_path": "src/voice2task/training.py",
+      "source_sha256": "978e2df42be7b1e020c5215febaf843a527b0fb96469273c93b66ce20b62db3c",
+      "stable_identity": "_decode_prediction_attempt"
+    },
+    {
+      "classification": "PRESENT",
+      "control": "do_sample_false",
+      "present": true,
+      "source_path": "src/voice2task/training.py",
+      "source_sha256": "978e2df42be7b1e020c5215febaf843a527b0fb96469273c93b66ce20b62db3c",
+      "stable_identity": "\"do_sample\": False"
+    },
+    {
+      "classification": "PRESENT",
+      "control": "markdown_fence_suppression",
+      "present": true,
+      "source_path": "src/voice2task/training.py",
+      "source_sha256": "978e2df42be7b1e020c5215febaf843a527b0fb96469273c93b66ce20b62db3c",
+      "stable_identity": "_markdown_fence_bad_words_ids"
+    },
+    {
+      "classification": "PRESENT",
+      "control": "post_generation_strict_parse_schema_guard",
+      "present": true,
+      "source_path": "src/voice2task/training.py",
+      "source_sha256": "978e2df42be7b1e020c5215febaf843a527b0fb96469273c93b66ce20b62db3c",
+      "stable_identity": "_schema_guard_status"
+    },
+    {
+      "classification": "PRESENT",
+      "control": "schema_retry_max_one",
+      "present": true,
+      "source_path": "src/voice2task/training.py",
+      "source_sha256": "978e2df42be7b1e020c5215febaf843a527b0fb96469273c93b66ce20b62db3c",
+      "stable_identity": "schema_retry_max_attempts"
+    },
+    {
+      "absence_terms": [
+        "prefix_allowed_tokens_fn",
+        "constraints",
+        "force_words_ids",
+        "grammar",
+        "json_schema"
+      ],
+      "classification": "ABSENT",
+      "control": "token_level_grammar_json_schema_constrained_decoding",
+      "inspected_callsite": "model.generate(**generation_kwargs)",
+      "present": false,
+      "source_path": "src/voice2task/training.py",
+      "source_sha256": "978e2df42be7b1e020c5215febaf843a527b0fb96469273c93b66ce20b62db3c",
+      "stable_identity": "_decode_prediction_attempt"
+    }
+  ],
+  "evidence_classification": {
+    "full_compiler_causal_identification": "CAUSAL_IDENTIFICATION_BLOCKED",
+    "model_learning_causal_identification": "CAUSAL_IDENTIFICATION_BLOCKED",
+    "renderer_mechanics": "DESCRIPTIVE_ONLY"
+  },
+  "evidence_status_reasons": {
+    "full_compiler_causal_identification": {
+      "reasons": [
+        "candidate_compiler_not_implemented_or_runtime_wired",
+        "no_preregistered_clean_matched_compiler_control_and_intervention",
+        "public_dev_test_are_development_only_spent",
+        "lockbox_v1_one_look_evidence_already_consumed"
+      ],
+      "status": "CAUSAL_IDENTIFICATION_BLOCKED"
+    },
+    "model_learning_causal_identification": {
+      "reasons": [
+        "no_clean_eligible_evaluation_set",
+        "no_matched_multi_seed_training_arms_or_predeclared_uncertainty",
+        "public_dev_test_are_development_only_spent",
+        "lockbox_v1_one_look_evidence_already_consumed"
+      ],
+      "status": "CAUSAL_IDENTIFICATION_BLOCKED"
+    },
+    "renderer_mechanics": {
+      "reasons": [
+        "fixed_seed_population_includes_development_only_spent_public_dev_test",
+        "renderer_support_and_self_consistency_do_not_supply_intervention_control_arms",
+        "policy_self_consistency_is_not_external_semantic_correctness"
+      ],
+      "status": "DESCRIPTIVE_ONLY"
+    }
+  },
+  "execution_and_claim_flags": {
+    "a100_execution": false,
+    "adapter_release": false,
+    "checkpoint_release": false,
+    "clean_evaluation_run": false,
+    "compiler_implementation": false,
+    "data_mutation": false,
+    "decoder_implementation": false,
+    "evaluator_default_change": false,
+    "heldout_recovery_claim": false,
+    "historical_metrics_rescored": false,
+    "live_browser_benchmark_improvement_claim": false,
+    "lockbox_row_level_read": false,
+    "model_improvement_claim": false,
+    "natural_asr_generalization_claim": false,
+    "prediction_run": false,
+    "production_readiness_claim": false,
+    "prompt_change": false,
+    "public_dev_test_selection": false,
+    "safety_readiness_claim": false,
+    "training_run": false
+  },
+  "field_authority": [
+    {
+      "authority_status": "HYPOTHETICAL_UNSPECIFIED",
+      "constraint_owner": "candidate_semantic_core_schema_unspecified",
+      "constraint_owner_status": "HYPOTHETICAL_UNSPECIFIED",
+      "field_path": "semantic_core.intent",
+      "mutable_at_candidate_compiler_stage": false,
+      "participation": {
+        "downstream_execution_gate": "HYPOTHETICAL",
+        "policy_self_consistency": "HYPOTHETICAL",
+        "raw_core_validity": "HYPOTHETICAL",
+        "strict_v1_exact": "HYPOTHETICAL"
+      },
+      "source_anchor": "candidate_semantic_core",
+      "source_path": "CONTEXT.md",
+      "source_rule_or_symbol": "candidate_semantic_core",
+      "transform": "candidate_model_output_transform_unspecified",
+      "transform_status": "HYPOTHETICAL_UNSPECIFIED",
+      "value_origin": "model_authored"
+    },
+    {
+      "authority_status": "HYPOTHETICAL_UNSPECIFIED",
+      "constraint_owner": "candidate_semantic_core_schema_unspecified",
+      "constraint_owner_status": "HYPOTHETICAL_UNSPECIFIED",
+      "field_path": "semantic_core.risk",
+      "mutable_at_candidate_compiler_stage": false,
+      "participation": {
+        "downstream_execution_gate": "HYPOTHETICAL",
+        "policy_self_consistency": "HYPOTHETICAL",
+        "raw_core_validity": "HYPOTHETICAL",
+        "strict_v1_exact": "HYPOTHETICAL"
+      },
+      "source_anchor": "candidate_semantic_core",
+      "source_path": "CONTEXT.md",
+      "source_rule_or_symbol": "candidate_semantic_core",
+      "transform": "candidate_model_output_transform_unspecified",
+      "transform_status": "HYPOTHETICAL_UNSPECIFIED",
+      "value_origin": "model_authored"
+    },
+    {
+      "authority_status": "HYPOTHETICAL_UNSPECIFIED",
+      "constraint_owner": "candidate_semantic_core_schema_unspecified",
+      "constraint_owner_status": "HYPOTHETICAL_UNSPECIFIED",
+      "field_path": "semantic_core.clarification",
+      "mutable_at_candidate_compiler_stage": false,
+      "participation": {
+        "downstream_execution_gate": "HYPOTHETICAL",
+        "policy_self_consistency": "HYPOTHETICAL",
+        "raw_core_validity": "HYPOTHETICAL",
+        "strict_v1_exact": "HYPOTHETICAL"
+      },
+      "source_anchor": "candidate_semantic_core",
+      "source_path": "CONTEXT.md",
+      "source_rule_or_symbol": "candidate_semantic_core",
+      "transform": "candidate_model_output_transform_unspecified",
+      "transform_status": "HYPOTHETICAL_UNSPECIFIED",
+      "value_origin": "model_authored"
+    },
+    {
+      "authority_status": "HYPOTHETICAL_UNSPECIFIED",
+      "constraint_owner": "candidate_semantic_core_schema_unspecified",
+      "constraint_owner_status": "HYPOTHETICAL_UNSPECIFIED",
+      "field_path": "semantic_core.slots.query",
+      "mutable_at_candidate_compiler_stage": false,
+      "participation": {
+        "downstream_execution_gate": "HYPOTHETICAL",
+        "policy_self_consistency": "HYPOTHETICAL",
+        "raw_core_validity": "HYPOTHETICAL",
+        "strict_v1_exact": "HYPOTHETICAL"
+      },
+      "source_anchor": "candidate_semantic_core",
+      "source_path": "CONTEXT.md",
+      "source_rule_or_symbol": "candidate_semantic_core",
+      "transform": "candidate_model_output_transform_unspecified",
+      "transform_status": "HYPOTHETICAL_UNSPECIFIED",
+      "value_origin": "model_authored"
+    },
+    {
+      "authority_status": "HYPOTHETICAL_UNSPECIFIED",
+      "constraint_owner": "candidate_semantic_core_schema_unspecified",
+      "constraint_owner_status": "HYPOTHETICAL_UNSPECIFIED",
+      "field_path": "semantic_core.slots.url",
+      "mutable_at_candidate_compiler_stage": false,
+      "participation": {
+        "downstream_execution_gate": "HYPOTHETICAL",
+        "policy_self_consistency": "HYPOTHETICAL",
+        "raw_core_validity": "HYPOTHETICAL",
+        "strict_v1_exact": "HYPOTHETICAL"
+      },
+      "source_anchor": "candidate_semantic_core",
+      "source_path": "CONTEXT.md",
+      "source_rule_or_symbol": "candidate_semantic_core",
+      "transform": "candidate_model_output_transform_unspecified",
+      "transform_status": "HYPOTHETICAL_UNSPECIFIED",
+      "value_origin": "model_authored"
+    },
+    {
+      "authority_status": "HYPOTHETICAL_UNSPECIFIED",
+      "constraint_owner": "candidate_semantic_core_schema_unspecified",
+      "constraint_owner_status": "HYPOTHETICAL_UNSPECIFIED",
+      "field_path": "semantic_core.slots.field",
+      "mutable_at_candidate_compiler_stage": false,
+      "participation": {
+        "downstream_execution_gate": "HYPOTHETICAL",
+        "policy_self_consistency": "HYPOTHETICAL",
+        "raw_core_validity": "HYPOTHETICAL",
+        "strict_v1_exact": "HYPOTHETICAL"
+      },
+      "source_anchor": "candidate_semantic_core",
+      "source_path": "CONTEXT.md",
+      "source_rule_or_symbol": "candidate_semantic_core",
+      "transform": "candidate_model_output_transform_unspecified",
+      "transform_status": "HYPOTHETICAL_UNSPECIFIED",
+      "value_origin": "model_authored"
+    },
+    {
+      "authority_status": "HYPOTHETICAL_UNSPECIFIED",
+      "constraint_owner": "candidate_semantic_core_schema_unspecified",
+      "constraint_owner_status": "HYPOTHETICAL_UNSPECIFIED",
+      "field_path": "semantic_core.slots.value",
+      "mutable_at_candidate_compiler_stage": false,
+      "participation": {
+        "downstream_execution_gate": "HYPOTHETICAL",
+        "policy_self_consistency": "HYPOTHETICAL",
+        "raw_core_validity": "HYPOTHETICAL",
+        "strict_v1_exact": "HYPOTHETICAL"
+      },
+      "source_anchor": "candidate_semantic_core",
+      "source_path": "CONTEXT.md",
+      "source_rule_or_symbol": "candidate_semantic_core",
+      "transform": "candidate_model_output_transform_unspecified",
+      "transform_status": "HYPOTHETICAL_UNSPECIFIED",
+      "value_origin": "model_authored"
+    },
+    {
+      "authority_status": "HYPOTHETICAL_UNSPECIFIED",
+      "constraint_owner": "candidate_semantic_core_schema_unspecified",
+      "constraint_owner_status": "HYPOTHETICAL_UNSPECIFIED",
+      "field_path": "semantic_core.slots.target",
+      "mutable_at_candidate_compiler_stage": false,
+      "participation": {
+        "downstream_execution_gate": "HYPOTHETICAL",
+        "policy_self_consistency": "HYPOTHETICAL",
+        "raw_core_validity": "HYPOTHETICAL",
+        "strict_v1_exact": "HYPOTHETICAL"
+      },
+      "source_anchor": "candidate_semantic_core",
+      "source_path": "CONTEXT.md",
+      "source_rule_or_symbol": "candidate_semantic_core",
+      "transform": "candidate_model_output_transform_unspecified",
+      "transform_status": "HYPOTHETICAL_UNSPECIFIED",
+      "value_origin": "model_authored"
+    },
+    {
+      "authority_status": "HYPOTHETICAL_UNSPECIFIED",
+      "constraint_owner": "candidate_semantic_core_schema_unspecified",
+      "constraint_owner_status": "HYPOTHETICAL_UNSPECIFIED",
+      "field_path": "semantic_core.slots.ambiguity",
+      "mutable_at_candidate_compiler_stage": false,
+      "participation": {
+        "downstream_execution_gate": "HYPOTHETICAL",
+        "policy_self_consistency": "HYPOTHETICAL",
+        "raw_core_validity": "HYPOTHETICAL",
+        "strict_v1_exact": "HYPOTHETICAL"
+      },
+      "source_anchor": "candidate_semantic_core",
+      "source_path": "CONTEXT.md",
+      "source_rule_or_symbol": "candidate_semantic_core",
+      "transform": "candidate_model_output_transform_unspecified",
+      "transform_status": "HYPOTHETICAL_UNSPECIFIED",
+      "value_origin": "model_authored"
+    },
+    {
+      "authority_status": "HYPOTHETICAL_UNSPECIFIED",
+      "constraint_owner": "candidate_semantic_core_schema_unspecified",
+      "constraint_owner_status": "HYPOTHETICAL_UNSPECIFIED",
+      "field_path": "semantic_core.slots.reason",
+      "mutable_at_candidate_compiler_stage": false,
+      "participation": {
+        "downstream_execution_gate": "HYPOTHETICAL",
+        "policy_self_consistency": "HYPOTHETICAL",
+        "raw_core_validity": "HYPOTHETICAL",
+        "strict_v1_exact": "HYPOTHETICAL"
+      },
+      "source_anchor": "candidate_semantic_core",
+      "source_path": "CONTEXT.md",
+      "source_rule_or_symbol": "candidate_semantic_core",
+      "transform": "candidate_model_output_transform_unspecified",
+      "transform_status": "HYPOTHETICAL_UNSPECIFIED",
+      "value_origin": "model_authored"
+    },
+    {
+      "authority_status": "HYPOTHETICAL",
+      "constraint_owner": "TASK_TYPES",
+      "constraint_owner_status": "CURRENT_SOURCE_VERIFIED",
+      "field_path": "v1.task_type",
+      "mutable_at_candidate_compiler_stage": true,
+      "participation": {
+        "downstream_execution_gate": "PARTICIPATES",
+        "policy_self_consistency": "PARTICIPATES",
+        "raw_core_validity": "PARTICIPATES",
+        "strict_v1_exact": "PARTICIPATES"
+      },
+      "source_anchor": "TASK_TYPES =",
+      "source_path": "src/voice2task/schemas.py",
+      "source_rule_or_symbol": "TASK_TYPES =",
+      "transform": "candidate_policy_table",
+      "transform_status": "HYPOTHETICAL",
+      "value_origin": "policy_derived"
+    },
+    {
+      "authority_status": "HYPOTHETICAL",
+      "constraint_owner": "TASK_TYPE_SEMANTICS",
+      "constraint_owner_status": "CURRENT_SOURCE_VERIFIED",
+      "field_path": "v1.route",
+      "mutable_at_candidate_compiler_stage": true,
+      "participation": {
+        "downstream_execution_gate": "PARTICIPATES",
+        "policy_self_consistency": "PARTICIPATES",
+        "raw_core_validity": "PARTICIPATES",
+        "strict_v1_exact": "PARTICIPATES"
+      },
+      "source_anchor": "\"route\":",
+      "source_path": "src/voice2task/schemas.py",
+      "source_rule_or_symbol": "\"route\":",
+      "transform": "candidate_policy_table",
+      "transform_status": "HYPOTHETICAL",
+      "value_origin": "policy_derived"
+    },
+    {
+      "authority_status": "HYPOTHETICAL",
+      "constraint_owner": "TASK_TYPE_SEMANTICS",
+      "constraint_owner_status": "CURRENT_SOURCE_VERIFIED",
+      "field_path": "v1.safety.allow",
+      "mutable_at_candidate_compiler_stage": true,
+      "participation": {
+        "downstream_execution_gate": "PARTICIPATES",
+        "policy_self_consistency": "PARTICIPATES",
+        "raw_core_validity": "PARTICIPATES",
+        "strict_v1_exact": "PARTICIPATES"
+      },
+      "source_anchor": "\"safety_allow\":",
+      "source_path": "src/voice2task/schemas.py",
+      "source_rule_or_symbol": "\"safety_allow\":",
+      "transform": "candidate_policy_table",
+      "transform_status": "HYPOTHETICAL",
+      "value_origin": "policy_derived"
+    },
+    {
+      "authority_status": "HYPOTHETICAL",
+      "constraint_owner": "TASK_TYPE_SEMANTICS",
+      "constraint_owner_status": "CURRENT_SOURCE_VERIFIED",
+      "field_path": "v1.safety.reason",
+      "mutable_at_candidate_compiler_stage": true,
+      "participation": {
+        "downstream_execution_gate": "PARTICIPATES",
+        "policy_self_consistency": "PARTICIPATES",
+        "raw_core_validity": "PARTICIPATES",
+        "strict_v1_exact": "PARTICIPATES"
+      },
+      "source_anchor": "\"safety_reason\":",
+      "source_path": "src/voice2task/schemas.py",
+      "source_rule_or_symbol": "\"safety_reason\":",
+      "transform": "candidate_policy_table",
+      "transform_status": "HYPOTHETICAL",
+      "value_origin": "policy_derived"
+    },
+    {
+      "authority_status": "HYPOTHETICAL",
+      "constraint_owner": "TASK_TYPE_SEMANTICS",
+      "constraint_owner_status": "CURRENT_SOURCE_VERIFIED",
+      "field_path": "v1.confirmation_required",
+      "mutable_at_candidate_compiler_stage": true,
+      "participation": {
+        "downstream_execution_gate": "PARTICIPATES",
+        "policy_self_consistency": "PARTICIPATES",
+        "raw_core_validity": "PARTICIPATES",
+        "strict_v1_exact": "PARTICIPATES"
+      },
+      "source_anchor": "\"confirmation_required\":",
+      "source_path": "src/voice2task/schemas.py",
+      "source_rule_or_symbol": "\"confirmation_required\":",
+      "transform": "candidate_policy_table",
+      "transform_status": "HYPOTHETICAL",
+      "value_origin": "policy_derived"
+    },
+    {
+      "authority_status": "HYPOTHETICAL",
+      "constraint_owner": "TASK_TYPE_SEMANTICS.required_slots",
+      "constraint_owner_status": "CURRENT_SOURCE_VERIFIED",
+      "field_path": "v1.slots.query",
+      "mutable_at_candidate_compiler_stage": false,
+      "participation": {
+        "downstream_execution_gate": "PARTICIPATES",
+        "policy_self_consistency": "PARTICIPATES",
+        "raw_core_validity": "PARTICIPATES",
+        "strict_v1_exact": "PARTICIPATES"
+      },
+      "source_anchor": "\"required_slots\": (\"query\",)",
+      "source_path": "src/voice2task/schemas.py",
+      "source_rule_or_symbol": "\"required_slots\": (\"query\",)",
+      "transform": "copy_from_semantic_core",
+      "transform_status": "HYPOTHETICAL",
+      "value_origin": "model_authored"
+    },
+    {
+      "authority_status": "HYPOTHETICAL",
+      "constraint_owner": "TASK_TYPE_SEMANTICS.required_slots",
+      "constraint_owner_status": "CURRENT_SOURCE_VERIFIED",
+      "field_path": "v1.slots.url",
+      "mutable_at_candidate_compiler_stage": false,
+      "participation": {
+        "downstream_execution_gate": "PARTICIPATES",
+        "policy_self_consistency": "PARTICIPATES",
+        "raw_core_validity": "PARTICIPATES",
+        "strict_v1_exact": "PARTICIPATES"
+      },
+      "source_anchor": "\"required_slots\": (\"url\",)",
+      "source_path": "src/voice2task/schemas.py",
+      "source_rule_or_symbol": "\"required_slots\": (\"url\",)",
+      "transform": "copy_from_semantic_core",
+      "transform_status": "HYPOTHETICAL",
+      "value_origin": "model_authored"
+    },
+    {
+      "authority_status": "HYPOTHETICAL",
+      "constraint_owner": "TASK_TYPE_SEMANTICS.required_slots",
+      "constraint_owner_status": "CURRENT_SOURCE_VERIFIED",
+      "field_path": "v1.slots.field",
+      "mutable_at_candidate_compiler_stage": false,
+      "participation": {
+        "downstream_execution_gate": "PARTICIPATES",
+        "policy_self_consistency": "PARTICIPATES",
+        "raw_core_validity": "PARTICIPATES",
+        "strict_v1_exact": "PARTICIPATES"
+      },
+      "source_anchor": "\"required_slots\": (\"field\",)",
+      "source_path": "src/voice2task/schemas.py",
+      "source_rule_or_symbol": "\"required_slots\": (\"field\",)",
+      "transform": "copy_from_semantic_core",
+      "transform_status": "HYPOTHETICAL",
+      "value_origin": "model_authored"
+    },
+    {
+      "authority_status": "HYPOTHETICAL",
+      "constraint_owner": "BrowserTaskContract.slots_object_schema",
+      "constraint_owner_status": "CURRENT_SOURCE_VERIFIED",
+      "field_path": "v1.slots.value",
+      "mutable_at_candidate_compiler_stage": false,
+      "participation": {
+        "downstream_execution_gate": "PARTICIPATES",
+        "policy_self_consistency": "DOES_NOT_PARTICIPATE",
+        "raw_core_validity": "PARTICIPATES",
+        "strict_v1_exact": "PARTICIPATES"
+      },
+      "source_anchor": "raise ValidationError(\"slots must be an object\")",
+      "source_path": "src/voice2task/schemas.py",
+      "source_rule_or_symbol": "raise ValidationError(\"slots must be an object\")",
+      "transform": "copy_from_semantic_core",
+      "transform_status": "HYPOTHETICAL",
+      "value_origin": "model_authored"
+    },
+    {
+      "authority_status": "HYPOTHETICAL",
+      "constraint_owner": "TASK_TYPE_SEMANTICS.required_slots",
+      "constraint_owner_status": "CURRENT_SOURCE_VERIFIED",
+      "field_path": "v1.slots.target",
+      "mutable_at_candidate_compiler_stage": false,
+      "participation": {
+        "downstream_execution_gate": "PARTICIPATES",
+        "policy_self_consistency": "PARTICIPATES",
+        "raw_core_validity": "PARTICIPATES",
+        "strict_v1_exact": "PARTICIPATES"
+      },
+      "source_anchor": "\"required_slots\": (\"target\",)",
+      "source_path": "src/voice2task/schemas.py",
+      "source_rule_or_symbol": "\"required_slots\": (\"target\",)",
+      "transform": "copy_from_semantic_core",
+      "transform_status": "HYPOTHETICAL",
+      "value_origin": "model_authored"
+    },
+    {
+      "authority_status": "HYPOTHETICAL",
+      "constraint_owner": "TASK_TYPE_SEMANTICS.required_slots",
+      "constraint_owner_status": "CURRENT_SOURCE_VERIFIED",
+      "field_path": "v1.slots.ambiguity",
+      "mutable_at_candidate_compiler_stage": false,
+      "participation": {
+        "downstream_execution_gate": "PARTICIPATES",
+        "policy_self_consistency": "PARTICIPATES",
+        "raw_core_validity": "PARTICIPATES",
+        "strict_v1_exact": "PARTICIPATES"
+      },
+      "source_anchor": "\"required_slots\": (\"ambiguity\",)",
+      "source_path": "src/voice2task/schemas.py",
+      "source_rule_or_symbol": "\"required_slots\": (\"ambiguity\",)",
+      "transform": "copy_from_semantic_core",
+      "transform_status": "HYPOTHETICAL",
+      "value_origin": "model_authored"
+    },
+    {
+      "authority_status": "HYPOTHETICAL",
+      "constraint_owner": "TASK_TYPE_SEMANTICS.required_slots",
+      "constraint_owner_status": "CURRENT_SOURCE_VERIFIED",
+      "field_path": "v1.slots.reason",
+      "mutable_at_candidate_compiler_stage": false,
+      "participation": {
+        "downstream_execution_gate": "PARTICIPATES",
+        "policy_self_consistency": "PARTICIPATES",
+        "raw_core_validity": "PARTICIPATES",
+        "strict_v1_exact": "PARTICIPATES"
+      },
+      "source_anchor": "\"required_slots\": (\"reason\",)",
+      "source_path": "src/voice2task/schemas.py",
+      "source_rule_or_symbol": "\"required_slots\": (\"reason\",)",
+      "transform": "copy_from_semantic_core",
+      "transform_status": "HYPOTHETICAL",
+      "value_origin": "model_authored"
+    },
+    {
+      "authority_status": "HYPOTHETICAL",
+      "constraint_owner": "BrowserTaskContract.normalized_command_nonempty_string",
+      "constraint_owner_status": "CURRENT_SOURCE_VERIFIED",
+      "field_path": "v1.normalized_command",
+      "mutable_at_candidate_compiler_stage": true,
+      "participation": {
+        "downstream_execution_gate": "DOES_NOT_PARTICIPATE",
+        "policy_self_consistency": "DOES_NOT_PARTICIPATE",
+        "raw_core_validity": "DOES_NOT_PARTICIPATE",
+        "strict_v1_exact": "PARTICIPATES"
+      },
+      "source_anchor": "_require_nonempty_string(self.normalized_command, \"normalized_command\")",
+      "source_path": "src/voice2task/schemas.py",
+      "source_rule_or_symbol": "_require_nonempty_string(self.normalized_command, \"normalized_command\")",
+      "transform": "deterministic_renderer",
+      "transform_status": "HYPOTHETICAL",
+      "value_origin": "renderer_derived"
+    },
+    {
+      "authority_status": "HYPOTHETICAL",
+      "constraint_owner": "BrowserTaskContract.language_literal_zh-CN",
+      "constraint_owner_status": "CURRENT_SOURCE_VERIFIED",
+      "field_path": "v1.language",
+      "mutable_at_candidate_compiler_stage": true,
+      "participation": {
+        "downstream_execution_gate": "DOES_NOT_PARTICIPATE",
+        "policy_self_consistency": "DOES_NOT_PARTICIPATE",
+        "raw_core_validity": "DOES_NOT_PARTICIPATE",
+        "strict_v1_exact": "PARTICIPATES"
+      },
+      "source_anchor": "if self.language != \"zh-CN\":",
+      "source_path": "src/voice2task/schemas.py",
+      "source_rule_or_symbol": "if self.language != \"zh-CN\":",
+      "transform": "constant_assignment",
+      "transform_status": "HYPOTHETICAL",
+      "value_origin": "constant"
+    },
+    {
+      "authority_status": "HYPOTHETICAL",
+      "constraint_owner": "BrowserTaskContract.contract_version_literal_v1",
+      "constraint_owner_status": "CURRENT_SOURCE_VERIFIED",
+      "field_path": "v1.contract_version",
+      "mutable_at_candidate_compiler_stage": true,
+      "participation": {
+        "downstream_execution_gate": "DOES_NOT_PARTICIPATE",
+        "policy_self_consistency": "DOES_NOT_PARTICIPATE",
+        "raw_core_validity": "DOES_NOT_PARTICIPATE",
+        "strict_v1_exact": "PARTICIPATES"
+      },
+      "source_anchor": "if self.contract_version != \"v1\":",
+      "source_path": "src/voice2task/schemas.py",
+      "source_rule_or_symbol": "if self.contract_version != \"v1\":",
+      "transform": "constant_assignment",
+      "transform_status": "HYPOTHETICAL",
+      "value_origin": "constant"
+    }
+  ],
+  "input_policy": {
+    "denied_input_read": false,
+    "renderer_source_paths": [
+      "data/public-samples/seed_traces.jsonl",
+      "data/public-samples/manifest_public_sample.json"
+    ],
+    "whitelist_enforced": true,
+    "wide_directory_glob_used": false
+  },
+  "methodology_version": "contract-compiler-v2-causal-audit.v1",
+  "next_phase_recommendations": [
+    {
+      "executed": false,
+      "phase": "preregister-clean-matched-compiler-and-model-evidence-design",
+      "requires": [
+        "preregistration",
+        "clean_evaluation_population",
+        "matched_control_and_intervention_arms",
+        "multiple_training_seeds_and_predeclared_uncertainty",
+        "machine_checked_invariants"
+      ]
+    }
+  ],
+  "renderer_audit": {
+    "counts": {
+      "legacy_exact": 98,
+      "legacy_mismatch": 148,
+      "parse_invalid": 0,
+      "parse_valid": 247,
+      "policy_self_consistent": 246,
+      "repeated_outcome_stable": 247,
+      "supported": 246,
+      "supported_and_deterministic": 246,
+      "unsupported": 1
+    },
+    "historical_support_interpretation": {
+      "canonical_exact_compatibility": false,
+      "denominator": 2185,
+      "numerator": 2180,
+      "rate": 0.9977116704805492,
+      "warning": "99.77% support is not legacy canonical exact compatibility."
+    },
+    "invalid_and_unsupported_count_as_itt_failures": true,
+    "itt": {
+      "denominator": 247,
+      "legacy_exact": {
+        "numerator": 98,
+        "rate": 0.396761
+      },
+      "policy_self_consistent": {
+        "numerator": 246,
+        "rate": 0.995951
+      }
+    },
+    "population": {
+      "classification": "DESCRIPTIVE_ONLY",
+      "deduplicated": false,
+      "fixed_itt_denominator": 247,
+      "manifest_path": "data/public-samples/manifest_public_sample.json",
+      "observation_unit": "one_formal_seed_row",
+      "selected_or_tuned_on_public_dev_test": false,
+      "source_path": "data/public-samples/seed_traces.jsonl"
+    },
+    "supported_only_secondary": {
+      "denominator": 246,
+      "legacy_exact": {
+        "numerator": 98,
+        "rate": 0.398374
+      },
+      "policy_self_consistent": {
+        "numerator": 246,
+        "rate": 1.0
+      }
+    }
+  },
+  "source_anchor_validation": {
+    "absent_generation_controls_checked": 1,
+    "passed": true,
+    "source_anchor_records_checked": 65
+  },
+  "source_manifest": [
+    {
+      "path": "src/voice2task/formatting.py",
+      "sha256": "a5933b89f9f9b43358619b15264047bc449a83dacadfc3e49db88d38d434a8f0"
+    },
+    {
+      "path": "src/voice2task/training.py",
+      "sha256": "978e2df42be7b1e020c5215febaf843a527b0fb96469273c93b66ce20b62db3c"
+    },
+    {
+      "path": "src/voice2task/schemas.py",
+      "sha256": "e5897b622dbcac398c28b14d264b99fb98ae749cf278cda1cdd9e83a4300d74f"
+    },
+    {
+      "path": "src/voice2task/evaluation.py",
+      "sha256": "568f4f41d2d6b0b5d45e68c53e14c5c6b70ebb37227c988a0b4b5aff8017e228"
+    },
+    {
+      "path": "src/voice2task/contract_core_v2.py",
+      "sha256": "ed77d5a21af3a868c3b9ff0fa81c62da29bfe939070c39fb3c8a0076f8c29098"
+    },
+    {
+      "path": "src/voice2task/contract_v2_projection.py",
+      "sha256": "b35c2b47ea73d96a484b96f3c6d4d38e510a58c5c2fb0ebf389e6da36e3a59b9"
+    },
+    {
+      "path": "data/public-samples/seed_traces.jsonl",
+      "sha256": "8fe5e75e9e0891b6824d7c142cbe15547267377420f8b3240414436265d15801"
+    },
+    {
+      "path": "data/public-samples/manifest_public_sample.json",
+      "sha256": "f866c173795e97953b1dec85611b405867d0a29497910282f99d399f109cda95"
+    },
+    {
+      "path": "reports/public-sample/split-integrity-audit/summary.json",
+      "sha256": "ac10bd0a1c3fefb717433de68ae29d049069b521bae8599234b7f52faec8f598"
+    },
+    {
+      "path": "reports/public-sample/internal-contract-v2-core/summary.json",
+      "sha256": "b4cbee7220cb8d9564c4a90a1b0469b27b0eb666b5aed572ff58749994d67d20"
+    },
+    {
+      "path": "CONTEXT.md",
+      "sha256": "2ffc67d81be8b3e482555efd23db5b0bf60239eb4ef4d9e24514cae24ea1009f"
+    },
+    {
+      "path": "data/lockbox/lockbox-v1.manifest.json",
+      "sha256": "72471bac59749f3bc9d21d73db47dafe1f160b978f5ac3971434e13527ddedde"
+    },
+    {
+      "path": "reports/lockbox-v1/final-evaluation/run-card.json",
+      "sha256": "39e59cd6e16baa7adadb6b3c474e7fce8bfe8223e5980a1288a1c50432acec66"
+    },
+    {
+      "path": "reports/lockbox-v1/final-evaluation/base/metrics.json",
+      "sha256": "400fa753e6e8bde611af4e4f9623155ceff6664454bfea0f57748043243cd02f"
+    },
+    {
+      "path": "reports/lockbox-v1/final-evaluation/final-sft/metrics.json",
+      "sha256": "aaecc8dcdad90e70c0f8a7c59a21d2e65d8d42bae3e304e4dce9b049390bc829"
+    },
+    {
+      "path": "reports/lockbox-v1/final-evaluation/comparison.json",
+      "sha256": "48fae0e85e016c1872477881939716076d96998d0c63f83adf1e9be42d9ed544"
+    }
+  ],
+  "transformation_graphs": {
+    "candidate_only": {
+      "edges": [
+        {
+          "from": "candidate_semantic_core",
+          "runtime_wired": false,
+          "source_anchor": "candidate_semantic_core_to_v1_compiler",
+          "source_path": "CONTEXT.md",
+          "stable_identity": "candidate_semantic_core_to_v1_compiler",
+          "to": "candidate_v1_compiler"
+        }
+      ],
+      "implementation_status": "NOT_IMPLEMENTED_HYPOTHETICAL",
+      "nodes": [
+        {
+          "id": "candidate_semantic_core",
+          "runtime_wired": false,
+          "source_anchor": "candidate_semantic_core",
+          "source_path": "CONTEXT.md",
+          "stable_identity": "candidate_semantic_core"
+        },
+        {
+          "id": "candidate_v1_compiler",
+          "runtime_wired": false,
+          "source_anchor": "candidate_v1_compiler",
+          "source_path": "CONTEXT.md",
+          "stable_identity": "candidate_v1_compiler"
+        }
+      ]
+    },
+    "observed_current": {
+      "edges": [
+        {
+          "branch": "raw_attempt",
+          "condition": "always",
+          "conditional": false,
+          "from": "json_only_prompt",
+          "runtime_wired": true,
+          "source_anchor": "def _decode_prediction_attempt(",
+          "source_path": "src/voice2task/training.py",
+          "stable_identity": "_decode_prediction_attempt",
+          "to": "raw_decode"
+        },
+        {
+          "branch": "raw_attempt",
+          "condition": "always",
+          "conditional": false,
+          "from": "raw_decode",
+          "runtime_wired": true,
+          "source_anchor": "def _extract_strict_json_object(",
+          "source_path": "src/voice2task/training.py",
+          "stable_identity": "_extract_strict_json_object",
+          "to": "raw_strict_parse"
+        },
+        {
+          "branch": "raw_attempt",
+          "condition": "always",
+          "conditional": false,
+          "from": "raw_strict_parse",
+          "runtime_wired": true,
+          "source_anchor": "def _schema_guard_status(",
+          "source_path": "src/voice2task/training.py",
+          "stable_identity": "_schema_guard_status",
+          "to": "raw_schema_guard"
+        },
+        {
+          "branch": "raw_valid_direct",
+          "condition": "raw_status[\"schema_valid\"]",
+          "conditional": true,
+          "from": "raw_schema_guard",
+          "runtime_wired": true,
+          "source_anchor": "def _build_schema_guard(",
+          "source_path": "src/voice2task/training.py",
+          "stable_identity": "_build_schema_guard",
+          "to": "validated_output_selection"
+        },
+        {
+          "branch": "raw_invalid_no_retry",
+          "condition": "not raw_status[\"schema_valid\"] and not schema_retry_enabled",
+          "conditional": true,
+          "from": "raw_schema_guard",
+          "runtime_wired": true,
+          "source_anchor": "def _build_schema_guard(",
+          "source_path": "src/voice2task/training.py",
+          "stable_identity": "_build_schema_guard",
+          "to": "validated_output_selection"
+        },
+        {
+          "branch": "raw_invalid_retry",
+          "condition": "schema_retry_enabled and not raw_status[\"schema_valid\"]",
+          "conditional": true,
+          "from": "raw_schema_guard",
+          "runtime_wired": true,
+          "source_anchor": "def _schema_retry_prompt(",
+          "source_path": "src/voice2task/training.py",
+          "stable_identity": "_schema_retry_prompt",
+          "to": "retry_instruction"
+        },
+        {
+          "branch": "raw_invalid_retry",
+          "condition": "retry_attempted",
+          "conditional": true,
+          "from": "retry_instruction",
+          "runtime_wired": true,
+          "source_anchor": "def format_schema_retry_prompt_text(",
+          "source_path": "src/voice2task/formatting.py",
+          "stable_identity": "format_schema_retry_prompt_text",
+          "to": "retry_prompt_format"
+        },
+        {
+          "branch": "raw_invalid_retry",
+          "condition": "retry_attempted",
+          "conditional": true,
+          "from": "retry_prompt_format",
+          "runtime_wired": true,
+          "source_anchor": "def _decode_prediction_attempt(",
+          "source_path": "src/voice2task/training.py",
+          "stable_identity": "_decode_prediction_attempt",
+          "to": "retry_decode"
+        },
+        {
+          "branch": "raw_invalid_retry",
+          "condition": "retry_attempted",
+          "conditional": true,
+          "from": "retry_decode",
+          "runtime_wired": true,
+          "source_anchor": "def _extract_strict_json_object(",
+          "source_path": "src/voice2task/training.py",
+          "stable_identity": "_extract_strict_json_object",
+          "to": "retry_strict_parse"
+        },
+        {
+          "branch": "raw_invalid_retry",
+          "condition": "retry_attempted",
+          "conditional": true,
+          "from": "retry_strict_parse",
+          "runtime_wired": true,
+          "source_anchor": "def _schema_guard_status(",
+          "source_path": "src/voice2task/training.py",
+          "stable_identity": "_schema_guard_status",
+          "to": "retry_schema_guard"
+        },
+        {
+          "branch": "raw_invalid_retry",
+          "condition": "retry_status is not None",
+          "conditional": true,
+          "from": "retry_schema_guard",
+          "runtime_wired": true,
+          "source_anchor": "def _build_schema_guard(",
+          "source_path": "src/voice2task/training.py",
+          "stable_identity": "_build_schema_guard",
+          "to": "validated_output_selection"
+        },
+        {
+          "branch": "retry_valid_selected",
+          "condition": "schema_guard[\"validated_output_source\"] == \"retry_attempt\"",
+          "conditional": true,
+          "from": "validated_output_selection",
+          "runtime_wired": true,
+          "source_anchor": "final_prediction = (",
+          "source_path": "src/voice2task/training.py",
+          "stable_identity": "final_prediction = (",
+          "to": "exported_prediction"
+        },
+        {
+          "branch": "raw_or_invalid_fallback",
+          "condition": "schema_guard[\"validated_output_source\"] != \"retry_attempt\"",
+          "conditional": true,
+          "from": "validated_output_selection",
+          "runtime_wired": true,
+          "source_anchor": "final_prediction = (",
+          "source_path": "src/voice2task/training.py",
+          "stable_identity": "final_prediction = (",
+          "to": "exported_prediction"
+        },
+        {
+          "branch": "evaluation",
+          "condition": "always",
+          "conditional": false,
+          "from": "exported_prediction",
+          "runtime_wired": true,
+          "source_anchor": "def evaluate_predictions(",
+          "source_path": "src/voice2task/evaluation.py",
+          "stable_identity": "evaluate_predictions",
+          "to": "strict_evaluation"
+        },
+        {
+          "branch": "offline_core_projection",
+          "condition": "offline_audit_only",
+          "conditional": false,
+          "from": "exported_prediction",
+          "runtime_wired": false,
+          "source_anchor": "def project_v1_to_core_v2(",
+          "source_path": "src/voice2task/contract_core_v2.py",
+          "stable_identity": "project_v1_to_core_v2",
+          "to": "contract_core_v2"
+        },
+        {
+          "branch": "offline_renderer",
+          "condition": "offline_audit_only",
+          "conditional": false,
+          "from": "contract_core_v2",
+          "runtime_wired": false,
+          "source_anchor": "def deterministic_normalized_command_renderer(",
+          "source_path": "src/voice2task/contract_v2_projection.py",
+          "stable_identity": "deterministic_normalized_command_renderer",
+          "to": "deterministic_renderer"
+        }
+      ],
+      "implementation_status": "IMPLEMENTED_OBSERVED",
+      "nodes": [
+        {
+          "id": "json_only_prompt",
+          "runtime_wired": true,
+          "source_anchor": "def format_sft_prediction_prompt(",
+          "source_path": "src/voice2task/formatting.py",
+          "stable_identity": "format_sft_prediction_prompt"
+        },
+        {
+          "id": "raw_decode",
+          "runtime_wired": true,
+          "source_anchor": "def _decode_prediction_attempt(",
+          "source_path": "src/voice2task/training.py",
+          "stable_identity": "_decode_prediction_attempt"
+        },
+        {
+          "id": "raw_strict_parse",
+          "runtime_wired": true,
+          "source_anchor": "def _extract_strict_json_object(",
+          "source_path": "src/voice2task/training.py",
+          "stable_identity": "_extract_strict_json_object"
+        },
+        {
+          "id": "raw_schema_guard",
+          "runtime_wired": true,
+          "source_anchor": "def _schema_guard_status(",
+          "source_path": "src/voice2task/training.py",
+          "stable_identity": "_schema_guard_status"
+        },
+        {
+          "id": "retry_instruction",
+          "runtime_wired": true,
+          "source_anchor": "def _schema_retry_prompt(",
+          "source_path": "src/voice2task/training.py",
+          "stable_identity": "_schema_retry_prompt"
+        },
+        {
+          "id": "retry_prompt_format",
+          "runtime_wired": true,
+          "source_anchor": "def format_schema_retry_prompt_text(",
+          "source_path": "src/voice2task/formatting.py",
+          "stable_identity": "format_schema_retry_prompt_text"
+        },
+        {
+          "id": "retry_decode",
+          "runtime_wired": true,
+          "source_anchor": "def _decode_prediction_attempt(",
+          "source_path": "src/voice2task/training.py",
+          "stable_identity": "_decode_prediction_attempt"
+        },
+        {
+          "id": "retry_strict_parse",
+          "runtime_wired": true,
+          "source_anchor": "def _extract_strict_json_object(",
+          "source_path": "src/voice2task/training.py",
+          "stable_identity": "_extract_strict_json_object"
+        },
+        {
+          "id": "retry_schema_guard",
+          "runtime_wired": true,
+          "source_anchor": "def _schema_guard_status(",
+          "source_path": "src/voice2task/training.py",
+          "stable_identity": "_schema_guard_status"
+        },
+        {
+          "id": "validated_output_selection",
+          "runtime_wired": true,
+          "source_anchor": "def _build_schema_guard(",
+          "source_path": "src/voice2task/training.py",
+          "stable_identity": "_build_schema_guard"
+        },
+        {
+          "id": "exported_prediction",
+          "runtime_wired": true,
+          "source_anchor": "final_prediction = (",
+          "source_path": "src/voice2task/training.py",
+          "stable_identity": "final_prediction = ("
+        },
+        {
+          "id": "strict_evaluation",
+          "runtime_wired": true,
+          "source_anchor": "def evaluate_predictions(",
+          "source_path": "src/voice2task/evaluation.py",
+          "stable_identity": "evaluate_predictions"
+        },
+        {
+          "id": "contract_core_v2",
+          "runtime_wired": false,
+          "source_anchor": "def project_v1_to_core_v2(",
+          "source_path": "src/voice2task/contract_core_v2.py",
+          "stable_identity": "project_v1_to_core_v2"
+        },
+        {
+          "id": "deterministic_renderer",
+          "runtime_wired": false,
+          "source_anchor": "def deterministic_normalized_command_renderer(",
+          "source_path": "src/voice2task/contract_v2_projection.py",
+          "stable_identity": "deterministic_normalized_command_renderer"
+        }
+      ]
+    }
+  }
+}

@@ -7,6 +7,17 @@ import json
 import sys
 from pathlib import Path
 
+import voice2task.clean_evaluation_review_pack as clean_review
+from voice2task.clean_evaluation_boundary import (
+    CANONICAL_PRIVATE_ROOT,
+    PUBLIC_REPORT_ROOT,
+    BoundaryViolation,
+    blocked_summary_for,
+    materialize_boundary,
+    validate_named_inputs,
+    verify_generation,
+    write_public_evidence,
+)
 from voice2task.dataset import (
     blocked_payment_safety_repair_public_sample_merge_evidence,
     build_local_private_corpus,
@@ -47,7 +58,10 @@ from voice2task.reports import (
     write_form_fill_remediation_public_sample_merge_report,
     write_scaled_public_sample_public_sample_merge_report,
 )
+from voice2task.split_integrity import audit_split_integrity, write_split_integrity_report
 from voice2task.validation import validate_dataset_artifacts
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -77,6 +91,36 @@ def build_parser() -> argparse.ArgumentParser:
 
     dpo_parser = subcommands.add_parser("dpo-check")
     dpo_parser.add_argument("--dpo", type=Path, required=True)
+
+    audit_splits_parser = subcommands.add_parser("audit-splits")
+    audit_splits_parser.add_argument("--seed", type=Path, required=True)
+    audit_splits_parser.add_argument("--sft", type=Path, required=True)
+    audit_splits_parser.add_argument("--dpo", type=Path, required=True)
+    audit_splits_parser.add_argument("--manifest", type=Path, required=True)
+    audit_splits_parser.add_argument("--output", type=Path, required=True)
+    audit_splits_parser.add_argument("--require-clean", action="store_true")
+
+    clean_boundary_validate_parser = subcommands.add_parser("clean-boundary-validate")
+    clean_boundary_validate_parser.add_argument("--bindings", required=True)
+    clean_boundary_validate_parser.add_argument("--source-contract", required=True)
+    clean_boundary_validate_parser.add_argument("--compiler-card", required=True)
+    clean_boundary_validate_parser.add_argument("--model-card", required=True)
+
+    clean_boundary_materialize_parser = subcommands.add_parser("clean-boundary-materialize")
+    clean_boundary_materialize_parser.add_argument("--protocol-sha256", required=True)
+    clean_boundary_materialize_parser.add_argument("--source-frame", required=True)
+    clean_boundary_materialize_parser.add_argument("--lockbox-attestation", required=True)
+    clean_boundary_materialize_parser.add_argument("--generation-id", required=True)
+
+    clean_boundary_verify_parser = subcommands.add_parser("clean-boundary-verify")
+    clean_boundary_verify_parser.add_argument("--generation-id", required=True)
+    clean_boundary_verify_parser.add_argument("--population-seal-sha256", required=True)
+
+    subcommands.add_parser("clean-boundary-review-pack")
+    clean_boundary_review_lint_parser = subcommands.add_parser(
+        "clean-boundary-review-lint"
+    )
+    clean_boundary_review_lint_parser.add_argument("--review-pack", required=True)
 
     slot_value_parser = subcommands.add_parser("materialize-slot-value-candidates")
     slot_value_parser.add_argument("--case-design", type=Path, required=True)
@@ -202,6 +246,19 @@ def _is_validate_lockbox_argv(argv: list[str] | None) -> bool:
     return bool(args and args[0] == "validate-lockbox")
 
 
+def _is_clean_boundary_review_argv(argv: list[str] | None) -> bool:
+    args = list(sys.argv[1:] if argv is None else argv)
+    return bool(
+        args
+        and args[0]
+        in {"clean-boundary-review-pack", "clean-boundary-review-lint"}
+    )
+
+
+def _review_lint_exit_zero(payload: dict[str, object]) -> bool:
+    return payload == clean_review.review_lint_success_truth()
+
+
 def _parser_error_payload(message: str, manifest_path: str | None = None) -> dict[str, object]:
     return {
         "ok": False,
@@ -219,13 +276,21 @@ def _parser_error_payload(message: str, manifest_path: str | None = None) -> dic
 
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
-    if _is_validate_lockbox_argv(argv):
+    is_validate_lockbox = _is_validate_lockbox_argv(argv)
+    is_clean_boundary_review = _is_clean_boundary_review_argv(argv)
+    if is_validate_lockbox or is_clean_boundary_review:
         argparse_stderr = io.StringIO()
         try:
             with contextlib.redirect_stderr(argparse_stderr):
                 args = parser.parse_args(argv)
         except SystemExit as exc:
-            payload = _parser_error_payload(argparse_stderr.getvalue())
+            if exc.code == 0 and is_clean_boundary_review:
+                return 0
+            payload = (
+                clean_review.review_command_failure_truth()
+                if is_clean_boundary_review
+                else _parser_error_payload(argparse_stderr.getvalue())
+            )
             print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
             return exc.code if isinstance(exc.code, int) else 2
     else:
@@ -277,6 +342,114 @@ def main(argv: list[str] | None = None) -> int:
         pairs = validate_dpo_pairs_file(args.dpo)
         print(json.dumps(summarize_dpo_slices(pairs), ensure_ascii=False, indent=2, sort_keys=True))
         return 0
+    if args.command == "audit-splits":
+        audit = audit_split_integrity(
+            seed_path=args.seed,
+            sft_path=args.sft,
+            dpo_path=args.dpo,
+            manifest_path=args.manifest,
+            repo_root=REPO_ROOT,
+        )
+        paths = write_split_integrity_report(audit, args.output)
+        payload = {
+            "ok": audit["input_validation"]["valid"]
+            and (audit["clean_gate"]["passed"] or not args.require_clean),
+            "require_clean": args.require_clean,
+            "input_validation": audit["input_validation"],
+            "clean_gate": audit["clean_gate"],
+            "outputs": {name: path.as_posix() for name, path in paths.items()},
+        }
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+        return 0 if payload["ok"] else 1
+    if args.command == "clean-boundary-review-pack":
+        try:
+            clean_review.write_review_pack_bundle(REPO_ROOT)
+            payload = clean_review.build_review_pack_summary()
+            return_code = 0
+        except Exception:
+            payload = clean_review.review_command_failure_truth()
+            return_code = 1
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+        return return_code
+    if args.command == "clean-boundary-review-lint":
+        review_input_root = REPO_ROOT / CANONICAL_PRIVATE_ROOT / "review-inputs"
+        try:
+            payload = clean_review.lint_review_envelope_file(
+                review_input_root,
+                args.review_pack,
+            )
+        except Exception:
+            payload = clean_review.review_command_failure_truth()
+        exit_zero = _review_lint_exit_zero(payload)
+        if not exit_zero and payload.get("lint_conforms") is True:
+            payload = clean_review.review_command_failure_truth()
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+        return 0 if exit_zero else 1
+    if args.command == "clean-boundary-validate":
+        private_root = REPO_ROOT / CANONICAL_PRIVATE_ROOT
+        try:
+            protocol = validate_named_inputs(
+                private_root,
+                bindings=args.bindings,
+                source_contract=args.source_contract,
+                compiler_card=args.compiler_card,
+                model_card=args.model_card,
+            )
+            payload = {
+                "ok": True,
+                "current_readiness_state": "PROTOCOL_FROZEN",
+                "protocol_sha256": protocol["protocol_sha256"],
+                "execution_readiness": False,
+            }
+        except BoundaryViolation as exc:
+            summary = blocked_summary_for(exc)
+            payload = {
+                "ok": False,
+                "evidence_status": summary["evidence_status"],
+                "decision": summary["decision"],
+                "current_readiness_state": summary["current_readiness_state"],
+                "blockers": summary["blockers"],
+                "execution_readiness": False,
+            }
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+        return 0 if payload["ok"] else 1
+    if args.command == "clean-boundary-materialize":
+        private_root = REPO_ROOT / CANONICAL_PRIVATE_ROOT
+        try:
+            summary = materialize_boundary(
+                private_root,
+                protocol_sha256=args.protocol_sha256,
+                source_frame=args.source_frame,
+                lockbox_attestation=args.lockbox_attestation,
+                generation_id=args.generation_id,
+            )
+            write_public_evidence(summary, REPO_ROOT, PUBLIC_REPORT_ROOT)
+            payload = {"ok": True, **summary}
+        except BoundaryViolation as exc:
+            summary = blocked_summary_for(exc, last_state=exc.last_verified_state)
+            write_public_evidence(summary, REPO_ROOT, PUBLIC_REPORT_ROOT)
+            payload = {"ok": False, **summary}
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+        return 0 if payload["ok"] else 1
+    if args.command == "clean-boundary-verify":
+        private_root = REPO_ROOT / CANONICAL_PRIVATE_ROOT
+        try:
+            payload = verify_generation(
+                private_root,
+                args.generation_id,
+                expected_population_seal_sha256=args.population_seal_sha256,
+            )
+        except BoundaryViolation as exc:
+            payload = {
+                "ok": False,
+                "boundary_integrity_status": (
+                    "NOT_CREATED" if exc.code == "GENERATION_NOT_FOUND" else "COMPROMISED"
+                ),
+                "blockers": [exc.code],
+                "execution_readiness": False,
+            }
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+        return 0 if payload["ok"] else 1
     if args.command == "materialize-slot-value-candidates":
         paths = materialize_slot_value_generalization_candidates(
             case_design_path=args.case_design,

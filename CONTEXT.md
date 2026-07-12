@@ -6,7 +6,9 @@ Voice2Task Post-Training is an evidence-first companion project for Chinese spok
 
 ## 2. Current Formal Data Boundary
 
-The current formal public sample is `public-sample-20260619T090925Z` in `data/public-samples/manifest_public_sample.json`: 247 seeds / 696 SFT rows / 2100 DPO pairs, with train/dev/test = 282/207/207. This boundary was produced by the canonical slot-boundary formal merge and is the current data boundary only; it is not a model-quality claim.
+The current formal public sample is `public-sample-20260619T090925Z` in `data/public-samples/manifest_public_sample.json`: 247 seeds / 696 SFT rows / 2100 DPO pairs, with train/dev/test = 282/207/207. The deterministic split audit at `reports/public-sample/split-integrity-audit/summary.json` classifies public dev/test as `DEVELOPMENT_ONLY_SPENT`: they informed repeated diagnosis/remediation and are not blind, independent, leakage-free, or final-generalization evidence. Historical rows and metrics remain preserved rather than invalidated or recomputed.
+
+Future strict `contract_exact_match` evaluation uses recursive JSON type-strict equality while ignoring object key order and serialization whitespace; arrays remain ordered and non-finite/non-JSON values fail closed. This forward evaluator repair does not re-score historical metrics. Lockbox-v1 remains a separate frozen 120-row / 120-family one-look aggregate boundary; it does not establish row-level failure causes, natural-ASR generalization, or an overall SFT causal effect.
 
 Prior manifests, prior prediction runs, and prior A100 training retries are historical unless explicitly marked `CURRENT` in `reports/public-sample/EVIDENCE_INDEX.md`.
 
@@ -48,6 +50,20 @@ The follow-up `recover-and-run-frozen-adapter-challenge-evaluation` is completed
 
 The follow-up `diagnose-copy-shadow-false-trust-before-naturalistic-v2` is completed as offline source-attestation hardening evidence under `reports/public-sample/copy-shadow-false-trust-diagnosis/summary.json`. Decision: `SOURCE_ATTESTATION_HARDENED_SCOPE_REDUCTION_REQUIRED`. The diagnosis recomputed committed challenge rows, predictions, online sidecars, offline audits, policy v1, hook-safety audit, and prediction-run audit without rerunning inference or modifying historical artifacts. Historical source-attested exact input count is 64; source-attested-and-gold-correct count is 48; source-attested-but-gold-mismatch count is 16. Six normalized-equivalent collisions are downgraded to `AMBIGUOUS_NORMALIZATION_COLLISION`, leaving post-diagnosis source_attested_exact count 58 and execution eligible count 0. `trusted_provenance` is now documented only as a deprecated compatibility alias; new artifacts use source-only `source_attested_exact`, and online semantic correctness remains unknown. Per-scope policy-v2 proposal is `form_fill:fill_form:field` -> `PROPOSE_DISABLE`, `search:search_web:query` -> `OBSERVE_LIMITED`, and `extract:extract_page:target` -> `OBSERVE_ENABLED`. This is not policy v2, naturalistic challenge v2, runtime enforcement, training, action enablement, normalized trusted provenance, or a model-quality claim.
 
+### Durable Contract Compiler V2 candidate boundary
+
+- `candidate_semantic_core` is a hypothetical model-authored boundary containing `intent`, task-specific `slots`, `risk`, and `clarification`; it is not implemented or runtime-loaded.
+- `candidate_v1_compiler` is a hypothetical deterministic boundary that may map the semantic core into BrowserTaskContract V1 policy fields, copied slot leaves, rendered `normalized_command`, and constant language/version fields; it is not implemented or evaluator-authoritative.
+- `candidate_semantic_core_to_v1_compiler` is a proposed transformation edge only. Its status is `NOT_IMPLEMENTED_HYPOTHETICAL` and `runtime_wired=false`.
+
+The candidate boundary keeps `value_origin`, `constraint_owner`, and `transform` separate. Renderer support, determinism, legacy canonical exact compatibility, and policy self-consistency remain distinct properties. Compiler/system and model-learning causal estimands remain separate; neither may use spent public dev/test or consumed one-look lockbox-v1 as fresh independent evidence.
+
+The applied `preregister-clean-matched-compiler-and-model-evidence-design` phase now records a reviewed design-only contract for one future acquisition and exactly two future family-disjoint one-look partitions: `compiler_system_evaluation` and `model_learning_evaluation`. It does not materialize or seal either partition. All 29 execution bindings remain exactly `UNBOUND_BY_DESIGN`; `protocol_freeze_status=NOT_FROZEN`, `clean_population_status=NOT_MATERIALIZED`, `experiment_preregistration_status=NOT_EXECUTABLE`, and `execution_readiness=false`. Both causal estimands remain `CAUSAL_IDENTIFICATION_BLOCKED`.
+
+The archived `materialize-and-freeze-clean-compiler-model-evaluation-boundary-v1` implementation reached the honest S0 blocked path because no independently authorized clean acquisition frame or reviewed 29-field binding packet exists. Its public evidence is `BLOCKED` with decision `CLEAN_EVALUATION_BOUNDARY_MATERIALIZATION_BLOCKED`, `current_readiness_state=DESIGN_ONLY`, bindings 0/29, protocol `NOT_FROZEN`, population `NOT_MATERIALIZED`, and boundary integrity `NOT_CREATED`. Neither partition was materialized; both one-look states are `NOT_AVAILABLE` with access count 0 and `consumed=false`. No private registry, membership, seal, clean row, compiler/model arm, training, prediction, A100 job, or experiment was created or run.
+
+The archived `prepare-clean-evaluation-acquisition-and-binding-review-pack-v1` phase publishes a public-safe [review-pack summary](reports/public-sample/clean-evaluation-acquisition-and-binding-review-pack-v1/summary.json) as operator guidance only. Its exact truth is `evidence_status=DESIGN_ONLY`, `phase_status=PREPARATION_ONLY`, `decision=ACQUISITION_AND_BINDING_REVIEW_PACK_READY_EXECUTION_BLOCKED`, `review_pack_status=READY_FOR_EXTERNAL_COMPLETION`, `candidate_pack_status=INCOMPLETE`, `binding_inventory_count=29`, `supplied_binding_count=0`, `authoritatively_bound_binding_count=0`, `acquisition_source_status=UNAVAILABLE`, `protocol_freeze_status=NOT_FROZEN`, `clean_population_status=NOT_MATERIALIZED`, `human_acceptance_status=NOT_RECORDED`, `freeze_authorized=false`, `next_phase_eligible=false`, and `execution_readiness=false`. `READY_FOR_EXTERNAL_COMPLETION` means review-pack readiness only: it is not a reviewed or accepted candidate, does not bind any input, does not freeze a protocol, does not materialize a population, and is not executable. It does not supersede the archived S0 blocker.
+
 ## 6. Current Claim Boundaries
 
 Current evidence cannot claim model improvement. It cannot claim executable quality improvement. It cannot claim production readiness. It cannot claim safety readiness. It cannot claim held-out recovery. It cannot claim live-browser benchmark gain. It cannot claim checkpoint release. It cannot claim adapter release. It cannot claim DPO justification. It cannot claim another canonical-candidate loop.
@@ -56,9 +72,9 @@ Do not merge metrics across manifests. Do not treat JSON validity, executable sm
 
 ## 7. Current Recommended Next Step
 
-The false-trust diagnosis hardened source-attestation semantics and found scope reduction is required before further copy-shadow integration. The recommended next change is `design-copy-shadow-scope-policy-v2`.
+The materialize-and-freeze phase is archived and honestly blocked at S0. No automatic follow-up is authorized. A later bounded retry is justified only when a genuinely independent metadata-only acquisition source and all 29 reviewed, source-hashed bindings exist; absence of those inputs must remain blocked rather than trigger synthetic, public-sample, challenge, remediation, prediction, or lockbox substitution.
 
-Do not automatically implement runtime enforcement, action enablement, normalized trusted provenance, naturalistic challenge v2, the full hybrid system, training, data expansion, schema changes, ContractCoreV2 changes, evaluator changes, prediction repair, browser automation, or model/executable improvement claims.
+Do not automatically implement the compiler or decoder, run training or prediction, create or select evaluation data, reuse lockbox-v1, change prompts/decoding/evaluators/schema/runtime, enable copy-shadow enforcement or action provenance, or make model/executable/production/safety/live-browser improvement claims.
 
 ## 8. Evidence Index Link
 

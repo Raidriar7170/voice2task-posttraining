@@ -40,6 +40,8 @@ def test_public_surfaces_clarify_strict_normalized_command_mismatch_policy() -> 
 
     assert "Metric Interpretation Boundaries" in readme
     assert "`contract_exact_match` is a hard full-contract exact-match metric" in normalized_readme
+    assert "JSON type-strict" in normalized_readme
+    assert "object key order and serialization whitespace" in normalized_readme
     assert (
         "`normalized_command` string-mismatch diagnostics are explanatory row-level evidence only"
         in normalized_readme

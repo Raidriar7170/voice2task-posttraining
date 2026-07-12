@@ -19,7 +19,7 @@ Browser Task Contract JSON，供后续浏览器 agent 决定搜索、打开 URL�
 | --- | --- |
 | Problem | 中文语音/ASR 浏览器命令 -> schema-valid browser task contract JSON |
 | Model pipeline | Qwen2.5-7B-Instruct + LoRA SFT；adapter 私有，不随仓库发布 |
-| Data/training | 247 seeds / 696 SFT rows / 2,100 preference pairs；final SFT 只使用既有训练数据 |
+| Data/training | 247 seeds / 696 SFT rows / 2,100 preference pairs；public dev/test 为 `DEVELOPMENT_ONLY_SPENT`；final SFT 只使用既有训练数据 |
 | Prompt/eval hardening | 统一 gold-free prompt policy `unified_gold_free_v1`；严格 JSON parse -> strict schema -> semantic contract -> exact match 分层验证 |
 | Frozen evaluation | 120-row `lockbox-v1`，120 semantic families，manifest frozen，one-look final evaluation |
 | Result boundary | final SFT 没有提升 strict contract exact match；`no overall model improvement claim` |
@@ -49,7 +49,7 @@ Interpretation:
 - Final SFT did improve several semantic/channel metrics:
   `semantic_contract_valid_rate +0.0417`, `task_type_accuracy +0.0667`,
   `route_accuracy +0.0583`, `confirmation_accuracy +0.0833`.
-- This is aggregate-only one-look evidence. Public reports do not include row-level failure analysis.
+- This is aggregate-only one-look evidence. Public reports do not include row-level failure analysis；不能据此推断 row-level failure cause、natural-ASR generalization 或 overall SFT causal effect。
 
 Evidence links:
 
@@ -118,6 +118,13 @@ PYTHONPATH=src python -m voice2task.cli.data validate \
   --dpo data/public-samples/dpo_public_sample.jsonl \
   --manifest data/public-samples/manifest_public_sample.json \
   --public
+
+PYTHONPATH=src python -m voice2task.cli.data audit-splits \
+  --seed data/public-samples/seed_traces.jsonl \
+  --sft data/public-samples/sft_public_sample.jsonl \
+  --dpo data/public-samples/dpo_public_sample.jsonl \
+  --manifest data/public-samples/manifest_public_sample.json \
+  --output reports/public-sample/split-integrity-audit
 ```
 
 Run local baselines and metrics:
@@ -151,21 +158,31 @@ PYTHONPATH=src python -m voice2task.cli.train dpo \
 
 ## Metric Interpretation Boundaries
 
-`contract_exact_match` is a hard full-contract exact-match metric.
+`contract_exact_match` is a hard full-contract exact-match metric. Future evaluator runs use recursive JSON type-strict equality: booleans, integers, and floating-point values are distinct; object key order and serialization whitespace are ignored; array order is preserved; non-finite or non-JSON values fail closed. Historical metrics were not re-scored.
 `normalized_command` string-mismatch diagnostics are explanatory row-level
 evidence only: they do not relax, normalize, semantically score, repair, replace,
-or re-score predictions, and they do not automatically mark Chinese phrase
-differences such as `搜索/查询` or `明天的天气/明天天气` as equivalent.
+or re-score predictions, and they do not automatically mark Chinese phrase differences such as `搜索/查询` or `明天的天气/明天天气` as equivalent.
 
 `normalized_command` gold targets are canonical Chinese intent phrases, not
 verbatim transcripts or ASR text. This is target-writing guidance for SFT/DPO
 data and prompts, not evaluator-side normalization, semantic-equivalence
 scoring, prediction repair, or re-scoring.
 
+### Normalized Command Target Policy
+
+Targets use canonical Chinese intent phrases, not verbatim transcripts or ASR
+text. Representative forms include `搜索北京明天天气`, `打开示例网站`,
+`填写邮箱并确认`, and `拒绝代替用户付款`. This is authoring guidance, not
+evaluator-side normalization or semantic-equivalence scoring.
+
 ## Evidence Archive
 
 Longer-running internal evidence remains documented below the headline result:
 
+- Public split integrity: the current 282/207/207 dev/test boundary is
+  `DEVELOPMENT_ONLY_SPENT`, not blind, independent, leakage-free, or
+  final-generalization evidence. The audit preserves historical rows and
+  metrics; lockbox-v1 remains the distinct frozen one-look aggregate boundary.
 - Contract V2 projection: `PARTIAL_SCHEMA_BENEFIT`; derived-field-only strict
   failures are 14.65%, normalized-command-only strict failures are 14.65%, and
   core slot failures remain 68.79% of V1 strict failures. This is useful

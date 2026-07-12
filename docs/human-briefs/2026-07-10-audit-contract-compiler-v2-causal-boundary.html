@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Contract Compiler V2 因果边界审计</title>
+  <style>
+    :root { color-scheme:light; --ink:#132238; --muted:#5b6878; --line:#dce3ea; --ok:#0f766e; --warn:#a16207; --block:#b42318; --bg:#f5f7fa; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.62 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif; }
+    main { max-width:980px; margin:32px auto; padding:0 20px 40px; }
+    header,.card { background:white; border:1px solid var(--line); border-radius:16px; box-shadow:0 8px 28px rgba(19,34,56,.06); }
+    header { padding:30px; }
+    .eyebrow { color:var(--ok); font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+    h1 { margin:.25rem 0 .7rem; font-size:30px; line-height:1.25; }
+    h2 { margin:0 0 12px; font-size:19px; }
+    p { margin:.45rem 0; }
+    .lead { font-size:18px; }
+    .status { display:inline-block; margin-top:14px; padding:5px 10px; border-radius:999px; color:white; background:var(--warn); font-weight:700; }
+    .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-top:16px; }
+    .card { padding:22px; }
+    .metric { font-size:26px; font-weight:800; color:var(--ok); }
+    .blocked { color:var(--block); }
+    ul { margin:.4rem 0 0; padding-left:1.25rem; }
+    code { padding:.08rem .32rem; border-radius:5px; background:#edf2f7; font:13px ui-monospace,SFMono-Regular,Menlo,monospace; }
+    a { color:#075985; }
+    .boundary { border-left:4px solid var(--warn); }
+    footer { color:var(--muted); margin-top:18px; font-size:13px; }
+    @media (max-width:720px) { .grid { grid-template-columns:1fr; } h1 { font-size:25px; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="eyebrow">Human Brief · 2026-07-10</div>
+    <h1>Contract Compiler V2：机制已审计，因果结论仍被阻断</h1>
+    <p class="lead">247 条 formal seed 的 renderer 机制可以描述，但现有 public dev/test 与已消费 lockbox 不能识别 compiler 或模型学习的因果提升。</p>
+    <span class="status" style="background:var(--ok)">ARCHIVED · POST-ARCHIVE VALIDATED</span>
+  </header>
+
+  <section class="grid" aria-label="关键结果">
+    <article class="card">
+      <h2>Renderer 支持与稳定性</h2>
+      <div class="metric">246 / 247</div>
+      <p>247 条均 parse-valid、重复结果均稳定；246 条 supported 且 deterministic，1 条 unsupported。</p>
+    </article>
+    <article class="card">
+      <h2>Legacy canonical exact</h2>
+      <div class="metric">98 / 247</div>
+      <p>ITT exact 为 <code>0.396761</code>；supported-only 仅是次级诊断：98/246（<code>0.398374</code>）。supported mismatch 为 148。</p>
+    </article>
+    <article class="card">
+      <h2>Policy self-consistency</h2>
+      <div class="metric">246 / 247</div>
+      <p>按 <code>validate_contract_status(...)[semantic_valid]</code> 检查，ITT 为 <code>0.995951</code>；这仍不是外部语义正确性。</p>
+    </article>
+    <article class="card">
+      <h2>因果识别</h2>
+      <div class="metric blocked">BLOCKED × 2</div>
+      <p>compiler/system 与 model-learning 两类 estimand 均为 <code>CAUSAL_IDENTIFICATION_BLOCKED</code>；mechanics 仅为 <code>DESCRIPTIVE_ONLY</code>。</p>
+    </article>
+  </section>
+
+  <section class="card boundary" style="margin-top:16px">
+    <h2>最重要的口径纠正</h2>
+    <p><strong>99.77% support is not legacy canonical exact compatibility.</strong></p>
+    <p>历史 <code>2180/2185</code> 只说明 renderer 返回了结果；本次固定 247-row 审计显示 legacy canonical exact 只有 <code>98/247</code>。不得把前者写成 canonical exact 或模型提升。</p>
+  </section>
+
+  <section class="grid">
+    <article class="card">
+      <h2>本阶段改变了什么</h2>
+      <ul>
+        <li>新增 audit-only helper、26 个 focused 契约测试与确定性 JSON/Markdown。</li>
+        <li>observed-current 图显式覆盖 raw-valid direct、raw-invalid retry、raw-invalid retry-disabled 三条实际分支；offline core/renderer 仍为 <code>runtime_wired=false</code>。</li>
+        <li>field-authority participation 改为三态；candidate semantic authority 明确为未指定的 hypothetical，V1 current constraints 与 hypothetical candidate transforms 分栏记录并绑定 source path/anchor。</li>
+        <li>compiler 与 model estimand 使用独立 invariant 集合；model 不再继承只适用于 compiler 的 <code>raw_core_identity</code>。</li>
+        <li>绑定 16 个显式 whitelist 输入与冻结 SHA-256；missing、extra、drift、exact/descendant deny、absolute、traversal 与 Windows drive path 均在任何 hash/read 前 fail closed，安全近似名称仍可通过。</li>
+        <li>导航与状态页只发布 blocked/descriptive 结论，不发布 model-improvement headline。</li>
+      </ul>
+    </article>
+    <article class="card">
+      <h2>没有发生什么</h2>
+      <ul>
+        <li>无训练、预测、A100 执行、数据修改或历史重评分。</li>
+        <li>无 prompt、evaluator default、compiler、decoder 或 runtime 实现。</li>
+        <li>未读取 lockbox rows、drafts、row failures、raw/private predictions、私有语料、cache、adapter 或 checkpoint。</li>
+        <li>无 clean evaluation、public dev/test selection、生产/安全/浏览器 benchmark 声明。</li>
+      </ul>
+    </article>
+  </section>
+
+  <section class="grid">
+    <article class="card">
+      <h2>当前验证证据</h2>
+      <ul>
+        <li>Focused audit tests：26 passed</li>
+        <li>相关 renderer / evaluator tests：116 passed</li>
+        <li>全仓 Ruff、focused Mypy、OpenSpec strict 12/12、diff check：通过</li>
+        <li>Public validate：696 SFT / 2100 DPO；DPO check：2100 pairs</li>
+        <li>Full Mypy：既有基线 39 errors / 5 files；audit 模块 0 errors</li>
+        <li>Post-archive full pytest：717 passed；原 4 个 active-change guards 全部闭合</li>
+        <li>Current truth surface：通过；OpenSpec strict：12/12</li>
+        <li>source-anchor、one-byte hash-drift 与 pre-access path-guard tests：通过</li>
+        <li>Markdown 分母来自 audit values 的 synthetic test：通过</li>
+        <li>Independent Spec Reviewer：Pass；Independent Code Quality Reviewer：Pass</li>
+        <li>双生成与 committed artifacts byte-identical：通过</li>
+        <li>Public leak scan：9 targets / 0 findings</li>
+        <li>Public seed / SFT / DPO / manifest hashes：未变化</li>
+      </ul>
+    </article>
+    <article class="card">
+      <h2>权威文件</h2>
+      <ul>
+        <li><a href="../../reports/public-sample/contract-compiler-v2-causal-boundary/summary.json">audit summary JSON</a></li>
+        <li><a href="../../reports/public-sample/contract-compiler-v2-causal-boundary/summary.md">audit summary Markdown</a></li>
+        <li><a href="../../CONTEXT.md">durable candidate boundary</a></li>
+        <li><a href="../current-status.md">current status</a></li>
+        <li><a href="../../reports/public-sample/EVIDENCE_INDEX.md">evidence index</a></li>
+        <li><a href="../../openspec/changes/archive/2026-07-10-audit-contract-compiler-v2-causal-boundary/tasks.md">archived OpenSpec tasks</a></li>
+      </ul>
+    </article>
+  </section>
+
+  <section class="card" style="margin-top:16px">
+    <h2>归档后 archive-only guards 已闭合</h2>
+    <p>两轮审查与 Must Fix 修复后的归档前结果为 <code>713 passed / 4 failed</code>；归档后为 <code>717 passed</code>。以下四项未被放宽，而是在 active change 清零后自然转绿：</p>
+    <ul>
+      <li><code>tests/test_evidence_surface.py::test_current_truth_surface_checker_passes</code></li>
+      <li><code>tests/test_recovered_adapter_challenge_evaluation.py::test_frozen_boundary_passes_with_committed_challenge_and_policy_hashes</code></li>
+      <li><code>tests/test_recovered_adapter_challenge_evaluation.py::test_blocked_artifact_contract_for_missing_adapters</code></li>
+      <li><code>tests/test_recovered_adapter_challenge_evaluation.py::test_verified_adapters_run_canonical_export_in_disabled_null_and_jsonl_modes</code></li>
+    </ul>
+  </section>
+
+  <section class="card" style="margin-top:16px">
+    <h2>剩余风险与下一步</h2>
+    <p>当前 public dev/test 已用于开发，lockbox-v1 已完成 one-look，且没有 preregistered clean matched arms、multi-seed uncertainty 或完整 machine-checked invariants。唯一建议是 <code>preregister-clean-matched-compiler-and-model-evidence-design</code>；本阶段只推荐、未执行。两轮独立只读审查与 post-archive 验证均已通过，当前 OpenSpec change 已归档；任何后续 evidence-design、compiler/decoder 实现、训练或预测都必须作为新的独立阶段开启。</p>
+  </section>
+  <footer>本页为人类复核摘要；OpenSpec、源码、测试、source hashes 与 report artifacts 仍是权威来源。</footer>
+</main>
+</body>
+</html>
