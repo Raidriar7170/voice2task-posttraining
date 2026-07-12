@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Voice2Task Review Pack Archived · 人类简报</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #171717;
+      --muted: #404040;
+      --accent: #A16207;
+      --paper: #FFFFFF;
+      --line: #E8ECF0;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+        "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      font-size: 16px;
+      line-height: 1.7;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: underline;
+      text-decoration-thickness: 0.08em;
+      text-underline-offset: 0.18em;
+    }
+
+    a:hover {
+      color: var(--ink);
+    }
+
+    a:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 3px;
+    }
+
+    .skip-link {
+      position: absolute;
+      top: 0.75rem;
+      left: 0.75rem;
+      padding: 0.5rem 0.75rem;
+      color: var(--paper);
+      background: var(--ink);
+      transform: translateY(-200%);
+    }
+
+    .skip-link:focus-visible {
+      transform: translateY(0);
+    }
+
+    header,
+    nav,
+    main,
+    footer {
+      width: calc(100% - 2rem);
+      max-width: 760px;
+      margin-inline: auto;
+    }
+
+    header {
+      padding: 4.5rem 0 2rem;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .eyebrow,
+    .status-line {
+      margin: 0 0 0.75rem;
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    h3 {
+      line-height: 1.25;
+      text-wrap: balance;
+    }
+
+    h1 {
+      max-width: 16ch;
+      margin: 0;
+      font-size: clamp(2rem, 7vw, 3.75rem);
+      letter-spacing: -0.035em;
+    }
+
+    h2 {
+      margin: 0 0 1rem;
+      font-size: 1.6rem;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 1.5rem 0 0.5rem;
+      font-size: 1rem;
+    }
+
+    .lede {
+      max-width: 64ch;
+      margin: 1.5rem 0 0;
+      color: var(--muted);
+      font-size: 1.08rem;
+    }
+
+    nav {
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    nav ul {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem 1rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    nav a {
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 650;
+    }
+
+    main {
+      padding: 1rem 0 4rem;
+    }
+
+    section {
+      padding: 2.5rem 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    p,
+    ul,
+    ol,
+    dl {
+      margin-top: 0;
+    }
+
+    ul,
+    ol {
+      padding-left: 1.4rem;
+    }
+
+    li + li {
+      margin-top: 0.55rem;
+    }
+
+    dl {
+      display: block;
+      margin-bottom: 0;
+      border-top: 1px solid var(--line);
+    }
+
+    dt,
+    dd {
+      margin: 0;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    dt {
+      padding-right: 1rem;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    code {
+      color: var(--ink);
+      background: var(--line);
+      padding: 0.1em 0.28em;
+      border-radius: 0.2rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+        "Liberation Mono", monospace;
+      font-size: 0.88em;
+      overflow-wrap: anywhere;
+    }
+
+    .callout {
+      margin: 1.25rem 0;
+      padding: 1rem 1.1rem;
+      border-left: 4px solid var(--accent);
+      background: var(--line);
+    }
+
+    .authority-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      border-top: 1px solid var(--line);
+    }
+
+    .authority-list li {
+      margin: 0;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .authority-list strong {
+      display: block;
+    }
+
+    .link-group {
+      margin-bottom: 1.75rem;
+    }
+
+    .link-group:last-child {
+      margin-bottom: 0;
+    }
+
+    footer {
+      padding: 1.5rem 0 3rem;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    @media (max-width: 600px) {
+      header,
+      nav,
+      main,
+      footer {
+        width: calc(100% - 1.5rem);
+      }
+
+      header {
+        padding-top: 3.5rem;
+      }
+
+      dt {
+        padding-bottom: 0.15rem;
+        border-bottom: 0;
+      }
+
+      dd {
+        padding-top: 0;
+      }
+
+    }
+
+    @media print {
+      body {
+        font-size: 10pt;
+      }
+
+      .skip-link,
+      nav {
+        display: none;
+      }
+
+      header,
+      main,
+      footer {
+        width: 100%;
+        max-width: none;
+      }
+
+      header {
+        padding-top: 0;
+      }
+
+      section {
+        break-inside: avoid;
+      }
+
+      a {
+        color: var(--ink);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      .skip-link {
+        transition: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#brief-main">跳到主要内容</a>
+  <header>
+    <p class="eyebrow">Voice2Task · Clean evaluation review pack</p>
+    <p class="status-line">ARCHIVED · REVIEW PACK READY ONLY · EXECUTION BLOCKED</p>
+    <h1>Review pack 已归档，但执行边界仍完全阻断</h1>
+    <p class="lede">本阶段已归档固定公开模板、结构约束、核对清单与纯 lint 接口，作为可复核的准备材料；归档没有取得独立来源、形成有效绑定、记录人类接受，也没有授权冻结、物化、写行或运行实验。</p>
+  </header>
+
+  <nav aria-label="简报目录">
+    <ul>
+      <li><a href="#status">当前状态</a></li>
+      <li><a href="#changes">阶段改变</a></li>
+      <li><a href="#authority">权限边界</a></li>
+      <li><a href="#sources">权威来源</a></li>
+      <li><a href="#verification">验证证据</a></li>
+      <li><a href="#risks">剩余风险</a></li>
+      <li><a href="#next">建议下一步</a></li>
+    </ul>
+  </nav>
+
+  <main id="brief-main">
+    <section id="status">
+      <h2>当前状态</h2>
+      <p class="callout"><strong>一句话结论：</strong>Review pack 只具备外部填写与结构核验能力；所有执行与生命周期门禁仍保持 fail-closed。</p>
+      <p lang="en">READY_FOR_EXTERNAL_COMPLETION means only that template, schema, catalog, and checklist are externally completable.</p>
+      <dl>
+        <dt>Change</dt>
+        <dd><code>change_status=ARCHIVED</code></dd>
+        <dt>Archive path</dt>
+        <dd><code>archive_path=openspec/changes/archive/2026-07-12-prepare-clean-evaluation-acquisition-and-binding-review-pack-v1</code></dd>
+        <dt>Main spec sync</dt>
+        <dd><code>main_spec_sync=PASS_7_REQUIREMENTS_29_SCENARIOS</code></dd>
+        <dt>Active OpenSpec changes</dt>
+        <dd><code>active_openspec_changes=0</code></dd>
+        <dt>Evidence</dt>
+        <dd><code>evidence_status=DESIGN_ONLY</code></dd>
+        <dt>Phase</dt>
+        <dd><code>phase_status=PREPARATION_ONLY</code></dd>
+        <dt>Decision</dt>
+        <dd><code>decision=ACQUISITION_AND_BINDING_REVIEW_PACK_READY_EXECUTION_BLOCKED</code></dd>
+        <dt>Review pack</dt>
+        <dd><code>review_pack_status=READY_FOR_EXTERNAL_COMPLETION</code></dd>
+        <dt>Candidate pack</dt>
+        <dd><code>candidate_pack_status=INCOMPLETE</code></dd>
+        <dt>Binding inventory</dt>
+        <dd><code>binding_inventory_count=29</code></dd>
+        <dt>Supplied bindings</dt>
+        <dd><code>supplied_binding_count=0</code></dd>
+        <dt>Authoritative bindings</dt>
+        <dd><code>authoritatively_bound_binding_count=0</code></dd>
+        <dt>Acquisition source</dt>
+        <dd><code>acquisition_source_status=UNAVAILABLE</code></dd>
+        <dt>Current readiness</dt>
+        <dd><code>current_readiness_state=DESIGN_ONLY</code></dd>
+        <dt>Execution bindings</dt>
+        <dd><code>execution_bindings_status=INCOMPLETE</code></dd>
+        <dt>Protocol freeze</dt>
+        <dd><code>protocol_freeze_status=NOT_FROZEN</code></dd>
+        <dt>Clean population</dt>
+        <dd><code>clean_population_status=NOT_MATERIALIZED</code></dd>
+        <dt>Boundary integrity</dt>
+        <dd><code>boundary_integrity_status=NOT_CREATED</code></dd>
+        <dt>Human acceptance</dt>
+        <dd><code>human_acceptance_status=NOT_RECORDED</code></dd>
+        <dt>Freeze authorization</dt>
+        <dd><code>freeze_authorized=false</code></dd>
+        <dt>Next phase</dt>
+        <dd><code>next_phase_eligible=false</code></dd>
+        <dt>Execution</dt>
+        <dd><code>execution_readiness=false</code></dd>
+        <dt>Bundle membership</dt>
+        <dd><code>seven_member_bundle=true</code></dd>
+        <dt>Manifest payload hashes</dt>
+        <dd><code>manifest_hashed_payload_count=6</code></dd>
+        <dt>Manifest self hash</dt>
+        <dd><code>manifest_self_hash=false</code></dd>
+      </dl>
+      <p>公开 bundle 固定包含 7 个成员；<code>manifest.json</code> 只哈希前 6 个 payload，manifest 不对自身做 self-hash。</p>
+    </section>
+
+    <section id="changes">
+      <h2>本阶段改变了什么</h2>
+      <ul>
+        <li>生成一个固定路径、七成员、create-once 且 exact-idempotent 的公开 review bundle；首次创建成功，第二次调用只接受机械完全一致的 no-op。</li>
+        <li>从执行侧唯一的 29 字段 inventory 派生 catalog，不复制字段列表，也不预填值、别名、哈希或权威结论。</li>
+        <li>提供一个严格的非执行 envelope、JSON Schema、template 与 checklist；所有 draft 表面保持与执行输入结构隔离。</li>
+        <li>加入纯内存 candidate lint 与两个受限 CLI 路由；lint 只能给出结构一致性结论，不能转换、导出、冻结或持久化执行组件。</li>
+        <li>在公开 evidence index、状态文档与 truth checker 中增加加法式导航，同时保持已归档 S0 的阻断结论与五文件证据不变。</li>
+        <li>完成 Task 4.1 的 publication、recovery、CLI/lint、current classification 与 legacy observable acceptance；该验收没有授予来源、绑定、冻结、物化或执行权限。</li>
+        <li>完成 Task 4.2 的临时 public build、正式 public validate、DPO check、focused dataset tests 与 15/15 protected-hash comparison；临时输出已经清理，正式公开数据与私有边界未被改写。</li>
+        <li>完成 Task 4.3 全量 gate 检查，并保留 full pytest 生命周期守卫与 full-Mypy baseline 的非绿色真实结果。</li>
+        <li>完成 Task 4.4 的 3 个 Must Fix：post-staging BaseException 走 observation-first recovery；private reader 在 open 前拒绝 FIFO/socket 并实施 nonblocking no-follow 与 identity 链验证；publication 固定错误码脱离 raw exception chain，classifier fault 降级为 sanitized identity uncertain。</li>
+      </ul>
+      <p><code>template_lint_conforms=false</code>；未来即使 lint 返回退出码 0，也只能解释为 <code>future_lint_exit_0=CONFORMANCE_ONLY</code>。</p>
+    </section>
+
+    <section id="authority">
+      <h2>信任与权限边界</h2>
+      <ul class="authority-list">
+        <li><strong>Pack 的权限</strong>仅提供 operator guidance 与 externally completable 的草稿表面；它是 not candidate reviewed or accepted。</li>
+        <li><strong>Lint 的权限</strong>仅检查结构、内部语义与交叉组件一致性；它不能证明独立性、真实性、来源或外部接受。</li>
+        <li><strong>外部证据</strong>source not acquired；因此没有独立 acquisition source 可供绑定。</li>
+        <li><strong>绑定状态</strong>bindings not effective；自报标签、哈希或 approval 字段不能提升权威计数。</li>
+        <li><strong>生命周期状态</strong>protocol not frozen；population not materialized；rows not authored；experiment not eligible。</li>
+        <li><strong>结果声明</strong>no model improvement，也没有训练、预测、A100、质量、安全或生产就绪结论。</li>
+        <li><strong>Writer 假设</strong>Publication 只在 trusted, exclusive, cooperative same-EUID writer assumption 下成立；<code>trusted_exclusive_cooperative_same_euid=true</code>。</li>
+        <li><strong>同账户竞争边界</strong>恶意 same-EUID pathname replacement 属于 account/process-boundary compromise，不是本能力提供的 portable CAS 保证；<code>malicious_same_euid_replacement=ACCOUNT_PROCESS_BOUNDARY_COMPROMISE</code>。</li>
+        <li><strong>无变更排除项</strong>descriptor-read access-time changes 是 no-mutation contract 唯一排除项；<code>no_mutation_exclusion=DESCRIPTOR_READ_ACCESS_TIME_ONLY</code>。</li>
+        <li><strong>Recovery 处置</strong>recovery sibling 永不自动 GC；必须单独人工处置；<code>recovery_automatic_gc=false</code>。</li>
+        <li><strong>S0 权威</strong><code>s0_evidence_status=BLOCKED</code>，<code>s0_decision=CLEAN_EVALUATION_BOUNDARY_MATERIALIZATION_BLOCKED</code>，<code>s0_superseded_by=null</code>；本 pack 没有解决或取代该阻断。</li>
+      </ul>
+    </section>
+
+    <section id="sources">
+      <h2>权威来源与关键产物</h2>
+
+      <div class="link-group">
+        <h3>OpenSpec 生命周期来源</h3>
+        <ul>
+          <li><a href="../../openspec/changes/archive/2026-07-12-prepare-clean-evaluation-acquisition-and-binding-review-pack-v1/proposal.md">Archived review pack change proposal</a></li>
+          <li><a href="../../openspec/changes/archive/2026-07-12-prepare-clean-evaluation-acquisition-and-binding-review-pack-v1/design.md">Archived review pack architecture design</a></li>
+          <li><a href="../../openspec/changes/archive/2026-07-12-prepare-clean-evaluation-acquisition-and-binding-review-pack-v1/specs/clean-evaluation-acquisition-and-binding-review-pack/spec.md">Archived review pack delta specification</a></li>
+          <li><a href="../../openspec/changes/archive/2026-07-12-prepare-clean-evaluation-acquisition-and-binding-review-pack-v1/tasks.md">Archived review pack apply tasks</a></li>
+          <li><a href="../../openspec/specs/clean-evaluation-acquisition-and-binding-review-pack/spec.md">Synced main capability specification</a></li>
+        </ul>
+      </div>
+
+      <div class="link-group">
+        <h3>七个固定公开成员</h3>
+        <ul class="compact-list">
+          <li><a href="../../reports/public-sample/clean-evaluation-acquisition-and-binding-review-pack-v1/summary.json">Machine-readable blocked summary</a></li>
+          <li><a href="../../reports/public-sample/clean-evaluation-acquisition-and-binding-review-pack-v1/summary.md">Human-readable pack summary</a></li>
+          <li><a href="../../reports/public-sample/clean-evaluation-acquisition-and-binding-review-pack-v1/manifest.json">Seven-member bundle manifest: six payload hashes, no self-hash</a></li>
+          <li><a href="../../reports/public-sample/clean-evaluation-acquisition-and-binding-review-pack-v1/binding-catalog.json">Canonical 29-field binding catalog</a></li>
+          <li><a href="../../reports/public-sample/clean-evaluation-acquisition-and-binding-review-pack-v1/review-pack.schema.json">Strict review envelope schema</a></li>
+          <li><a href="../../reports/public-sample/clean-evaluation-acquisition-and-binding-review-pack-v1/review-pack.template.json">Non-executable review template</a></li>
+          <li><a href="../../reports/public-sample/clean-evaluation-acquisition-and-binding-review-pack-v1/review-checklist.md">Provider and reviewer checklist</a></li>
+        </ul>
+      </div>
+
+      <div class="link-group">
+        <h3>执行边界、实现与测试</h3>
+        <ul>
+          <li><a href="../../reports/public-sample/clean-compiler-model-evaluation-boundary-v1/summary.json">Archived S0 blocked summary</a></li>
+          <li><a href="../../src/voice2task/clean_evaluation_review_pack.py">Pure review-pack implementation</a></li>
+          <li><a href="../../src/voice2task/clean_evaluation_boundary.py">Clean evaluation execution boundary</a></li>
+          <li><a href="../../src/voice2task/cli/data.py">Bounded data CLI routes</a></li>
+          <li><a href="../../tests/test_clean_evaluation_review_pack.py">Review-pack behavior tests</a></li>
+          <li><a href="../../tests/test_clean_evaluation_boundary.py">Execution-boundary regression tests</a></li>
+          <li><a href="../../tests/test_evidence_surface.py">Truth-surface and Human Brief tests</a></li>
+        </ul>
+      </div>
+
+      <div class="link-group">
+        <h3>当前导航与守卫</h3>
+        <ul>
+          <li><a href="../../reports/public-sample/EVIDENCE_INDEX.md">Public evidence index</a></li>
+          <li><a href="../current-status.md">Current project status</a></li>
+          <li><a href="../../CONTEXT.md">Durable project context</a></li>
+          <li><a href="../../scripts/check_current_truth_surface.py">Current truth-surface checker</a></li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="verification">
+      <h2>验证证据</h2>
+      <dl>
+        <dt>Publication</dt>
+        <dd><code>publication_initial_create=PASS</code><br><code>publication_second_exact_noop=PASS</code><br><code>task_4_1_group_a_tests=39 passed</code><br><code>task_4_1_group_b_tests=25 passed</code></dd>
+        <dt>Recovery namespace</dt>
+        <dd><code>recovery_siblings=0</code><br><code>recovery_gate_fail_closed=PASS</code><br><code>recovery_automatic_gc=false</code></dd>
+        <dt>CLI and lint</dt>
+        <dd><code>cli_lint_tests=193 passed</code></dd>
+        <dt>Public dataset acceptance</dt>
+        <dd><code>task_4_2_temp_build=PASS</code><br><code>public_build_seed_rows=247</code><br><code>public_build_sft_rows=696</code><br><code>public_build_dpo_pairs=2100</code><br><code>public_validate=PASS_0_FAILURES</code><br><code>public_dpo_check_pairs=2100</code><br><code>task_4_2_focused_tests=88 passed</code><br><code>protected_hashes_unchanged=15/15</code><br><code>task_4_2_temp_output=CLEANED</code></dd>
+        <dt>Archived S0 bytes</dt>
+        <dd><code>s0_five_hashes=UNCHANGED</code></dd>
+        <dt>Private review root</dt>
+        <dd><code>canonical_private_root=ABSENT_IGNORED_UNTRACKED</code></dd>
+        <dt>Evidence surface</dt>
+        <dd><code>evidence_surface_tests=55 passed</code></dd>
+        <dt>Review and boundary</dt>
+        <dd><code>review_boundary_tests=434 passed</code><br><code>boundary_review_evidence_tests=489 passed</code></dd>
+        <dt>Task 4.4 targeted regressions</dt>
+        <dd><code>task_4_4_baseexception_tests=7 passed</code><br><code>task_4_4_private_reader_tests=6 passed</code><br><code>task_4_4_adapter_cli_tests=7 passed</code><br><code>task_4_4_clean_chain_tests=4 passed</code><br><code>task_4_4_targeted_tests=24 passed</code><br><code>task_4_4_must_fixes_resolved=3/3</code></dd>
+        <dt>Truth checker</dt>
+        <dd><code>checker_status=PASS</code><br><code>default_zero_active_truth_status=PASS</code><br><code>active_openspec_changes=0</code></dd>
+        <dt>Full pytest</dt>
+        <dd><code>full_pytest_status=1260_PASSED</code><br><code>full_pytest_failure_scope=NONE</code><br><code>full_pytest_failure_reason=NONE</code><br><code>challenge_hash_policy_rows_template_disjoint=PASS</code></dd>
+        <dt>Static checks</dt>
+        <dd><code>ruff_status=PASS</code><br><code>focused_mypy_status=PASS_4_FILES_0_ISSUES</code><br><code>recorded_full_mypy_baseline=39_ERRORS_IN_5_FILES</code><br><code>full_mypy_rerun=39_ERRORS_IN_5_FILES_CHECKED_31_SOURCE_FILES</code><br><code>full_mypy_status=RECORDED_BASELINE_PRESERVED</code><br><code>full_mypy_source_coverage=31_CURRENT_VS_28_PRIOR_RECORDED</code></dd>
+        <dt>OpenSpec</dt>
+        <dd><code>openspec_strict=15/15</code><br><code>main_spec_sync=PASS_7_REQUIREMENTS_29_SCENARIOS</code></dd>
+        <dt>Public surfaces</dt>
+        <dd><code>leak_link_diff_status=PASS</code></dd>
+        <dt>Completed slice reviews</dt>
+        <dd><code>prior_independent_reviews=PASS</code><br><code>task_4_1_reviewer_focused_tests=8 passed</code><br><code>task_4_1_independent_reviewer=PASS</code><br><code>task_4_2_independent_reviewer=PASS</code><br><code>task_4_3_independent_gate_reviewer=PASS</code><br><code>task_4_4_spec_truth_reviewer=PASS</code><br><code>task_4_4_code_security_reviewer=PASS</code><br><code>final_independent_review_status=PASS_TASK_4_4</code></dd>
+        <dt>Browser viewport QA</dt>
+        <dd><code>browser_viewport_qa_status=NOT_RUN_FILE_URL_BLOCKED</code></dd>
+      </dl>
+      <p>Task 4.1 至 Task 4.3 均已完成有界验证并通过各自独立复核；Task 4.4 的 3 个 Must Fix 已解决，最终 spec/truth 与 code/security 两组独立复核均 PASS；Task 4.5 已完成主 spec 同步、归档与 post-archive gates。临时 manifest 的 <code>generated_at</code> 与输出路径是动态值，因此不要求与 committed manifest 字节相同。</p>
+      <p>Task 4.3 的历史全量检查点是 1241 passed、3 failed；3 个 Must Fix 修复后的归档前检查点是 1257 passed、3 failed。Task 4.5 归档后全量结果为 1260 passed，生命周期守卫已关闭，full-Mypy baseline 保持不变。Frozen challenge/policy hashes、120 rows、template-disjoint 与 in-memory expected-current audit 均通过；这只关闭 OpenSpec 生命周期守卫，不授予 acquisition、binding、freeze 或 execution 权限。</p>
+      <p>Focused Mypy 对 4 个文件返回 0 issues。Full Mypy 仍是 39 errors / 5 files，不能称为 PASS；错误/文件 baseline 保持不变，检查覆盖从先前记录的 28 个 source files 增至当前 31 个。<code>src/voice2task/cli/data.py</code> 的错误仅在 legacy lines 478–609，新 review routes lines 364–389 clean。</p>
+    </section>
+
+    <section id="risks">
+      <h2>剩余风险与禁止过度声明</h2>
+      <ul>
+        <li>外部 provider、reviewer、独立来源、真实数值、统计充分性与接受回执仍不可用；任何自报字段都不构成权威证据。</li>
+        <li>七成员 public bundle 完整且 deterministic，不等于 candidate 完整、被审阅、被接受或可执行。</li>
+        <li>JSON Schema 只证明结构；lint 即使 conformance 通过，也不证明 authority authenticity、source independence 或 human acceptance。</li>
+        <li>不得声称 clean population 已建立、协议已冻结、行已生成、实验已可运行、模型已改进、A100 已执行或产品已就绪。</li>
+        <li>归档 S0 继续是当前执行边界权威：它仍 BLOCKED 且未被 supersede。</li>
+      </ul>
+      <p><code>task_4_1_status=COMPLETE</code>；<code>task_4_2_status=COMPLETE</code>；<code>task_4_3_status=COMPLETE_WITH_EXPLICIT_LIFECYCLE_AND_BASELINE_LIMITATIONS</code>；<code>task_4_4_status=COMPLETE_AFTER_3_MUST_FIXES_RESOLVED_AND_TWO_INDEPENDENT_REVIEWS_PASS</code>；<code>openspec_progress=20/20</code>。</p>
+      <p><code>task_4_4_must_fixes_resolved=3/3</code>；<code>task_4_4_spec_truth_reviewer=PASS</code>；<code>task_4_4_code_security_reviewer=PASS</code>；<code>final_independent_review_status=PASS_TASK_4_4</code>；<code>task_4_5_archive_status=COMPLETE</code>。Browser viewport QA 仍是文件 URL 策略下未运行，且不是 Task 4.3 gate。</p>
+    </section>
+
+    <section id="next">
+      <h2>建议下一步</h2>
+      <p><code>task_4_1_scope=PUBLICATION_RECOVERY_NO_REPLACE_EXACT_NOOP_CLI_LINT_CURRENT_LEGACY_ACCEPTANCE</code><br>Task 4.1：已完成两组 publication acceptance、CLI/lint、current/recovery gate 与 legacy observable regression。</p>
+      <p><code>task_4_2_scope=TEMP_BUILD_PUBLIC_VALIDATE_PUBLIC_DPO_CHECK_FOCUSED_DATASET_TESTS_PROTECTED_HASH_COMPARISON</code><br>Task 4.2：已在临时目录完成 public build，并通过 validate --public、dpo-check、focused dataset tests 与 15/15 protected-hash comparison；临时输出已清理。</p>
+      <p><code>task_4_3_scope=FULL_PYTEST_RUFF_FOCUSED_MYPY_RECORDED_FULL_MYPY_BASELINE_OPENSPEC_TRUTH_LEAK_LINK_JSON_MANIFEST_PRIVATE_DIFF</code><br>Task 4.3：历史检查点为 1241 passed、3 个 active-change archive-guard 失败；Task 4.5 归档后全量结果为 1260 passed，生命周期守卫已关闭，full-Mypy baseline 保持不变。</p>
+      <p><code>task_4_4_scope=FINAL_INDEPENDENT_SPEC_SECURITY_REVIEW</code><br>Task 4.4：3 个 Must Fix 已解决，两组独立复核均 PASS。</p>
+      <p><code>task_4_5_scope=ARCHIVE_COMPLETE_POST_ARCHIVE_GATES</code><br>归档已完成；不自动创建下一 change。任何未来 acquisition/binding 阶段都需要一个经单独审阅的新 change，以及真实的外部输入与接受记录。</p>
+    </section>
+  </main>
+
+  <footer>
+    <p>Human Brief 仅是导航摘要，不是第二套权威来源：<code>human_brief_role=NAVIGATION_SUMMARY_ONLY</code>。OpenSpec、raw summary/manifest、tests 与 validation 保持权威：<code>authoritative_sources=OPENSPEC_RAW_SUMMARY_MANIFEST_TESTS_VALIDATION</code>。</p>
+  </footer>
+</body>
+</html>

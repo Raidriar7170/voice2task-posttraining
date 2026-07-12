@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 
 from voice2task.leak_scan import scan_paths
@@ -23,6 +24,13 @@ CANONICAL_POLICY_PATH = (
 CANONICAL_POLICY_MANIFEST_PATH = (
     REPO_ROOT / "reports/public-sample/normalized-command-canonicalization-policy/manifest.json"
 )
+MOBILE_HUMAN_BRIEF_PATHS = (
+    REPO_ROOT / "docs/human-briefs/2026-07-10-audit-contract-compiler-v2-causal-boundary.html",
+    REPO_ROOT
+    / "docs/human-briefs/2026-07-10-preregister-clean-matched-compiler-and-model-evidence-design.html",
+    REPO_ROOT
+    / "docs/human-briefs/2026-07-11-materialize-and-freeze-clean-compiler-model-evaluation-boundary-v1.html",
+)
 
 
 def _one_line(text: str) -> str:
@@ -40,6 +48,8 @@ def test_public_surfaces_clarify_strict_normalized_command_mismatch_policy() -> 
 
     assert "Metric Interpretation Boundaries" in readme
     assert "`contract_exact_match` is a hard full-contract exact-match metric" in normalized_readme
+    assert "JSON type-strict" in normalized_readme
+    assert "object key order and serialization whitespace" in normalized_readme
     assert (
         "`normalized_command` string-mismatch diagnostics are explanatory row-level evidence only"
         in normalized_readme
@@ -99,3 +109,12 @@ def test_public_surfaces_clarify_strict_normalized_command_mismatch_policy() -> 
     assert scan_paths(
         [README_PATH, STRICT_STRING_POLICY_PATH, MANIFEST_PATH, CANONICAL_POLICY_PATH, CANONICAL_POLICY_MANIFEST_PATH]
     ).ok is True
+
+
+def test_human_briefs_keep_long_content_within_mobile_viewport() -> None:
+    for brief_path in MOBILE_HUMAN_BRIEF_PATHS:
+        brief = brief_path.read_text(encoding="utf-8")
+        compact_brief = "".join(brief.split())
+
+        assert '<metaname="viewport"content="width=device-width,initial-scale=1">' in compact_brief
+        assert re.search(r"body\s*\{[^}]*overflow-wrap\s*:\s*anywhere\s*;", brief)

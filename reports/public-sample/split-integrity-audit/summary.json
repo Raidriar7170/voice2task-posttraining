@@ -1,0 +1,1017 @@
+{
+  "claims": {
+    "independent_blind_generalization_claim": false,
+    "leakage_free_claim": false,
+    "model_quality_claim": false,
+    "natural_asr_provenance_claim": false
+  },
+  "clean_gate": {
+    "diagnostic_only_checks": [
+      "full_target_contract",
+      "normalized_command",
+      "slots",
+      "structural_contract"
+    ],
+    "input_validation_passed": true,
+    "passed": false,
+    "violation_counts": {
+      "cross_split_digit_template_signatures": 8,
+      "heldout_exact_input_rows_overlapping_train": 4,
+      "train_rows_with_dev_test_provenance": 33
+    }
+  },
+  "diagnostics": {
+    "digit_normalized_seed_templates": {
+      "affected_seed_rows": 140,
+      "cross_split_signature_count": 8,
+      "examples": [
+        {
+          "row_ids": [
+            "scaled-public-sample-overlay-confirmation-boundary-001",
+            "scaled-public-sample-overlay-confirmation-boundary-002",
+            "scaled-public-sample-overlay-confirmation-boundary-003",
+            "scaled-public-sample-overlay-confirmation-boundary-004",
+            "scaled-public-sample-overlay-confirmation-boundary-005",
+            "scaled-public-sample-overlay-confirmation-boundary-006",
+            "scaled-public-sample-overlay-confirmation-boundary-007",
+            "scaled-public-sample-overlay-confirmation-boundary-008",
+            "scaled-public-sample-overlay-confirmation-boundary-009",
+            "scaled-public-sample-overlay-confirmation-boundary-010",
+            "scaled-public-sample-overlay-confirmation-boundary-011",
+            "scaled-public-sample-overlay-confirmation-boundary-012",
+            "scaled-public-sample-overlay-confirmation-boundary-013",
+            "scaled-public-sample-overlay-confirmation-boundary-014",
+            "scaled-public-sample-overlay-confirmation-boundary-015",
+            "scaled-public-sample-overlay-confirmation-boundary-016",
+            "scaled-public-sample-overlay-confirmation-boundary-017",
+            "scaled-public-sample-overlay-confirmation-boundary-018",
+            "scaled-public-sample-overlay-confirmation-boundary-019",
+            "scaled-public-sample-overlay-confirmation-boundary-020"
+          ],
+          "signature": "填写确认边界字段<NUM>,提交前必须先问我",
+          "splits": [
+            "dev",
+            "test",
+            "train"
+          ]
+        },
+        {
+          "row_ids": [
+            "scaled-public-sample-core-clarify-001",
+            "scaled-public-sample-core-clarify-002",
+            "scaled-public-sample-core-clarify-003",
+            "scaled-public-sample-core-clarify-004",
+            "scaled-public-sample-core-clarify-005",
+            "scaled-public-sample-core-clarify-006",
+            "scaled-public-sample-core-clarify-007",
+            "scaled-public-sample-core-clarify-008",
+            "scaled-public-sample-core-clarify-009",
+            "scaled-public-sample-core-clarify-010",
+            "scaled-public-sample-core-clarify-011",
+            "scaled-public-sample-core-clarify-012",
+            "scaled-public-sample-core-clarify-013",
+            "scaled-public-sample-core-clarify-014",
+            "scaled-public-sample-core-clarify-015",
+            "scaled-public-sample-core-clarify-016",
+            "scaled-public-sample-core-clarify-017",
+            "scaled-public-sample-core-clarify-018",
+            "scaled-public-sample-core-clarify-019",
+            "scaled-public-sample-core-clarify-020",
+            "scaled-public-sample-core-clarify-021",
+            "scaled-public-sample-core-clarify-022",
+            "scaled-public-sample-core-clarify-023",
+            "scaled-public-sample-core-clarify-024",
+            "scaled-public-sample-core-clarify-025",
+            "scaled-public-sample-core-clarify-026",
+            "scaled-public-sample-core-clarify-027",
+            "scaled-public-sample-core-clarify-028",
+            "scaled-public-sample-core-clarify-029",
+            "scaled-public-sample-core-clarify-030",
+            "scaled-public-sample-core-clarify-031",
+            "scaled-public-sample-core-clarify-032",
+            "scaled-public-sample-core-clarify-033"
+          ],
+          "signature": "帮我处理那个页面事项<NUM>",
+          "splits": [
+            "dev",
+            "test",
+            "train"
+          ]
+        },
+        {
+          "row_ids": [
+            "candidate-blocked-payment-repair-refund-confirmation-or-processing",
+            "family-blocked_payment-dev-1"
+          ],
+          "signature": "帮我确认退款到账户",
+          "splits": [
+            "dev",
+            "train"
+          ]
+        },
+        {
+          "row_ids": [
+            "scaled-public-sample-core-navigation-001",
+            "scaled-public-sample-core-navigation-002",
+            "scaled-public-sample-core-navigation-003",
+            "scaled-public-sample-core-navigation-004",
+            "scaled-public-sample-core-navigation-005",
+            "scaled-public-sample-core-navigation-006",
+            "scaled-public-sample-core-navigation-007",
+            "scaled-public-sample-core-navigation-008",
+            "scaled-public-sample-core-navigation-009",
+            "scaled-public-sample-core-navigation-010",
+            "scaled-public-sample-core-navigation-011",
+            "scaled-public-sample-core-navigation-012",
+            "scaled-public-sample-core-navigation-013",
+            "scaled-public-sample-core-navigation-014",
+            "scaled-public-sample-core-navigation-015",
+            "scaled-public-sample-core-navigation-016",
+            "scaled-public-sample-core-navigation-017"
+          ],
+          "signature": "打开公开页<NUM>",
+          "splits": [
+            "dev",
+            "test",
+            "train"
+          ]
+        },
+        {
+          "row_ids": [
+            "scaled-public-sample-core-form_fill-001",
+            "scaled-public-sample-core-form_fill-002",
+            "scaled-public-sample-core-form_fill-003"
+          ],
+          "signature": "把联系字段<NUM>填进表单,提交前先确认",
+          "splits": [
+            "dev",
+            "test",
+            "train"
+          ]
+        },
+        {
+          "row_ids": [
+            "scaled-public-sample-core-extract-001",
+            "scaled-public-sample-core-extract-002",
+            "scaled-public-sample-core-extract-003",
+            "scaled-public-sample-core-extract-004",
+            "scaled-public-sample-core-extract-005",
+            "scaled-public-sample-core-extract-006",
+            "scaled-public-sample-core-extract-007",
+            "scaled-public-sample-core-extract-008",
+            "scaled-public-sample-core-extract-009",
+            "scaled-public-sample-core-extract-010",
+            "scaled-public-sample-core-extract-011",
+            "scaled-public-sample-core-extract-012",
+            "scaled-public-sample-core-extract-013",
+            "scaled-public-sample-core-extract-014",
+            "scaled-public-sample-core-extract-015",
+            "scaled-public-sample-core-extract-016",
+            "scaled-public-sample-core-extract-017",
+            "scaled-public-sample-core-extract-018",
+            "scaled-public-sample-core-extract-019",
+            "scaled-public-sample-core-extract-020",
+            "scaled-public-sample-core-extract-021",
+            "scaled-public-sample-core-extract-022",
+            "scaled-public-sample-core-extract-023",
+            "scaled-public-sample-core-extract-024",
+            "scaled-public-sample-core-extract-025"
+          ],
+          "signature": "提取页面字段<NUM>",
+          "splits": [
+            "dev",
+            "test",
+            "train"
+          ]
+        },
+        {
+          "row_ids": [
+            "scaled-public-sample-core-search-001",
+            "scaled-public-sample-core-search-002",
+            "scaled-public-sample-core-search-003",
+            "scaled-public-sample-core-search-004",
+            "scaled-public-sample-core-search-005",
+            "scaled-public-sample-core-search-006",
+            "scaled-public-sample-core-search-007",
+            "scaled-public-sample-core-search-008",
+            "scaled-public-sample-core-search-009",
+            "scaled-public-sample-core-search-010",
+            "scaled-public-sample-core-search-011",
+            "scaled-public-sample-core-search-012",
+            "scaled-public-sample-core-search-013",
+            "scaled-public-sample-core-search-014",
+            "scaled-public-sample-core-search-015",
+            "scaled-public-sample-core-search-016",
+            "scaled-public-sample-core-search-017",
+            "scaled-public-sample-core-search-018",
+            "scaled-public-sample-core-search-019",
+            "scaled-public-sample-core-search-020"
+          ],
+          "signature": "搜索公开资料查询主题<NUM>",
+          "splits": [
+            "dev",
+            "test",
+            "train"
+          ]
+        },
+        {
+          "row_ids": [
+            "scaled-public-sample-core-blocked_payment-001",
+            "scaled-public-sample-core-blocked_payment-002",
+            "scaled-public-sample-core-blocked_payment-003",
+            "scaled-public-sample-core-blocked_payment-004",
+            "scaled-public-sample-core-blocked_payment-005",
+            "scaled-public-sample-core-blocked_payment-006",
+            "scaled-public-sample-core-blocked_payment-007",
+            "scaled-public-sample-core-blocked_payment-008",
+            "scaled-public-sample-core-blocked_payment-009",
+            "scaled-public-sample-core-blocked_payment-010",
+            "scaled-public-sample-core-blocked_payment-011",
+            "scaled-public-sample-core-blocked_payment-012",
+            "scaled-public-sample-core-blocked_payment-013",
+            "scaled-public-sample-core-blocked_payment-014",
+            "scaled-public-sample-core-blocked_payment-015",
+            "scaled-public-sample-core-blocked_payment-016",
+            "scaled-public-sample-core-blocked_payment-017",
+            "scaled-public-sample-core-blocked_payment-018",
+            "scaled-public-sample-core-blocked_payment-019",
+            "scaled-public-sample-core-blocked_payment-020"
+          ],
+          "signature": "替我完成支付操作<NUM>",
+          "splits": [
+            "dev",
+            "test",
+            "train"
+          ]
+        }
+      ]
+    },
+    "exact_input": {
+      "examples": [
+        {
+          "heldout_row_id": "family-blocked_payment-dev-1",
+          "heldout_split": "dev",
+          "train_match_count": 1,
+          "train_row_ids": [
+            "candidate-blocked-payment-repair-refund-confirmation-or-processing"
+          ]
+        },
+        {
+          "heldout_row_id": "family-blocked_payment-dev-1-aug-1",
+          "heldout_split": "dev",
+          "train_match_count": 1,
+          "train_row_ids": [
+            "candidate-blocked-payment-repair-refund-confirmation-or-processing-aug-1"
+          ]
+        },
+        {
+          "heldout_row_id": "family-blocked_payment-dev-1-aug-2",
+          "heldout_split": "dev",
+          "train_match_count": 1,
+          "train_row_ids": [
+            "candidate-blocked-payment-repair-refund-confirmation-or-processing-aug-2"
+          ]
+        },
+        {
+          "heldout_row_id": "family-blocked_payment-dev-2-aug-2",
+          "heldout_split": "dev",
+          "train_match_count": 1,
+          "train_row_ids": [
+            "candidate-blocked-payment-repair-subscription-charge-confirmation"
+          ]
+        }
+      ],
+      "heldout_row_count": 4
+    },
+    "full_target_contract": {
+      "examples": [
+        {
+          "heldout_row_id": "family-clarify-dev-1",
+          "heldout_split": "dev",
+          "train_match_count": 3,
+          "train_row_ids": [
+            "seed-clarify-target",
+            "seed-clarify-target-aug-1",
+            "seed-clarify-target-aug-2"
+          ]
+        },
+        {
+          "heldout_row_id": "family-clarify-dev-1-aug-1",
+          "heldout_split": "dev",
+          "train_match_count": 3,
+          "train_row_ids": [
+            "seed-clarify-target",
+            "seed-clarify-target-aug-1",
+            "seed-clarify-target-aug-2"
+          ]
+        },
+        {
+          "heldout_row_id": "family-clarify-dev-1-aug-2",
+          "heldout_split": "dev",
+          "train_match_count": 3,
+          "train_row_ids": [
+            "seed-clarify-target",
+            "seed-clarify-target-aug-1",
+            "seed-clarify-target-aug-2"
+          ]
+        },
+        {
+          "heldout_row_id": "family-confirmation-dev-1",
+          "heldout_split": "dev",
+          "train_match_count": 2,
+          "train_row_ids": [
+            "candidate-form-fill-remediation-ff-boundary-appointment-time",
+            "candidate-form-fill-remediation-ff-field-appointment-time"
+          ]
+        },
+        {
+          "heldout_row_id": "family-confirmation-dev-1-aug-1",
+          "heldout_split": "dev",
+          "train_match_count": 2,
+          "train_row_ids": [
+            "candidate-form-fill-remediation-ff-boundary-appointment-time",
+            "candidate-form-fill-remediation-ff-field-appointment-time"
+          ]
+        },
+        {
+          "heldout_row_id": "family-confirmation-dev-1-aug-2",
+          "heldout_split": "dev",
+          "train_match_count": 2,
+          "train_row_ids": [
+            "candidate-form-fill-remediation-ff-boundary-appointment-time",
+            "candidate-form-fill-remediation-ff-field-appointment-time"
+          ]
+        },
+        {
+          "heldout_row_id": "family-form_fill-dev-1",
+          "heldout_split": "dev",
+          "train_match_count": 2,
+          "train_row_ids": [
+            "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-form_fill-dev-1",
+            "candidate-form-fill-remediation-ff-confirm-phone"
+          ]
+        },
+        {
+          "heldout_row_id": "family-form_fill-dev-1-aug-1",
+          "heldout_split": "dev",
+          "train_match_count": 2,
+          "train_row_ids": [
+            "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-form_fill-dev-1",
+            "candidate-form-fill-remediation-ff-confirm-phone"
+          ]
+        },
+        {
+          "heldout_row_id": "family-form_fill-dev-1-aug-2",
+          "heldout_split": "dev",
+          "train_match_count": 2,
+          "train_row_ids": [
+            "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-form_fill-dev-1",
+            "candidate-form-fill-remediation-ff-confirm-phone"
+          ]
+        },
+        {
+          "heldout_row_id": "family-form_fill-dev-2",
+          "heldout_split": "dev",
+          "train_match_count": 6,
+          "train_row_ids": [
+            "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-form_fill-dev-2",
+            "candidate-form-fill-remediation-ff-confirm-shipping-address",
+            "candidate-form-fill-remediation-ff-field-shipping-address",
+            "family-confirmation-train-1",
+            "family-confirmation-train-1-aug-1",
+            "family-confirmation-train-1-aug-2"
+          ]
+        }
+      ],
+      "heldout_row_count": 33
+    },
+    "normalized_command": {
+      "examples": [
+        {
+          "heldout_row_id": "family-blocked_payment-dev-1",
+          "heldout_split": "dev",
+          "train_match_count": 3,
+          "train_row_ids": [
+            "candidate-blocked-payment-repair-refund-confirmation-or-processing",
+            "candidate-blocked-payment-repair-refund-confirmation-or-processing-aug-1",
+            "candidate-blocked-payment-repair-refund-confirmation-or-processing-aug-2"
+          ]
+        },
+        {
+          "heldout_row_id": "family-blocked_payment-dev-1-aug-1",
+          "heldout_split": "dev",
+          "train_match_count": 3,
+          "train_row_ids": [
+            "candidate-blocked-payment-repair-refund-confirmation-or-processing",
+            "candidate-blocked-payment-repair-refund-confirmation-or-processing-aug-1",
+            "candidate-blocked-payment-repair-refund-confirmation-or-processing-aug-2"
+          ]
+        },
+        {
+          "heldout_row_id": "family-blocked_payment-dev-1-aug-2",
+          "heldout_split": "dev",
+          "train_match_count": 3,
+          "train_row_ids": [
+            "candidate-blocked-payment-repair-refund-confirmation-or-processing",
+            "candidate-blocked-payment-repair-refund-confirmation-or-processing-aug-1",
+            "candidate-blocked-payment-repair-refund-confirmation-or-processing-aug-2"
+          ]
+        },
+        {
+          "heldout_row_id": "family-clarify-dev-1",
+          "heldout_split": "dev",
+          "train_match_count": 48,
+          "train_row_ids": [
+            "candidate-clarify-ambiguous-canonical-scope",
+            "candidate-clarify-ambiguous-canonical-scope-aug-1",
+            "candidate-clarify-ambiguous-canonical-scope-aug-2",
+            "family-clarify-train-1",
+            "family-clarify-train-1-aug-1",
+            "family-clarify-train-1-aug-2",
+            "family-clarify-train-2",
+            "family-clarify-train-2-aug-1",
+            "family-clarify-train-2-aug-2",
+            "family-clarify-train-3"
+          ]
+        },
+        {
+          "heldout_row_id": "family-clarify-dev-1-aug-1",
+          "heldout_split": "dev",
+          "train_match_count": 48,
+          "train_row_ids": [
+            "candidate-clarify-ambiguous-canonical-scope",
+            "candidate-clarify-ambiguous-canonical-scope-aug-1",
+            "candidate-clarify-ambiguous-canonical-scope-aug-2",
+            "family-clarify-train-1",
+            "family-clarify-train-1-aug-1",
+            "family-clarify-train-1-aug-2",
+            "family-clarify-train-2",
+            "family-clarify-train-2-aug-1",
+            "family-clarify-train-2-aug-2",
+            "family-clarify-train-3"
+          ]
+        },
+        {
+          "heldout_row_id": "family-clarify-dev-1-aug-2",
+          "heldout_split": "dev",
+          "train_match_count": 48,
+          "train_row_ids": [
+            "candidate-clarify-ambiguous-canonical-scope",
+            "candidate-clarify-ambiguous-canonical-scope-aug-1",
+            "candidate-clarify-ambiguous-canonical-scope-aug-2",
+            "family-clarify-train-1",
+            "family-clarify-train-1-aug-1",
+            "family-clarify-train-1-aug-2",
+            "family-clarify-train-2",
+            "family-clarify-train-2-aug-1",
+            "family-clarify-train-2-aug-2",
+            "family-clarify-train-3"
+          ]
+        },
+        {
+          "heldout_row_id": "family-clarify-dev-2",
+          "heldout_split": "dev",
+          "train_match_count": 48,
+          "train_row_ids": [
+            "candidate-clarify-ambiguous-canonical-scope",
+            "candidate-clarify-ambiguous-canonical-scope-aug-1",
+            "candidate-clarify-ambiguous-canonical-scope-aug-2",
+            "family-clarify-train-1",
+            "family-clarify-train-1-aug-1",
+            "family-clarify-train-1-aug-2",
+            "family-clarify-train-2",
+            "family-clarify-train-2-aug-1",
+            "family-clarify-train-2-aug-2",
+            "family-clarify-train-3"
+          ]
+        },
+        {
+          "heldout_row_id": "family-clarify-dev-2-aug-1",
+          "heldout_split": "dev",
+          "train_match_count": 48,
+          "train_row_ids": [
+            "candidate-clarify-ambiguous-canonical-scope",
+            "candidate-clarify-ambiguous-canonical-scope-aug-1",
+            "candidate-clarify-ambiguous-canonical-scope-aug-2",
+            "family-clarify-train-1",
+            "family-clarify-train-1-aug-1",
+            "family-clarify-train-1-aug-2",
+            "family-clarify-train-2",
+            "family-clarify-train-2-aug-1",
+            "family-clarify-train-2-aug-2",
+            "family-clarify-train-3"
+          ]
+        },
+        {
+          "heldout_row_id": "family-clarify-dev-2-aug-2",
+          "heldout_split": "dev",
+          "train_match_count": 48,
+          "train_row_ids": [
+            "candidate-clarify-ambiguous-canonical-scope",
+            "candidate-clarify-ambiguous-canonical-scope-aug-1",
+            "candidate-clarify-ambiguous-canonical-scope-aug-2",
+            "family-clarify-train-1",
+            "family-clarify-train-1-aug-1",
+            "family-clarify-train-1-aug-2",
+            "family-clarify-train-2",
+            "family-clarify-train-2-aug-1",
+            "family-clarify-train-2-aug-2",
+            "family-clarify-train-3"
+          ]
+        },
+        {
+          "heldout_row_id": "family-clarify-dev-3",
+          "heldout_split": "dev",
+          "train_match_count": 48,
+          "train_row_ids": [
+            "candidate-clarify-ambiguous-canonical-scope",
+            "candidate-clarify-ambiguous-canonical-scope-aug-1",
+            "candidate-clarify-ambiguous-canonical-scope-aug-2",
+            "family-clarify-train-1",
+            "family-clarify-train-1-aug-1",
+            "family-clarify-train-1-aug-2",
+            "family-clarify-train-2",
+            "family-clarify-train-2-aug-1",
+            "family-clarify-train-2-aug-2",
+            "family-clarify-train-3"
+          ]
+        }
+      ],
+      "heldout_row_count": 120
+    },
+    "slots": {
+      "examples": [
+        {
+          "heldout_row_id": "family-blocked_payment-dev-1",
+          "heldout_split": "dev",
+          "train_match_count": 3,
+          "train_row_ids": [
+            "candidate-blocked-payment-repair-refund-confirmation-or-processing",
+            "candidate-blocked-payment-repair-refund-confirmation-or-processing-aug-1",
+            "candidate-blocked-payment-repair-refund-confirmation-or-processing-aug-2"
+          ]
+        },
+        {
+          "heldout_row_id": "family-blocked_payment-dev-1-aug-1",
+          "heldout_split": "dev",
+          "train_match_count": 3,
+          "train_row_ids": [
+            "candidate-blocked-payment-repair-refund-confirmation-or-processing",
+            "candidate-blocked-payment-repair-refund-confirmation-or-processing-aug-1",
+            "candidate-blocked-payment-repair-refund-confirmation-or-processing-aug-2"
+          ]
+        },
+        {
+          "heldout_row_id": "family-blocked_payment-dev-1-aug-2",
+          "heldout_split": "dev",
+          "train_match_count": 3,
+          "train_row_ids": [
+            "candidate-blocked-payment-repair-refund-confirmation-or-processing",
+            "candidate-blocked-payment-repair-refund-confirmation-or-processing-aug-1",
+            "candidate-blocked-payment-repair-refund-confirmation-or-processing-aug-2"
+          ]
+        },
+        {
+          "heldout_row_id": "family-clarify-dev-1",
+          "heldout_split": "dev",
+          "train_match_count": 3,
+          "train_row_ids": [
+            "seed-clarify-target",
+            "seed-clarify-target-aug-1",
+            "seed-clarify-target-aug-2"
+          ]
+        },
+        {
+          "heldout_row_id": "family-clarify-dev-1-aug-1",
+          "heldout_split": "dev",
+          "train_match_count": 3,
+          "train_row_ids": [
+            "seed-clarify-target",
+            "seed-clarify-target-aug-1",
+            "seed-clarify-target-aug-2"
+          ]
+        },
+        {
+          "heldout_row_id": "family-clarify-dev-1-aug-2",
+          "heldout_split": "dev",
+          "train_match_count": 3,
+          "train_row_ids": [
+            "seed-clarify-target",
+            "seed-clarify-target-aug-1",
+            "seed-clarify-target-aug-2"
+          ]
+        },
+        {
+          "heldout_row_id": "family-confirmation-dev-1",
+          "heldout_split": "dev",
+          "train_match_count": 2,
+          "train_row_ids": [
+            "candidate-form-fill-remediation-ff-boundary-appointment-time",
+            "candidate-form-fill-remediation-ff-field-appointment-time"
+          ]
+        },
+        {
+          "heldout_row_id": "family-confirmation-dev-1-aug-1",
+          "heldout_split": "dev",
+          "train_match_count": 2,
+          "train_row_ids": [
+            "candidate-form-fill-remediation-ff-boundary-appointment-time",
+            "candidate-form-fill-remediation-ff-field-appointment-time"
+          ]
+        },
+        {
+          "heldout_row_id": "family-confirmation-dev-1-aug-2",
+          "heldout_split": "dev",
+          "train_match_count": 2,
+          "train_row_ids": [
+            "candidate-form-fill-remediation-ff-boundary-appointment-time",
+            "candidate-form-fill-remediation-ff-field-appointment-time"
+          ]
+        },
+        {
+          "heldout_row_id": "family-form_fill-dev-1",
+          "heldout_split": "dev",
+          "train_match_count": 2,
+          "train_row_ids": [
+            "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-form_fill-dev-1",
+            "candidate-form-fill-remediation-ff-confirm-phone"
+          ]
+        }
+      ],
+      "heldout_row_count": 39
+    },
+    "structural_contract": {
+      "examples": [
+        {
+          "heldout_row_id": "family-blocked_payment-dev-1",
+          "heldout_split": "dev",
+          "train_match_count": 30,
+          "train_row_ids": [
+            "family-blocked_payment-train-1",
+            "family-blocked_payment-train-1-aug-1",
+            "family-blocked_payment-train-1-aug-2",
+            "family-blocked_payment-train-2",
+            "family-blocked_payment-train-2-aug-1",
+            "family-blocked_payment-train-2-aug-2",
+            "family-blocked_payment-train-3",
+            "family-blocked_payment-train-3-aug-1",
+            "family-blocked_payment-train-3-aug-2",
+            "scaled-public-sample-core-blocked_payment-002"
+          ]
+        },
+        {
+          "heldout_row_id": "family-blocked_payment-dev-1-aug-1",
+          "heldout_split": "dev",
+          "train_match_count": 30,
+          "train_row_ids": [
+            "family-blocked_payment-train-1",
+            "family-blocked_payment-train-1-aug-1",
+            "family-blocked_payment-train-1-aug-2",
+            "family-blocked_payment-train-2",
+            "family-blocked_payment-train-2-aug-1",
+            "family-blocked_payment-train-2-aug-2",
+            "family-blocked_payment-train-3",
+            "family-blocked_payment-train-3-aug-1",
+            "family-blocked_payment-train-3-aug-2",
+            "scaled-public-sample-core-blocked_payment-002"
+          ]
+        },
+        {
+          "heldout_row_id": "family-blocked_payment-dev-1-aug-2",
+          "heldout_split": "dev",
+          "train_match_count": 30,
+          "train_row_ids": [
+            "family-blocked_payment-train-1",
+            "family-blocked_payment-train-1-aug-1",
+            "family-blocked_payment-train-1-aug-2",
+            "family-blocked_payment-train-2",
+            "family-blocked_payment-train-2-aug-1",
+            "family-blocked_payment-train-2-aug-2",
+            "family-blocked_payment-train-3",
+            "family-blocked_payment-train-3-aug-1",
+            "family-blocked_payment-train-3-aug-2",
+            "scaled-public-sample-core-blocked_payment-002"
+          ]
+        },
+        {
+          "heldout_row_id": "family-blocked_payment-dev-2",
+          "heldout_split": "dev",
+          "train_match_count": 30,
+          "train_row_ids": [
+            "family-blocked_payment-train-1",
+            "family-blocked_payment-train-1-aug-1",
+            "family-blocked_payment-train-1-aug-2",
+            "family-blocked_payment-train-2",
+            "family-blocked_payment-train-2-aug-1",
+            "family-blocked_payment-train-2-aug-2",
+            "family-blocked_payment-train-3",
+            "family-blocked_payment-train-3-aug-1",
+            "family-blocked_payment-train-3-aug-2",
+            "scaled-public-sample-core-blocked_payment-002"
+          ]
+        },
+        {
+          "heldout_row_id": "family-blocked_payment-dev-2-aug-1",
+          "heldout_split": "dev",
+          "train_match_count": 30,
+          "train_row_ids": [
+            "family-blocked_payment-train-1",
+            "family-blocked_payment-train-1-aug-1",
+            "family-blocked_payment-train-1-aug-2",
+            "family-blocked_payment-train-2",
+            "family-blocked_payment-train-2-aug-1",
+            "family-blocked_payment-train-2-aug-2",
+            "family-blocked_payment-train-3",
+            "family-blocked_payment-train-3-aug-1",
+            "family-blocked_payment-train-3-aug-2",
+            "scaled-public-sample-core-blocked_payment-002"
+          ]
+        },
+        {
+          "heldout_row_id": "family-blocked_payment-dev-2-aug-2",
+          "heldout_split": "dev",
+          "train_match_count": 30,
+          "train_row_ids": [
+            "family-blocked_payment-train-1",
+            "family-blocked_payment-train-1-aug-1",
+            "family-blocked_payment-train-1-aug-2",
+            "family-blocked_payment-train-2",
+            "family-blocked_payment-train-2-aug-1",
+            "family-blocked_payment-train-2-aug-2",
+            "family-blocked_payment-train-3",
+            "family-blocked_payment-train-3-aug-1",
+            "family-blocked_payment-train-3-aug-2",
+            "scaled-public-sample-core-blocked_payment-002"
+          ]
+        },
+        {
+          "heldout_row_id": "family-blocked_payment-dev-3",
+          "heldout_split": "dev",
+          "train_match_count": 30,
+          "train_row_ids": [
+            "family-blocked_payment-train-1",
+            "family-blocked_payment-train-1-aug-1",
+            "family-blocked_payment-train-1-aug-2",
+            "family-blocked_payment-train-2",
+            "family-blocked_payment-train-2-aug-1",
+            "family-blocked_payment-train-2-aug-2",
+            "family-blocked_payment-train-3",
+            "family-blocked_payment-train-3-aug-1",
+            "family-blocked_payment-train-3-aug-2",
+            "scaled-public-sample-core-blocked_payment-002"
+          ]
+        },
+        {
+          "heldout_row_id": "family-blocked_payment-dev-3-aug-1",
+          "heldout_split": "dev",
+          "train_match_count": 30,
+          "train_row_ids": [
+            "family-blocked_payment-train-1",
+            "family-blocked_payment-train-1-aug-1",
+            "family-blocked_payment-train-1-aug-2",
+            "family-blocked_payment-train-2",
+            "family-blocked_payment-train-2-aug-1",
+            "family-blocked_payment-train-2-aug-2",
+            "family-blocked_payment-train-3",
+            "family-blocked_payment-train-3-aug-1",
+            "family-blocked_payment-train-3-aug-2",
+            "scaled-public-sample-core-blocked_payment-002"
+          ]
+        },
+        {
+          "heldout_row_id": "family-blocked_payment-dev-3-aug-2",
+          "heldout_split": "dev",
+          "train_match_count": 30,
+          "train_row_ids": [
+            "family-blocked_payment-train-1",
+            "family-blocked_payment-train-1-aug-1",
+            "family-blocked_payment-train-1-aug-2",
+            "family-blocked_payment-train-2",
+            "family-blocked_payment-train-2-aug-1",
+            "family-blocked_payment-train-2-aug-2",
+            "family-blocked_payment-train-3",
+            "family-blocked_payment-train-3-aug-1",
+            "family-blocked_payment-train-3-aug-2",
+            "scaled-public-sample-core-blocked_payment-002"
+          ]
+        },
+        {
+          "heldout_row_id": "family-clarify-dev-1",
+          "heldout_split": "dev",
+          "train_match_count": 48,
+          "train_row_ids": [
+            "candidate-clarify-ambiguous-canonical-scope",
+            "candidate-clarify-ambiguous-canonical-scope-aug-1",
+            "candidate-clarify-ambiguous-canonical-scope-aug-2",
+            "family-clarify-train-1",
+            "family-clarify-train-1-aug-1",
+            "family-clarify-train-1-aug-2",
+            "family-clarify-train-2",
+            "family-clarify-train-2-aug-1",
+            "family-clarify-train-2-aug-2",
+            "family-clarify-train-3"
+          ]
+        }
+      ],
+      "heldout_row_count": 414
+    },
+    "train_provenance_to_dev_test": {
+      "examples": [
+        {
+          "reasons": [
+            "source_family_id:seed-block-purchase:test"
+          ],
+          "train_row_id": "candidate-blocked-payment-canonical-command"
+        },
+        {
+          "reasons": [
+            "source_family_id:seed-block-purchase:test"
+          ],
+          "train_row_id": "candidate-blocked-payment-canonical-command-aug-1"
+        },
+        {
+          "reasons": [
+            "source_family_id:seed-block-purchase:test"
+          ],
+          "train_row_id": "candidate-blocked-payment-canonical-command-aug-2"
+        },
+        {
+          "reasons": [
+            "source_row_ids:family-blocked_payment-dev-1-aug-1:dev",
+            "source_row_ids:family-blocked_payment-dev-1-aug-2:dev",
+            "source_row_ids:family-blocked_payment-dev-1:dev"
+          ],
+          "train_row_id": "candidate-blocked-payment-repair-refund-confirmation-or-processing"
+        },
+        {
+          "reasons": [
+            "source_row_ids:family-blocked_payment-dev-1-aug-1:dev",
+            "source_row_ids:family-blocked_payment-dev-1-aug-2:dev",
+            "source_row_ids:family-blocked_payment-dev-1:dev"
+          ],
+          "train_row_id": "candidate-blocked-payment-repair-refund-confirmation-or-processing-aug-1"
+        },
+        {
+          "reasons": [
+            "source_row_ids:family-blocked_payment-dev-1-aug-1:dev",
+            "source_row_ids:family-blocked_payment-dev-1-aug-2:dev",
+            "source_row_ids:family-blocked_payment-dev-1:dev"
+          ],
+          "train_row_id": "candidate-blocked-payment-repair-refund-confirmation-or-processing-aug-2"
+        },
+        {
+          "reasons": [
+            "source_row_ids:family-blocked_payment-dev-2-aug-2:dev"
+          ],
+          "train_row_id": "candidate-blocked-payment-repair-subscription-charge-confirmation"
+        },
+        {
+          "reasons": [
+            "source_family_id:seed-clarify-ambiguous:dev"
+          ],
+          "train_row_id": "candidate-clarify-ambiguous-canonical-scope"
+        },
+        {
+          "reasons": [
+            "source_family_id:seed-clarify-ambiguous:dev"
+          ],
+          "train_row_id": "candidate-clarify-ambiguous-canonical-scope-aug-1"
+        },
+        {
+          "reasons": [
+            "source_family_id:seed-clarify-ambiguous:dev"
+          ],
+          "train_row_id": "candidate-clarify-ambiguous-canonical-scope-aug-2"
+        },
+        {
+          "reasons": [
+            "source_row_ids:family-navigation-test-1:test",
+            "source_row_ids:family-navigation-test-3-aug-1:test",
+            "source_splits:test"
+          ],
+          "train_row_id": "candidate-current-retry-public-navigation-non-confirmation-preservation"
+        },
+        {
+          "reasons": [
+            "source_row_ids:family-navigation-test-1:test",
+            "source_row_ids:family-navigation-test-3-aug-1:test",
+            "source_splits:test"
+          ],
+          "train_row_id": "candidate-current-retry-public-navigation-non-confirmation-preservation-aug-1"
+        },
+        {
+          "reasons": [
+            "source_row_ids:family-blocked_payment-dev-1-aug-1:dev",
+            "source_row_ids:family-blocked_payment-dev-1-aug-2:dev",
+            "source_row_ids:family-blocked_payment-dev-1:dev",
+            "source_row_ids:family-blocked_payment-dev-2-aug-2:dev",
+            "source_row_ids:family-blocked_payment-dev-3:dev",
+            "source_splits:dev"
+          ],
+          "train_row_id": "candidate-current-retry-unsafe-payment-confirmation-preservation"
+        },
+        {
+          "reasons": [
+            "source_row_ids:family-blocked_payment-dev-1-aug-1:dev",
+            "source_row_ids:family-blocked_payment-dev-1-aug-2:dev",
+            "source_row_ids:family-blocked_payment-dev-1:dev",
+            "source_row_ids:family-blocked_payment-dev-2-aug-2:dev",
+            "source_row_ids:family-blocked_payment-dev-3:dev",
+            "source_splits:dev"
+          ],
+          "train_row_id": "candidate-current-retry-unsafe-payment-confirmation-preservation-aug-1"
+        },
+        {
+          "reasons": [
+            "source_row_ids:family-blocked_payment-dev-1-aug-1:dev",
+            "source_row_ids:family-blocked_payment-dev-1-aug-2:dev",
+            "source_row_ids:family-blocked_payment-dev-1:dev",
+            "source_row_ids:family-blocked_payment-dev-2-aug-2:dev",
+            "source_row_ids:family-blocked_payment-dev-3:dev",
+            "source_splits:dev"
+          ],
+          "train_row_id": "candidate-current-retry-unsafe-payment-confirmation-preservation-aug-2"
+        },
+        {
+          "reasons": [
+            "source_family_id:seed-form-email:test"
+          ],
+          "train_row_id": "candidate-form-email-canonical-field"
+        },
+        {
+          "reasons": [
+            "source_family_id:seed-form-email:test"
+          ],
+          "train_row_id": "candidate-form-email-canonical-field-aug-1"
+        },
+        {
+          "reasons": [
+            "source_family_id:seed-form-email:test"
+          ],
+          "train_row_id": "candidate-form-email-canonical-field-aug-2"
+        },
+        {
+          "reasons": [
+            "source_family_id:family-confirmation-dev-1:dev"
+          ],
+          "train_row_id": "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-confirmation-dev-1"
+        },
+        {
+          "reasons": [
+            "source_family_id:family-confirmation-dev-2:dev"
+          ],
+          "train_row_id": "candidate-form-fill-confirmation-marker-extension-ff-confirm-marker-extension-family-confirmation-dev-2"
+        }
+      ],
+      "train_row_count": 33
+    }
+  },
+  "evidence_status": "DEVELOPMENT_ONLY_SPENT",
+  "historical_metrics_rescored": false,
+  "historical_rows_mutated": false,
+  "input_counts": {
+    "dpo_pairs": 2100,
+    "seed_rows": 247,
+    "sft_rows": 696,
+    "sft_split_counts": {
+      "dev": 207,
+      "test": 207,
+      "train": 282
+    }
+  },
+  "input_validation": {
+    "errors": [],
+    "valid": true
+  },
+  "limitations": [
+    "Lexical and digit-template checks do not establish semantic independence.",
+    "Provenance checks are bounded to declared source fields and resolvable committed IDs.",
+    "This audit does not establish natural-ASR provenance or model quality.",
+    "Repeated target, normalized-command, slot, or structural labels are diagnostic-only because ontology reuse can be legitimate."
+  ],
+  "methodology": {
+    "digit_template": "Unicode NFKC, trim/collapse whitespace, replace each Unicode decimal digit run with <NUM>",
+    "overlap_boundary": "train versus the union of dev and test; counts are affected held-out rows",
+    "provenance_resolution": "source_splits plus source_row_ids/source_family_id/source_id resolved against seed and SFT row IDs",
+    "structural_contract": "task_type, route, safety, confirmation_required, sorted slot keys, language, and contract_version"
+  },
+  "methodology_version": "voice2task.split_integrity.v1",
+  "sources": {
+    "dpo": {
+      "path": "data/public-samples/dpo_public_sample.jsonl",
+      "sha256": "b673dff3c1f598a250c8ed463be320fd2126b61a07e7672b83fbca4bae266ea8"
+    },
+    "manifest": {
+      "path": "data/public-samples/manifest_public_sample.json",
+      "sha256": "f866c173795e97953b1dec85611b405867d0a29497910282f99d399f109cda95"
+    },
+    "seed": {
+      "path": "data/public-samples/seed_traces.jsonl",
+      "sha256": "8fe5e75e9e0891b6824d7c142cbe15547267377420f8b3240414436265d15801"
+    },
+    "sft": {
+      "path": "data/public-samples/sft_public_sample.jsonl",
+      "sha256": "4b677420f766555c04199f15f69f41f3b3ad36ad3cd5c33d2b40b0e3f8573587"
+    }
+  }
+}

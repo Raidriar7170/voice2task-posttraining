@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Clean Compiler / Model Evaluation Boundary v1 Apply 简报</title>
+  <style>
+    :root { color-scheme:light; --ink:#172033; --muted:#647084; --line:#dce4ee; --blue:#1d4ed8; --teal:#0f766e; --amber:#a16207; --red:#b42318; --bg:#f5f7fb; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif; overflow-wrap:anywhere; }
+    main { max-width:1000px; margin:30px auto; padding:0 20px 44px; }
+    header,.card { background:#fff; border:1px solid var(--line); border-radius:16px; box-shadow:0 8px 28px rgba(23,32,51,.06); }
+    header { padding:28px; }
+    h1 { margin:.25rem 0 .65rem; font-size:29px; line-height:1.25; }
+    h2 { margin:0 0 9px; font-size:19px; }
+    p { margin:.42rem 0; }
+    ul { margin:.4rem 0 0; padding-left:1.2rem; }
+    code { padding:.08rem .3rem; border-radius:5px; background:#edf2f7; font:13px ui-monospace,SFMono-Regular,Menlo,monospace; }
+    a { color:#075985; }
+    .eyebrow { color:var(--blue); font-weight:760; letter-spacing:.08em; text-transform:uppercase; }
+    .status { display:inline-block; margin-top:13px; padding:5px 11px; border-radius:999px; color:#fff; background:var(--red); font-weight:760; }
+    .lead { font-size:18px; }
+    .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-top:16px; }
+    .card { padding:21px; }
+    .boundary { border-left:4px solid var(--amber); }
+    .blocked { color:var(--red); font-weight:700; }
+    .flow { display:flex; flex-wrap:wrap; align-items:center; gap:7px; margin-top:10px; }
+    .step { padding:5px 8px; border:1px solid var(--line); border-radius:8px; background:#f8fafc; font:12px ui-monospace,SFMono-Regular,Menlo,monospace; }
+    .now { color:#fff; background:var(--blue); border-color:var(--blue); }
+    .target { color:#fff; background:var(--teal); border-color:var(--teal); }
+    .arrow { color:var(--muted); }
+    table { width:100%; border-collapse:collapse; margin-top:8px; }
+    th,td { text-align:left; vertical-align:top; padding:8px 9px; border-bottom:1px solid var(--line); }
+    th { width:35%; color:var(--muted); }
+    footer { color:var(--muted); margin-top:18px; font-size:13px; }
+    @media (max-width:760px) { .grid { grid-template-columns:1fr; } h1 { font-size:24px; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="eyebrow">Human Brief · 2026-07-11</div>
+    <h1>Archive 完成；真实输入不足，诚实停在 S0</h1>
+    <p class="lead">核心实现、四轮安全攻击修复和独立 spec/security review 已收口，change 已归档到 <code>2026-07-11-materialize-and-freeze-clean-compiler-model-evaluation-boundary-v1</code>；真实仓库仍因没有独立 acquisition frame 与 reviewed binding packet 而只保留 S0 blocked 证据。</p>
+    <span class="status">ARCHIVED · BLOCKED AT S0 · NO EXECUTION</span>
+  </header>
+
+  <section class="card boundary" style="margin-top:16px">
+    <h2>当前真实起点</h2>
+    <div class="flow">
+      <span class="step now">DESIGN_ONLY · ARCHIVED</span><span class="arrow">→</span>
+      <span class="step">EXPERIMENT_BINDINGS_COMPLETE</span><span class="arrow">→</span>
+      <span class="step">PROTOCOL_FROZEN</span><span class="arrow">→</span>
+      <span class="step target">POPULATION_MATERIALIZED_AND_SEALED</span><span class="arrow">→ STOP</span>
+    </div>
+    <p>真实状态是 <code>BLOCKED / CLEAN_EVALUATION_BOUNDARY_MATERIALIZATION_BLOCKED / S0_SOURCE_OR_BINDING</code>：0/29 bindings，协议未冻结，population 未物化，integrity 未创建。不得用 public sample、challenge、remediation、prediction 或已消费 lockbox 顶替。</p>
+  </section>
+
+  <section class="grid">
+    <article class="card">
+      <h2>已实现并由临时 fixture 验证</h2>
+      <ul>
+        <li>29/29 typed、source-hashed binding dossier 验证。</li>
+        <li>byte-deterministic protocol freeze 与 drift 拒绝。</li>
+        <li>race/hardlink/symlink-safe 的单快照 frame 读取。</li>
+        <li>exact-quota 双分区与 single-writer atomic generation promotion。</li>
+        <li>aggregate-only public evidence 与 seal verification。</li>
+      </ul>
+    </article>
+    <article class="card">
+      <h2>本次真实路径没有创建</h2>
+      <ul>
+        <li>无输入文本、音频、ASR、gold、contract、prediction 或 outcome。</li>
+        <li>无 compiler/decoder、adapter、checkpoint 或 arm artifact。</li>
+        <li>无训练、预测、A100、one-look 或 experiment execution。</li>
+        <li>无模型、compiler effect、natural-ASR、生产或安全 claim。</li>
+      </ul>
+    </article>
+  </section>
+
+  <section class="grid">
+    <article class="card">
+      <h2>本次 S0 终态</h2>
+      <table>
+        <tr><th>current state</th><td><code>DESIGN_ONLY</code></td></tr>
+        <tr><th>bindings</th><td><code>0 / 29 · INCOMPLETE</code></td></tr>
+        <tr><th>protocol</th><td><code>NOT_FROZEN</code></td></tr>
+        <tr><th>population</th><td><code>NOT_MATERIALIZED</code></td></tr>
+        <tr><th>integrity</th><td><code>NOT_CREATED</code></td></tr>
+        <tr><th>clean rows</th><td><code>NOT_CREATED</code></td></tr>
+        <tr><th>execution</th><td><code>false</code></td></tr>
+      </table>
+    </article>
+    <article class="card">
+      <h2>安全实现要点</h2>
+      <ul>
+        <li>frame payload 只在 <code>PROTOCOL_FROZEN</code> 后首次打开。</li>
+        <li>descriptor-relative <code>O_NOFOLLOW</code>、<code>fstat</code>、link-count 和 identity checks 拒绝路径竞态。</li>
+        <li>历史 aggregate 不能冒充 clean ICC、paired correlation 或 attrition 点估计。</li>
+        <li>lockbox 只接受完整 sealed aggregate attestation；materializer 零 row read。</li>
+      </ul>
+    </article>
+  </section>
+
+  <section class="grid">
+    <article class="card">
+      <h2>权威实现与证据</h2>
+      <ul>
+        <li><a href="../../openspec/changes/archive/2026-07-11-materialize-and-freeze-clean-compiler-model-evaluation-boundary-v1/proposal.md">proposal</a></li>
+        <li><a href="../../openspec/changes/archive/2026-07-11-materialize-and-freeze-clean-compiler-model-evaluation-boundary-v1/design.md">design</a></li>
+        <li><a href="../../openspec/changes/archive/2026-07-11-materialize-and-freeze-clean-compiler-model-evaluation-boundary-v1/specs/clean-compiler-model-evaluation-boundary/spec.md">delta spec</a></li>
+        <li><a href="../../openspec/changes/archive/2026-07-11-materialize-and-freeze-clean-compiler-model-evaluation-boundary-v1/tasks.md">tasks</a></li>
+        <li><a href="../../src/voice2task/clean_evaluation_boundary.py">implementation</a></li>
+        <li><a href="../../tests/test_clean_evaluation_boundary.py">focused tests</a></li>
+        <li><a href="../../reports/public-sample/clean-compiler-model-evaluation-boundary-v1/summary.json">S0 machine summary</a></li>
+        <li><a href="../../reports/public-sample/clean-compiler-model-evaluation-boundary-v1/summary.md">S0 readable summary</a></li>
+        <li><a href="../../reports/public-sample/clean-compiler-model-evaluation-boundary-v1/protocol-manifest.json">public protocol manifest</a></li>
+        <li><a href="../../reports/public-sample/clean-compiler-model-evaluation-boundary-v1/population-seal-attestation.json">population seal attestation</a></li>
+        <li><a href="../../reports/public-sample/clean-compiler-model-evaluation-boundary-v1/lineage-attestation.json">lineage attestation</a></li>
+        <li><a href="../../reports/public-sample/clean-matched-causal-evidence-design/summary.json">prior design evidence</a></li>
+        <li><a href="../../openspec/specs/clean-matched-causal-evidence-design/spec.md">prior main spec</a></li>
+      </ul>
+    </article>
+    <article class="card">
+      <h2>当前验证</h2>
+      <ul>
+        <li>Clean-boundary focused tests：102 passed；deterministic/blocker/zero-read targeted replay：5 passed。</li>
+        <li>Post-archive full pytest：883 passed。</li>
+        <li>Public schema validation：696 SFT / 2100 DPO，0 failures；DPO check：2100 pairs。</li>
+        <li>Ruff：pass；focused Mypy：3 files / 0 issues；full Mypy 保持既有基线 39 errors / 5 files。</li>
+        <li>Post-archive OpenSpec strict：14/14；默认 no-active truth checker：pass；active changes：0。</li>
+        <li>Post-archive archive/leak/hash/private-boundary/link/diff checks：pass。</li>
+        <li>S0 public artifact set：exactly 5 files；deterministic replay、leak scan 0 findings、Human Brief links 13/13。</li>
+        <li>Canonical private root：absent、ignored、tracked=0、status entries=0；protected hashes 无漂移。</li>
+        <li>source/frame/path/power/protocol/registry/partition/seal/privacy/status 与 CLI 均有测试。</li>
+        <li>独立 spec/security review：pass，Must Fix=0；archive 已完成。</li>
+      </ul>
+    </article>
+  </section>
+
+  <section class="card" style="margin-top:16px">
+    <h2>下一步</h2>
+    <p>保持本次 S0 blocked archive 冻结，不自动开启下一阶段。只有未来确实获得独立 metadata-only source 与 29/29 reviewed bindings，才值得提出新的 bounded retry；compiler/model experiment、row authoring、one-look、training 和 A100 仍是更后的独立授权。</p>
+  </section>
+  <footer>本页是 archive 人类复核摘要；OpenSpec artifacts、测试与机器证据始终是权威来源。</footer>
+</main>
+</body>
+</html>

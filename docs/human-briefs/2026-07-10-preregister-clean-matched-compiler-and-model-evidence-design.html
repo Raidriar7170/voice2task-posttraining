@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Clean Matched 因果证据设计预注册</title>
+  <style>
+    :root { color-scheme:light; --ink:#172033; --muted:#647084; --line:#dce4ee; --blue:#1d4ed8; --teal:#0f766e; --amber:#a16207; --red:#b42318; --bg:#f5f7fb; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.64 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif; overflow-wrap:anywhere; }
+    main { max-width:1000px; margin:32px auto; padding:0 20px 44px; }
+    header,.card { background:#fff; border:1px solid var(--line); border-radius:16px; box-shadow:0 8px 28px rgba(23,32,51,.06); }
+    header { padding:30px; }
+    .eyebrow { color:var(--blue); font-weight:750; letter-spacing:.08em; text-transform:uppercase; }
+    h1 { margin:.25rem 0 .7rem; font-size:30px; line-height:1.25; }
+    h2 { margin:0 0 10px; font-size:19px; }
+    h3 { margin:0 0 6px; font-size:16px; }
+    p { margin:.45rem 0; }
+    .lead { font-size:18px; }
+    .status { display:inline-block; margin-top:14px; padding:5px 11px; border-radius:999px; color:#fff; background:var(--amber); font-weight:750; }
+    .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-top:16px; }
+    .card { padding:22px; }
+    .partition { border-top:4px solid var(--blue); }
+    .partition.model { border-top-color:var(--teal); }
+    .metric { font-size:24px; font-weight:800; color:var(--blue); }
+    .blocked { color:var(--red); }
+    ul,ol { margin:.4rem 0 0; padding-left:1.25rem; }
+    code { padding:.08rem .32rem; border-radius:5px; background:#edf2f7; font:13px ui-monospace,SFMono-Regular,Menlo,monospace; }
+    a { color:#075985; }
+    .boundary { border-left:4px solid var(--amber); }
+    .flow { display:flex; flex-wrap:wrap; gap:7px; align-items:center; margin-top:10px; }
+    .step { padding:5px 8px; border:1px solid var(--line); border-radius:8px; background:#f8fafc; font:12px ui-monospace,SFMono-Regular,Menlo,monospace; }
+    .active { color:#fff; background:var(--blue); border-color:var(--blue); }
+    .arrow { color:var(--muted); }
+    .truth { width:100%; border-collapse:collapse; margin-top:8px; }
+    .truth th,.truth td { text-align:left; vertical-align:top; padding:8px 10px; border-bottom:1px solid var(--line); }
+    .truth th { width:34%; color:var(--muted); font-weight:650; }
+    footer { color:var(--muted); margin-top:18px; font-size:13px; }
+    @media (max-width:760px) { .grid { grid-template-columns:1fr; } h1 { font-size:25px; } .truth th { width:auto; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="eyebrow">Human Brief · 2026-07-10</div>
+    <h1>方案 A：先预注册一套 clean acquisition，再封存两块独立证据</h1>
+    <p class="lead">本阶段已把 compiler/system 与 model-learning 两类因果证据的独立边界编译为确定性公开设计包；未创建 clean rows，未冻结可执行协议，也未运行 compiler、训练或预测。</p>
+    <span class="status">ARCHIVED · REVIEWED DESIGN_ONLY · EXECUTION BLOCKED</span>
+  </header>
+
+  <section class="grid" aria-label="两块独立证据分区">
+    <article class="card partition">
+      <h2>Compiler / System 分区</h2>
+      <div class="metric">compiler_system_evaluation</div>
+      <p>未来以同一条冻结 raw record 为观察单位，两臂接收 byte-identical 模型输出与 provenance；primary 为完整固定分母上的 compiled-V1 strict exact。</p>
+      <ul>
+        <li>invalid、unsupported、compiler error 与 missing 保留为 primary failure。</li>
+        <li>只允许归因为 <code>system_compiler_transformation_effect</code>。</li>
+        <li>打开这一分区不得消费 model-learning 的 one-look。</li>
+      </ul>
+    </article>
+    <article class="card partition model">
+      <h2>Model Learning 分区</h2>
+      <div class="metric" style="color:var(--teal)">model_learning_evaluation</div>
+      <p>未来以 preregistered semantic family 为观察单位，只允许一个命名训练干预，并保持 data、prompt、decoder、compiler policy、evaluator、budget 与 eligible population 配对。</p>
+      <ul>
+        <li>至少 3 个冻结 paired seeds，failed/missing seeds 不得删除或选择性重跑。</li>
+        <li>primary 只覆盖 model-authored fields。</li>
+        <li>compiler-filled fields 不得包装成模型学习提升。</li>
+      </ul>
+    </article>
+  </section>
+
+  <section class="card boundary" style="margin-top:16px">
+    <h2>为什么选择方案 A</h2>
+    <p>一次 acquisition/lineage 设计减少重复采集与标注成本；在 acquisition 前冻结 family key、算法、seed、strata、allocation 与最小规模，materialization 时再把 family registry 按冻结规则分配，并在 row authoring、gold 或 outcome access 前封存。这样 compiler 可以先开箱而不提前花掉 model-learning 证据。共享 sequential partition 会造成证据污染；两套完全独立 acquisition 又超出当前最小阶段。</p>
+  </section>
+
+  <section class="card" style="margin-top:16px">
+    <h2>Fail-closed 生命周期</h2>
+    <div class="flow" aria-label="协议生命周期">
+      <span class="step active">DESIGN_ONLY</span><span class="arrow">→</span>
+      <span class="step">EXPERIMENT_BINDINGS_COMPLETE</span><span class="arrow">→</span>
+      <span class="step">PROTOCOL_FROZEN</span><span class="arrow">→</span>
+      <span class="step">POPULATION_MATERIALIZED_AND_SEALED</span><span class="arrow">→</span>
+      <span class="step">ARM_ARTIFACTS_FROZEN</span><span class="arrow">→</span>
+      <span class="step">ELIGIBLE_FOR_ONE_LOOK</span>
+    </div>
+    <p><strong>当前 change 只到 <code>DESIGN_ONLY</code>。</strong> 后续五个状态均未到达；文档存在、报告生成或设计审查通过都不能越级解释为 frozen preregistration、已 materialize population 或可执行实验。</p>
+  </section>
+
+  <section class="grid">
+    <article class="card">
+      <h2>当前精确 truth surface</h2>
+      <table class="truth">
+        <tr><th>evidence_status</th><td><code>DESIGN_ONLY</code></td></tr>
+        <tr><th>decision</th><td><code>PREREGISTRATION_DESIGN_READY_EXECUTION_BLOCKED</code></td></tr>
+        <tr><th>design_contract_status</th><td><code>REVIEWED_DESIGN_ONLY</code></td></tr>
+        <tr><th>protocol_freeze_status</th><td><code>NOT_FROZEN</code></td></tr>
+        <tr><th>clean_population_status</th><td><code>NOT_MATERIALIZED</code></td></tr>
+        <tr><th>compiler_causal_identification</th><td class="blocked"><code>CAUSAL_IDENTIFICATION_BLOCKED</code></td></tr>
+        <tr><th>model_learning_causal_identification</th><td class="blocked"><code>CAUSAL_IDENTIFICATION_BLOCKED</code></td></tr>
+        <tr><th>experiment_preregistration_status</th><td><code>NOT_EXECUTABLE</code></td></tr>
+        <tr><th>execution_readiness</th><td><code>false</code></td></tr>
+      </table>
+    </article>
+    <article class="card">
+      <h2>Canonical bindings：当前全部 UNBOUND</h2>
+      <ul>
+        <li>Acquisition：<code>acquisition_source</code>、<code>acquisition_frame_version</code>。</li>
+        <li>Partition：<code>semantic_family_key</code>、<code>partition_algorithm</code>、<code>partition_seed</code>、<code>strata_definition</code>、<code>target_total_family_count</code>、<code>target_partition_allocation</code>、<code>minimum_families_per_partition</code>。</li>
+        <li>Arms / seeds：<code>compiler_control</code>、<code>compiler_intervention</code>、<code>model_control</code>、<code>model_training_intervention</code>、<code>paired_model_seed_list</code>。</li>
+        <li>Power / analysis：<code>compiler_effect_scale</code>、<code>model_effect_scale</code>、<code>compiler_mde_or_sensitivity_target</code>、<code>model_mde_or_sensitivity_target</code>、<code>compiler_target_power_or_beta</code>、<code>model_target_power_or_beta</code>、<code>alpha</code>、<code>compiler_family_variance_or_icc_assumption</code>、<code>model_family_variance_or_icc_assumption</code>、<code>paired_seed_correlation_assumption</code>、<code>seed_failure_or_attrition_assumption</code>、<code>compiler_interval_and_multiplicity_method</code>、<code>model_interval_and_multiplicity_method</code>、<code>guardrail_margins</code>、<code>stop_rules</code>。</li>
+      </ul>
+      <p>完整精确字段清单见 <a href="../../openspec/changes/archive/2026-07-11-preregister-clean-matched-compiler-and-model-evidence-design/design.md">archived design</a>；每一项都显式为 <code>UNBOUND_BY_DESIGN</code> 并阻断 <code>EXPERIMENT_BINDINGS_COMPLETE</code>。实际 realized family count 与 membership 是未来 materialization evidence，不是假装已知的 design binding。</p>
+    </article>
+  </section>
+
+  <section class="grid">
+    <article class="card">
+      <h2>本阶段固化了什么</h2>
+      <ul>
+        <li>family-level lineage、disjointness、sealing 与独立 one-look。</li>
+        <li>compiler 与 model 两张独立 preregistration card。</li>
+        <li>pre-outcome sample-size/MDE、family/seed hierarchical uncertainty。</li>
+        <li>完整分母、failed-seed retention、negative controls 与 hard stops。</li>
+        <li>显式 public-safe whitelist / private-artifact denylist。</li>
+      </ul>
+    </article>
+    <article class="card">
+      <h2>本阶段没有做什么</h2>
+      <ul>
+        <li>无 clean row、manifest、gold、prediction、adapter 或 checkpoint。</li>
+        <li>无 lockbox-v1 raw-row read 或 second look。</li>
+        <li>无 compiler/decoder、prompt/schema/evaluator/runtime 改动。</li>
+        <li>无训练、预测、A100、数据 mutation 或结果查看。</li>
+        <li>无 clean-evidence、causal-effect、model-improvement、production/safety claim。</li>
+      </ul>
+    </article>
+  </section>
+
+  <section class="grid">
+    <article class="card">
+      <h2>Apply 与归档证据</h2>
+      <ul>
+        <li>TDD：new design focused tests 48 个，historical causal-audit focused tests 38 个；模块、source policy、truth surface、partition、两张 cards、uncertainty、hard stops、snapshot replay、resolver security 与 renderer 均先 RED 后 GREEN。</li>
+        <li>输入边界：精确 10 个 public-safe / aggregate-only 文件，冻结 SHA-256 与 source anchors；raw lockbox、row failures、private predictions/corpora、cache、adapter、checkpoint、log 与 secrets 均拒绝读取。</li>
+        <li>Source safety：final / parent symlink、missing source 与真实 hash drift 均 fail closed；被拒绝的 unwhitelisted / denylisted path 在读取前停止；build 对 10 个来源各读取一次 bytes，并从同一 snapshot 完成 hash、UTF-8 与 anchor 验证。</li>
+        <li>历史回放：归档 causal audit 使用 content-addressed phase-time <code>CONTEXT.md</code> snapshot（16,755 bytes，SHA-256 <code>2ffc67d8...1009f</code>），对外仍发逻辑路径 <code>CONTEXT.md</code> 与旧 hash；重渲染旧 JSON / Markdown 与归档报告逐字节一致。</li>
+        <li>确定性报告：<a href="../../reports/public-sample/clean-matched-causal-evidence-design/summary.json">summary.json</a> / <a href="../../reports/public-sample/clean-matched-causal-evidence-design/summary.md">summary.md</a>；双次 renderer byte-identical。</li>
+        <li>Controller related regression：172 passed；public validation：696 SFT / 2100 DPO，DPO check：2100 pairs。</li>
+        <li>Apply 前 Full pytest：773 passed / 4 archive-only active-change guards failed；归档后：777 passed，四个 guards 全部自然关闭，没有放宽测试。</li>
+        <li>归档：delta spec 已同步为 main spec，active changes=0；归档路径为 <code>openspec/changes/archive/2026-07-11-preregister-clean-matched-compiler-and-model-evidence-design/</code>。</li>
+        <li>归档后 truth-surface、全仓 Ruff、两个 source modules focused Mypy、OpenSpec strict 13/13、<code>git diff --check</code>：通过；full Mypy 保持 apply 阶段既有 39 errors / 5 files（checked files 28 → 29）。</li>
+        <li>Public leak scan：0 findings；HTML：10 links / 0 missing；Public seed / SFT / DPO / manifest 的受保护 SHA-256：未变化。</li>
+        <li>独立 Spec Review：Pass；独立 Code Quality Review 两轮 Must Fix 闭合后：Pass，Must Fix / Should Fix / Nice to Have 均为 None。</li>
+      </ul>
+    </article>
+    <article class="card">
+      <h2>权威文件</h2>
+      <ul>
+        <li><a href="../../openspec/changes/archive/2026-07-11-preregister-clean-matched-compiler-and-model-evidence-design/proposal.md">archived proposal</a></li>
+        <li><a href="../../openspec/changes/archive/2026-07-11-preregister-clean-matched-compiler-and-model-evidence-design/design.md">archived design</a></li>
+        <li><a href="../../openspec/specs/clean-matched-causal-evidence-design/spec.md">synced main spec</a></li>
+        <li><a href="../../openspec/changes/archive/2026-07-11-preregister-clean-matched-compiler-and-model-evidence-design/tasks.md">archived tasks</a></li>
+        <li><a href="../../reports/public-sample/clean-matched-causal-evidence-design/summary.json">deterministic design JSON</a></li>
+        <li><a href="../../reports/public-sample/clean-matched-causal-evidence-design/summary.md">deterministic design Markdown</a></li>
+        <li><a href="../../reports/public-sample/contract-compiler-v2-causal-boundary/summary.json">archived causal-audit summary</a></li>
+      </ul>
+    </article>
+  </section>
+
+  <section class="card" style="margin-top:16px">
+    <h2>建议的下一步</h2>
+    <p>本阶段已归档并关闭 active-change guards。证据层面的唯一后续推荐仍是 <code>materialize-and-freeze-clean-compiler-model-evaluation-boundary-v1</code>，但没有随 archive 自动执行；其 <code>executed=false</code>，仍需单独 OpenSpec 审查。</p>
+  </section>
+  <footer>本页是 archived design-only 阶段的人类复核摘要；OpenSpec artifacts、测试、source hashes 与 evidence reports 始终是权威来源。</footer>
+</main>
+</body>
+</html>

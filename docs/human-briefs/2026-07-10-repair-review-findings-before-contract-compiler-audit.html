@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Voice2Task 三项审阅问题修复</title>
+  <style>
+    :root { color-scheme: light; --ink:#132238; --muted:#5b6878; --line:#dce3ea; --ok:#0f766e; --warn:#a16207; --bg:#f5f7fa; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.62 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif; }
+    main { max-width:980px; margin:32px auto; padding:0 20px 40px; }
+    header,.card { background:white; border:1px solid var(--line); border-radius:16px; box-shadow:0 8px 28px rgba(19,34,56,.06); }
+    header { padding:30px; }
+    .eyebrow { color:var(--ok); font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+    h1 { margin:.25rem 0 .7rem; font-size:30px; line-height:1.25; }
+    h2 { margin:0 0 12px; font-size:19px; }
+    p { margin:.45rem 0; }
+    .lead { font-size:18px; }
+    .status { display:inline-block; margin-top:14px; padding:5px 10px; border-radius:999px; color:white; background:var(--ok); font-weight:700; }
+    .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-top:16px; }
+    .card { padding:22px; }
+    .metric { font-size:26px; font-weight:800; color:var(--ok); }
+    ul { margin:.4rem 0 0; padding-left:1.25rem; }
+    code { padding:.08rem .32rem; border-radius:5px; background:#edf2f7; font:13px ui-monospace,SFMono-Regular,Menlo,monospace; }
+    a { color:#075985; }
+    .boundary { border-left:4px solid var(--warn); }
+    footer { color:var(--muted); margin-top:18px; font-size:13px; }
+    @media (max-width:720px) { .grid { grid-template-columns:1fr; } h1 { font-size:25px; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="eyebrow">Human Brief · 2026-07-10</div>
+    <h1>三项审阅问题已修复、归档并通过终验</h1>
+    <p class="lead">严格 exact 不再受 Python 数值相等误导；最终 lockbox 导航状态已纠正；public dev/test 的污染边界已有可复现审计与未来 fail-closed gate。</p>
+    <span class="status">ARCHIVED · Reviewer Pass · 691 tests</span>
+  </header>
+
+  <section class="grid" aria-label="关键结果">
+    <article class="card">
+      <h2>1 · Exact 语义</h2>
+      <div class="metric">JSON type-strict</div>
+      <p><code>true</code>、<code>1</code>、<code>1.0</code> 不再互相等价；对象键序忽略、数组顺序保留，非有限值、循环或非 JSON 对象 fail closed。</p>
+    </article>
+    <article class="card">
+      <h2>2 · Lockbox 真相面</h2>
+      <div class="metric">CURRENT / SUPERSEDED</div>
+      <p>final evaluation 成为 CURRENT；旧 lineage guard 保留为 SUPERSEDED。manifest、run card、两臂 metrics 与 comparison 仍是权威源。</p>
+    </article>
+    <article class="card">
+      <h2>3 · Split 审计</h2>
+      <div class="metric">8 / 4 / 33</div>
+      <p>8 个跨 split 数字模板（140 seeds）、4 个 held-out exact-input overlap、33 个 train→dev/test provenance rows。</p>
+    </article>
+    <article class="card">
+      <h2>历史边界</h2>
+      <div class="metric">0 raw mutations</div>
+      <p>247 seeds、696 SFT、2100 DPO、manifest、lockbox 原始 artifacts 与历史 metrics 均未修改或重算。</p>
+    </article>
+  </section>
+
+  <section class="card boundary" style="margin-top:16px">
+    <h2>必须怎样解释</h2>
+    <ul>
+      <li>当前 public dev/test 是 <code>DEVELOPMENT_ONLY_SPENT</code>，不能称 blind、independent、leakage-free 或最终泛化证据。</li>
+      <li>lockbox-v1 仍只是 frozen one-look aggregate evidence；不能推出 row-level failure、自然 ASR 泛化或总体 SFT 因果效应。</li>
+      <li><code>derive_display</code> 的 99.77% 是 renderer support，不等于 legacy <code>normalized_command</code> exact compatibility；此项进入下一 causal-boundary audit。</li>
+    </ul>
+  </section>
+
+  <section class="grid">
+    <article class="card">
+      <h2>验证摘要</h2>
+      <ul>
+        <li>归档后 full pytest：691 passed</li>
+        <li>Ruff、核心 Mypy、dataset validate、2100 DPO check：通过</li>
+        <li>归档后 OpenSpec strict：11/11；truth checker、leak scan、diff check：通过</li>
+        <li>Full Mypy：既有基线 39 errors / 5 files，无本次新增错误</li>
+      </ul>
+    </article>
+    <article class="card">
+      <h2>权威文件</h2>
+      <ul>
+        <li><a href="../../openspec/changes/archive/2026-07-10-repair-review-findings-before-contract-compiler-audit/design.md">Archived OpenSpec design</a></li>
+        <li><a href="../../reports/public-sample/split-integrity-audit/summary.json">split audit JSON</a></li>
+        <li><a href="../../reports/public-sample/EVIDENCE_INDEX.md">evidence index</a></li>
+        <li><a href="../../reports/lockbox-v1/final-evaluation/comparison.json">lockbox comparison</a></li>
+      </ul>
+    </article>
+  </section>
+
+  <section class="card" style="margin-top:16px">
+    <h2>下一步</h2>
+    <p>Repair change 已归档且无 active change 终验通过。下一步仅开启 <code>audit-contract-compiler-v2-causal-boundary</code> 的 proposal/design/spec/tasks，不执行训练、A100、compiler 实现或历史重评分。</p>
+  </section>
+  <footer>本页为人类复核摘要；OpenSpec、源码、测试、raw artifacts 与验证输出仍是权威来源。</footer>
+</main>
+</body>
+</html>

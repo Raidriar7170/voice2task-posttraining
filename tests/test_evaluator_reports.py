@@ -80,6 +80,85 @@ def test_evaluator_computes_contract_metrics_and_failure_slices() -> None:
     assert result.failure_slices["slot"]["examples"] == ["gold-2"]
 
 
+@pytest.mark.parametrize("prediction_value", [1.0, True])
+def test_contract_exact_match_preserves_json_number_and_boolean_types(
+    prediction_value: object,
+) -> None:
+    row = _row_with_split("json-type-strict", "test", "search", "search_web", {"query": 1})
+    prediction = row.target_contract.to_dict()
+    prediction["slots"] = {"query": prediction_value}
+
+    result = evaluate_predictions([row], {row.id: prediction})
+
+    assert result.metrics["strict_schema_valid_rate"] == 1.0
+    assert result.metrics["semantic_contract_valid_rate"] == 1.0
+    assert result.metrics["contract_exact_match"] == 0.0
+
+
+def test_contract_exact_match_compares_nested_json_recursively() -> None:
+    row = _row_with_split(
+        "nested-json",
+        "test",
+        "search",
+        "search_web",
+        {"query": {"filters": [1, {"enabled": True, "weight": 1.0}], "text": "weather"}},
+    )
+    reordered = row.target_contract.to_dict()
+    reordered["slots"] = {
+        "query": {"text": "weather", "filters": [1, {"weight": 1.0, "enabled": True}]}
+    }
+    list_reordered = row.target_contract.to_dict()
+    list_reordered["slots"] = {
+        "query": {"filters": [{"enabled": True, "weight": 1.0}, 1], "text": "weather"}
+    }
+
+    assert evaluate_predictions([row], {row.id: reordered}).metrics["contract_exact_match"] == 1.0
+    assert evaluate_predictions([row], {row.id: list_reordered}).metrics["contract_exact_match"] == 0.0
+
+
+@pytest.mark.parametrize(
+    ("left", "right"),
+    [
+        (float("nan"), float("nan")),
+        (float("inf"), float("inf")),
+        (("not", "json"), ("not", "json")),
+        (object(), object()),
+        ({"value": 1}, {"value": True}),
+        ({"value": [1]}, {"value": [1.0]}),
+    ],
+)
+def test_json_type_strict_comparator_fails_closed_outside_finite_json(
+    left: object,
+    right: object,
+) -> None:
+    assert evaluation._json_values_equal(left, right) is False
+
+
+def test_json_type_strict_comparator_fails_closed_for_cyclic_containers() -> None:
+    left: dict[str, object] = {}
+    right: dict[str, object] = {}
+    left["self"] = left
+    right["self"] = right
+
+    assert evaluation._json_values_equal(left, right) is False
+
+
+def test_evaluate_predictions_fails_closed_for_non_json_slot_values_without_raising() -> None:
+    row = _row_with_split("non-json-e2e", "test", "search", "search_web", {"query": "expected"})
+    cycle: dict[str, object] = {}
+    cycle["self"] = cycle
+
+    for value in (float("nan"), ("tuple",), object(), cycle):
+        prediction = row.target_contract.to_dict()
+        prediction["slots"] = {"query": value}
+
+        result = evaluate_predictions([row], {row.id: prediction})
+
+        assert result.metrics["strict_schema_valid_rate"] == 1.0
+        assert result.metrics["semantic_contract_valid_rate"] == 1.0
+        assert result.metrics["contract_exact_match"] == 0.0
+
+
 def test_evaluator_rejects_predictions_missing_required_contract_fields() -> None:
     rows = [_row("gold-1", "search_web", "天气")]
     incomplete_prediction = {

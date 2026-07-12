@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import re
 import subprocess
 from collections.abc import Iterable
@@ -164,6 +165,61 @@ def _slot_f1_soft(gold: dict[str, Any], predicted: dict[str, Any]) -> float:
     return 2 * precision * recall / (precision + recall)
 
 
+def _json_values_equal(
+    left: Any,
+    right: Any,
+    _active_pairs: set[tuple[int, int]] | None = None,
+) -> bool:
+    """Compare finite JSON-domain values without Python's numeric coercions."""
+    active_pairs = set() if _active_pairs is None else _active_pairs
+    if left is None or right is None:
+        return left is None and right is None
+    if isinstance(left, bool) or isinstance(right, bool):
+        return isinstance(left, bool) and isinstance(right, bool) and left is right
+    if isinstance(left, int) or isinstance(right, int):
+        return type(left) is int and type(right) is int and left == right
+    if isinstance(left, float) or isinstance(right, float):
+        return (
+            type(left) is float
+            and type(right) is float
+            and math.isfinite(left)
+            and math.isfinite(right)
+            and left == right
+        )
+    if isinstance(left, str) or isinstance(right, str):
+        return type(left) is str and type(right) is str and left == right
+    if isinstance(left, list) or isinstance(right, list):
+        if type(left) is not list or type(right) is not list or len(left) != len(right):
+            return False
+        pair = (id(left), id(right))
+        if pair in active_pairs:
+            return False
+        active_pairs.add(pair)
+        try:
+            return all(
+                _json_values_equal(left_item, right_item, active_pairs)
+                for left_item, right_item in zip(left, right, strict=True)
+            )
+        finally:
+            active_pairs.remove(pair)
+    if isinstance(left, dict) or isinstance(right, dict):
+        if type(left) is not dict or type(right) is not dict:
+            return False
+        if not all(type(key) is str for key in left) or not all(type(key) is str for key in right):
+            return False
+        if left.keys() != right.keys():
+            return False
+        pair = (id(left), id(right))
+        if pair in active_pairs:
+            return False
+        active_pairs.add(pair)
+        try:
+            return all(_json_values_equal(left[key], right[key], active_pairs) for key in left)
+        finally:
+            active_pairs.remove(pair)
+    return False
+
+
 def _add_failure(failure_slices: dict[str, dict[str, Any]], category: str, row_id: str) -> None:
     entry = failure_slices.setdefault(category, {"count": 0, "examples": []})
     entry["count"] += 1
@@ -234,7 +290,9 @@ def evaluate_predictions(rows: list[SFTDatasetRow], predictions: dict[str, Any])
         slot_soft_scores.append(_slot_f1_soft(gold.slots, predicted.slots))
         if slot_score < 1.0:
             _add_failure(failure_slices, "slot", row.id)
-        if prediction_status["semantic_valid"] and predicted.to_dict() == gold.to_dict():
+        if prediction_status["semantic_valid"] and _json_values_equal(
+            predicted.to_dict(), gold.to_dict()
+        ):
             exact_matches += 1
 
     predicted_positive_support = safety_tp + safety_fp

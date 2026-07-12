@@ -1,0 +1,705 @@
+{
+  "binding_inventory_count": 29,
+  "blocked_reasons": {
+    "compiler_causal_identification": [
+      "no_clean_matched_compiler_comparison",
+      "compiler_control_unbound",
+      "compiler_intervention_unbound"
+    ],
+    "execution_readiness": [
+      "execution_bindings_unbound",
+      "protocol_not_frozen",
+      "clean_population_not_materialized",
+      "arm_artifacts_not_frozen",
+      "one_look_not_eligible"
+    ],
+    "model_learning_causal_identification": [
+      "no_clean_matched_multi_seed_model_comparison",
+      "model_control_unbound",
+      "model_training_intervention_unbound",
+      "paired_model_seed_list_unbound"
+    ]
+  },
+  "bound_binding_count": 0,
+  "claim_flags": {
+    "adapter_release_claim": false,
+    "checkpoint_release_claim": false,
+    "clean_independent_evidence_claim": false,
+    "compiler_causal_effect_claim": false,
+    "executable_improvement_claim": false,
+    "live_browser_benchmark_claim": false,
+    "model_improvement_claim": false,
+    "model_learning_causal_effect_claim": false,
+    "natural_asr_generalization_claim": false,
+    "production_readiness_claim": false,
+    "safety_readiness_claim": false
+  },
+  "current_readiness_state": "DESIGN_ONLY",
+  "document_presence_implies_readiness": false,
+  "execution_bindings": {
+    "acquisition_frame_version": "UNBOUND_BY_DESIGN",
+    "acquisition_source": "UNBOUND_BY_DESIGN",
+    "alpha": "UNBOUND_BY_DESIGN",
+    "compiler_control": "UNBOUND_BY_DESIGN",
+    "compiler_effect_scale": "UNBOUND_BY_DESIGN",
+    "compiler_family_variance_or_icc_assumption": "UNBOUND_BY_DESIGN",
+    "compiler_interval_and_multiplicity_method": "UNBOUND_BY_DESIGN",
+    "compiler_intervention": "UNBOUND_BY_DESIGN",
+    "compiler_mde_or_sensitivity_target": "UNBOUND_BY_DESIGN",
+    "compiler_target_power_or_beta": "UNBOUND_BY_DESIGN",
+    "guardrail_margins": "UNBOUND_BY_DESIGN",
+    "minimum_families_per_partition": "UNBOUND_BY_DESIGN",
+    "model_control": "UNBOUND_BY_DESIGN",
+    "model_effect_scale": "UNBOUND_BY_DESIGN",
+    "model_family_variance_or_icc_assumption": "UNBOUND_BY_DESIGN",
+    "model_interval_and_multiplicity_method": "UNBOUND_BY_DESIGN",
+    "model_mde_or_sensitivity_target": "UNBOUND_BY_DESIGN",
+    "model_target_power_or_beta": "UNBOUND_BY_DESIGN",
+    "model_training_intervention": "UNBOUND_BY_DESIGN",
+    "paired_model_seed_list": "UNBOUND_BY_DESIGN",
+    "paired_seed_correlation_assumption": "UNBOUND_BY_DESIGN",
+    "partition_algorithm": "UNBOUND_BY_DESIGN",
+    "partition_seed": "UNBOUND_BY_DESIGN",
+    "seed_failure_or_attrition_assumption": "UNBOUND_BY_DESIGN",
+    "semantic_family_key": "UNBOUND_BY_DESIGN",
+    "stop_rules": "UNBOUND_BY_DESIGN",
+    "strata_definition": "UNBOUND_BY_DESIGN",
+    "target_partition_allocation": "UNBOUND_BY_DESIGN",
+    "target_total_family_count": "UNBOUND_BY_DESIGN"
+  },
+  "execution_bindings_complete": false,
+  "execution_flags": {
+    "a100_execution": false,
+    "clean_outcome_access": false,
+    "clean_row_annotation": false,
+    "clean_row_creation": false,
+    "clean_row_selection": false,
+    "compiler_implementation": false,
+    "data_mutation": false,
+    "decoder_implementation": false,
+    "evaluator_change": false,
+    "experiment_execution": false,
+    "lockbox_row_level_read": false,
+    "prediction_run": false,
+    "prompt_change": false,
+    "runtime_change": false,
+    "schema_change": false,
+    "training_run": false
+  },
+  "hard_stops": [
+    {
+      "action": "STOP_READINESS_NO_CAUSAL_CLAIM",
+      "code": "MISSING_BINDINGS",
+      "machine_checkable": true
+    },
+    {
+      "action": "STOP_READINESS_NO_CAUSAL_CLAIM",
+      "code": "LINEAGE_AMBIGUITY",
+      "machine_checkable": true
+    },
+    {
+      "action": "STOP_READINESS_NO_CAUSAL_CLAIM",
+      "code": "PARTITION_FAMILY_OVERLAP",
+      "machine_checkable": true
+    },
+    {
+      "action": "STOP_READINESS_NO_CAUSAL_CLAIM",
+      "code": "SOURCE_HASH_DRIFT",
+      "machine_checkable": true
+    },
+    {
+      "action": "STOP_READINESS_NO_CAUSAL_CLAIM",
+      "code": "EARLY_OUTCOME_ACCESS",
+      "machine_checkable": true
+    },
+    {
+      "action": "STOP_READINESS_NO_CAUSAL_CLAIM",
+      "code": "ARM_MISMATCH",
+      "machine_checkable": true
+    },
+    {
+      "action": "STOP_READINESS_NO_CAUSAL_CLAIM",
+      "code": "SEED_LOSS",
+      "machine_checkable": true
+    },
+    {
+      "action": "STOP_READINESS_NO_CAUSAL_CLAIM",
+      "code": "PREDICTION_REPAIR",
+      "machine_checkable": true
+    },
+    {
+      "action": "STOP_READINESS_NO_CAUSAL_CLAIM",
+      "code": "UNSUPPORTED_CASE_FILTERING",
+      "machine_checkable": true
+    },
+    {
+      "action": "STOP_READINESS_NO_CAUSAL_CLAIM",
+      "code": "ONE_LOOK_REUSE",
+      "machine_checkable": true
+    }
+  ],
+  "input_policy": {
+    "aggregate_lockbox_only": true,
+    "broad_directory_discovery": false,
+    "denylist": [
+      "data/lockbox/lockbox-v1.jsonl",
+      "data/lockbox/lockbox-v1.draft.jsonl",
+      "reports/lockbox-v1/final-evaluation/row-failures.jsonl",
+      "raw/private-predictions/",
+      "private-corpora/",
+      ".cache/",
+      "adapters/",
+      "checkpoints/",
+      "logs/",
+      "secrets/",
+      ".env",
+      ".ssh/"
+    ],
+    "whitelist": [
+      "reports/public-sample/contract-compiler-v2-causal-boundary/summary.json",
+      "openspec/specs/contract-compiler-v2-causal-audit/spec.md",
+      "CONTEXT.md",
+      "data/public-samples/manifest_public_sample.json",
+      "reports/public-sample/split-integrity-audit/summary.json",
+      "data/lockbox/lockbox-v1.manifest.json",
+      "reports/lockbox-v1/final-evaluation/run-card.json",
+      "reports/lockbox-v1/final-evaluation/base/metrics.json",
+      "reports/lockbox-v1/final-evaluation/final-sft/metrics.json",
+      "reports/lockbox-v1/final-evaluation/comparison.json"
+    ]
+  },
+  "invariant_matrix": [
+    {
+      "machine_checkable": true,
+      "name": "source_hashes_match",
+      "scope": "all",
+      "status_now": "DESIGN_RULE_ONLY"
+    },
+    {
+      "machine_checkable": true,
+      "name": "execution_bindings_complete_before_freeze",
+      "scope": "all",
+      "status_now": "DESIGN_RULE_ONLY"
+    },
+    {
+      "machine_checkable": true,
+      "name": "family_partition_disjointness",
+      "scope": "population",
+      "status_now": "DESIGN_RULE_ONLY"
+    },
+    {
+      "machine_checkable": true,
+      "name": "no_early_outcome_access",
+      "scope": "population",
+      "status_now": "DESIGN_RULE_ONLY"
+    },
+    {
+      "machine_checkable": true,
+      "name": "compiler_arm_identity_except_compiler",
+      "scope": "compiler_system",
+      "status_now": "DESIGN_RULE_ONLY"
+    },
+    {
+      "machine_checkable": true,
+      "name": "model_arm_identity_except_one_training_intervention",
+      "scope": "model_learning",
+      "status_now": "DESIGN_RULE_ONLY"
+    },
+    {
+      "machine_checkable": true,
+      "name": "all_assigned_seeds_retained",
+      "scope": "model_learning",
+      "status_now": "DESIGN_RULE_ONLY"
+    },
+    {
+      "machine_checkable": true,
+      "name": "one_look_state_independence",
+      "scope": "population",
+      "status_now": "DESIGN_RULE_ONLY"
+    }
+  ],
+  "maximum_state_this_change": "DESIGN_ONLY",
+  "methodology_version": "clean-matched-causal-evidence-design.v1",
+  "negative_controls": [
+    "constant_only",
+    "field_copy_only",
+    "policy_default_only",
+    "evaluation_plumbing",
+    "compiler_filled_fields_not_model_learning"
+  ],
+  "next_phase_recommendations": [
+    {
+      "change": "materialize-and-freeze-clean-compiler-model-evaluation-boundary-v1",
+      "executed": false,
+      "may_run_compiler_or_model_experiment": false,
+      "separate_review_required": true
+    }
+  ],
+  "population_design": {
+    "acquisition_plan_count": 1,
+    "acquisition_status": "NOT_STARTED",
+    "artifacts_created": {
+      "clean_manifest": false,
+      "clean_rows": false,
+      "family_registry": false,
+      "gold_labels": false,
+      "partition_membership": false,
+      "predictions": false
+    },
+    "claims_allowed": {
+      "clean_independent_evidence": false,
+      "natural_asr": false,
+      "partitions_sealed": false,
+      "population_materialized": false
+    },
+    "family_disjointness_rules": {
+      "challenge_use": false,
+      "development_use": false,
+      "one_family_in_exactly_one_evaluation_partition": true,
+      "outcome_aware_allocation": false,
+      "post_hoc_repartitioning": false,
+      "remediation_use": false,
+      "training_use": false
+    },
+    "family_registry_status": "NOT_CREATED",
+    "future_membership_assignment": {
+      "assignment_count": "EXACTLY_ONCE_IN_FUTURE_MATERIALIZATION",
+      "before": [
+        "row_authoring",
+        "annotation",
+        "gold_access",
+        "outcome_access"
+      ],
+      "membership_attestation_created_now": false,
+      "realized_counts_are_design_bindings": false,
+      "source": "future_source_hashed_acquisition_frame",
+      "unit": "semantic_family"
+    },
+    "independent_one_look_contract": {
+      "compiler_open_consumes": [
+        "compiler_system_evaluation"
+      ],
+      "compiler_open_preserves": [
+        "model_learning_evaluation"
+      ],
+      "compiler_result_driven_model_changes": false,
+      "cross_partition_inspection": false,
+      "partition_reuse_for_other_estimand": false
+    },
+    "lineage_contract": {
+      "excluded_ancestry": [
+        "current_public_train",
+        "current_public_dev",
+        "current_public_test",
+        "remediation_artifacts",
+        "challenge_artifacts",
+        "prediction_artifacts",
+        "lockbox_v1"
+      ],
+      "lockbox_overlap_interface": "SEALED_AGGREGATE_ATTESTATION_ONLY",
+      "lockbox_row_access": false,
+      "new_creation_timestamp_establishes_cleanliness": false,
+      "predeclared_disjointness_checks": [
+        "exact",
+        "normalized",
+        "template",
+        "semantic_family",
+        "provenance"
+      ],
+      "synthetic_origin_establishes_natural_asr": false
+    },
+    "partition_count": 2,
+    "partition_mechanics": {
+      "freeze_required_before_acquisition": true,
+      "mechanics_bindings": {
+        "acquisition_frame_version": "UNBOUND_BY_DESIGN",
+        "acquisition_source": "UNBOUND_BY_DESIGN",
+        "minimum_families_per_partition": "UNBOUND_BY_DESIGN",
+        "partition_algorithm": "UNBOUND_BY_DESIGN",
+        "partition_seed": "UNBOUND_BY_DESIGN",
+        "semantic_family_key": "UNBOUND_BY_DESIGN",
+        "strata_definition": "UNBOUND_BY_DESIGN",
+        "target_partition_allocation": "UNBOUND_BY_DESIGN",
+        "target_total_family_count": "UNBOUND_BY_DESIGN"
+      },
+      "protocol_frozen_now": false
+    },
+    "partition_mechanics_frozen_now": false,
+    "partitions": [
+      {
+        "future_family_disjoint": true,
+        "id": "compiler_system_evaluation",
+        "materialization_status": "NOT_MATERIALIZED",
+        "membership_assignment_status": "NOT_ASSIGNED",
+        "one_look_state": "NOT_AVAILABLE",
+        "sealing_status": "NOT_SEALED"
+      },
+      {
+        "future_family_disjoint": true,
+        "id": "model_learning_evaluation",
+        "materialization_status": "NOT_MATERIALIZED",
+        "membership_assignment_status": "NOT_ASSIGNED",
+        "one_look_state": "NOT_AVAILABLE",
+        "sealing_status": "NOT_SEALED"
+      }
+    ],
+    "shared_sequential_partition": false
+  },
+  "power_and_uncertainty": {
+    "compiler_system": {
+      "binding_values": {
+        "alpha": "UNBOUND_BY_DESIGN",
+        "compiler_effect_scale": "UNBOUND_BY_DESIGN",
+        "compiler_family_variance_or_icc_assumption": "UNBOUND_BY_DESIGN",
+        "compiler_interval_and_multiplicity_method": "UNBOUND_BY_DESIGN",
+        "compiler_mde_or_sensitivity_target": "UNBOUND_BY_DESIGN",
+        "compiler_target_power_or_beta": "UNBOUND_BY_DESIGN",
+        "guardrail_margins": "UNBOUND_BY_DESIGN",
+        "stop_rules": "UNBOUND_BY_DESIGN"
+      },
+      "bound_before_clean_outcomes": true,
+      "dependence_structure": [
+        "paired_record",
+        "semantic_family_cluster"
+      ],
+      "row_independent_interval_allowed": false
+    },
+    "historical_inputs": "AGGREGATE_ONLY_SENSITIVITY_INPUTS",
+    "model_learning": {
+      "binding_values": {
+        "alpha": "UNBOUND_BY_DESIGN",
+        "guardrail_margins": "UNBOUND_BY_DESIGN",
+        "model_effect_scale": "UNBOUND_BY_DESIGN",
+        "model_family_variance_or_icc_assumption": "UNBOUND_BY_DESIGN",
+        "model_interval_and_multiplicity_method": "UNBOUND_BY_DESIGN",
+        "model_mde_or_sensitivity_target": "UNBOUND_BY_DESIGN",
+        "model_target_power_or_beta": "UNBOUND_BY_DESIGN",
+        "paired_seed_correlation_assumption": "UNBOUND_BY_DESIGN",
+        "seed_failure_or_attrition_assumption": "UNBOUND_BY_DESIGN",
+        "stop_rules": "UNBOUND_BY_DESIGN"
+      },
+      "bound_before_clean_outcomes": true,
+      "dependence_structure": [
+        "semantic_family_cluster",
+        "paired_seed"
+      ],
+      "incomplete_seed_deletion_allowed": false,
+      "row_independent_interval_allowed": false
+    },
+    "repartition_after_clean_outcome_access": false,
+    "resize_after_clean_outcome_access": false,
+    "select_after_clean_outcome_access": false
+  },
+  "preregistration_cards": {
+    "compiler_system": {
+      "arm_invariants": [
+        "byte_identical_model_output",
+        "semantic_core_identity",
+        "legacy_envelope_metadata_identity",
+        "row_and_order_identity",
+        "source_hash_identity",
+        "prompt_and_decoding_provenance_identity",
+        "evaluator_version_identity",
+        "no_prediction_repair"
+      ],
+      "bindings": {
+        "compiler_control": "UNBOUND_BY_DESIGN",
+        "compiler_intervention": "UNBOUND_BY_DESIGN"
+      },
+      "causal_identification": "CAUSAL_IDENTIFICATION_BLOCKED",
+      "effect_label_if_future_identified": "system_compiler_transformation_effect",
+      "eligible_population": "future_clean_fixed_eligible_population",
+      "future_named_arm_requirements": {
+        "complete_now": false,
+        "control": "one_named_identity_or_preserve_legacy_path",
+        "intervention": "one_named_candidate_compiler"
+      },
+      "guardrails": [
+        "safety",
+        "confirmation",
+        "slots",
+        "executable_gates"
+      ],
+      "negative_controls": [
+        "constant_only",
+        "field_copy_only",
+        "policy_default_only",
+        "evaluation_plumbing"
+      ],
+      "observation_unit": "one_frozen_raw_record",
+      "paired_analysis": {
+        "family_aggregation": "aggregate_record_contrasts_within_semantic_family",
+        "interval": "family_clustered_paired_or_randomization_method_UNBOUND_BY_DESIGN",
+        "multiplicity_bound_before_outcomes": true,
+        "record_contrast": "paired_within_record_before_aggregation",
+        "row_independence_assumed": false
+      },
+      "partition": "compiler_system_evaluation",
+      "primary_denominator": "complete_fixed_eligible_population",
+      "primary_failure_categories": [
+        "invalid",
+        "renderer_unsupported",
+        "compiler_error",
+        "missing"
+      ],
+      "primary_outcome": "compiled_v1_strict_exact_full_population_itt",
+      "supported_only_denominator_must_be_printed": true,
+      "supported_only_secondary_diagnostic": true
+    },
+    "model_learning": {
+      "aggregation_order": [
+        "aggregate_within_semantic_family_for_each_assigned_seed",
+        "pair_same_assigned_seed_list_across_arms",
+        "retain_failure_coded_seeds_in_primary_itt"
+      ],
+      "assigned_seed_list_status": "UNBOUND_BY_DESIGN",
+      "bindings": {
+        "model_control": "UNBOUND_BY_DESIGN",
+        "model_training_intervention": "UNBOUND_BY_DESIGN",
+        "paired_model_seed_list": "UNBOUND_BY_DESIGN"
+      },
+      "bound_training_intervention_count": 0,
+      "bundled_pipeline_comparison_identifies_model_learning": false,
+      "causal_identification": "CAUSAL_IDENTIFICATION_BLOCKED",
+      "exactly_one_training_intervention_required": true,
+      "excluded_primary_outcomes": [
+        "compiler_filled_constants",
+        "route",
+        "safety",
+        "confirmation",
+        "normalized_command",
+        "language",
+        "contract_version",
+        "compiled_full_v1_exact"
+      ],
+      "matched_arm_requirements": [
+        "data_boundary_identity",
+        "prompt_identity",
+        "output_schema_identity",
+        "decoding_identity",
+        "compiler_policy_identity",
+        "evaluator_version_identity",
+        "optimization_budget_identity",
+        "eligible_evaluation_population_identity"
+      ],
+      "minimum_assigned_paired_seeds": 3,
+      "model_authored_outcomes": [
+        "intent",
+        "slots",
+        "risk",
+        "clarification"
+      ],
+      "observation_unit": "one_preregistered_evaluation_family",
+      "partition": "model_learning_evaluation",
+      "pipeline_metrics_reported_separately": true,
+      "primary_outcome_scope": "model_authored_fields_only",
+      "primary_seed_denominator": "all_assigned_paired_seeds",
+      "seed_failure_policy": {
+        "drop_seed": false,
+        "failure_codes": [
+          "MISSING_CONTROL_ARM",
+          "MISSING_INTERVENTION_ARM",
+          "TRAINING_FAILURE",
+          "INVALID_EVALUATION"
+        ],
+        "replace_seed": false,
+        "selective_rerun": false
+      }
+    }
+  },
+  "readiness_lifecycle": [
+    {
+      "blocked_reasons": [],
+      "ordinal": 0,
+      "reached": true,
+      "state": "DESIGN_ONLY"
+    },
+    {
+      "blocked_reasons": [
+        "execution_bindings_unbound"
+      ],
+      "ordinal": 1,
+      "reached": false,
+      "state": "EXPERIMENT_BINDINGS_COMPLETE"
+    },
+    {
+      "blocked_reasons": [
+        "protocol_not_frozen"
+      ],
+      "ordinal": 2,
+      "reached": false,
+      "state": "PROTOCOL_FROZEN"
+    },
+    {
+      "blocked_reasons": [
+        "clean_population_not_materialized"
+      ],
+      "ordinal": 3,
+      "reached": false,
+      "state": "POPULATION_MATERIALIZED_AND_SEALED"
+    },
+    {
+      "blocked_reasons": [
+        "arm_artifacts_not_frozen"
+      ],
+      "ordinal": 4,
+      "reached": false,
+      "state": "ARM_ARTIFACTS_FROZEN"
+    },
+    {
+      "blocked_reasons": [
+        "one_look_not_eligible"
+      ],
+      "ordinal": 5,
+      "reached": false,
+      "state": "ELIGIBLE_FOR_ONE_LOOK"
+    }
+  ],
+  "source_anchor_validation": [
+    {
+      "anchors": [
+        "\"audit_status\": \"ARCHIVED\"",
+        "\"status\": \"CAUSAL_IDENTIFICATION_BLOCKED\"",
+        "\"implementation_status\": \"NOT_IMPLEMENTED_HYPOTHETICAL\""
+      ],
+      "path": "reports/public-sample/contract-compiler-v2-causal-boundary/summary.json",
+      "valid": true
+    },
+    {
+      "anchors": [
+        "### Requirement: Classify evidence fail closed",
+        "CAUSAL_IDENTIFICATION_BLOCKED",
+        "consumed one-look lockbox-v1"
+      ],
+      "path": "openspec/specs/contract-compiler-v2-causal-audit/spec.md",
+      "valid": true
+    },
+    {
+      "anchors": [
+        "UNBOUND_BY_DESIGN",
+        "clean_population_status=NOT_MATERIALIZED",
+        "execution_readiness=false"
+      ],
+      "path": "CONTEXT.md",
+      "valid": true
+    },
+    {
+      "anchors": [
+        "\"manifest_id\": \"public-sample-20260619T090925Z\"",
+        "\"seed_rows\": 247",
+        "\"sft_rows\": 696",
+        "\"dpo_pairs\": 2100"
+      ],
+      "path": "data/public-samples/manifest_public_sample.json",
+      "valid": true
+    },
+    {
+      "anchors": [
+        "\"evidence_status\": \"DEVELOPMENT_ONLY_SPENT\"",
+        "\"passed\": false"
+      ],
+      "path": "reports/public-sample/split-integrity-audit/summary.json",
+      "valid": true
+    },
+    {
+      "anchors": [
+        "\"frozen\": true",
+        "\"family_count\": 120",
+        "\"row_count\": 120"
+      ],
+      "path": "data/lockbox/lockbox-v1.manifest.json",
+      "valid": true
+    },
+    {
+      "anchors": [
+        "\"final_lockbox_evaluation_run_once\": true",
+        "\"lockbox_tuning_after_result\": false",
+        "\"row_level_failure_analysis_public\": false"
+      ],
+      "path": "reports/lockbox-v1/final-evaluation/run-card.json",
+      "valid": true
+    },
+    {
+      "anchors": [
+        "\"aggregate_metrics_only\": true",
+        "\"row_level_failure_analysis_included\": false",
+        "\"row_count\": 120"
+      ],
+      "path": "reports/lockbox-v1/final-evaluation/base/metrics.json",
+      "valid": true
+    },
+    {
+      "anchors": [
+        "\"aggregate_metrics_only\": true",
+        "\"row_level_failure_analysis_included\": false",
+        "\"row_count\": 120"
+      ],
+      "path": "reports/lockbox-v1/final-evaluation/final-sft/metrics.json",
+      "valid": true
+    },
+    {
+      "anchors": [
+        "\"comparison\": \"final_sft_minus_base\"",
+        "\"aggregate_metrics_only\": true",
+        "\"lockbox_tuning_after_result\": false"
+      ],
+      "path": "reports/lockbox-v1/final-evaluation/comparison.json",
+      "valid": true
+    }
+  ],
+  "source_manifest": [
+    {
+      "path": "reports/public-sample/contract-compiler-v2-causal-boundary/summary.json",
+      "sha256": "5bfcbedfb6130207c577f6b03608a555086ac33f1295d4a7f225917be0cde1c1"
+    },
+    {
+      "path": "openspec/specs/contract-compiler-v2-causal-audit/spec.md",
+      "sha256": "5db529a5e603b610e79a4ba1e2b3765ba6fa6c263de48b2df629b69863e7e26c"
+    },
+    {
+      "path": "CONTEXT.md",
+      "sha256": "becc5b54eaf66f90789b77fb4fef1a6fc14bd62ae8ef50f9f26a0791edd4b993"
+    },
+    {
+      "path": "data/public-samples/manifest_public_sample.json",
+      "sha256": "f866c173795e97953b1dec85611b405867d0a29497910282f99d399f109cda95"
+    },
+    {
+      "path": "reports/public-sample/split-integrity-audit/summary.json",
+      "sha256": "ac10bd0a1c3fefb717433de68ae29d049069b521bae8599234b7f52faec8f598"
+    },
+    {
+      "path": "data/lockbox/lockbox-v1.manifest.json",
+      "sha256": "72471bac59749f3bc9d21d73db47dafe1f160b978f5ac3971434e13527ddedde"
+    },
+    {
+      "path": "reports/lockbox-v1/final-evaluation/run-card.json",
+      "sha256": "39e59cd6e16baa7adadb6b3c474e7fce8bfe8223e5980a1288a1c50432acec66"
+    },
+    {
+      "path": "reports/lockbox-v1/final-evaluation/base/metrics.json",
+      "sha256": "400fa753e6e8bde611af4e4f9623155ceff6664454bfea0f57748043243cd02f"
+    },
+    {
+      "path": "reports/lockbox-v1/final-evaluation/final-sft/metrics.json",
+      "sha256": "aaecc8dcdad90e70c0f8a7c59a21d2e65d8d42bae3e304e4dce9b049390bc829"
+    },
+    {
+      "path": "reports/lockbox-v1/final-evaluation/comparison.json",
+      "sha256": "48fae0e85e016c1872477881939716076d96998d0c63f83adf1e9be42d9ed544"
+    }
+  ],
+  "state_skipping_allowed": false,
+  "status": {
+    "clean_population_status": "NOT_MATERIALIZED",
+    "compiler_causal_identification": "CAUSAL_IDENTIFICATION_BLOCKED",
+    "decision": "PREREGISTRATION_DESIGN_READY_EXECUTION_BLOCKED",
+    "design_contract_status": "REVIEWED_DESIGN_ONLY",
+    "evidence_status": "DESIGN_ONLY",
+    "execution_readiness": false,
+    "experiment_preregistration_status": "NOT_EXECUTABLE",
+    "model_learning_causal_identification": "CAUSAL_IDENTIFICATION_BLOCKED",
+    "protocol_freeze_status": "NOT_FROZEN"
+  },
+  "unbound_binding_count": 29
+}
