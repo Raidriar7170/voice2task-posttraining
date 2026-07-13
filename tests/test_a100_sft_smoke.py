@@ -164,6 +164,10 @@ def _write_runtime_label_provenance_config(
 
 class _RuntimeInspectableTokenizer:
     chat_template = "private-runtime-template"
+    pad_token_id = 0
+    pad_token = "<pad>"
+    eos_token_id = 1
+    eos_token = "<eos>"
 
     def __call__(self, text: str, **kwargs: Any) -> dict[str, Any]:
         tokens = [ord(char) for char in text]
@@ -1565,18 +1569,85 @@ def test_runtime_label_provenance_train_cli_does_not_write_unresolved_status_out
     assert output.as_posix() not in stdout
 
 
+def _install_bounded_run_sft_preflight_stub(monkeypatch: Any) -> None:
+    def preflight(
+        config_path: Path,
+        manifest_path: Path,
+        output_dir: Path,
+    ) -> tuple[dict[str, Any], training._SFTPreflightExecutionContext | None]:  # noqa: SLF001
+        config = json.loads(config_path.read_text(encoding="utf-8"))
+        if config.get("allow_heavy_training") is not True:
+            return (
+                {
+                    "schema_version": "voice2task-sft-preflight-v1",
+                    "ready": False,
+                    "status": "blocked",
+                    "blockers": ["CONFIG_HEAVY_TRAINING_NOT_ALLOWED"],
+                    "config": {"allow_heavy_training": False},
+                },
+                None,
+            )
+        output_policy = training.validate_sft_output_policy(
+            config,
+            output_dir,
+            repo_root=config_path.parent / "not-the-output-repo",
+        )
+        if output_policy["ready"] is not True:
+            return (
+                {
+                    "schema_version": "voice2task-sft-preflight-v1",
+                    "ready": False,
+                    "status": "blocked",
+                    "blockers": output_policy["blockers"],
+                    "config": {"allow_heavy_training": True},
+                    "output": output_policy,
+                },
+                None,
+            )
+        rows = training._load_sft_training_rows(manifest_path, split="train")  # noqa: SLF001
+        execution_context = _bound_sft_execution_context(
+            config_path.parent,
+            config,
+            manifest_path,
+            output_dir,
+            rows,
+        )
+        return (
+            {
+                "schema_version": "voice2task-sft-preflight-v1",
+                "ready": True,
+                "status": "ready",
+                "blockers": [],
+                "config": {"allow_heavy_training": True},
+                "runtime": {
+                    "python": "test",
+                    "versions": {
+                        name: "test"
+                        for name in ("accelerate", "datasets", "peft", "transformers", "trl")
+                    },
+                },
+                "output": output_policy,
+            },
+            execution_context,
+        )
+
+    monkeypatch.setattr(training, "_run_sft_preflight_core", preflight)
+
+
 def test_sft_heavy_training_requires_cli_and_config_opt_ins(monkeypatch: Any, tmp_path: Path) -> None:
     manifest = _write_manifest(tmp_path)
     calls: list[Path] = []
 
     monkeypatch.setattr(training, "_train_dependencies_available", lambda: True)
+    _install_bounded_run_sft_preflight_stub(monkeypatch)
     monkeypatch.setattr(
         training,
         "_run_real_sft",
-        lambda metadata, config, manifest_path, output_dir: calls.append(output_dir),
+        lambda metadata, config, manifest_path, output_dir, *, execution_context: calls.append(output_dir),
     )
 
     allowed_root = tmp_path / "remote-root"
+    allowed_root.mkdir()
     config_allows = _write_config(tmp_path, allow_heavy_training=True, output_root=allowed_root.as_posix())
     dry_run_meta = run_sft(
         config_path=config_allows,
@@ -1623,13 +1694,15 @@ def test_sft_heavy_training_requires_cli_and_config_opt_ins(monkeypatch: Any, tm
 def test_sft_a100_run_training_blocks_output_outside_configured_root(monkeypatch: Any, tmp_path: Path) -> None:
     manifest = _write_manifest(tmp_path)
     allowed_root = tmp_path / "allowed-root"
+    allowed_root.mkdir()
     config = _write_config(tmp_path, allow_heavy_training=True, output_root=allowed_root.as_posix())
     calls: list[Path] = []
     monkeypatch.setattr(training, "_train_dependencies_available", lambda: True)
+    _install_bounded_run_sft_preflight_stub(monkeypatch)
     monkeypatch.setattr(
         training,
         "_run_real_sft",
-        lambda metadata, config, manifest_path, output_dir: calls.append(output_dir),
+        lambda metadata, config, manifest_path, output_dir, *, execution_context: calls.append(output_dir),
     )
 
     metadata = run_sft(
@@ -1643,7 +1716,7 @@ def test_sft_a100_run_training_blocks_output_outside_configured_root(monkeypatch
     assert metadata["release_status"] == "not_released"
     assert metadata["training_status"] == "training_blocked_by_output_policy"
     assert metadata["heavy_training_gate"]["will_run_heavy_training"] is False
-    assert "outside configured output_root" in metadata["notes"]
+    assert "OUTPUT_PATH_OUTSIDE_ROOT" in metadata["blockers"]
 
 
 def test_sft_a100_run_training_blocks_unresolved_public_template_output_root(
@@ -1654,10 +1727,11 @@ def test_sft_a100_run_training_blocks_unresolved_public_template_output_root(
     config = _write_config(tmp_path, allow_heavy_training=True, output_root="<a100_project_root>")
     calls: list[Path] = []
     monkeypatch.setattr(training, "_train_dependencies_available", lambda: True)
+    _install_bounded_run_sft_preflight_stub(monkeypatch)
     monkeypatch.setattr(
         training,
         "_run_real_sft",
-        lambda metadata, config, manifest_path, output_dir: calls.append(output_dir),
+        lambda metadata, config, manifest_path, output_dir, *, execution_context: calls.append(output_dir),
     )
 
     metadata = run_sft(
@@ -1671,7 +1745,7 @@ def test_sft_a100_run_training_blocks_unresolved_public_template_output_root(
     assert metadata["release_status"] == "not_released"
     assert metadata["training_status"] == "training_blocked_by_output_policy"
     assert metadata["heavy_training_gate"]["will_run_heavy_training"] is False
-    assert "unresolved output_root template" in metadata["notes"]
+    assert "OUTPUT_ROOT_MISSING" in metadata["blockers"]
 
 
 def _install_fake_training_modules(
@@ -1689,19 +1763,22 @@ def _install_fake_training_modules(
             return records
 
     class FakeModel:
+        def __init__(self) -> None:
+            self.config = types.SimpleNamespace(use_cache=True)
+
         def save_pretrained(self, path: str) -> None:
             saved_paths.append(path)
 
     class FakeAutoModelForCausalLM:
         @staticmethod
-        def from_pretrained(base_model: str) -> FakeModel:
-            assert base_model == "fake-qwen"
+        def from_pretrained(base_model: str, **kwargs: Any) -> FakeModel:
+            assert Path(base_model).name == "fake-qwen"
             return FakeModel()
 
     class FakeAutoTokenizer:
         @staticmethod
-        def from_pretrained(base_model: str) -> _RuntimeInspectableTokenizer:
-            assert base_model == "fake-qwen"
+        def from_pretrained(base_model: str, **kwargs: Any) -> _RuntimeInspectableTokenizer:
+            assert Path(base_model).name == "fake-qwen"
             return _RuntimeInspectableTokenizer()
 
     class FakeTrainingArguments:
@@ -1732,6 +1809,58 @@ def _install_fake_training_modules(
     monkeypatch.setitem(sys.modules, "transformers", fake_transformers)
     monkeypatch.setitem(sys.modules, "peft", fake_peft)
     monkeypatch.setitem(sys.modules, "trl", fake_trl)
+
+
+def _bound_sft_execution_context(
+    tmp_path: Path,
+    config: dict[str, Any],
+    manifest: Path,
+    output_dir: Path,
+    rows: list[training.SFTDatasetRow],
+) -> Any:
+    bound_config = dict(config)
+    bound_config.setdefault("max_train_rows", len(rows))
+    model_root = tmp_path / "fake-qwen"
+    model_root.mkdir(exist_ok=True)
+    bound_config["base_model_runtime_path"] = model_root.as_posix()
+    config_path = tmp_path / "bound-private-config.json"
+    config_path.write_text(json.dumps(bound_config, sort_keys=True), encoding="utf-8")
+    fingerprints, inventory = training._stable_local_model_inventory(model_root)  # noqa: SLF001
+    output_facts = training.validate_sft_output_policy(
+        bound_config,
+        output_dir,
+        repo_root=tmp_path / "not-the-output-repo",
+    )
+    assert output_facts["ready"] is True
+    return training._SFTPreflightExecutionContext(  # noqa: SLF001
+        config_path=config_path,
+        config_sha256=training._sha256_file(config_path),  # noqa: SLF001
+        config_json=json.dumps(bound_config, ensure_ascii=False, sort_keys=True, separators=(",", ":")),
+        repo_root=tmp_path / "not-the-output-repo",
+        manifest_path=manifest,
+        manifest_sha256=training._sha256_file(manifest),  # noqa: SLF001
+        manifest_id=str(json.loads(manifest.read_text(encoding="utf-8"))["manifest_id"]),
+        sft_path=manifest,
+        sft_sha256=training._sha256_file(manifest),  # noqa: SLF001
+        selected_rows_json=tuple(
+            json.dumps(row.to_dict(), ensure_ascii=False, sort_keys=True, separators=(",", ":")) for row in rows
+        ),
+        selected_row_ids_sha256=training._sha256_text(  # noqa: SLF001
+            json.dumps([row.id for row in rows], separators=(",", ":"))
+        ),
+        model_root=model_root,
+        model_inventory_sha256=training._sha256_text(  # noqa: SLF001
+            json.dumps(
+                {"fingerprints": fingerprints, "weights": inventory},
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+        ),
+        output_root=tmp_path,
+        output_dir=output_dir,
+        output_facts_json=json.dumps(output_facts, sort_keys=True, separators=(",", ":")),
+    )
 
 
 def test_real_sft_heavy_path_keeps_new_trl_sfttrainer_with_assistant_only_labels(
@@ -1780,16 +1909,22 @@ def test_real_sft_heavy_path_keeps_new_trl_sfttrainer_with_assistant_only_labels
         saved_paths=saved_paths,
     )
 
+    config = {
+        "base_model": "fake-qwen",
+        "output_root": tmp_path.as_posix(),
+        "min_free_disk_gib": 0,
+        "dataset_split": "train",
+        "max_seq_length": SHARED_PREFIX_RUNTIME_SFT_MAX_SEQ_LENGTH,
+        "lora": {"r": 8, "alpha": 16, "dropout": 0.05, "target_modules": ["q_proj"]},
+    }
+    output_dir = tmp_path / "run"
+    execution_context = _bound_sft_execution_context(tmp_path, config, manifest, output_dir, rows)
     training._run_real_sft(  # noqa: SLF001
         {"adapter_path": (tmp_path / "adapter").as_posix()},
-        {
-            "base_model": "fake-qwen",
-            "dataset_split": "train",
-            "max_seq_length": SHARED_PREFIX_RUNTIME_SFT_MAX_SEQ_LENGTH,
-            "lora": {"r": 8, "alpha": 16, "dropout": 0.05, "target_modules": ["q_proj"]},
-        },
+        config,
         manifest,
-        tmp_path / "run",
+        output_dir,
+        execution_context=execution_context,
     )
 
     assert trainer_calls == []
@@ -1814,6 +1949,7 @@ def test_real_sft_heavy_path_supports_old_trl_sfttrainer_tokenizer_signature(
     tmp_path: Path,
 ) -> None:
     manifest = _write_manifest(tmp_path)
+    rows = training._load_sft_training_rows(manifest, split="train")  # noqa: SLF001
     dataset_records: list[list[dict[str, list[int]]]] = []
     sft_trainer_calls: list[dict[str, Any]] = []
     trainer_calls: list[dict[str, Any]] = []
@@ -1853,16 +1989,22 @@ def test_real_sft_heavy_path_supports_old_trl_sfttrainer_tokenizer_signature(
         saved_paths=saved_paths,
     )
 
+    config = {
+        "base_model": "fake-qwen",
+        "output_root": tmp_path.as_posix(),
+        "min_free_disk_gib": 0,
+        "dataset_split": "train",
+        "max_seq_length": SHARED_PREFIX_RUNTIME_SFT_MAX_SEQ_LENGTH,
+        "lora": {"r": 8, "alpha": 16, "dropout": 0.05, "target_modules": ["q_proj"]},
+    }
+    output_dir = tmp_path / "run"
+    execution_context = _bound_sft_execution_context(tmp_path, config, manifest, output_dir, rows)
     training._run_real_sft(  # noqa: SLF001
         {"adapter_path": (tmp_path / "adapter").as_posix()},
-        {
-            "base_model": "fake-qwen",
-            "dataset_split": "train",
-            "max_seq_length": SHARED_PREFIX_RUNTIME_SFT_MAX_SEQ_LENGTH,
-            "lora": {"r": 8, "alpha": 16, "dropout": 0.05, "target_modules": ["q_proj"]},
-        },
+        config,
         manifest,
-        tmp_path / "run",
+        output_dir,
+        execution_context=execution_context,
     )
 
     assert trainer_calls == []
@@ -1877,6 +2019,7 @@ def test_real_sft_heavy_path_limits_tiny_overfit_rows_and_records_metadata(
     tmp_path: Path,
 ) -> None:
     manifest = _write_multirow_manifest(tmp_path, train_rows=4)
+    rows = training._load_sft_training_rows(manifest, split="train")[:2]  # noqa: SLF001
     dataset_records: list[list[dict[str, list[int]]]] = []
     sft_trainer_calls: list[dict[str, Any]] = []
     trainer_calls: list[dict[str, Any]] = []
@@ -1916,18 +2059,24 @@ def test_real_sft_heavy_path_limits_tiny_overfit_rows_and_records_metadata(
         saved_paths=saved_paths,
     )
 
+    config = {
+        "base_model": "fake-qwen",
+        "output_root": tmp_path.as_posix(),
+        "min_free_disk_gib": 0,
+        "dataset_split": "train",
+        "max_train_rows": 2,
+        "max_seq_length": SHARED_PREFIX_RUNTIME_SFT_MAX_SEQ_LENGTH,
+        "lora": {"r": 8, "alpha": 16, "dropout": 0.05, "target_modules": ["q_proj"]},
+    }
+    output_dir = tmp_path / "run"
+    execution_context = _bound_sft_execution_context(tmp_path, config, manifest, output_dir, rows)
     metadata = {"adapter_path": (tmp_path / "adapter").as_posix(), "dataset_load": {}}
     training._run_real_sft(  # noqa: SLF001
         metadata,
-        {
-            "base_model": "fake-qwen",
-            "dataset_split": "train",
-            "max_train_rows": 2,
-            "max_seq_length": SHARED_PREFIX_RUNTIME_SFT_MAX_SEQ_LENGTH,
-            "lora": {"r": 8, "alpha": 16, "dropout": 0.05, "target_modules": ["q_proj"]},
-        },
+        config,
         manifest,
-        tmp_path / "run",
+        output_dir,
+        execution_context=execution_context,
     )
 
     assert trainer_calls == []
@@ -1939,16 +2088,22 @@ def test_real_sft_heavy_path_limits_tiny_overfit_rows_and_records_metadata(
     assert metadata["training_row_ids"] == ["sft-1", "sft-2"]
     assert metadata["dataset_load"]["training_rows_used"] == 2
     assert metadata["dataset_load"]["training_row_ids"] == ["sft-1", "sft-2"]
-    assert metadata["dataset_load"]["loaded_rows_before_training_row_limit"] == 4
+    assert metadata["dataset_load"]["loaded_rows_before_training_row_limit"] == 2
 
 
 def test_sft_metadata_contains_public_safe_a100_smoke_fields(monkeypatch: Any, tmp_path: Path) -> None:
     manifest = _write_manifest(tmp_path)
     allowed_root = tmp_path / "remote-root"
+    allowed_root.mkdir()
     config = _write_config(tmp_path, allow_heavy_training=True, output_root=allowed_root.as_posix())
     output_dir = allowed_root / "runs" / "run"
     monkeypatch.setattr(training, "_train_dependencies_available", lambda: True)
-    monkeypatch.setattr(training, "_run_real_sft", lambda metadata, config, manifest_path, output_dir: None)
+    _install_bounded_run_sft_preflight_stub(monkeypatch)
+    monkeypatch.setattr(
+        training,
+        "_run_real_sft",
+        lambda metadata, config, manifest_path, output_dir, *, execution_context: None,
+    )
 
     metadata = run_sft(config_path=config, manifest_path=manifest, output_dir=output_dir, dry_run=False)
 
@@ -1973,11 +2128,20 @@ def test_sft_metadata_contains_public_safe_a100_smoke_fields(monkeypatch: Any, t
 def test_sft_training_failure_writes_sanitized_metadata(monkeypatch: Any, tmp_path: Path) -> None:
     manifest = _write_manifest(tmp_path)
     allowed_root = tmp_path / "remote-root"
+    allowed_root.mkdir()
     config = _write_config(tmp_path, allow_heavy_training=True, output_root=allowed_root.as_posix())
     output_dir = allowed_root / "runs" / "run"
     monkeypatch.setattr(training, "_train_dependencies_available", lambda: True)
+    _install_bounded_run_sft_preflight_stub(monkeypatch)
 
-    def fail_training(metadata: dict[str, Any], config: dict[str, Any], manifest_path: Path, output_dir: Path) -> None:
+    def fail_training(
+        metadata: dict[str, Any],
+        config: dict[str, Any],
+        manifest_path: Path,
+        output_dir: Path,
+        *,
+        execution_context: object,
+    ) -> None:
         raise RuntimeError("Network is unreachable while reading /" + "Users/person/token.txt")
 
     monkeypatch.setattr(training, "_run_real_sft", fail_training)

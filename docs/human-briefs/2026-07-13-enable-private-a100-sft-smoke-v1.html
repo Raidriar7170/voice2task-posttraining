@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Voice2Task Private A100 SFT Smoke V1 · 人类简报</title>
+  <style>
+    :root { color-scheme: light; --ink:#17202a; --muted:#4b5563; --accent:#9a3412; --line:#e5e7eb; --paper:#fff; }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--ink); background:var(--paper); font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif; }
+    header,main,footer { width:min(760px,calc(100% - 2rem)); margin:auto; }
+    header { padding:4rem 0 2rem; border-bottom:1px solid var(--line); }
+    main { padding-bottom:3rem; }
+    section { padding:2rem 0; border-bottom:1px solid var(--line); }
+    h1,h2 { line-height:1.2; text-wrap:balance; }
+    h1 { margin:.4rem 0 1rem; font-size:clamp(2rem,7vw,3.5rem); letter-spacing:-.035em; }
+    h2 { margin:0 0 .8rem; }
+    .eyebrow,.status { color:var(--accent); font-size:.78rem; font-weight:750; letter-spacing:.08em; text-transform:uppercase; }
+    .lede { max-width:62ch; color:var(--muted); font-size:1.08rem; }
+    code { padding:.08em .3em; background:#f3f4f6; overflow-wrap:anywhere; }
+    ul { padding-left:1.25rem; }
+    li+li { margin-top:.45rem; }
+    .callout { padding:1rem; border-left:4px solid var(--accent); background:#fff7ed; }
+    dl { display:grid; grid-template-columns:minmax(12rem,1fr) 2fr; border-top:1px solid var(--line); }
+    dt,dd { margin:0; padding:.65rem 0; border-bottom:1px solid var(--line); }
+    dt { font-weight:700; }
+    @media (max-width:620px) { dl { display:block; } dd { color:var(--muted); } }
+  </style>
+</head>
+<body>
+  <header>
+    <p class="eyebrow">OpenSpec · enable-private-a100-sft-smoke-v1</p>
+    <h1>真实训练之前，先把边界变成可证明的</h1>
+    <p class="lede">本阶段只允许一次 Qwen2.5-7B-Instruct LoRA SFT 基础设施 smoke：formal public sample 的 train split、最多 2 条、恰好 1 optimizer step、单张显式 GPU。</p>
+    <p class="status">FINAL_REVIEW_READY · PREFLIGHT_BLOCKED · A100_UNREACHABLE · REAL_SMOKE_NOT_RUN</p>
+  </header>
+  <main>
+    <section>
+      <h2>为什么要修</h2>
+      <p>旧路径可能在未配置输出根、未规范化路径或阻断结果退出码为 0 的情况下继续。新合同把输出目录、共享 preflight、CLI 退出码和 7B 本地加载串成同一个 fail-closed 门。</p>
+    </section>
+    <section>
+      <h2>本阶段交付</h2>
+      <ul>
+        <li>绝对、已存在、非 symlink 的 output root；候选必须是规范化后的全新严格子目录，任何已存在候选（包括空目录）都拒绝。runner 排他创建并再次校验路径 hash。</li>
+        <li><code>sft-preflight</code> 与真实 run 共用同一 core；core 同时产生 public report 与 immutable private context。真实 run 只消费已绑定 config、manifest、SFT、rows、model inventory 和 output facts，并在加载前重新 hash。</li>
+        <li>真实 run 在任何 legacy config/metadata/dataset 读取前先进入 exception-safe shared core；阻断结果不写 candidate，ready metadata 只来自 report/context，并绑定模型 probe 已验证的同一份 facts。</li>
+        <li>稳定 blocker code、单一 stdout JSON、真实非成功退出码。</li>
+        <li><code>max_seq_length</code> 只接受 1–4096 的非布尔整数；public config facts 使用白名单。共享 core 的意外异常只返回 <code>PREFLIGHT_INTERNAL_ERROR</code>，不回显私有值或原始异常。</li>
+        <li>所有真实训练预算采用严格 JSON 整数语义：rows 只能是整数 1/2，step、batch、accumulation 只能是整数 1；<code>seed</code> 必须为整数，<code>logging_steps</code> 必须为正整数。<code>true</code> 与 <code>1.0</code> 不再被隐式转换。</li>
+        <li>严格 A100 与 Qwen2.5-7B geometry/weight inventory、BF16、单 GPU、1 step、1–2 rows 的 LoRA 参数与审计 metadata；成功还要求 finite non-bool loss、adapter config+weights，并扫描整个 run tree 排除完整模型权重。</li>
+        <li>DPO real mode 从调用方提供的 manifest checkout 推导 repo root，不依赖进程 cwd；无法确认 checkout 时在 config/metadata/dependency/runner 之前 fail closed。本阶段仍不授权或执行 DPO。</li>
+      </ul>
+    </section>
+    <section>
+      <h2>硬停止</h2>
+      <p class="callout">不会自动完整训练，不会运行 DPO、GRPO、prediction、evaluation，不访问 lockbox，不声明模型改善，不提交私有 config、adapter、日志、缓存或私有路径。</p>
+    </section>
+    <section>
+      <h2>clean-evaluation 事实不变</h2>
+      <dl>
+        <dt>acquisition_source_status</dt><dd><code>UNAVAILABLE</code></dd>
+        <dt>authoritatively_bound_binding_count</dt><dd><code>0</code></dd>
+        <dt>human_acceptance_status</dt><dd><code>NOT_RECORDED</code></dd>
+        <dt>protocol_freeze_status</dt><dd><code>NOT_FROZEN</code></dd>
+        <dt>clean_population_status</dt><dd><code>NOT_MATERIALIZED</code></dd>
+        <dt>freeze_authorized</dt><dd><code>false</code></dd>
+        <dt>execution_readiness</dt><dd><code>false</code></dd>
+      </dl>
+    </section>
+    <section>
+      <h2>执行门</h2>
+      <p>只有 ignored private config 已存在、共享 preflight 返回退出码 0 且 <code>ready=true</code>、并确认一张空闲 A100 后，才允许恰好一次真实 smoke。任一条件缺失都必须以 blocker 停止，不得用 fixture、mock、dry-run 或小模型替代成功。</p>
+    </section>
+    <section>
+      <h2>验证结果</h2>
+      <ul>
+        <li>最终 fresh reviewer module：<code>123 passed</code>；Reviewer 最终合并聚焦回归：<code>214 passed</code>，Final Verdict 为 <code>Pass</code>，无 Must Fix 或 Should Fix。</li>
+        <li>提交前独立全量 pytest：<code>1381 passed, 4 failed</code>。四个失败均为 active OpenSpec change 触发的既有生命周期/冻结边界 guard；未增加永久 allowlist，也未绕过。</li>
+        <li>提交前独立 ruff、严格 OpenSpec validation（<code>16 passed, 0 failed</code>）和 <code>git diff --check</code> 通过。</li>
+        <li>用户指定 targeted mypy 命令只报告两个既有 imported-file diagnostic（<code>slot_error_analysis.py:574</code>、<code>copy_backed_shadow_interface.py:357</code>）；本次触及的 <code>training.py</code> 与 <code>cli/train.py</code> 没有诊断。</li>
+        <li>truth-surface check 仅因本 change 仍处于 active 生命周期而非绿；该状态保留为真实结果。</li>
+      </ul>
+    </section>
+    <section>
+      <h2>真实执行状态</h2>
+      <p class="callout">ignored private config 不存在。clean-HEAD 上实际 <code>sft-preflight</code> 退出码为 1，stdout 为单个 JSON document、stderr 为 0 字节，唯一 blocker 为 <code>CONFIG_FILE_MISSING</code>。既有授权 A100 alias 的只读占用探测另行重试三次，均连接超时，因此没有取得 GPU 或本地 7B 模型事实，也没有执行真实 1-step smoke。</p>
+      <p>没有 adapter、训练日志、缓存、prediction 或 evaluation 产物进入 Git；没有完整训练、DPO、GRPO、lockbox 访问或模型改进声明。</p>
+    </section>
+  </main>
+  <footer><p>更新时间：2026-07-13 · 当前为 final-review-ready 的代码交付；共享 preflight 的唯一 blocker 为 <code>CONFIG_FILE_MISSING</code>，A100 alias 同时不可达。</p></footer>
+</body>
+</html>
