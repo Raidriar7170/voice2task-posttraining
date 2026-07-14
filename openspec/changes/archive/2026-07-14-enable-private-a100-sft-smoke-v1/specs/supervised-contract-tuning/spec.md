@@ -17,7 +17,7 @@ The system SHALL provide a bounded, opt-in, local-only Qwen2.5-7B-Instruct LoRA 
 
 #### Scenario: Keep remote evidence private by default
 - **WHEN** a preflight or smoke produces private paths, configs, adapters, caches, or raw logs
-- **THEN** those values and artifacts remain out of Git and public JSON exposes only approved hashes, counts, versions, GPU facts, and file-name/size inventory
+- **THEN** those values and artifacts remain out of Git and CLI JSON is rebuilt from the exact approved result-field allowlist, with adapter evidence limited to filename, size, and SHA-256
 
 #### Scenario: Preserve clean-evaluation blockers
 - **WHEN** infrastructure preflight or the authorized smoke succeeds
@@ -26,7 +26,9 @@ The system SHALL provide a bounded, opt-in, local-only Qwen2.5-7B-Instruct LoRA 
 ## ADDED Requirements
 
 ### Requirement: Enforce canonical SFT output boundaries
-Every real SFT run MUST require an existing absolute non-symlink output root and an absolute, not-yet-existing, strict descendant output directory after canonical resolution. The system MUST reject traversal, any existing symlink component, final-directory symlinks, root-external destinations, every existing candidate including an empty directory, and repository locations with stable blocker codes. It MUST check the nearest existing parent, claim the final directory exclusively, and revalidate the bound path before model and tokenizer loading.
+Every real SFT run MUST require an existing absolute non-symlink output root and an absolute, not-yet-existing, strict descendant output directory after canonical resolution. The system MUST reject traversal, any existing symlink component, final-directory symlinks, root-external destinations, every existing candidate including an empty directory, and repository locations with stable blocker codes. The exact candidate parent MUST already exist and pass the output checks before the system claims the final directory exclusively and revalidates the bound path before model and tokenizer loading.
+
+This contract defends output drift, symlink substitution, inode exchange, and concurrent final-leaf creation that is observable at its identity checkpoints. Its deployment precondition is that no malicious same-UID process renames the output-root or candidate-parent namespace during the final identity-checkpoint-to-`mkdirat` syscall window. The contract does not claim kernel-atomic protection against such a same-UID rename inside that narrow window.
 
 #### Scenario: Reject an unsafe output path
 - **WHEN** the root is missing, relative, symlinked, or the candidate is relative, equal to the root, escaping, symlinked, already exists, or is inside the repository
@@ -40,16 +42,24 @@ Every real SFT run MUST require an existing absolute non-symlink output root and
 - **WHEN** filesystem state makes a previously accepted output path unsafe before tokenizer or model loading
 - **THEN** the repeated shared policy blocks execution before model weights load
 
+#### Scenario: Claim the leaf without following exchanged paths
+- **WHEN** preflight accepts an existing root and parent
+- **THEN** the private context binds their filesystem identities and the runner traverses directory descriptors without following symlinks, creates only the final leaf with mode `0700`, and fails closed on any root/parent identity change or concurrent leaf creation without pathname cleanup
+
+#### Scenario: Enforce the deployment namespace precondition
+- **WHEN** a deployment permits another same-UID process to rename the accepted output root or parent during the final identity-checkpoint-to-`mkdirat` boundary
+- **THEN** that deployment is outside this claim contract and MUST prevent that adversarial namespace mutation before authorizing a real smoke
+
 ### Requirement: Provide one shared SFT preflight
 The system MUST expose `sft-preflight` and MUST use the same internal preflight core from real SFT execution before loading model weights. That core MUST produce the public report plus an immutable private execution context binding canonical inputs, selected rows, model inventory, and output facts. Real training MUST consume the bound context rather than reselecting data from caller arguments and MUST rehash mutable inputs before model loading. The single public JSON result MUST use schema `voice2task-sft-preflight-v1`, report `ready`, `status`, `blockers`, and the `git`, `config`, `dataset`, `model`, `runtime`, `gpu`, `output`, and `objective` sections, and MUST not access the network.
 
 #### Scenario: Report a ready bounded smoke
-- **WHEN** Git tracked state is clean and includes the change, the ignored non-symlink private config is exactly smoke-bounded, dependencies and `pip check` pass, one explicit BF16-capable >=35 GiB A100 is visible, exact local Qwen2.5-7B model/tokenizer identity and >=12 GiB weight inventory pass, selected formal train rows and assistant-only labels pass, and output policy passes
+- **WHEN** Git tracked state is clean and includes the change, the ignored non-symlink private config is exactly smoke-bounded, dependencies and `pip check` pass, one explicit idle BF16-capable A100 has at least 35 GiB total and free memory and zero compute processes, exact local Qwen2.5-7B model/tokenizer identity and >=12 GiB weight inventory pass, selected formal train rows and assistant-only labels pass, and output policy passes
 - **THEN** preflight returns exit code 0 with `ready=true`, an empty blocker list, stable fingerprints, hashes, versions, counts, and public-safe facts
 
 #### Scenario: Report blocked readiness safely
 - **WHEN** any required Git, config, dependency, GPU, model, dataset, objective, or output condition fails
-- **THEN** preflight returns non-zero with `ready=false` and only stable enumerated blocker codes, without raw exceptions or private runtime values
+- **THEN** preflight returns non-zero with `ready=false` and only stable enumerated blocker codes, including `GPU_FREE_MEMORY_INSUFFICIENT`, `GPU_BUSY`, or `GPU_OCCUPANCY_PROBE_FAILED` for the corresponding GPU state, without raw exceptions or private runtime values
 
 #### Scenario: Fail closed on an unexpected preflight exception
 - **WHEN** any internal shared-preflight operation raises an unexpected exception
@@ -63,8 +73,12 @@ The system MUST expose `sft-preflight` and MUST use the same internal preflight 
 The shared preflight MUST require the canonical current formal manifest and exact SFT entry, hash both complete files, then parse only the first exactly `max_train_rows` ordered `split=train` records where that value is a non-boolean integer in `{1, 2}` and stop. It MUST reject JSON booleans and floats for `max_train_rows`, `max_steps`, `per_device_train_batch_size`, and `gradient_accumulation_steps`; the latter three MUST be the non-boolean integer `1`. It MUST also require `seed` to be a non-boolean integer and `logging_steps` to be a positive non-boolean integer before those values reach real `TrainingArguments`. It MUST reject empty or duplicate row IDs and every implicit selector such as `train_source_ids`, bind those exact rows into the private execution context, and validate every selected row with the same real-tokenizer assistant-only record builder used for training.
 
 #### Scenario: Validate assistant-only records
-- **WHEN** a selected row is encoded
-- **THEN** `max_seq_length` has already been validated as a non-boolean integer from 1 through 4096, prompt labels are all `-100`, at least one assistant target label is trainable, `input_ids`, `attention_mask`, and `labels` lengths match, and length does not exceed `max_seq_length`
+- **WHEN** a selected row is encoded with tokenizer offsets
+- **THEN** every token outside the contiguous assistant target region has label `-100`, every assistant label matches its input token, at least one assistant token carries loss, all tensor lengths match, and length does not exceed the validated `max_seq_length`
+
+#### Scenario: Prove a real adapter update
+- **WHEN** one-step training returns
+- **THEN** smoke completion additionally requires positive trainable/adapter tensor counts, different stable before/after adapter-state digests, at least one changed adapter tensor, finite adapter values, and hashed non-empty adapter files
 
 #### Scenario: Reject data or selection drift
 - **WHEN** the manifest/SFT hash or manifest ID does not match its declared value, train selection changes, rows are empty or duplicated, labels are invalid, or sequence length is exceeded

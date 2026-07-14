@@ -1648,6 +1648,7 @@ def test_sft_heavy_training_requires_cli_and_config_opt_ins(monkeypatch: Any, tm
 
     allowed_root = tmp_path / "remote-root"
     allowed_root.mkdir()
+    (allowed_root / "runs").mkdir()
     config_allows = _write_config(tmp_path, allow_heavy_training=True, output_root=allowed_root.as_posix())
     dry_run_meta = run_sft(
         config_path=config_allows,
@@ -1859,6 +1860,7 @@ def _bound_sft_execution_context(
         ),
         output_root=tmp_path,
         output_dir=output_dir,
+        output_identities=training._bind_output_identities(tmp_path, output_dir.parent),  # noqa: SLF001
         output_facts_json=json.dumps(output_facts, sort_keys=True, separators=(",", ":")),
     )
 
@@ -1867,6 +1869,7 @@ def test_real_sft_heavy_path_keeps_new_trl_sfttrainer_with_assistant_only_labels
     monkeypatch: Any,
     tmp_path: Path,
 ) -> None:
+    monkeypatch.setattr(training, "_probe_sft_gpu", lambda: ({"idle_verified": True}, []))
     manifest = _write_manifest(tmp_path)
     rows = training._load_sft_training_rows(manifest, split="train")  # noqa: SLF001
     target = canonical_contract_json(rows[0].target_contract)
@@ -1948,6 +1951,7 @@ def test_real_sft_heavy_path_supports_old_trl_sfttrainer_tokenizer_signature(
     monkeypatch: Any,
     tmp_path: Path,
 ) -> None:
+    monkeypatch.setattr(training, "_probe_sft_gpu", lambda: ({"idle_verified": True}, []))
     manifest = _write_manifest(tmp_path)
     rows = training._load_sft_training_rows(manifest, split="train")  # noqa: SLF001
     dataset_records: list[list[dict[str, list[int]]]] = []
@@ -2018,6 +2022,7 @@ def test_real_sft_heavy_path_limits_tiny_overfit_rows_and_records_metadata(
     monkeypatch: Any,
     tmp_path: Path,
 ) -> None:
+    monkeypatch.setattr(training, "_probe_sft_gpu", lambda: ({"idle_verified": True}, []))
     manifest = _write_multirow_manifest(tmp_path, train_rows=4)
     rows = training._load_sft_training_rows(manifest, split="train")[:2]  # noqa: SLF001
     dataset_records: list[list[dict[str, list[int]]]] = []
@@ -2095,6 +2100,7 @@ def test_sft_metadata_contains_public_safe_a100_smoke_fields(monkeypatch: Any, t
     manifest = _write_manifest(tmp_path)
     allowed_root = tmp_path / "remote-root"
     allowed_root.mkdir()
+    (allowed_root / "runs").mkdir()
     config = _write_config(tmp_path, allow_heavy_training=True, output_root=allowed_root.as_posix())
     output_dir = allowed_root / "runs" / "run"
     monkeypatch.setattr(training, "_train_dependencies_available", lambda: True)
@@ -2129,6 +2135,7 @@ def test_sft_training_failure_writes_sanitized_metadata(monkeypatch: Any, tmp_pa
     manifest = _write_manifest(tmp_path)
     allowed_root = tmp_path / "remote-root"
     allowed_root.mkdir()
+    (allowed_root / "runs").mkdir()
     config = _write_config(tmp_path, allow_heavy_training=True, output_root=allowed_root.as_posix())
     output_dir = allowed_root / "runs" / "run"
     monkeypatch.setattr(training, "_train_dependencies_available", lambda: True)

@@ -9,6 +9,7 @@ import math
 import os
 import re
 import shutil
+import stat
 import subprocess
 import sys
 from collections.abc import Callable
@@ -182,6 +183,386 @@ def public_training_metadata(metadata: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(sanitized, dict):
         raise AssertionError("training metadata must remain a mapping after sanitization")
     return cast(dict[str, Any], sanitized)
+
+
+PUBLIC_TRAINING_RESULT_FIELDS = (
+    "schema_version",
+    "stage",
+    "training_status",
+    "smoke_status",
+    "blockers",
+    "preflight",
+    "observed_optimizer_steps",
+    "training_rows_used",
+    "training_budget",
+    "train_result_metrics",
+    "adapter_files",
+    "clean_evaluation",
+)
+
+PUBLIC_TRAINING_BUDGET_FIELDS = (
+    "configured_max_steps",
+    "observed_optimizer_steps",
+    "num_train_epochs",
+    "per_device_train_batch_size",
+    "gradient_accumulation_steps",
+    "effective_batch_size",
+    "scheduler_max_steps",
+    "train_row_count",
+    "theoretical_examples_seen",
+    "target_tokens_per_single_pass",
+    "target_tokens_seen_estimate",
+    "target_tokens_seen_status",
+    "step_matching_unit",
+    "step_matched_not_token_matched",
+)
+PUBLIC_TRAINING_METRIC_FIELDS = (
+    "train_runtime",
+    "train_samples_per_second",
+    "train_steps_per_second",
+    "train_loss",
+    "epoch",
+    "global_step",
+    "trainable_parameter_count",
+    "adapter_tensor_count",
+    "adapter_state_digest_before",
+    "adapter_state_digest_after",
+    "changed_adapter_tensor_count",
+    "all_adapter_tensors_finite",
+)
+
+PUBLIC_SFT_PREFLIGHT_SECTION_FIELDS: dict[str, tuple[str, ...]] = {
+    "git": ("commit_sha", "tracked_worktree_clean"),
+    "config": (
+        "config_sha256",
+        "allow_heavy_training",
+        "base_model_public_id",
+        "dataset_split",
+        "max_train_rows",
+        "max_steps",
+        "per_device_train_batch_size",
+        "gradient_accumulation_steps",
+        "max_seq_length",
+        "seed",
+        "logging_steps",
+        "save_strategy",
+        "report_to_empty",
+        "local_files_only",
+        "bf16",
+        "fp16",
+        "tf32",
+        "gradient_checkpointing",
+        "use_cache",
+        "low_cpu_mem_usage",
+        "trust_remote_code",
+        "dtype_is_bfloat16",
+        "torch_dtype_is_bfloat16",
+        "minimum_free_disk_gib",
+        "lora_policy_valid",
+        "private_file",
+    ),
+    "dataset": (
+        "manifest_file",
+        "manifest_sha256",
+        "manifest_id",
+        "sft_file",
+        "sft_sha256",
+        "selected_split",
+        "selected_row_count",
+        "selected_row_ids_sha256",
+        "non_train_rows_selected",
+    ),
+    "model": (
+        "public_id",
+        "local_files_only",
+        "stable_fingerprints",
+        "weight_inventory",
+        "total_weight_bytes",
+        "minimum_weight_bytes",
+        "geometry_matches_qwen2_5_7b",
+        "snapshot_revision_sha256",
+    ),
+    "runtime": ("python", "python_requirement", "versions", "missing", "pip_check"),
+    "gpu": (
+        "explicit_selection",
+        "visible_device_count",
+        "name",
+        "compute_capability",
+        "total_memory_gib",
+        "minimum_memory_gib",
+        "free_memory_gib",
+        "minimum_free_memory_gib",
+        "compute_process_count",
+        "idle_verified",
+        "cuda_version",
+        "bf16_supported",
+    ),
+    "output": (
+        "ready",
+        "blockers",
+        "root_path_sha256",
+        "output_path_sha256",
+        "writable",
+        "free_disk_gib",
+        "minimum_free_disk_gib",
+    ),
+    "objective": (
+        "records_checked",
+        "prompt_labels_masked",
+        "assistant_target_present",
+        "max_sequence_length",
+        "maximum_observed_tokens",
+    ),
+}
+
+_INVALID_PUBLIC_VALUE = object()
+
+
+def _public_preflight_scalar(section: str, key: str, value: Any) -> Any:
+    if not isinstance(value, str):
+        if isinstance(value, float) and not math.isfinite(value):
+            return _INVALID_PUBLIC_VALUE
+        return value if value is None or isinstance(value, int | float | bool) else _INVALID_PUBLIC_VALUE
+    exact_values: dict[tuple[str, str], set[str]] = {
+        ("config", "base_model_public_id"): {"Qwen/Qwen2.5-7B-Instruct"},
+        ("config", "dataset_split"): {"train"},
+        ("config", "save_strategy"): {"no"},
+        ("dataset", "manifest_file"): {"manifest_public_sample.json"},
+        ("dataset", "manifest_id"): {FORMAL_PUBLIC_MANIFEST_ID},
+        ("dataset", "sft_file"): {"sft_public_sample.jsonl"},
+        ("dataset", "selected_split"): {"train"},
+        ("model", "public_id"): {"Qwen/Qwen2.5-7B-Instruct"},
+        ("runtime", "python_requirement"): {">=3.10"},
+        ("runtime", "pip_check"): {"ok", "conflict", "not_run"},
+    }
+    allowed = exact_values.get((section, key))
+    if allowed is not None:
+        return value if value in allowed else _INVALID_PUBLIC_VALUE
+    if key == "commit_sha":
+        return value if re.fullmatch(r"[0-9a-f]{40}", value) else _INVALID_PUBLIC_VALUE
+    if key.endswith("sha256"):
+        return value if re.fullmatch(r"[0-9a-f]{64}", value) else _INVALID_PUBLIC_VALUE
+    if section == "runtime" and key == "python":
+        return value if re.fullmatch(r"\d+\.\d+\.\d+", value) else _INVALID_PUBLIC_VALUE
+    if section == "gpu" and key in {"compute_capability", "cuda_version"}:
+        return value if re.fullmatch(r"(?:\d+(?:\.\d+)+|unknown)", value) else _INVALID_PUBLIC_VALUE
+    if section == "gpu" and key == "name":
+        return (
+            value
+            if re.fullmatch(r"[A-Za-z0-9 ._()+-]{1,100}", value)
+            and re.search(r"\bA100\b", value, flags=re.IGNORECASE)
+            else _INVALID_PUBLIC_VALUE
+        )
+    return _INVALID_PUBLIC_VALUE
+
+
+def _public_sft_preflight_result(value: Any) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        return {}
+    result: dict[str, Any] = {}
+    if value.get("schema_version") == "voice2task-sft-preflight-v1":
+        result["schema_version"] = "voice2task-sft-preflight-v1"
+    if isinstance(value.get("ready"), bool):
+        result["ready"] = value["ready"]
+    if value.get("status") in {"ready", "blocked"}:
+        result["status"] = value["status"]
+    blockers = value.get("blockers")
+    if isinstance(blockers, list):
+        result["blockers"] = [
+            code
+            for code in blockers
+            if isinstance(code, str) and re.fullmatch(r"[A-Z][A-Z0-9_]*", code)
+        ]
+    for section, allowed_fields in PUBLIC_SFT_PREFLIGHT_SECTION_FIELDS.items():
+        raw_section = value.get(section)
+        if not isinstance(raw_section, dict):
+            continue
+        public_section: dict[str, Any] = {}
+        for key in allowed_fields:
+            if key not in raw_section:
+                continue
+            raw_value = raw_section[key]
+            if key in {"private_file", "versions", "missing", "stable_fingerprints", "weight_inventory", "blockers"}:
+                public_section[key] = raw_value
+                continue
+            public_value = _public_preflight_scalar(section, key, raw_value)
+            if public_value is not _INVALID_PUBLIC_VALUE:
+                public_section[key] = public_value
+        if section == "config" and isinstance(public_section.get("private_file"), dict):
+            private_file = cast(dict[str, Any], public_section["private_file"])
+            public_section["private_file"] = {
+                key: private_file[key]
+                for key in ("under_private_runtime", "nonsymlink", "git_ignored", "git_tracked")
+                if key in private_file and isinstance(private_file[key], bool)
+            }
+        elif section == "runtime":
+            versions = public_section.get("versions")
+            if isinstance(versions, dict):
+                public_section["versions"] = {
+                    key: versions[key]
+                    for key in ("torch", "accelerate", "datasets", "peft", "transformers", "trl")
+                    if key in versions
+                    and isinstance(versions[key], str)
+                    and re.fullmatch(r"[A-Za-z0-9.+_-]{1,80}", versions[key])
+                }
+            missing = public_section.get("missing")
+            if isinstance(missing, list):
+                allowed_dependencies = {"torch", "accelerate", "datasets", "peft", "transformers", "trl"}
+                public_section["missing"] = [name for name in missing if name in allowed_dependencies]
+        elif section == "model":
+            fingerprints = public_section.get("stable_fingerprints")
+            if isinstance(fingerprints, dict):
+                allowed_fingerprints = {
+                    "config.json",
+                    "generation_config.json",
+                    "tokenizer.json",
+                    "tokenizer_config.json",
+                    "special_tokens_map.json",
+                    "vocab.json",
+                    "merges.txt",
+                    "model.safetensors.index.json",
+                    "pytorch_model.bin.index.json",
+                }
+                public_section["stable_fingerprints"] = {
+                    key: fingerprints[key]
+                    for key in allowed_fingerprints
+                    if key in fingerprints
+                    and isinstance(fingerprints[key], str)
+                    and re.fullmatch(r"[0-9a-f]{64}", fingerprints[key])
+                }
+            inventory = public_section.get("weight_inventory")
+            if isinstance(inventory, list):
+                public_inventory: list[dict[str, Any]] = []
+                for item in inventory:
+                    if not isinstance(item, dict):
+                        continue
+                    name = item.get("name")
+                    size = item.get("size")
+                    if (
+                        isinstance(name, str)
+                        and name
+                        and Path(name).name == name
+                        and type(size) is int
+                        and size >= 0
+                    ):
+                        public_inventory.append({"name": name, "size": size})
+                public_section["weight_inventory"] = public_inventory
+        elif section == "output" and isinstance(public_section.get("blockers"), list):
+            public_section["blockers"] = [
+                code
+                for code in cast(list[Any], public_section["blockers"])
+                if isinstance(code, str) and re.fullmatch(r"[A-Z][A-Z0-9_]*", code)
+            ]
+        result[section] = public_section
+    return result
+
+
+def public_training_result(metadata: dict[str, Any]) -> dict[str, Any]:
+    """Build CLI output from an exact allowlist; never copy private metadata wholesale."""
+    result: dict[str, Any] = {}
+    top_level_enums: dict[str, set[str]] = {
+        "schema_version": {"voice2task-training-result-v1"},
+        "stage": {"sft", "dpo"},
+        "training_status": {
+            "dry_run",
+            "training_completed",
+            "training_failed",
+            "training_skipped_by_config",
+            "training_unavailable",
+            "training_blocked_by_output_policy",
+            "training_blocked_by_preflight",
+        },
+        "smoke_status": {"SMOKE_COMPLETED", "SMOKE_FAILED"},
+    }
+    for key, allowed in top_level_enums.items():
+        if metadata.get(key) in allowed:
+            result[key] = metadata[key]
+    for key in ("observed_optimizer_steps", "training_rows_used"):
+        if type(metadata.get(key)) is int:
+            result[key] = metadata[key]
+    if "preflight" in metadata:
+        result["preflight"] = _public_sft_preflight_result(metadata["preflight"])
+    blockers = metadata.get("blockers")
+    if isinstance(blockers, list):
+        result["blockers"] = [
+            code
+            for code in blockers
+            if isinstance(code, str) and re.fullmatch(r"[A-Z][A-Z0-9_]*", code)
+        ]
+    raw_budget = metadata.get("training_budget")
+    if isinstance(raw_budget, dict):
+        result["training_budget"] = {
+            key: raw_budget[key]
+            for key in PUBLIC_TRAINING_BUDGET_FIELDS
+            if key in raw_budget
+            and (
+                raw_budget[key] is None
+                or isinstance(raw_budget[key], int | bool)
+                or (
+                    isinstance(raw_budget[key], float)
+                    and math.isfinite(raw_budget[key])
+                )
+                or raw_budget[key]
+                in {
+                    "estimated_from_label_tokens_and_step_budget",
+                    "optimizer_steps",
+                }
+            )
+        }
+    raw_metrics = metadata.get("train_result_metrics")
+    public_metrics: dict[str, Any] = {}
+    if isinstance(raw_metrics, dict):
+        for key in PUBLIC_TRAINING_METRIC_FIELDS:
+            value = raw_metrics.get(key)
+            if isinstance(value, int | bool) or (
+                isinstance(value, float) and math.isfinite(value)
+            ) or (
+                key.startswith("adapter_state_digest_")
+                and isinstance(value, str)
+                and re.fullmatch(r"[0-9a-f]{64}", value)
+            ):
+                public_metrics[key] = value
+    for key in PUBLIC_TRAINING_METRIC_FIELDS[6:]:
+        if key in metadata:
+            value = metadata[key]
+            if isinstance(value, int | bool) or (
+                key.startswith("adapter_state_digest_")
+                and isinstance(value, str)
+                and re.fullmatch(r"[0-9a-f]{64}", value)
+            ):
+                public_metrics[key] = value
+    if public_metrics or isinstance(raw_metrics, dict):
+        result["train_result_metrics"] = public_metrics
+    raw_adapter_files = metadata.get("adapter_files")
+    if isinstance(raw_adapter_files, list):
+        adapter_files: list[dict[str, Any]] = []
+        for item in raw_adapter_files:
+            if not isinstance(item, dict):
+                continue
+            raw_name = item.get("name")
+            if (
+                not isinstance(raw_name, str)
+                or not raw_name
+                or Path(raw_name).is_absolute()
+                or ".." in Path(raw_name).parts
+            ):
+                continue
+            public_item = {
+                key: item[key]
+                for key in ("name", "size", "sha256")
+                if key in item
+            }
+            if (
+                type(public_item.get("size")) is int
+                and public_item["size"] >= 0
+                and isinstance(public_item.get("sha256"), str)
+                and re.fullmatch(r"[0-9a-f]{64}", public_item["sha256"])
+            ):
+                adapter_files.append(public_item)
+        result["adapter_files"] = adapter_files
+    if "clean_evaluation" in metadata:
+        result["clean_evaluation"] = _clean_evaluation_truth_surface()
+    return result
 
 
 def _manifest_metadata_without_dataset_load(manifest_path: Path) -> dict[str, Any]:
@@ -435,6 +816,83 @@ class SFTOutputPolicyError(RuntimeError):
         super().__init__(",".join(self.blockers))
 
 
+@dataclass(frozen=True)
+class _OutputIdentity:
+    st_dev: int
+    st_ino: int
+    st_uid: int
+    st_gid: int
+    st_mode: int
+
+
+@dataclass(frozen=True)
+class _BoundOutputIdentities:
+    root: _OutputIdentity
+    parent: _OutputIdentity
+
+
+def _identity_from_stat(value: os.stat_result) -> _OutputIdentity:
+    return _OutputIdentity(
+        st_dev=int(value.st_dev),
+        st_ino=int(value.st_ino),
+        st_uid=int(value.st_uid),
+        st_gid=int(value.st_gid),
+        st_mode=int(value.st_mode),
+    )
+
+
+def _bind_output_identities(root: Path, parent: Path) -> _BoundOutputIdentities:
+    try:
+        root_stat = root.lstat()
+        parent_stat = parent.lstat()
+    except OSError as exc:
+        raise SFTOutputPolicyError(["OUTPUT_IDENTITY_UNAVAILABLE"]) from exc
+    if root.is_symlink() or parent.is_symlink():
+        raise SFTOutputPolicyError(["OUTPUT_PATH_SYMLINK"])
+    if not stat.S_ISDIR(root_stat.st_mode) or not stat.S_ISDIR(parent_stat.st_mode):
+        raise SFTOutputPolicyError(["OUTPUT_IDENTITY_UNAVAILABLE"])
+    return _BoundOutputIdentities(
+        root=_identity_from_stat(root_stat),
+        parent=_identity_from_stat(parent_stat),
+    )
+
+
+def _open_bound_output_parent(
+    root: Path,
+    parent: Path,
+    expected: _BoundOutputIdentities,
+) -> tuple[int, int]:
+    flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_NOFOLLOW", 0)
+    flags |= getattr(os, "O_CLOEXEC", 0)
+    root_fd = -1
+    parent_fd = -1
+    try:
+        root_fd = os.open(root, flags)
+        if _identity_from_stat(os.fstat(root_fd)) != expected.root:
+            raise SFTOutputPolicyError(["OUTPUT_IDENTITY_CHANGED"])
+        relative_parent = parent.relative_to(root)
+        parent_fd = os.dup(root_fd)
+        for component in relative_parent.parts:
+            next_fd = os.open(component, flags, dir_fd=parent_fd)
+            os.close(parent_fd)
+            parent_fd = next_fd
+        if _identity_from_stat(os.fstat(parent_fd)) != expected.parent:
+            raise SFTOutputPolicyError(["OUTPUT_IDENTITY_CHANGED"])
+        return root_fd, parent_fd
+    except SFTOutputPolicyError:
+        if parent_fd >= 0:
+            os.close(parent_fd)
+        if root_fd >= 0:
+            os.close(root_fd)
+        raise
+    except (OSError, ValueError) as exc:
+        if parent_fd >= 0:
+            os.close(parent_fd)
+        if root_fd >= 0:
+            os.close(root_fd)
+        raise SFTOutputPolicyError(["OUTPUT_IDENTITY_CHANGED"]) from exc
+
+
 def validate_sft_output_policy(
     config: dict[str, Any],
     output_dir: Path,
@@ -503,6 +961,11 @@ def validate_sft_output_policy(
         candidate_is_descendant = _strict_descendant(candidate_resolved, root_resolved)
         if not candidate_is_descendant:
             blockers.append("OUTPUT_PATH_OUTSIDE_ROOT")
+        parent = candidate.parent
+        if candidate_is_descendant and (not parent.exists() or not parent.is_dir()):
+            blockers.append("OUTPUT_PARENT_MISSING")
+        elif candidate_is_descendant and parent.is_symlink():
+            blockers.append("OUTPUT_PATH_SYMLINK")
         if candidate_is_descendant and candidate.exists() and not candidate.is_symlink():
             if not candidate.is_dir() or any(candidate.iterdir()):
                 blockers.append("OUTPUT_DIRECTORY_NOT_EMPTY")
@@ -526,8 +989,24 @@ def validate_sft_output_policy(
 
     writable = False
     free_disk_gib: float | None = None
+    structural_blockers = {
+        "OUTPUT_PARENT_MISSING",
+        "OUTPUT_PATH_OUTSIDE_ROOT",
+        "OUTPUT_PATH_SYMLINK",
+        "OUTPUT_PATH_GIT_TRACKED",
+    }
+    if any(code in structural_blockers for code in blockers):
+        return {
+            "ready": False,
+            "blockers": list(dict.fromkeys(blockers)),
+            "root_path_sha256": _sha256_text(root_resolved.as_posix()),
+            "output_path_sha256": _sha256_text(candidate_resolved.as_posix()),
+            "writable": False,
+            "free_disk_gib": None,
+            "minimum_free_disk_gib": configured_minimum_free_disk_gib,
+        }
     try:
-        writable_parent = _nearest_existing_parent(candidate_resolved)
+        writable_parent = candidate_resolved.parent
         writable = os.access(writable_parent, os.W_OK)
     except OSError:
         writable_parent = root_resolved
@@ -560,24 +1039,70 @@ def _claim_sft_output_directory(
     *,
     repo_root: Path | None = None,
     expected_output_path_sha256: str | None = None,
+    expected_identities: _BoundOutputIdentities | None = None,
 ) -> None:
-    """Exclusively claim and revalidate a previously unused SFT output directory."""
+    """Claim one leaf under a namespace kept stable across the final mkdirat boundary.
+
+    Identity checkpoints fail closed on observable drift and never trigger pathname
+    cleanup after uncertainty. This does not claim syscall-atomic protection from a
+    malicious same-UID rename between the final checkpoint and mkdirat; deployment
+    must prevent that namespace mutation during this narrow claim window.
+    """
     initial = validate_sft_output_policy(config, output_dir, repo_root=repo_root)
     if initial.get("ready") is not True:
+        if expected_identities is not None:
+            initial_blockers = [str(code) for code in initial.get("blockers", [])]
+            if initial_blockers in (["OUTPUT_DIRECTORY_EXISTS"], ["OUTPUT_DIRECTORY_NOT_EMPTY"]):
+                raise SFTOutputPolicyError(["OUTPUT_DIRECTORY_EXISTS"])
+            raise SFTOutputPolicyError(["OUTPUT_IDENTITY_CHANGED"])
         raise SFTOutputPolicyError([str(code) for code in initial.get("blockers", [])])
     expected_hash = expected_output_path_sha256 or initial.get("output_path_sha256")
+    raw_root = config.get("output_root")
+    if not isinstance(raw_root, str):
+        raise SFTOutputPolicyError(["OUTPUT_ROOT_MISSING"])
+    root = Path(raw_root).expanduser().resolve(strict=True)
+    parent = output_dir.expanduser().parent.resolve(strict=True)
+    identities = expected_identities or _bind_output_identities(root, parent)
+    root_fd = -1
+    parent_fd = -1
     try:
-        output_dir.mkdir(parents=True, exist_ok=False)
+        root_fd, parent_fd = _open_bound_output_parent(root, parent, identities)
+        try:
+            path_identities = _bind_output_identities(root, parent)
+        except SFTOutputPolicyError as exc:
+            raise SFTOutputPolicyError(["OUTPUT_IDENTITY_CHANGED"]) from exc
+        if (
+            _identity_from_stat(os.fstat(root_fd)) != identities.root
+            or _identity_from_stat(os.fstat(parent_fd)) != identities.parent
+            or path_identities != identities
+        ):
+            raise SFTOutputPolicyError(["OUTPUT_IDENTITY_CHANGED"])
+        os.mkdir(output_dir.name, mode=0o700, dir_fd=parent_fd)
+        if (
+            _identity_from_stat(os.fstat(root_fd)) != identities.root
+            or _identity_from_stat(os.fstat(parent_fd)) != identities.parent
+        ):
+            raise SFTOutputPolicyError(["OUTPUT_IDENTITY_CHANGED"])
     except FileExistsError as exc:
         raise SFTOutputPolicyError(["OUTPUT_DIRECTORY_EXISTS"]) from exc
+    except SFTOutputPolicyError:
+        raise
     except OSError as exc:
         raise SFTOutputPolicyError(["OUTPUT_CREATE_FAILED"]) from exc
+    finally:
+        if parent_fd >= 0:
+            os.close(parent_fd)
+        if root_fd >= 0:
+            os.close(root_fd)
 
-    claimed = validate_sft_output_policy(config, output_dir, repo_root=repo_root)
-    claimed_blockers = [str(code) for code in claimed.get("blockers", [])]
-    if claimed_blockers != ["OUTPUT_DIRECTORY_EXISTS"]:
-        raise SFTOutputPolicyError(claimed_blockers or ["OUTPUT_PATH_CHANGED"])
-    if not isinstance(expected_hash, str) or claimed.get("output_path_sha256") != expected_hash:
+    try:
+        current = _bind_output_identities(root, parent)
+    except SFTOutputPolicyError as exc:
+        raise SFTOutputPolicyError(["OUTPUT_IDENTITY_CHANGED"]) from exc
+    if current != identities:
+        raise SFTOutputPolicyError(["OUTPUT_IDENTITY_CHANGED"])
+    current_hash = _sha256_text(output_dir.expanduser().resolve(strict=True).as_posix())
+    if not isinstance(expected_hash, str) or current_hash != expected_hash:
         raise SFTOutputPolicyError(["OUTPUT_PATH_CHANGED"])
 
 
@@ -722,6 +1247,10 @@ def _probe_sft_gpu() -> tuple[dict[str, Any], list[str]]:
         "compute_capability": None,
         "total_memory_gib": None,
         "minimum_memory_gib": 35.0,
+        "free_memory_gib": None,
+        "minimum_free_memory_gib": 35.0,
+        "compute_process_count": None,
+        "idle_verified": False,
         "cuda_version": None,
         "bf16_supported": False,
     }
@@ -754,6 +1283,8 @@ def _probe_sft_gpu() -> tuple[dict[str, Any], list[str]]:
         properties = cuda.get_device_properties(0)
         capability = tuple(int(value) for value in cuda.get_device_capability(0))
         total_memory_gib = int(getattr(properties, "total_memory", 0)) / float(1024**3)
+        free_memory_bytes, _ = cuda.mem_get_info(0)
+        free_memory_gib = int(free_memory_bytes) / float(1024**3)
         bf16_supported = bool(cuda.is_bf16_supported())
         gpu_name = str(cuda.get_device_name(0))
     except Exception:
@@ -763,6 +1294,7 @@ def _probe_sft_gpu() -> tuple[dict[str, Any], list[str]]:
             "name": gpu_name,
             "compute_capability": f"{capability[0]}.{capability[1]}",
             "total_memory_gib": round(total_memory_gib, 3),
+            "free_memory_gib": round(free_memory_gib, 3),
             "cuda_version": str(getattr(getattr(torch, "version", None), "cuda", None) or "unknown"),
             "bf16_supported": bf16_supported,
         }
@@ -771,8 +1303,41 @@ def _probe_sft_gpu() -> tuple[dict[str, Any], list[str]]:
         blockers.append("BF16_UNSUPPORTED")
     if total_memory_gib < 35.0:
         blockers.append("GPU_MEMORY_INSUFFICIENT")
+    if free_memory_gib < 35.0:
+        blockers.append("GPU_FREE_MEMORY_INSUFFICIENT")
     if re.search(r"\bA100\b", gpu_name, flags=re.IGNORECASE) is None:
         blockers.append("GPU_NOT_A100")
+    try:
+        occupancy = subprocess.run(
+            [
+                "nvidia-smi",
+                f"--id={selected_parts[0]}",
+                "--query-compute-apps=pid",
+                "--format=csv,noheader,nounits",
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=15,
+        )
+        if occupancy.returncode != 0:
+            raise RuntimeError("occupancy probe failed")
+        process_ids: set[int] = set()
+        for line in occupancy.stdout.splitlines():
+            value = line.strip()
+            if not value:
+                continue
+            if not value.isdigit():
+                raise RuntimeError("occupancy output invalid")
+            process_id = int(value)
+            if process_id != os.getpid():
+                process_ids.add(process_id)
+        facts["compute_process_count"] = len(process_ids)
+        facts["idle_verified"] = not process_ids
+        if process_ids:
+            blockers.append("GPU_BUSY")
+    except (OSError, RuntimeError, subprocess.SubprocessError):
+        blockers.append("GPU_OCCUPANCY_PROBE_FAILED")
     return facts, list(dict.fromkeys(blockers))
 
 
@@ -1078,13 +1643,7 @@ def _probe_sft_model_and_objective(
             blocker = "ASSISTANT_ONLY_LABELS_INVALID"
         return model_facts, objective_facts, [blocker]
 
-    all_lengths_match = all(
-        len(record["input_ids"]) == len(record["attention_mask"]) == len(record["labels"])
-        for record in records
-    )
-    prompt_masked = all(any(label == -100 for label in record["labels"]) for record in records)
-    assistant_present = all(any(label != -100 for label in record["labels"]) for record in records)
-    if not records or not all_lengths_match or not prompt_masked or not assistant_present:
+    if not records or not all(_assistant_only_record_is_valid(record) for record in records):
         return model_facts, objective_facts, ["ASSISTANT_ONLY_LABELS_INVALID"]
     objective_facts.update(
         {
@@ -1114,6 +1673,7 @@ class _SFTPreflightExecutionContext:
     model_inventory_sha256: str
     output_root: Path
     output_dir: Path
+    output_identities: _BoundOutputIdentities
     output_facts_json: str
 
     def config_snapshot(self) -> dict[str, Any]:
@@ -1403,6 +1963,9 @@ def _run_sft_preflight_core_unchecked(
     model_inventory = model_facts.get("weight_inventory")
     if not isinstance(model_fingerprints, dict) or not isinstance(model_inventory, list):
         return public_result, None
+    resolved_output_root = Path(raw_output_root).expanduser().resolve(strict=True)
+    resolved_output_dir = output_dir.expanduser().resolve(strict=False)
+    output_identities = _bind_output_identities(resolved_output_root, resolved_output_dir.parent)
     context = _SFTPreflightExecutionContext(
         config_path=config_path.resolve(strict=True),
         config_sha256=str(config_facts["config_sha256"]),
@@ -1427,8 +1990,9 @@ def _run_sft_preflight_core_unchecked(
                 separators=(",", ":"),
             )
         ),
-        output_root=Path(raw_output_root).expanduser().resolve(strict=True),
-        output_dir=output_dir.expanduser().resolve(strict=False),
+        output_root=resolved_output_root,
+        output_dir=resolved_output_dir,
+        output_identities=output_identities,
         output_facts_json=json.dumps(
             output_facts,
             ensure_ascii=False,
@@ -1766,6 +2330,74 @@ def _clean_evaluation_truth_surface() -> dict[str, Any]:
     }
 
 
+@dataclass(frozen=True)
+class _AdapterStateSnapshot:
+    tensors: tuple[tuple[str, int, str], ...]
+    trainable_parameter_count: int
+    all_finite: bool
+    digest: str
+
+
+def _capture_adapter_state(model: Any) -> _AdapterStateSnapshot:
+    import torch
+
+    tensors: list[tuple[str, int, str]] = []
+    digest = hashlib.sha256()
+    trainable_parameter_count = 0
+    all_finite = True
+    named_parameters = getattr(model, "named_parameters", None)
+    if not callable(named_parameters):
+        return _AdapterStateSnapshot((), 0, False, hashlib.sha256().hexdigest())
+    for name, parameter in sorted(named_parameters(), key=lambda item: item[0]):
+        if not bool(getattr(parameter, "requires_grad", False)):
+            continue
+        detached = parameter.detach().cpu().contiguous()
+        trainable_parameter_count += int(detached.numel())
+        normalized_name = str(name).lower()
+        if "lora_" not in normalized_name and "adapter" not in normalized_name:
+            continue
+        raw = detached.view(torch.uint8).numpy().tobytes()
+        tensor_hash = hashlib.sha256(raw).hexdigest()
+        parameter_count = int(detached.numel())
+        all_finite = all_finite and bool(torch.isfinite(detached.float()).all().item())
+        tensors.append((str(name), parameter_count, tensor_hash))
+        digest.update(str(name).encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(str(tuple(detached.shape)).encode("ascii"))
+        digest.update(b"\0")
+        digest.update(str(detached.dtype).encode("ascii"))
+        digest.update(b"\0")
+        digest.update(raw)
+    return _AdapterStateSnapshot(
+        tensors=tuple(tensors),
+        trainable_parameter_count=trainable_parameter_count,
+        all_finite=all_finite,
+        digest=digest.hexdigest(),
+    )
+
+
+def _adapter_update_evidence(
+    before: _AdapterStateSnapshot,
+    after: _AdapterStateSnapshot,
+) -> dict[str, Any]:
+    before_hashes = {name: tensor_hash for name, _, tensor_hash in before.tensors}
+    after_hashes = {name: tensor_hash for name, _, tensor_hash in after.tensors}
+    changed = sum(
+        1
+        for name, tensor_hash in after_hashes.items()
+        if before_hashes.get(name) != tensor_hash
+    )
+    same_tensor_set = before_hashes.keys() == after_hashes.keys()
+    return {
+        "trainable_parameter_count": after.trainable_parameter_count,
+        "adapter_tensor_count": len(after.tensors),
+        "adapter_state_digest_before": before.digest,
+        "adapter_state_digest_after": after.digest,
+        "changed_adapter_tensor_count": changed if same_tensor_set else 0,
+        "all_adapter_tensors_finite": before.all_finite and after.all_finite,
+    }
+
+
 def _sft_smoke_postconditions(metadata: dict[str, Any]) -> list[str]:
     blockers: list[str] = []
     observed_steps = metadata.get("observed_optimizer_steps")
@@ -1786,13 +2418,39 @@ def _sft_smoke_postconditions(metadata: dict[str, Any]) -> list[str]:
     if isinstance(loss, bool) or not isinstance(loss, int | float) or not math.isfinite(float(loss)):
         blockers.append("TRAINING_LOSS_INVALID")
 
+    trainable_parameter_count = metadata.get("trainable_parameter_count")
+    adapter_tensor_count = metadata.get("adapter_tensor_count")
+    before_digest = metadata.get("adapter_state_digest_before")
+    after_digest = metadata.get("adapter_state_digest_after")
+    changed_adapter_tensor_count = metadata.get("changed_adapter_tensor_count")
+    all_adapter_tensors_finite = metadata.get("all_adapter_tensors_finite")
+    if (
+        type(trainable_parameter_count) is not int
+        or trainable_parameter_count <= 0
+        or type(adapter_tensor_count) is not int
+        or adapter_tensor_count <= 0
+        or not isinstance(before_digest, str)
+        or len(before_digest) != 64
+        or not isinstance(after_digest, str)
+        or len(after_digest) != 64
+        or before_digest == after_digest
+        or type(changed_adapter_tensor_count) is not int
+        or changed_adapter_tensor_count <= 0
+        or all_adapter_tensors_finite is not True
+    ):
+        blockers.append("ADAPTER_UPDATE_NOT_OBSERVED")
+
     adapter_path = Path(str(metadata.get("adapter_path", "")))
     try:
         adapter_files = sorted(
             path for path in adapter_path.rglob("*") if path.is_file() and path.stat().st_size > 0
         )
         metadata["adapter_files"] = [
-            {"name": path.relative_to(adapter_path).as_posix(), "size": path.stat().st_size}
+            {
+                "name": path.relative_to(adapter_path).as_posix(),
+                "size": path.stat().st_size,
+                "sha256": _sha256_file(path),
+            }
             for path in adapter_files
         ]
     except OSError:
@@ -3283,20 +3941,14 @@ def _assistant_target_span(training_text: str, assistant_text: str) -> tuple[str
     return "available", start, start + len(assistant_text)
 
 
-def _assistant_only_labels_from_encoded(
+def _assistant_token_indices_from_offsets(
     *,
-    encoded: Any,
     offsets: list[tuple[int, int]],
     assistant_start: int,
     assistant_end: int,
-) -> tuple[list[Any], list[str]]:
-    input_ids = _token_list(_mapping_value(encoded, "input_ids"))
-    if not input_ids:
-        return [], ["input_ids_unavailable"]
-    if not offsets or len(input_ids) != len(offsets):
-        gaps = ["token_offsets_unavailable"] if not offsets else ["label_token_offset_length_mismatch"]
-        return [], gaps
-
+) -> tuple[list[int], list[str]]:
+    if not offsets:
+        return [], ["token_offsets_unavailable"]
     assistant_indices: set[int] = set()
     boundary_overlap = False
     for index, (start, end) in enumerate(offsets):
@@ -3312,11 +3964,63 @@ def _assistant_only_labels_from_encoded(
         return [], ["assistant_span_token_boundary_unavailable"]
     if not assistant_indices:
         return [], ["assistant_target_tokens_unavailable"]
+    return sorted(assistant_indices), []
+
+
+def _assistant_only_labels_from_encoded(
+    *,
+    encoded: Any,
+    offsets: list[tuple[int, int]],
+    assistant_start: int,
+    assistant_end: int,
+) -> tuple[list[Any], list[str]]:
+    input_ids = _token_list(_mapping_value(encoded, "input_ids"))
+    if not input_ids:
+        return [], ["input_ids_unavailable"]
+    if not offsets or len(input_ids) != len(offsets):
+        gaps = ["token_offsets_unavailable"] if not offsets else ["label_token_offset_length_mismatch"]
+        return [], gaps
+    assistant_indices, evidence_gaps = _assistant_token_indices_from_offsets(
+        offsets=offsets,
+        assistant_start=assistant_start,
+        assistant_end=assistant_end,
+    )
+    if evidence_gaps:
+        return [], evidence_gaps
+    assistant_index_set = set(assistant_indices)
 
     return [
-        token_id if index in assistant_indices else -100
+        token_id if index in assistant_index_set else -100
         for index, token_id in enumerate(input_ids)
     ], []
+
+
+def _assistant_only_record_is_valid(record: dict[str, Any]) -> bool:
+    input_ids = _token_list(record.get("input_ids"))
+    attention_mask = _token_list(record.get("attention_mask"))
+    labels = _token_list(record.get("labels"))
+    raw_indices = record.get("assistant_token_indices")
+    if not isinstance(raw_indices, list) or not raw_indices:
+        return False
+    if not all(type(index) is int for index in raw_indices):
+        return False
+    assistant_indices = cast(list[int], raw_indices)
+    if assistant_indices != sorted(set(assistant_indices)):
+        return False
+    if assistant_indices != list(range(assistant_indices[0], assistant_indices[-1] + 1)):
+        return False
+    if not input_ids or len(input_ids) != len(attention_mask) or len(input_ids) != len(labels):
+        return False
+    if assistant_indices[0] < 0 or assistant_indices[-1] >= len(input_ids):
+        return False
+    assistant_set = set(assistant_indices)
+    for index, (token_id, label) in enumerate(zip(input_ids, labels, strict=True)):
+        if index in assistant_set:
+            if label == -100 or label != token_id:
+                return False
+        elif label != -100:
+            return False
+    return True
 
 
 def _assistant_only_training_record(
@@ -3349,11 +4053,23 @@ def _assistant_only_training_record(
     attention_mask = _token_list(_mapping_value(encoded, "attention_mask"))
     if len(attention_mask) != len(input_ids):
         attention_mask = [1 for _ in input_ids]
-    return {
+    assistant_indices, index_gaps = _assistant_token_indices_from_offsets(
+        offsets=offsets,
+        assistant_start=assistant_start,
+        assistant_end=assistant_end,
+    )
+    if index_gaps:
+        gaps = ",".join(index_gaps)
+        raise ValueError(f"assistant-only SFT labels unavailable: {gaps}")
+    record = {
         "input_ids": input_ids,
         "attention_mask": attention_mask,
         "labels": labels,
+        "assistant_token_indices": assistant_indices,
     }
+    if not _assistant_only_record_is_valid(record):
+        raise ValueError("assistant-only SFT labels unavailable: assistant_label_region_invalid")
+    return record
 
 
 class _AssistantOnlyCausalLmDataCollator:
@@ -3846,6 +4562,9 @@ def _run_real_sft(
     drift_blockers = _preflight_input_drift_blockers(execution_context)
     if drift_blockers:
         raise SFTPreflightDriftError(drift_blockers)
+    _, gpu_blockers = _probe_sft_gpu()
+    if gpu_blockers:
+        raise SFTPreflightDriftError(gpu_blockers)
     config = execution_context.config_snapshot()
     output_dir = execution_context.output_dir
     _claim_sft_output_directory(
@@ -3853,6 +4572,7 @@ def _run_real_sft(
         output_dir,
         repo_root=execution_context.repo_root,
         expected_output_path_sha256=json.loads(execution_context.output_facts_json).get("output_path_sha256"),
+        expected_identities=execution_context.output_identities,
     )
 
     from datasets import Dataset  # type: ignore[import-not-found, unused-ignore]
@@ -3877,6 +4597,9 @@ def _run_real_sft(
     dataset = Dataset.from_list(records)
     import torch
 
+    _, immediate_gpu_blockers = _probe_sft_gpu()
+    if immediate_gpu_blockers:
+        raise SFTPreflightDriftError(immediate_gpu_blockers)
     model = AutoModelForCausalLM.from_pretrained(
         base_model,
         local_files_only=local_files_only,
@@ -3917,7 +4640,10 @@ def _run_real_sft(
         data_collator=_AssistantOnlyCausalLmDataCollator(tokenizer),
         **_sft_trainer_tokenizer_kwargs(SFTTrainer, tokenizer),
     )
+    adapter_state_before = _capture_adapter_state(trainer.model)
     train_result = trainer.train()
+    adapter_state_after = _capture_adapter_state(trainer.model)
+    metadata.update(_adapter_update_evidence(adapter_state_before, adapter_state_after))
     _record_sft_training_budget_metadata(
         metadata,
         config=config,

@@ -27,13 +27,15 @@ Alternative considered: keep a lightweight CLI preflight and separate runtime gu
 
 ### 2. Output authorization is based on canonical filesystem identity
 
-The output root must already exist, be absolute, and not itself be a symlink. The absolute candidate is rejected if it equals the root, if any existing component is a symlink, if its resolved location is not a strict descendant of the resolved root, if it already exists (including an empty directory), or if it falls within the repository. Writability and free space are checked on the nearest existing parent. The real runner claims the final directory with exclusive creation, then accepts only the expected existing-empty result from the same policy and the bound path hash. DPO real mode derives its repository root from the supplied manifest checkout with a cwd-independent fail-closed helper, passes that root explicitly to its runner, uses the same generic gate before metadata/dependency work, and repeats it in the runner. This is defensive hardening, not authorization to execute DPO.
+The output root and candidate parent must already exist, be absolute directories, and not be symlinks. Preflight binds both objects' `st_dev`, `st_ino`, `st_uid`, `st_gid`, and `st_mode` in the private execution context. The runner opens root-to-parent components descriptor-relatively with directory/no-follow flags and creates only the final leaf with `os.mkdir(..., mode=0o700, dir_fd=parent_fd)`. It compares `fstat` identity before and after claim and never performs pathname cleanup once identity becomes uncertain. DPO uses the same claim primitive defensively without authorizing execution.
+
+Threat-model clarification authorized by the user: these checks defend every drift, symlink, inode-exchange, and concurrent-leaf condition observable at a checkpoint. They do not claim that userspace identity comparison and the following `mkdirat` syscall are one kernel-atomic operation. Production use therefore requires the output root and parent namespace not be maliciously renamed by another same-UID process during that final boundary.
 
 Alternative considered: lexical `Path.relative_to`. Rejected because it does not defend against `..`, symlink redirection, or later path substitution.
 
-### 3. Blockers are stable codes; diagnostics are sanitized sections
+### 3. Public results are strict allowlists; blockers are stable codes
 
-Exceptions and machine-specific values are converted to enumerated blocker codes. The shared top-level gate catches unexpected internal exceptions and returns the complete blocked schema with only `PREFLIGHT_INTERNAL_ERROR`; it never serializes the exception. Public config facts are an explicit whitelist of approved constants, booleans, bounded numbers, and hashes. Public JSON includes hashes, booleans, counts, versions, GPU model/capability/memory, and file-name/size inventories, but not private paths, hostname, IP, GPU UUID, secrets, environment values, arbitrary config strings, or raw exception text.
+Exceptions and machine-specific values are converted to enumerated blocker codes. CLI training output is rebuilt from an exact top-level allowlist and a separately allowlisted adapter-file inventory; it never recursively sanitizes or copies the private metadata object. Public JSON may include only approved schema/status, blockers, preflight, budget/metrics, adapter filename-size-hash evidence, and the unchanged clean-evaluation facts. Private execution metadata remains only in the ignored output directory.
 
 Alternative considered: surface exception strings for convenience. Rejected because they are unstable and can leak private runtime details.
 
@@ -41,17 +43,18 @@ Alternative considered: surface exception strings for convenience. Rejected beca
 
 The canonical formal manifest and complete SFT JSONL are hashed. After binding the current manifest ID and exact SFT entry, parsing reads from the beginning, requires `split=train` for every selected record, stops immediately after the configured one or two rows, rejects duplicates/empty selections and `train_source_ids`, and hashes the ordered selected IDs. Smoke budget scalars use exact JSON integer semantics: `max_train_rows` is a non-boolean integer in `{1, 2}`; `max_steps`, `per_device_train_batch_size`, and `gradient_accumulation_steps` are non-boolean integer `1`; `max_seq_length` is a non-boolean integer from 1 through 4096; `seed` is a non-boolean integer; and `logging_steps` is a positive non-boolean integer. Those exact serialized rows are carried in the private context. A local tokenizer constructs the same assistant-only records used by training and verifies mask, target, length, and tensor-shape invariants before the 7B model is loaded.
 
-### 5. The trainer owns one explicitly visible GPU
+### 5. The trainer owns one explicitly visible idle GPU
 
-The caller must set `CUDA_VISIBLE_DEVICES`, exactly one CUDA device must be visible, the device name must identify an A100, BF16 must be supported, compute capability must meet the BF16 threshold, and memory must be at least 35 GiB. The private model must match Qwen2.5-7B-Instruct geometry and architecture, expose at least 12 GiB of weight inventory, use `dtype=torch_dtype=bfloat16`, `trust_remote_code=false`, local-only loading, and a bounded q/k/v/o LoRA target set. Model loading does not use `device_map="auto"`; Trainer/Accelerate performs placement. Gradient checkpointing forces `use_cache=false`. A missing pad token uses only the tokenizer EOS token after validation.
+The caller must set `CUDA_VISIBLE_DEVICES`, exactly one device must be visible, the name must identify an A100, BF16 and compute capability must pass, total and current free memory must each be at least 35 GiB, and a sanitized compute-process probe must count zero processes. The same probe runs again immediately before weights load. Public facts expose only aggregate count and readiness, never process identity.
 
 ### 6. Smoke completion is a narrow postcondition
 
-`SMOKE_COMPLETED` requires exit success, `training_completed`, one true integer optimizer step, an observed row count exactly equal to configured `max_train_rows`, a finite non-boolean numeric loss, and both non-empty `adapter_config.json` and adapter weights. The entire run tree is scanned for full base-model files, indexes, or shards rather than checking only the adapter directory. Metadata records the bounded budget and public-safe provenance. Any mismatch is a failed run, not a partial success.
+`SMOKE_COMPLETED` additionally requires a positive trainable-parameter count, positive adapter-tensor count, stable before/after adapter-state digests, at least one changed adapter tensor, and finite values for every adapter tensor. Adapter files carry filename, size, and SHA-256. A step count and files alone never prove an update.
 
 ## Risks / Trade-offs
 
-- [Filesystem state changes after preflight] -> Rehash bound inputs, repeat policy, claim the final output directory exclusively, and post-claim revalidate before local tokenizer/model loading. Parent-component mutation after the final check would require a directory-fd based redesign to eliminate completely.
+- [Filesystem state changes after preflight] -> Bind root/parent identities and use descriptor-relative no-follow traversal plus leaf-only mkdir; fail closed without pathname cleanup on uncertainty.
+- [Same-UID rename at the final syscall boundary] -> This narrow interval is an explicit deployment precondition, not a claimed atomic defense; prevent malicious same-UID namespace renames during claim.
 - [Tokenizer loading itself can be expensive] -> Keep it local-only and load it before model weights because objective validity depends on the real tokenizer.
 - [Git status includes generated private ignored config] -> Inspect tracked changes only and record commit SHA; ignored files never make readiness dirty.
 - [Package/GPU APIs vary between versions] -> Keep dependency and GPU probes injectable for unit tests and convert failures to stable blockers.

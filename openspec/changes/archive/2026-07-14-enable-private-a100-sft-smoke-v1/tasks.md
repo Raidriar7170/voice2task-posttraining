@@ -73,3 +73,16 @@
 - [x] 8.4 Exercise the real execution gate from a clean committed HEAD and stop fail-closed
   - Shared CLI preflight: exit `1`, exactly one stdout JSON document, empty stderr, sole blocker `CONFIG_FILE_MISSING`.
   - Authorized A100 alias: three read-only occupancy probes timed out; no remote writes, model-path search, training, prediction, or evaluation occurred.
+
+## 9. Changes-Requested Hardening
+
+- [x] 9.1 Replace regex-based public training metadata with a strict allowlist result builder and prove arbitrary absolute private paths never reach CLI stdout
+- [x] 9.2 Bind output-root and parent filesystem identities, require the parent to pre-exist, and claim the leaf descriptor-relatively without pathname cleanup after uncertainty
+- [x] 9.3 Add free-memory and zero-compute-process GPU readiness facts and repeat the same occupancy probe before model-weight loading
+- [x] 9.4 Validate assistant-only labels against the tokenizer offset-derived assistant token region and reject any prompt-label leakage
+- [x] 9.5 Record before/after adapter-state digests, changed finite adapter tensor counts, and SHA-256 adapter-file inventory as required smoke postconditions
+- [x] 9.6 Add no-GPU/no-model RED/GREEN regressions, update the Human Brief, and run focused verification without training, archive, commit, push, or PR actions
+  - RED: `17 failed` in the new review-hardening module before production changes.
+  - GREEN: combined focused suite `200 passed`; focused Ruff passed; strict change validation passed.
+  - Targeted Mypy reports only the two pre-existing imported-module diagnostics and no touched-file diagnostic.
+- [x] 9.7 Record the user-authorized output-claim threat-model clarification: checkpoint-observable races remain defended, while malicious same-UID namespace rename inside the final identity-checkpoint-to-`mkdirat` boundary is a deployment precondition rather than a syscall-atomicity claim

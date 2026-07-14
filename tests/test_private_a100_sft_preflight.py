@@ -116,6 +116,7 @@ def test_output_policy_rejects_existing_empty_output_dir(tmp_path: Path) -> None
 def test_output_policy_accepts_new_absolute_child_without_creating_it(tmp_path: Path) -> None:
     root = tmp_path / "root"
     root.mkdir()
+    (root / "runs").mkdir()
     output_dir = root / "runs" / "smoke"
 
     result = _policy({"output_root": root.as_posix(), "min_free_disk_gib": 0}, output_dir)
@@ -215,6 +216,7 @@ def test_output_policy_converts_path_resolution_error_to_private_safe_blocker(
 def test_output_policy_rejects_repository_location(tmp_path: Path) -> None:
     repo_root = tmp_path / "repo"
     repo_root.mkdir()
+    (repo_root / "runs").mkdir()
     output_dir = repo_root / "runs" / "smoke"
 
     result = _policy(
@@ -234,15 +236,15 @@ def test_output_claim_fails_closed_if_candidate_appears_after_preflight(
     root = tmp_path / "root"
     root.mkdir()
     output_dir = root / "smoke"
-    original_mkdir = Path.mkdir
+    original_mkdir = training.os.mkdir
 
-    def racing_mkdir(path: Path, *args: Any, **kwargs: Any) -> None:
-        if path == output_dir:
+    def racing_mkdir(path: Any, *args: Any, **kwargs: Any) -> None:
+        if path == output_dir.name and kwargs.get("dir_fd") is not None:
             original_mkdir(path, *args, **kwargs)
             raise FileExistsError(path)
         original_mkdir(path, *args, **kwargs)
 
-    monkeypatch.setattr(Path, "mkdir", racing_mkdir)
+    monkeypatch.setattr(training.os, "mkdir", racing_mkdir)
 
     with pytest.raises(training.SFTOutputPolicyError) as exc_info:
         training._claim_sft_output_directory(  # noqa: SLF001
@@ -905,10 +907,20 @@ def test_gpu_probe_rejects_non_a100_even_when_other_cuda_facts_pass(
             assert index == 0
             return "NVIDIA GeForce RTX 4090"
 
+        @staticmethod
+        def mem_get_info(index: int) -> tuple[int, int]:
+            assert index == 0
+            return (80 * 1024**3, 80 * 1024**3)
+
     monkeypatch.setitem(
         sys.modules,
         "torch",
         types.SimpleNamespace(cuda=FakeCuda(), version=types.SimpleNamespace(cuda="12.4")),
+    )
+    monkeypatch.setattr(
+        training.subprocess,
+        "run",
+        lambda *args, **kwargs: types.SimpleNamespace(returncode=0, stdout="", stderr=""),
     )
 
     facts, blockers = training._probe_sft_gpu()  # noqa: SLF001
@@ -1269,10 +1281,7 @@ def test_sft_cli_sanitizes_private_paths_in_normal_blocked_result(
     captured = capsys.readouterr()
     result = json.loads(captured.out)
     assert exit_code == 1
-    assert result["hyperparameters"] == {
-        "base_model_runtime_path": "<private_path>",
-        "output_root": "<private_path>",
-    }
+    assert "hyperparameters" not in result
     assert "Users/person" not in captured.out
     assert "mnt/data/person" not in captured.out
     assert captured.err == ""
@@ -1402,6 +1411,12 @@ def test_run_sft_ready_real_mode_builds_metadata_only_from_bound_context(
                 "observed_optimizer_steps": 1,
                 "training_rows_used": 2,
                 "train_result_metrics": {"train_loss": 1.25},
+                "trainable_parameter_count": 8,
+                "adapter_tensor_count": 2,
+                "adapter_state_digest_before": "a" * 64,
+                "adapter_state_digest_after": "b" * 64,
+                "changed_adapter_tensor_count": 1,
+                "all_adapter_tensors_finite": True,
             }
         )
 
@@ -1499,6 +1514,12 @@ def test_run_sft_uses_shared_preflight_core_and_passes_bound_context_to_runner(
                 "observed_optimizer_steps": 1,
                 "training_rows_used": 2,
                 "train_result_metrics": {"train_loss": 1.25},
+                "trainable_parameter_count": 8,
+                "adapter_tensor_count": 2,
+                "adapter_state_digest_before": "a" * 64,
+                "adapter_state_digest_after": "b" * 64,
+                "changed_adapter_tensor_count": 1,
+                "all_adapter_tensors_finite": True,
             }
         )
 
@@ -1582,7 +1603,7 @@ def test_run_sft_does_not_write_when_final_in_runner_output_check_detects_drift(
     result = training.run_sft(config, manifest, output_dir, dry_run=False)
 
     assert result["training_status"] == "training_blocked_by_output_policy"
-    assert result["blockers"] == ["OUTPUT_PATH_SYMLINK"]
+    assert result["blockers"] == ["OUTPUT_IDENTITY_CHANGED"]
     assert not output_dir.exists()
 
 
@@ -1664,6 +1685,12 @@ def test_run_sft_smoke_completion_preserves_clean_evaluation_blockers(
                 "training_rows_used": 2,
                 "train_result_metrics": {"train_loss": 1.25},
                 "training_budget": {"configured_max_steps": 1, "observed_optimizer_steps": 1},
+                "trainable_parameter_count": 8,
+                "adapter_tensor_count": 2,
+                "adapter_state_digest_before": "a" * 64,
+                "adapter_state_digest_after": "b" * 64,
+                "changed_adapter_tensor_count": 1,
+                "all_adapter_tensors_finite": True,
             }
         )
 
@@ -1676,8 +1703,20 @@ def test_run_sft_smoke_completion_preserves_clean_evaluation_blockers(
     assert result["observed_optimizer_steps"] == 1
     assert result["training_rows_used"] == 2
     assert result["adapter_files"] == [
-        {"name": "adapter_config.json", "size": 3},
-        {"name": "adapter_model.safetensors", "size": 7},
+        {
+            "name": "adapter_config.json",
+            "size": 3,
+            "sha256": training._sha256_file(  # noqa: SLF001
+                output_dir / "adapter" / "adapter_config.json"
+            ),
+        },
+        {
+            "name": "adapter_model.safetensors",
+            "size": 7,
+            "sha256": training._sha256_file(  # noqa: SLF001
+                output_dir / "adapter" / "adapter_model.safetensors"
+            ),
+        },
     ]
     assert result["clean_evaluation"] == {
         "acquisition_source_status": "UNAVAILABLE",
@@ -1749,6 +1788,7 @@ def test_real_sft_rechecks_output_before_tokenizer_or_model_loading(
     )
     assert preflight["ready"] is True
     assert execution_context is not None
+    monkeypatch.setattr(training, "_probe_sft_gpu", lambda: ({"idle_verified": True}, []))
     loads: list[str] = []
     monkeypatch.setattr(
         training,
@@ -1782,7 +1822,7 @@ def test_real_sft_rechecks_output_before_tokenizer_or_model_loading(
             execution_context=execution_context,
         )
 
-    assert exc_info.value.blockers == ["OUTPUT_PATH_SYMLINK"]
+    assert exc_info.value.blockers == ["OUTPUT_IDENTITY_CHANGED"]
     assert loads == []
     assert not output_dir.exists()
 
@@ -1942,6 +1982,11 @@ def test_real_sft_passes_local_bf16_options_and_bounded_training_arguments(
     assert preflight["ready"] is True
     assert execution_context is not None
     calls: dict[str, Any] = {"order": []}
+    monkeypatch.setattr(
+        training,
+        "_probe_sft_gpu",
+        lambda: calls["order"].append("gpu") or ({"idle_verified": True}, []),
+    )
     fake_bfloat16 = object()
 
     class FakeTokenizer:
@@ -2047,6 +2092,7 @@ def test_real_sft_passes_local_bf16_options_and_bounded_training_arguments(
             "input_ids": [1, 2],
             "attention_mask": [1, 1],
             "labels": [-100, 2],
+            "assistant_token_indices": [1],
         },
     )
     monkeypatch.setattr(
@@ -2066,7 +2112,7 @@ def test_real_sft_passes_local_bf16_options_and_bounded_training_arguments(
         execution_context=execution_context,
     )
 
-    assert calls["order"] == ["policy", "policy", "tokenizer", "model"]
+    assert calls["order"] == ["gpu", "policy", "tokenizer", "gpu", "model"]
     assert calls["tokenizer"] == {
         "path": config["base_model_runtime_path"],
         "local_files_only": True,
@@ -2144,6 +2190,7 @@ def test_model_objective_probe_passes_local_files_only_to_config_and_tokenizer(
             "input_ids": [1, 2],
             "attention_mask": [1, 1],
             "labels": [-100, 2],
+            "assistant_token_indices": [1],
         },
     )
 
@@ -2158,6 +2205,110 @@ def test_model_objective_probe_passes_local_files_only_to_config_and_tokenizer(
         {"name": "model-00001-of-00001.safetensors", "size": 12 * 1024**3}
     ]
     assert objective["records_checked"] == 2
+
+
+def test_sft_preflight_rejects_one_prompt_label_leak_even_with_other_masked_tokens(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    config, manifest, output_dir = _write_preflight_fixture(tmp_path)
+    actual_model_probe = training._probe_sft_model_and_objective  # noqa: SLF001
+    _install_ready_preflight_probes(monkeypatch)
+    monkeypatch.setattr(training, "_probe_sft_model_and_objective", actual_model_probe)
+    config_payload = json.loads(config.read_text(encoding="utf-8"))
+    model_root = Path(config_payload["base_model_runtime_path"])
+    (model_root / "model-00001-of-00001.safetensors").open("r+b").truncate(12 * 1024**3)
+
+    class FakeAutoConfig:
+        @staticmethod
+        def from_pretrained(path: str, **kwargs: Any) -> Any:
+            return types.SimpleNamespace(
+                model_type="qwen2",
+                architectures=["Qwen2ForCausalLM"],
+                hidden_size=3584,
+                intermediate_size=18944,
+                num_hidden_layers=28,
+                num_attention_heads=28,
+                num_key_value_heads=4,
+                vocab_size=152064,
+            )
+
+    class FakeTokenizer:
+        def __call__(self, text: str, **kwargs: Any) -> dict[str, Any]:
+            return {
+                "input_ids": [10, 11, 12, 13],
+                "attention_mask": [1, 1, 1, 1],
+                "offset_mapping": [(0, 1), (1, 2), (2, 3), (3, 4)],
+            }
+
+    class FakeAutoTokenizer:
+        @staticmethod
+        def from_pretrained(path: str, **kwargs: Any) -> FakeTokenizer:
+            return FakeTokenizer()
+
+    monkeypatch.setitem(
+        sys.modules,
+        "transformers",
+        types.SimpleNamespace(AutoConfig=FakeAutoConfig, AutoTokenizer=FakeAutoTokenizer),
+    )
+    monkeypatch.setattr(training, "format_sft_training_text", lambda row, tokenizer: "abcd")
+    monkeypatch.setattr(training, "canonical_contract_json", lambda target: "cd")
+    monkeypatch.setattr(
+        training,
+        "_assistant_only_labels_from_encoded",
+        lambda **kwargs: ([-100, 11, 12, 13], []),
+    )
+
+    result = training.run_sft_preflight(config, manifest, output_dir)
+
+    assert result["ready"] is False
+    assert result["blockers"] == ["ASSISTANT_ONLY_LABELS_INVALID"]
+
+
+def test_real_sft_rechecks_gpu_idle_state_before_model_weight_load(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    config_path, manifest, output_dir = _write_preflight_fixture(tmp_path)
+    _install_ready_preflight_probes(monkeypatch)
+    preflight, execution_context = training._run_sft_preflight_core(  # noqa: SLF001
+        config_path,
+        manifest,
+        output_dir,
+    )
+    assert preflight["ready"] is True
+    assert execution_context is not None
+    monkeypatch.setattr(
+        training,
+        "_probe_sft_gpu",
+        lambda: (
+            {"free_memory_gib": 34.0, "compute_process_count": 0, "idle_verified": False},
+            ["GPU_FREE_MEMORY_INSUFFICIENT"],
+        ),
+    )
+    model_loads: list[str] = []
+
+    class FailIfLoaded:
+        @staticmethod
+        def from_pretrained(*args: Any, **kwargs: Any) -> None:
+            model_loads.append("loaded")
+
+    monkeypatch.setitem(
+        sys.modules,
+        "transformers",
+        types.SimpleNamespace(AutoModelForCausalLM=FailIfLoaded, AutoTokenizer=FailIfLoaded),
+    )
+    with pytest.raises(training.SFTPreflightDriftError) as exc_info:
+        training._run_real_sft(  # noqa: SLF001
+            {"adapter_path": (output_dir / "adapter").as_posix(), "dataset_load": {}},
+            execution_context.config_snapshot(),
+            manifest,
+            output_dir,
+            execution_context=execution_context,
+        )
+    assert exc_info.value.blockers == ["GPU_FREE_MEMORY_INSUFFICIENT"]
+    assert model_loads == []
+    assert not output_dir.exists()
 
 
 def test_model_probe_rejects_generic_qwen2_geometry_and_tiny_weight_inventory(
@@ -2190,6 +2341,7 @@ def test_model_probe_rejects_generic_qwen2_geometry_and_tiny_weight_inventory(
             "input_ids": [1, 2],
             "attention_mask": [1, 1],
             "labels": [-100, 2],
+            "assistant_token_indices": [1],
         },
     )
 

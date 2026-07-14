@@ -8,7 +8,7 @@ from voice2task.io import write_json
 from voice2task.training import (
     inspect_sft_objective_from_manifest,
     prepare_sft_runtime_label_provenance,
-    public_training_metadata,
+    public_training_result,
     run_dpo,
     run_sft,
     run_sft_prediction_export,
@@ -97,7 +97,7 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(metadata, ensure_ascii=False, indent=2, sort_keys=True))
         return 1
     if args.command in {"sft", "dpo"}:
-        metadata = public_training_metadata(metadata)
+        metadata = public_training_result(metadata)
     if args.command == "sft-inspect-objective" and args.output:
         write_json(args.output, metadata)
     elif args.command == "sft-prepare-runtime-label-provenance":
