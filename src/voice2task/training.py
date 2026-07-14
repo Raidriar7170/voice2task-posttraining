@@ -1237,11 +1237,28 @@ def _probe_sft_dependencies() -> tuple[dict[str, Any], list[str]]:
     return facts, list(dict.fromkeys(blockers))
 
 
-def _probe_sft_gpu() -> tuple[dict[str, Any], list[str]]:
-    selected = os.environ.get("CUDA_VISIBLE_DEVICES")
-    selected_parts = [part.strip() for part in selected.split(",") if part.strip()] if selected else []
-    facts: dict[str, Any] = {
-        "explicit_selection": bool(selected_parts),
+SFT_GPU_HELPER_SCHEMA_VERSION = "voice2task-sft-gpu-helper-v2"
+SFT_GPU_HELPER_STATUSES = {
+    "OK",
+    "CUDA_UNAVAILABLE",
+    "CUDA_PROBE_FAILED",
+    "GPU_SELECTION_NOT_SINGLE",
+}
+SFT_GPU_HELPER_FACT_FIELDS = {
+    "cuda_available",
+    "visible_device_count",
+    "name",
+    "compute_capability",
+    "total_memory_gib",
+    "free_memory_gib",
+    "cuda_version",
+    "bf16_supported",
+}
+
+
+def _empty_sft_gpu_facts(*, explicit_selection: bool) -> dict[str, Any]:
+    return {
+        "explicit_selection": explicit_selection,
         "visible_device_count": 0,
         "name": None,
         "compute_capability": None,
@@ -1254,48 +1271,211 @@ def _probe_sft_gpu() -> tuple[dict[str, Any], list[str]]:
         "cuda_version": None,
         "bf16_supported": False,
     }
+
+
+def _sample_sft_gpu_compute_process_count(selector: str) -> int:
+    try:
+        occupancy = subprocess.run(
+            [
+                "nvidia-smi",
+                f"--id={selector}",
+                "--query-compute-apps=pid",
+                "--format=csv,noheader,nounits",
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=15,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise RuntimeError("GPU_OCCUPANCY_PROBE_FAILED") from exc
+    if occupancy.returncode != 0:
+        raise RuntimeError("GPU_OCCUPANCY_PROBE_FAILED")
+    process_count = 0
+    for line in occupancy.stdout.splitlines():
+        value = line.strip()
+        if not value:
+            continue
+        if not value.isdigit():
+            raise RuntimeError("GPU_OCCUPANCY_PROBE_FAILED")
+        process_count += 1
+    return process_count
+
+
+def _validated_sft_gpu_helper_result(value: Any) -> dict[str, Any]:
+    expected_fields = {*SFT_GPU_HELPER_FACT_FIELDS, "status"}
+    if not isinstance(value, dict) or set(value) != expected_fields:
+        raise RuntimeError("GPU_OCCUPANCY_PROBE_FAILED")
+    status = value.get("status")
+    cuda_available = value.get("cuda_available")
+    visible_device_count = value.get("visible_device_count")
+    bf16_supported = value.get("bf16_supported")
+    cuda_version = value.get("cuda_version")
+    if (
+        not isinstance(status, str)
+        or status not in SFT_GPU_HELPER_STATUSES
+        or not isinstance(cuda_available, bool)
+        or type(visible_device_count) is not int
+        or visible_device_count < 0
+        or not isinstance(bf16_supported, bool)
+        or not isinstance(cuda_version, str)
+        or not re.fullmatch(r"(?:\d+(?:\.\d+)+|unknown)", cuda_version)
+    ):
+        raise RuntimeError("GPU_OCCUPANCY_PROBE_FAILED")
+    for key in ("total_memory_gib", "free_memory_gib"):
+        number = value.get(key)
+        if number is not None and (
+            isinstance(number, bool)
+            or not isinstance(number, int | float)
+            or not math.isfinite(float(number))
+            or float(number) < 0
+        ):
+            raise RuntimeError("GPU_OCCUPANCY_PROBE_FAILED")
+    name = value.get("name")
+    capability = value.get("compute_capability")
+    if name is not None and (
+        not isinstance(name, str) or re.fullmatch(r"[A-Za-z0-9 ._()+-]{1,100}", name) is None
+    ):
+        raise RuntimeError("GPU_OCCUPANCY_PROBE_FAILED")
+    if capability is not None and (
+        not isinstance(capability, str) or re.fullmatch(r"\d+\.\d+", capability) is None
+    ):
+        raise RuntimeError("GPU_OCCUPANCY_PROBE_FAILED")
+    device_fact_values = (
+        name,
+        capability,
+        value.get("total_memory_gib"),
+        value.get("free_memory_gib"),
+    )
+    if status == "OK":
+        if not cuda_available or visible_device_count != 1 or any(
+            item is None for item in device_fact_values
+        ):
+            raise RuntimeError("GPU_OCCUPANCY_PROBE_FAILED")
+    elif status == "GPU_SELECTION_NOT_SINGLE":
+        if (
+            not cuda_available
+            or visible_device_count == 1
+            or any(item is not None for item in device_fact_values)
+            or bf16_supported
+        ):
+            raise RuntimeError("GPU_OCCUPANCY_PROBE_FAILED")
+    elif (
+        cuda_available
+        or visible_device_count != 0
+        or any(item is not None for item in device_fact_values)
+        or bf16_supported
+    ):
+        raise RuntimeError("GPU_OCCUPANCY_PROBE_FAILED")
+    return {"status": status, **{key: value[key] for key in SFT_GPU_HELPER_FACT_FIELDS}}
+
+
+def _run_sft_gpu_fact_helper(selector: str) -> dict[str, Any]:
+    environment = {
+        "CUDA_VISIBLE_DEVICES": selector,
+        "PYTHONNOUSERSITE": "1",
+        "HF_HUB_OFFLINE": "1",
+        "TRANSFORMERS_OFFLINE": "1",
+        "HF_DATASETS_OFFLINE": "1",
+        "LC_ALL": "C",
+        "LANG": "C",
+    }
+    try:
+        python_executable = Path(sys.executable).expanduser()
+        if not python_executable.is_absolute() or not python_executable.is_file():
+            raise OSError
+        helper_path = Path(__file__).with_name("_sft_gpu_probe_helper.py").resolve(strict=True)
+    except (OSError, RuntimeError) as exc:
+        raise RuntimeError("GPU_OCCUPANCY_PROBE_FAILED") from exc
+    try:
+        completed = subprocess.run(
+            [python_executable.as_posix(), "-I", helper_path.as_posix()],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            env=environment,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise RuntimeError("GPU_OCCUPANCY_PROBE_FAILED") from exc
+    if completed.returncode != 0:
+        raise RuntimeError("GPU_OCCUPANCY_PROBE_FAILED")
+    try:
+        payload = json.loads(completed.stdout)
+    except (TypeError, json.JSONDecodeError) as exc:
+        raise RuntimeError("GPU_OCCUPANCY_PROBE_FAILED") from exc
+    if not isinstance(payload, dict) or payload.get("schema_version") != SFT_GPU_HELPER_SCHEMA_VERSION:
+        raise RuntimeError("GPU_OCCUPANCY_PROBE_FAILED")
+    if set(payload) != {*SFT_GPU_HELPER_FACT_FIELDS, "schema_version", "status"}:
+        raise RuntimeError("GPU_OCCUPANCY_PROBE_FAILED")
+    return _validated_sft_gpu_helper_result(
+        {
+            "status": payload["status"],
+            **{key: payload[key] for key in SFT_GPU_HELPER_FACT_FIELDS},
+        }
+    )
+
+
+def _probe_sft_gpu() -> tuple[dict[str, Any], list[str]]:
+    selected = os.environ.get("CUDA_VISIBLE_DEVICES")
+    selected_parts = [part.strip() for part in selected.split(",") if part.strip()] if selected else []
+    facts = _empty_sft_gpu_facts(explicit_selection=bool(selected_parts))
     blockers: list[str] = []
     if len(selected_parts) != 1 or selected_parts == ["-1"]:
         blockers.append("GPU_SELECTION_NOT_EXPLICIT" if not selected_parts else "GPU_SELECTION_NOT_SINGLE")
+        return facts, blockers
+    selector = selected_parts[0]
     try:
-        torch = importlib.import_module("torch")
+        pre_count = _sample_sft_gpu_compute_process_count(selector)
     except Exception:
-        return facts, list(dict.fromkeys([*blockers, "CUDA_UNAVAILABLE"]))
-    cuda = getattr(torch, "cuda", None)
-    if cuda is None:
-        return facts, list(dict.fromkeys([*blockers, "CUDA_UNAVAILABLE"]))
+        return facts, ["GPU_OCCUPANCY_PROBE_FAILED"]
+    facts["compute_process_count"] = pre_count
+    if pre_count:
+        return facts, ["GPU_BUSY"]
+    helper_result: dict[str, Any] | None = None
+    helper_failed = False
     try:
-        cuda_available = bool(cuda.is_available())
+        helper_result = _validated_sft_gpu_helper_result(_run_sft_gpu_fact_helper(selector))
     except Exception:
-        return facts, list(dict.fromkeys([*blockers, "CUDA_PROBE_FAILED"]))
-    if not cuda_available:
-        return facts, list(dict.fromkeys([*blockers, "CUDA_UNAVAILABLE"]))
+        helper_failed = True
     try:
-        visible_count = int(cuda.device_count())
+        post_count = _sample_sft_gpu_compute_process_count(selector)
     except Exception:
-        return facts, list(dict.fromkeys([*blockers, "CUDA_PROBE_FAILED"]))
+        return facts, ["GPU_OCCUPANCY_PROBE_FAILED"]
+    facts["compute_process_count"] = post_count
+    if post_count:
+        return facts, ["GPU_BUSY"]
+    if helper_failed or helper_result is None:
+        return facts, ["GPU_OCCUPANCY_PROBE_FAILED"]
+    facts["idle_verified"] = True
+    helper_status = str(helper_result["status"])
+    cuda_available = bool(helper_result["cuda_available"])
+    visible_count = int(helper_result["visible_device_count"])
     facts["visible_device_count"] = visible_count
-    if visible_count != 1:
-        blockers.append("GPU_SELECTION_NOT_SINGLE")
-        return facts, list(dict.fromkeys(blockers))
-
+    if helper_status == "CUDA_UNAVAILABLE":
+        return facts, ["CUDA_UNAVAILABLE"]
+    if helper_status == "CUDA_PROBE_FAILED":
+        return facts, ["CUDA_PROBE_FAILED"]
+    if helper_status == "GPU_SELECTION_NOT_SINGLE":
+        return facts, ["GPU_SELECTION_NOT_SINGLE"]
+    if helper_status != "OK" or not cuda_available or visible_count != 1:
+        return facts, ["GPU_OCCUPANCY_PROBE_FAILED"]
+    gpu_name = str(helper_result["name"])
+    capability_text = str(helper_result["compute_capability"])
     try:
-        properties = cuda.get_device_properties(0)
-        capability = tuple(int(value) for value in cuda.get_device_capability(0))
-        total_memory_gib = int(getattr(properties, "total_memory", 0)) / float(1024**3)
-        free_memory_bytes, _ = cuda.mem_get_info(0)
-        free_memory_gib = int(free_memory_bytes) / float(1024**3)
-        bf16_supported = bool(cuda.is_bf16_supported())
-        gpu_name = str(cuda.get_device_name(0))
-    except Exception:
-        return facts, list(dict.fromkeys([*blockers, "CUDA_PROBE_FAILED"]))
+        capability = tuple(int(value) for value in capability_text.split("."))
+        total_memory_gib = float(helper_result["total_memory_gib"])
+        free_memory_gib = float(helper_result["free_memory_gib"])
+    except (TypeError, ValueError):
+        return facts, ["GPU_OCCUPANCY_PROBE_FAILED"]
+    bf16_supported = bool(helper_result["bf16_supported"])
     facts.update(
         {
             "name": gpu_name,
-            "compute_capability": f"{capability[0]}.{capability[1]}",
+            "compute_capability": capability_text,
             "total_memory_gib": round(total_memory_gib, 3),
             "free_memory_gib": round(free_memory_gib, 3),
-            "cuda_version": str(getattr(getattr(torch, "version", None), "cuda", None) or "unknown"),
+            "cuda_version": str(helper_result["cuda_version"]),
             "bf16_supported": bf16_supported,
         }
     )
@@ -1307,37 +1487,6 @@ def _probe_sft_gpu() -> tuple[dict[str, Any], list[str]]:
         blockers.append("GPU_FREE_MEMORY_INSUFFICIENT")
     if re.search(r"\bA100\b", gpu_name, flags=re.IGNORECASE) is None:
         blockers.append("GPU_NOT_A100")
-    try:
-        occupancy = subprocess.run(
-            [
-                "nvidia-smi",
-                f"--id={selected_parts[0]}",
-                "--query-compute-apps=pid",
-                "--format=csv,noheader,nounits",
-            ],
-            check=False,
-            capture_output=True,
-            text=True,
-            timeout=15,
-        )
-        if occupancy.returncode != 0:
-            raise RuntimeError("occupancy probe failed")
-        process_ids: set[int] = set()
-        for line in occupancy.stdout.splitlines():
-            value = line.strip()
-            if not value:
-                continue
-            if not value.isdigit():
-                raise RuntimeError("occupancy output invalid")
-            process_id = int(value)
-            if process_id != os.getpid():
-                process_ids.add(process_id)
-        facts["compute_process_count"] = len(process_ids)
-        facts["idle_verified"] = not process_ids
-        if process_ids:
-            blockers.append("GPU_BUSY")
-    except (OSError, RuntimeError, subprocess.SubprocessError):
-        blockers.append("GPU_OCCUPANCY_PROBE_FAILED")
     return facts, list(dict.fromkeys(blockers))
 
 

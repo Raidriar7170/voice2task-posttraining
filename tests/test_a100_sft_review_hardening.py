@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import sys
 import types
 from pathlib import Path
 from typing import Any
@@ -327,51 +326,23 @@ def test_output_claim_checks_parent_path_identity_after_open_before_leaf_mkdir(
     assert not (moved_parent / "smoke").exists()
 
 
-def _install_fake_torch(monkeypatch: pytest.MonkeyPatch, *, free_gib: float = 80.0) -> None:
-    class FakeCuda:
-        @staticmethod
-        def is_available() -> bool:
-            return True
-
-        @staticmethod
-        def device_count() -> int:
-            return 1
-
-        @staticmethod
-        def get_device_properties(index: int) -> Any:
-            return types.SimpleNamespace(total_memory=80 * 1024**3)
-
-        @staticmethod
-        def get_device_capability(index: int) -> tuple[int, int]:
-            return (8, 0)
-
-        @staticmethod
-        def is_bf16_supported() -> bool:
-            return True
-
-        @staticmethod
-        def get_device_name(index: int) -> str:
-            return "NVIDIA A100-SXM4-80GB"
-
-        @staticmethod
-        def mem_get_info(index: int) -> tuple[int, int]:
-            assert index == 0
-            return (int(free_gib * 1024**3), 80 * 1024**3)
-
-    monkeypatch.setitem(
-        sys.modules,
-        "torch",
-        types.SimpleNamespace(cuda=FakeCuda(), version=types.SimpleNamespace(cuda="12.4")),
-    )
-
-
 def test_gpu_probe_reports_free_memory_and_idle_aggregate(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("CUDA_VISIBLE_DEVICES", "3")
-    _install_fake_torch(monkeypatch)
+    monkeypatch.setattr(training, "_sample_sft_gpu_compute_process_count", lambda selector: 0)
     monkeypatch.setattr(
-        training.subprocess,
-        "run",
-        lambda *args, **kwargs: types.SimpleNamespace(returncode=0, stdout="", stderr=""),
+        training,
+        "_run_sft_gpu_fact_helper",
+        lambda selector: {
+            "status": "OK",
+            "cuda_available": True,
+            "visible_device_count": 1,
+            "name": "NVIDIA A100-SXM4-80GB",
+            "compute_capability": "8.0",
+            "total_memory_gib": 80.0,
+            "free_memory_gib": 80.0,
+            "cuda_version": "12.4",
+            "bf16_supported": True,
+        },
     )
     facts, blockers = training._probe_sft_gpu()  # noqa: SLF001
     assert blockers == []
@@ -385,24 +356,34 @@ def test_gpu_probe_reports_free_memory_and_idle_aggregate(monkeypatch: pytest.Mo
 
 
 @pytest.mark.parametrize(
-    ("free_gib", "process_output", "expected"),
+    ("free_gib", "process_count", "expected"),
     [
-        (34.0, "", "GPU_FREE_MEMORY_INSUFFICIENT"),
-        (80.0, "12345\n", "GPU_BUSY"),
+        (34.0, 0, "GPU_FREE_MEMORY_INSUFFICIENT"),
+        (80.0, 1, "GPU_BUSY"),
     ],
 )
 def test_gpu_probe_blocks_insufficient_free_memory_or_busy_device(
     monkeypatch: pytest.MonkeyPatch,
     free_gib: float,
-    process_output: str,
+    process_count: int,
     expected: str,
 ) -> None:
     monkeypatch.setenv("CUDA_VISIBLE_DEVICES", "0")
-    _install_fake_torch(monkeypatch, free_gib=free_gib)
+    monkeypatch.setattr(training, "_sample_sft_gpu_compute_process_count", lambda selector: process_count)
     monkeypatch.setattr(
-        training.subprocess,
-        "run",
-        lambda *args, **kwargs: types.SimpleNamespace(returncode=0, stdout=process_output, stderr=""),
+        training,
+        "_run_sft_gpu_fact_helper",
+        lambda selector: {
+            "status": "OK",
+            "cuda_available": True,
+            "visible_device_count": 1,
+            "name": "NVIDIA A100-SXM4-80GB",
+            "compute_capability": "8.0",
+            "total_memory_gib": 80.0,
+            "free_memory_gib": free_gib,
+            "cuda_version": "12.4",
+            "bf16_supported": True,
+        },
     )
     _, blockers = training._probe_sft_gpu()  # noqa: SLF001
     assert expected in blockers
@@ -410,7 +391,6 @@ def test_gpu_probe_blocks_insufficient_free_memory_or_busy_device(
 
 def test_gpu_probe_fails_closed_when_occupancy_probe_fails(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("CUDA_VISIBLE_DEVICES", "0")
-    _install_fake_torch(monkeypatch)
     monkeypatch.setattr(
         training.subprocess,
         "run",

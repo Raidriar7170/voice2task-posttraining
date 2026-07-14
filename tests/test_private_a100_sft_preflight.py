@@ -879,48 +879,21 @@ def test_gpu_probe_rejects_non_a100_even_when_other_cuda_facts_pass(
 ) -> None:
     monkeypatch.setenv("CUDA_VISIBLE_DEVICES", "0")
 
-    class FakeCuda:
-        @staticmethod
-        def is_available() -> bool:
-            return True
-
-        @staticmethod
-        def device_count() -> int:
-            return 1
-
-        @staticmethod
-        def get_device_properties(index: int) -> Any:
-            assert index == 0
-            return types.SimpleNamespace(total_memory=80 * 1024**3)
-
-        @staticmethod
-        def get_device_capability(index: int) -> tuple[int, int]:
-            assert index == 0
-            return (8, 9)
-
-        @staticmethod
-        def is_bf16_supported() -> bool:
-            return True
-
-        @staticmethod
-        def get_device_name(index: int) -> str:
-            assert index == 0
-            return "NVIDIA GeForce RTX 4090"
-
-        @staticmethod
-        def mem_get_info(index: int) -> tuple[int, int]:
-            assert index == 0
-            return (80 * 1024**3, 80 * 1024**3)
-
-    monkeypatch.setitem(
-        sys.modules,
-        "torch",
-        types.SimpleNamespace(cuda=FakeCuda(), version=types.SimpleNamespace(cuda="12.4")),
-    )
+    monkeypatch.setattr(training, "_sample_sft_gpu_compute_process_count", lambda selector: 0)
     monkeypatch.setattr(
-        training.subprocess,
-        "run",
-        lambda *args, **kwargs: types.SimpleNamespace(returncode=0, stdout="", stderr=""),
+        training,
+        "_run_sft_gpu_fact_helper",
+        lambda selector: {
+            "status": "OK",
+            "cuda_available": True,
+            "visible_device_count": 1,
+            "name": "NVIDIA GeForce RTX 4090",
+            "compute_capability": "8.9",
+            "total_memory_gib": 80.0,
+            "free_memory_gib": 80.0,
+            "cuda_version": "12.4",
+            "bf16_supported": True,
+        },
     )
 
     facts, blockers = training._probe_sft_gpu()  # noqa: SLF001
@@ -929,30 +902,22 @@ def test_gpu_probe_rejects_non_a100_even_when_other_cuda_facts_pass(
     assert blockers == ["GPU_NOT_A100"]
 
 
-def test_gpu_probe_converts_cuda_api_exception_to_stable_blocker(
+def test_gpu_probe_converts_helper_process_failure_to_stable_blocker(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setenv("CUDA_VISIBLE_DEVICES", "0")
 
-    class BrokenCuda:
-        @staticmethod
-        def is_available() -> bool:
-            return True
-
-        @staticmethod
-        def device_count() -> int:
-            raise RuntimeError("private CUDA driver detail")
-
-    monkeypatch.setitem(
-        sys.modules,
-        "torch",
-        types.SimpleNamespace(cuda=BrokenCuda(), version=types.SimpleNamespace(cuda="12.4")),
+    monkeypatch.setattr(training, "_sample_sft_gpu_compute_process_count", lambda selector: 0)
+    monkeypatch.setattr(
+        training,
+        "_run_sft_gpu_fact_helper",
+        lambda selector: (_ for _ in ()).throw(RuntimeError("private CUDA driver detail")),
     )
 
     facts, blockers = training._probe_sft_gpu()  # noqa: SLF001
 
     assert facts["visible_device_count"] == 0
-    assert blockers == ["CUDA_PROBE_FAILED"]
+    assert blockers == ["GPU_OCCUPANCY_PROBE_FAILED"]
 
 
 def test_sft_preflight_blocks_missing_private_model_path(
