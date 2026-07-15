@@ -724,7 +724,7 @@ gh pr create \
   --head codex/optimize-recruiter-facing-project-page-v1 \
   --draft \
   --title "Optimize recruiter-facing Voice2Task project page" \
-  --body-file /Users/raidriar/.codex/tmp/voice2task-recruiter-pr-body.md
+  --body-file "/path/outside/repository/voice2task-recruiter-pr-body.md"
 ```
 
 The body must contain Summary, Scope, Verification, and Result boundary
