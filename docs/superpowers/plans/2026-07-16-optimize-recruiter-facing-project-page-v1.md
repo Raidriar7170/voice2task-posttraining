@@ -682,21 +682,21 @@ separately and then unioned.
 - Commit: `README.md`
 - Commit: `README_en.md`
 
-- [ ] **Step 1: Commit the implementation plan**
+- [x] **Step 1: Commit the implementation plan**
 
 ```bash
 git add docs/superpowers/plans/2026-07-16-optimize-recruiter-facing-project-page-v1.md
 git commit -m "Plan recruiter-facing README rewrite"
 ```
 
-- [ ] **Step 2: Commit the synchronized READMEs**
+- [x] **Step 2: Commit the synchronized READMEs**
 
 ```bash
 git add README.md README_en.md
 git commit -m "Optimize recruiter-facing project page"
 ```
 
-- [ ] **Step 3: Run final short verification**
+- [x] **Step 3: Run final short verification**
 
 ```bash
 PYTHONPATH=src python scripts/check_current_truth_surface.py
@@ -707,13 +707,13 @@ git status --short --branch
 
 Expected: checks pass and the worktree is clean.
 
-- [ ] **Step 4: Push the branch**
+- [x] **Step 4: Push the branch**
 
 ```bash
 git push -u origin codex/optimize-recruiter-facing-project-page-v1
 ```
 
-- [ ] **Step 5: Create a Draft PR with this topology and content**
+- [x] **Step 5: Create a Draft PR with this topology and content**
 
 Create a public-safe PR body outside the repository, then run:
 
@@ -732,7 +732,7 @@ sections. It must say the PR is docs-only and stacked, list the passing checks,
 and disclose that strict exact decreased from 1.67% to 0.83%, so no overall
 model-improvement claim is made.
 
-- [ ] **Step 6: Verify the Draft PR without merging**
+- [x] **Step 6: Verify the Draft PR without merging**
 
 ```bash
 gh pr view \
