@@ -53,7 +53,15 @@ HISTORICAL_SOURCE_SNAPSHOT_OVERRIDES = {
     "CONTEXT.md": (
         "reports/public-sample/clean-matched-causal-evidence-design/source-snapshots/"
         "CONTEXT.becc5b54eaf66f90789b77fb4fef1a6fc14bd62ae8ef50f9f26a0791edd4b993.md"
-    )
+    ),
+    "data/public-samples/manifest_public_sample.json": (
+        "reports/public-sample/formal-manifest-history/"
+        "manifest_public_sample.f866c173795e97953b1dec85611b405867d0a29497910282f99d399f109cda95.json"
+    ),
+    "reports/public-sample/split-integrity-audit/summary.json": (
+        "reports/public-sample/split-integrity-audit/source-snapshots/"
+        "summary.ac10bd0a1c3fefb717433de68ae29d049069b521bae8599234b7f52faec8f598.json"
+    ),
 }
 
 DENIED_INPUTS = (

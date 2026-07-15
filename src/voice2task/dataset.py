@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from collections import Counter
 from datetime import datetime, timezone
@@ -4810,10 +4811,14 @@ def build_public_sample_dataset(seed_path: Path, output_dir: Path) -> DatasetMan
     for pair in pairs:
         validate_public_record(pair.to_dict())
 
+    sft_rows = [row.to_dict() for row in rows]
+    train_rows = [row for row in sft_rows if row["split"] == "train"]
     sft_path = output_dir / "sft_public_sample.jsonl"
+    sft_train_path = output_dir / "sft_train_public_sample.jsonl"
     dpo_path = output_dir / "dpo_public_sample.jsonl"
     manifest_path = output_dir / "manifest_public_sample.json"
-    write_jsonl(sft_path, [row.to_dict() for row in rows])
+    write_jsonl(sft_path, sft_rows)
+    write_jsonl(sft_train_path, train_rows)
     write_jsonl(dpo_path, [pair.to_dict() for pair in pairs])
 
     candidate_seed_count = _slot_value_candidate_seed_count(seed_rows)
@@ -4830,6 +4835,12 @@ def build_public_sample_dataset(seed_path: Path, output_dir: Path) -> DatasetMan
     canonical_slot_boundary_seed_count = _canonical_slot_boundary_formal_seed_count(seed_rows)
     source_summary: dict[str, Any] = {
         "seed_rows": len(seed_rows),
+        "sft_train_artifact": {
+            "sha256": hashlib.sha256(sft_train_path.read_bytes()).hexdigest(),
+            "row_count": len(train_rows),
+            "split": "train",
+            "canonical_jsonl": True,
+        },
         "source": "sanitized_public_seed_fixture",
     }
     if candidate_seed_count:
@@ -4959,6 +4970,11 @@ def build_public_sample_dataset(seed_path: Path, output_dir: Path) -> DatasetMan
         files={
             "seed": seed_path.as_posix(),
             "sft": sft_path.as_posix(),
+            "sft_train": (
+                _safe_artifact_ref(sft_train_path)
+                if output_dir.resolve() == (REPO_ROOT / "data/public-samples").resolve()
+                else sft_train_path.name
+            ),
             "dpo": dpo_path.as_posix(),
             "manifest": manifest_path.as_posix(),
         },

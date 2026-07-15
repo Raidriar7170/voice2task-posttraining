@@ -27,6 +27,16 @@ HISTORICAL_TRAINING_SNAPSHOT = (
     "reports/public-sample/contract-compiler-v2-causal-boundary/"
     f"source-snapshots/training.{HISTORICAL_TRAINING_SHA256}.py"
 )
+HISTORICAL_MANIFEST_SHA256 = "f866c173795e97953b1dec85611b405867d0a29497910282f99d399f109cda95"
+HISTORICAL_MANIFEST_SNAPSHOT = (
+    "reports/public-sample/formal-manifest-history/"
+    f"manifest_public_sample.{HISTORICAL_MANIFEST_SHA256}.json"
+)
+HISTORICAL_SPLIT_SUMMARY_SHA256 = "ac10bd0a1c3fefb717433de68ae29d049069b521bae8599234b7f52faec8f598"
+HISTORICAL_SPLIT_SUMMARY_SNAPSHOT = (
+    "reports/public-sample/split-integrity-audit/source-snapshots/"
+    f"summary.{HISTORICAL_SPLIT_SUMMARY_SHA256}.json"
+)
 
 
 def _audit() -> dict[str, object]:
@@ -645,6 +655,10 @@ def test_historical_context_snapshot_is_exact_and_live_context_has_advanced() ->
     assert overrides == {
         "src/voice2task/training.py": HISTORICAL_TRAINING_SNAPSHOT,
         "CONTEXT.md": HISTORICAL_CONTEXT_SNAPSHOT,
+        "data/public-samples/manifest_public_sample.json": HISTORICAL_MANIFEST_SNAPSHOT,
+        "reports/public-sample/split-integrity-audit/summary.json": (
+            HISTORICAL_SPLIT_SUMMARY_SNAPSHOT
+        ),
     }
     assert callable(resolver)
     snapshot = resolver(REPO_ROOT, "CONTEXT.md")
@@ -667,6 +681,30 @@ def test_historical_training_snapshot_is_exact_and_live_training_has_advanced() 
     assert hashlib.sha256(
         (REPO_ROOT / "src/voice2task/training.py").read_bytes()
     ).hexdigest() != HISTORICAL_TRAINING_SHA256
+
+
+def test_historical_manifest_snapshot_is_exact_and_live_manifest_has_advanced() -> None:
+    snapshot = audit_module._resolve_audit_source_path(
+        REPO_ROOT, "data/public-samples/manifest_public_sample.json"
+    )
+
+    assert snapshot == REPO_ROOT / HISTORICAL_MANIFEST_SNAPSHOT
+    assert hashlib.sha256(snapshot.read_bytes()).hexdigest() == HISTORICAL_MANIFEST_SHA256
+    assert hashlib.sha256(
+        (REPO_ROOT / "data/public-samples/manifest_public_sample.json").read_bytes()
+    ).hexdigest() != HISTORICAL_MANIFEST_SHA256
+
+
+def test_historical_split_summary_snapshot_is_exact_and_current_report_has_advanced() -> None:
+    snapshot = audit_module._resolve_audit_source_path(
+        REPO_ROOT, "reports/public-sample/split-integrity-audit/summary.json"
+    )
+
+    assert snapshot == REPO_ROOT / HISTORICAL_SPLIT_SUMMARY_SNAPSHOT
+    assert hashlib.sha256(snapshot.read_bytes()).hexdigest() == HISTORICAL_SPLIT_SUMMARY_SHA256
+    assert hashlib.sha256(
+        (REPO_ROOT / "reports/public-sample/split-integrity-audit/summary.json").read_bytes()
+    ).hexdigest() != HISTORICAL_SPLIT_SUMMARY_SHA256
 
 
 def test_historical_builder_emits_logical_context_path_and_phase_time_hash() -> None:

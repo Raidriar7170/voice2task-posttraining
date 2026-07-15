@@ -16,6 +16,11 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 SUMMARY_PATH = REPO_ROOT / "reports/public-sample/contract-v2-projection/rerun-with-recovered-inputs/summary.json"
 INTERNAL_SUMMARY_PATH = REPO_ROOT / "reports/public-sample/internal-contract-v2-core/summary.json"
 MANIFEST_PATH = REPO_ROOT / "data/public-samples/manifest_public_sample.json"
+CLEAN_BOUNDARY_PUBLIC_MANIFEST_SNAPSHOT_PATH = (
+    REPO_ROOT
+    / "reports/public-sample/formal-manifest-history/"
+    "manifest_public_sample.f866c173795e97953b1dec85611b405867d0a29497910282f99d399f109cda95.json"
+)
 INDEX_JSON_PATH = REPO_ROOT / "reports/public-sample/evidence-index.json"
 INDEX_MD_PATH = REPO_ROOT / "reports/public-sample/EVIDENCE_INDEX.md"
 README_PATH = REPO_ROOT / "README.md"
@@ -291,7 +296,7 @@ EXPECTED_CURRENT_BOUNDARY_HASHES = {
     "seed": "8fe5e75e9e0891b6824d7c142cbe15547267377420f8b3240414436265d15801",
     "sft": "4b677420f766555c04199f15f69f41f3b3ad36ad3cd5c33d2b40b0e3f8573587",
     "dpo": "b673dff3c1f598a250c8ed463be320fd2126b61a07e7672b83fbca4bae266ea8",
-    "manifest": "f866c173795e97953b1dec85611b405867d0a29497910282f99d399f109cda95",
+    "manifest": "47d7337ff92a7dbd85ec9ee93120e9d32af81ca13f50f5761dfa1743f03127ae",
 }
 
 ALLOWED_STATUSES = {
@@ -1005,7 +1010,9 @@ def _check_clean_evaluation_boundary(
             ("public_dataset_sha256", "seed"): PUBLIC_SEED_PATH,
             ("public_dataset_sha256", "sft"): PUBLIC_SFT_PATH,
             ("public_dataset_sha256", "dpo"): PUBLIC_DPO_PATH,
-            ("public_dataset_sha256", "manifest"): MANIFEST_PATH,
+            ("public_dataset_sha256", "manifest"): (
+                CLEAN_BOUNDARY_PUBLIC_MANIFEST_SNAPSHOT_PATH
+            ),
             ("lockbox_aggregate_sha256", "manifest"): LOCKBOX_MANIFEST_PATH,
             ("lockbox_aggregate_sha256", "run_card"): LOCKBOX_RUN_CARD_PATH,
             ("lockbox_aggregate_sha256", "base_metrics"): LOCKBOX_BASE_METRICS_PATH,

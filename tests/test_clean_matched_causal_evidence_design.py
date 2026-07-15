@@ -16,6 +16,16 @@ HISTORICAL_CONTEXT_SNAPSHOT = (
     "reports/public-sample/clean-matched-causal-evidence-design/source-snapshots/"
     f"CONTEXT.{HISTORICAL_CONTEXT_SHA256}.md"
 )
+HISTORICAL_MANIFEST_SHA256 = "f866c173795e97953b1dec85611b405867d0a29497910282f99d399f109cda95"
+HISTORICAL_MANIFEST_SNAPSHOT = (
+    "reports/public-sample/formal-manifest-history/"
+    f"manifest_public_sample.{HISTORICAL_MANIFEST_SHA256}.json"
+)
+HISTORICAL_SPLIT_SUMMARY_SHA256 = "ac10bd0a1c3fefb717433de68ae29d049069b521bae8599234b7f52faec8f598"
+HISTORICAL_SPLIT_SUMMARY_SNAPSHOT = (
+    "reports/public-sample/split-integrity-audit/source-snapshots/"
+    f"summary.{HISTORICAL_SPLIT_SUMMARY_SHA256}.json"
+)
 
 EXPECTED_DESIGN_INPUT_WHITELIST = (
     "reports/public-sample/contract-compiler-v2-causal-boundary/summary.json",
@@ -236,7 +246,11 @@ def test_source_manifest_uses_all_and_only_frozen_whitelist_hashes() -> None:
 
 def test_historical_context_snapshot_preserves_design_replay_after_live_context_advances() -> None:
     assert design_module.HISTORICAL_SOURCE_SNAPSHOT_OVERRIDES == {
-        "CONTEXT.md": HISTORICAL_CONTEXT_SNAPSHOT
+        "CONTEXT.md": HISTORICAL_CONTEXT_SNAPSHOT,
+        "data/public-samples/manifest_public_sample.json": HISTORICAL_MANIFEST_SNAPSHOT,
+        "reports/public-sample/split-integrity-audit/summary.json": (
+            HISTORICAL_SPLIT_SUMMARY_SNAPSHOT
+        ),
     }
     snapshot = design_module._resolve_design_source_path(REPO_ROOT, "CONTEXT.md")
     assert snapshot == REPO_ROOT / HISTORICAL_CONTEXT_SNAPSHOT
@@ -244,6 +258,28 @@ def test_historical_context_snapshot_preserves_design_replay_after_live_context_
     assert hashlib.sha256((REPO_ROOT / "CONTEXT.md").read_bytes()).hexdigest() != (
         HISTORICAL_CONTEXT_SHA256
     )
+
+
+def test_historical_manifest_snapshot_preserves_design_replay_after_live_manifest_advances() -> None:
+    snapshot = design_module._resolve_design_source_path(
+        REPO_ROOT, "data/public-samples/manifest_public_sample.json"
+    )
+    assert snapshot == REPO_ROOT / HISTORICAL_MANIFEST_SNAPSHOT
+    assert hashlib.sha256(snapshot.read_bytes()).hexdigest() == HISTORICAL_MANIFEST_SHA256
+    assert hashlib.sha256(
+        (REPO_ROOT / "data/public-samples/manifest_public_sample.json").read_bytes()
+    ).hexdigest() != HISTORICAL_MANIFEST_SHA256
+
+
+def test_historical_split_summary_snapshot_preserves_design_replay_after_current_report_advances() -> None:
+    snapshot = design_module._resolve_design_source_path(
+        REPO_ROOT, "reports/public-sample/split-integrity-audit/summary.json"
+    )
+    assert snapshot == REPO_ROOT / HISTORICAL_SPLIT_SUMMARY_SNAPSHOT
+    assert hashlib.sha256(snapshot.read_bytes()).hexdigest() == HISTORICAL_SPLIT_SUMMARY_SHA256
+    assert hashlib.sha256(
+        (REPO_ROOT / "reports/public-sample/split-integrity-audit/summary.json").read_bytes()
+    ).hexdigest() != HISTORICAL_SPLIT_SUMMARY_SHA256
 
 
 def test_source_anchor_validation_fails_closed_on_authoritative_drift(

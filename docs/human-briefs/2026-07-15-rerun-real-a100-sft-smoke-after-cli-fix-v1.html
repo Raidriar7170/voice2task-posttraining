@@ -18,11 +18,12 @@
 </head>
 <body>
   <h1>阶段 A：修复后真实 A100 SFT smoke 重跑</h1>
-  <p class="status"><strong>当前结论：</strong>固定提交上的全部 gate 与唯一一次真实 smoke 均已通过。launch count 精确为 1，没有重试；这只证明 bounded real training path 与 adapter update 可用，不是模型指标提升或 clean-evaluation readiness。</p>
+  <p class="status"><strong>当前结论：</strong>固定提交上的全部 gate 与唯一一次真实 smoke 均已通过，且 change 已在 archive-only 收口中归档。launch count 精确为 1，没有重试；这只证明 bounded real training path 与 adapter update 可用，不是模型指标提升或 clean-evaluation readiness。</p>
 
   <h2>固定边界</h2>
   <table>
     <tr><th>变更</th><td><code>rerun-real-a100-sft-smoke-after-cli-fix-v1</code></td></tr>
+    <tr><th>归档路径</th><td><code>openspec/changes/archive/2026-07-15-rerun-real-a100-sft-smoke-after-cli-fix-v1/</code></td></tr>
     <tr><th>可执行提交</th><td><code>df25648d1d837d7aa4af7757b9aea68783d2a5b6</code></td></tr>
     <tr><th>模型</th><td>Qwen2.5-7B-Instruct，本地文件，禁止下载</td></tr>
     <tr><th>数据</th><td>current formal manifest 的 <code>train</code> split，1–2 rows</td></tr>
@@ -60,19 +61,21 @@
   <p>原始日志、私有绝对路径、配置内容、raw rows、模型文件、cache 与 adapter 只留在 ignored/private 远端证据区。仓库只记录固定提交、稳定状态、脱敏 hash/count、验证结果与真实 stop verdict；本地未提交 OpenSpec 不混入远端可执行 checkout。</p>
 
   <h2>明确不做</h2>
-  <p class="no">不运行 prediction、evaluation、DPO、GRPO、public test、lockbox 或 clean-evaluation；不 commit、push、更新或合并 PR #3，不 archive、release、production deploy；不声称模型提升、held-out/generalization gain、生产就绪或 live-browser benchmark 改善。</p>
+  <p class="no">本次 archive-only 收口没有运行新的训练、prediction、evaluation、DPO、GRPO、public test、lockbox 或 clean-evaluation；没有 commit、push、更新或合并 PR #3，也没有 release 或 production deploy；不声称模型提升、held-out/generalization gain、生产就绪或 live-browser benchmark 改善。</p>
 
   <h2>验证</h2>
   <ul>
     <li>CLI/preflight/A100 smoke focused tests：<code>206 passed</code>。</li>
     <li>public dataset-builder、schema、DPO-pair no-training contract tests：<code>30 passed</code>。</li>
     <li>本 change 与 Human Brief public leak scan：0 findings。</li>
-    <li><code>openspec validate --all --strict</code>：16/16 passed。</li>
+    <li>归档前 <code>openspec validate --all --strict</code>：16/16 passed。</li>
     <li><code>git diff --check</code>：passed；禁止 claim marker scan：passed。</li>
-    <li><code>git status --short</code>：仅新增本 Human Brief 与 bounded OpenSpec change，均为 untracked；无代码修改。</li>
+    <li>原执行阶段的 <code>git status --short</code>：仅新增本 Human Brief 与 bounded OpenSpec change，均为 untracked；无代码修改。</li>
+    <li>本次 archive-only 收口：active changes 为 0；strict OpenSpec 15/15 passed；truth-surface exit 0；<code>git diff --check</code> passed。</li>
+    <li>Post-archive fresh verification：<code>PYTHONPATH=src pytest -q</code> 为 <code>1485 passed in 27.00s</code>；<code>PYTHONPATH=src ruff check .</code> passed。</li>
   </ul>
 
   <h2>下一步</h2>
-  <p>验证已通过。保持变更 active，等待只读 Reviewer 与人类决定是否另行授权更新 PR #3。不得把后续 search-query 指标实验提交进 PR #3。</p>
+  <p>该 change 已归档，archive-only 边界到此停止。未执行 commit、push 或 merge；任何后续 search-query 指标实验必须使用独立 change，且不得混入 PR #3。</p>
 </body>
 </html>

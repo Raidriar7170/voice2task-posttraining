@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>正式 public train-only SFT 派生物</title>
+  <style>
+    :root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body { max-width: 880px; margin: 32px auto; padding: 0 20px 48px; color: #172033; line-height: 1.65; }
+    h1, h2 { line-height: 1.25; }
+    .status { padding: 12px 16px; border-left: 4px solid #b7791f; background: #fff8e6; }
+    code { background: #f3f5f8; padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #d8dee9; padding: 8px 10px; text-align: left; vertical-align: top; }
+    th { background: #f6f8fa; width: 35%; }
+    .no { color: #8b1a1a; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <h1>正式 public train-only SFT 派生物</h1>
+  <p class="status"><strong>当前状态：</strong><code>materialize-manifest-bound-train-only-sft-v1</code> 已在 archive-only 收口中归档，工作树仍 uncommitted。该阶段只增加数据访问边界和可审计派生物，不产生模型或指标证据。</p>
+
+  <h2>本次改变</h2>
+  <ul>
+    <li>从既有 mixed public SFT 中机械筛选 <code>split=train</code> 的有序子序列。</li>
+    <li>生成 282 行 canonical <code>sft_train_public_sample.jsonl</code>，不重写 row、ID 或 provenance。</li>
+    <li>在当前 manifest 中以 <code>data/public-samples/sft_train_public_sample.jsonl</code> 绑定 repo-relative 路径、最终字节 SHA-256、行数、split 和 canonical JSONL 声明。</li>
+    <li>保留 seed、mixed SFT、DPO、manifest ID、generated-at、counts 与 split counts；旧 manifest 字节保存在 hash-named 历史快照中。</li>
+    <li>重新生成 CURRENT split-integrity JSON/Markdown，使其绑定 live manifest；旧 split summary 同样保存为 exact hash-named snapshot，历史 replay 不变。</li>
+  </ul>
+
+  <h2>审计事实</h2>
+  <table>
+    <tr><th>归档路径</th><td><code>openspec/changes/archive/2026-07-15-materialize-manifest-bound-train-only-sft-v1/</code></td></tr>
+    <tr><th>Train-only 行数</th><td>282；全部为 train；ID 非空且唯一。</td></tr>
+    <tr><th>Train-only SHA-256</th><td><code>262096626e808ac42f20900e0ff85230f43d68df58910a60a316dfc468fd779f</code></td></tr>
+    <tr><th>有序子序列</th><td>与 mixed SFT 中所有 train rows 逐对象、逐顺序相等。</td></tr>
+    <tr><th>既有数据字节</th><td>seed、mixed SFT 与 DPO 未改变。</td></tr>
+    <tr><th>历史 manifest</th><td>旧 SHA-256 <code>f866c173795e97953b1dec85611b405867d0a29497910282f99d399f109cda95</code> 由 exact snapshot 保留。</td></tr>
+    <tr><th>Validation 边界</th><td><code>public=True</code> 必须同时具有 path 与 provenance/integrity binding；只有显式 <code>public=False</code> local/legacy 模式允许两者同时缺失，任一模式均拒绝 partial binding。</td></tr>
+    <tr><th>路径身份</th><td>只有 canonical formal output/manifest 使用 repo-relative reference；repo 内其他 build 目录与 external temp 均使用 basename，并从各自 manifest parent 解析。Raw prefix 不能选择 repo root。</td></tr>
+    <tr><th>Split evidence</th><td>CURRENT report 仅同步 live manifest hash，仍为 <code>DEVELOPMENT_ONLY_SPENT</code> 且 clean gate 未通过；历史 reader 继续读取旧 summary snapshot。</td></tr>
+  </table>
+
+  <h2>Clean-evaluation 事实保持不变</h2>
+  <ul>
+    <li><code>acquisition_source_status=UNAVAILABLE</code></li>
+    <li><code>authoritatively_bound_binding_count=0</code></li>
+    <li><code>human_acceptance_status=NOT_RECORDED</code></li>
+    <li><code>protocol_freeze_status=NOT_FROZEN</code></li>
+    <li><code>clean_population_status=NOT_MATERIALIZED</code></li>
+    <li><code>freeze_authorized=false</code></li>
+    <li><code>execution_readiness=false</code></li>
+  </ul>
+
+  <h2>明确边界</h2>
+  <p class="no">没有训练、prediction、evaluation、DPO、GRPO、A100 或模型加载；没有访问 lockbox 或 clean-evaluation population；没有模型提升、指标提升、held-out、generalization、production-ready 或 clean-evaluation-ready 声明；本次只执行主 spec 同步和 archive，没有 commit、push 或 merge。</p>
+
+  <h2>验证结果</h2>
+  <ul>
+    <li>聚焦 materializer/history/evidence suite：<code>192 passed</code>；只读 Reviewer 最终结论：<code>Approved</code>，无 Must Fix 或 Should Fix。</li>
+    <li>正式 dataset validation：<code>ok=true</code>，696 mixed SFT / 282 bound train-only / 2100 DPO；DPO check 为 2100 pairs。</li>
+    <li>Ruff、strict OpenSpec（17 passed）、公开泄漏扫描和 <code>git diff --check</code> 通过。</li>
+    <li>Targeted mypy 的四个其他触及文件通过；<code>dataset.py</code> 仍报告 diff 外的 6 个既有错误。</li>
+    <li>归档前 Full pytest 为 <code>1482 passed, 3 failed</code>；三个失败均来自 archived recovered-adapter challenge audit 正确拒绝当时两个 active OpenSpec changes。</li>
+    <li>归档前 Truth-surface checker 仅因 active changes 非空而 exit 1；未修改该生命周期 guard，未增加 allowlist。</li>
+    <li>本次 archive-only 收口后 active changes 为 0；strict OpenSpec 15/15 passed；truth-surface exit 0；<code>git diff --check</code> passed。</li>
+    <li>Post-archive fresh verification：<code>PYTHONPATH=src pytest -q</code> 为 <code>1485 passed in 27.00s</code>；<code>PYTHONPATH=src ruff check .</code> passed。</li>
+  </ul>
+
+  <h2>下一步</h2>
+  <p>该 change 已归档，工作树保持 uncommitted。未执行 commit、push 或 merge；任何后续训练或 public-dev screening 都必须是独立 change 和独立授权。</p>
+</body>
+</html>

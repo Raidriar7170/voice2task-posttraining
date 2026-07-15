@@ -1,7 +1,13 @@
+import hashlib
 import json
 from pathlib import Path
 
+import pytest
+
+import voice2task.dataset as dataset_module
+import voice2task.validation as validation_module
 from voice2task.dataset import build_local_private_corpus, build_public_sample_dataset
+from voice2task.io import read_json, read_jsonl
 from voice2task.validation import validate_dataset_artifacts
 
 
@@ -104,6 +110,80 @@ def test_build_public_sample_dataset_writes_manifest_sft_and_dpo(tmp_path: Path)
         manifest_path=output_dir / "manifest_public_sample.json",
         public=True,
     )
+    assert result.ok is True
+    assert result.failures == []
+
+
+def test_build_public_sample_dataset_binds_deterministic_ordered_train_only_artifact(
+    tmp_path: Path,
+) -> None:
+    seed_path = tmp_path / "seed.jsonl"
+    first_output = tmp_path / "first"
+    second_output = tmp_path / "second"
+    _write_seed(seed_path)
+
+    first_manifest = build_public_sample_dataset(seed_path=seed_path, output_dir=first_output)
+    build_public_sample_dataset(seed_path=seed_path, output_dir=second_output)
+
+    mixed_rows = read_jsonl(first_output / "sft_public_sample.jsonl")
+    train_path = first_output / "sft_train_public_sample.jsonl"
+    train_rows = read_jsonl(train_path)
+    expected_train_rows = [row for row in mixed_rows if row["split"] == "train"]
+    expected_bytes = "".join(
+        json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n" for row in expected_train_rows
+    ).encode("utf-8")
+    persisted_manifest = read_json(first_output / "manifest_public_sample.json")
+    binding = persisted_manifest["source_summary"]["sft_train_artifact"]
+
+    assert train_rows == expected_train_rows
+    assert train_path.read_bytes() == expected_bytes
+    assert train_path.read_bytes() == (second_output / "sft_train_public_sample.jsonl").read_bytes()
+    assert first_manifest.files["sft_train"] == "sft_train_public_sample.jsonl"
+    assert persisted_manifest["files"]["sft_train"] == "sft_train_public_sample.jsonl"
+    assert binding == {
+        "canonical_jsonl": True,
+        "row_count": len(expected_train_rows),
+        "sha256": hashlib.sha256(expected_bytes).hexdigest(),
+        "split": "train",
+    }
+    assert [row["provenance"] for row in train_rows] == [
+        row["provenance"] for row in expected_train_rows
+    ]
+
+
+def test_build_public_sample_dataset_uses_repo_relative_train_path_for_formal_output(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    seed_path = tmp_path / "seed.jsonl"
+    output_dir = tmp_path / "data/public-samples"
+    _write_seed(seed_path)
+    monkeypatch.setattr(dataset_module, "REPO_ROOT", tmp_path)
+
+    manifest = build_public_sample_dataset(seed_path=seed_path, output_dir=output_dir)
+
+    assert manifest.files["sft_train"] == "data/public-samples/sft_train_public_sample.jsonl"
+
+
+def test_repo_internal_nonformal_build_uses_manifest_relative_train_path(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    seed_path = tmp_path / "seed.jsonl"
+    output_dir = tmp_path / "reports/build"
+    _write_seed(seed_path)
+    monkeypatch.setattr(dataset_module, "REPO_ROOT", tmp_path)
+    monkeypatch.setattr(validation_module, "REPO_ROOT", tmp_path)
+
+    manifest = build_public_sample_dataset(seed_path=seed_path, output_dir=output_dir)
+    result = validate_dataset_artifacts(
+        sft_path=output_dir / "sft_public_sample.jsonl",
+        dpo_path=output_dir / "dpo_public_sample.jsonl",
+        manifest_path=output_dir / "manifest_public_sample.json",
+        public=True,
+    )
+
+    assert manifest.files["sft_train"] == "sft_train_public_sample.jsonl"
     assert result.ok is True
     assert result.failures == []
 

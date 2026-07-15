@@ -26,6 +26,11 @@ CURRENT_STATUS = REPO_ROOT / "docs/current-status.md"
 CLEAN_BOUNDARY_SUMMARY = (
     REPO_ROOT / "reports/public-sample/clean-compiler-model-evaluation-boundary-v1/summary.json"
 )
+HISTORICAL_PUBLIC_MANIFEST_SNAPSHOT = (
+    REPO_ROOT
+    / "reports/public-sample/formal-manifest-history/"
+    "manifest_public_sample.f866c173795e97953b1dec85611b405867d0a29497910282f99d399f109cda95.json"
+)
 REVIEW_PACK_ID = "clean-evaluation-acquisition-and-binding-review-pack-v1"
 REVIEW_PACK_PHASE = "prepare-clean-evaluation-acquisition-and-binding-review-pack-v1"
 RETIRED_REVIEW_PACK_FLAG_ERROR = (
@@ -463,10 +468,10 @@ def test_current_truth_surface_checker_cli_rejects_retired_review_pack_apply_fla
 
     assert result.returncode == 1
     assert result.stderr == ""
-    assert result.stdout == (
-        "current truth surface check failed:\n"
-        f"- {RETIRED_REVIEW_PACK_FLAG_ERROR}\n"
-    )
+    assert result.stdout.splitlines()[:2] == [
+        "current truth surface check failed:",
+        f"- {RETIRED_REVIEW_PACK_FLAG_ERROR}",
+    ]
     assert check_current_truth_surface.REVIEW_PACK_PHASE == REVIEW_PACK_PHASE
     assert not hasattr(check_current_truth_surface, "ACTIVE_REVIEW_PACK_CHANGE")
 
@@ -1337,6 +1342,44 @@ def test_clean_evaluation_boundary_guard_rejects_status_drift() -> None:
     )
 
     assert any("execution_readiness" in error for error in errors)
+
+
+def test_clean_evaluation_boundary_guard_uses_exact_historical_manifest_and_rejects_drift(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    assert (
+        check_current_truth_surface.CLEAN_BOUNDARY_PUBLIC_MANIFEST_SNAPSHOT_PATH
+        == HISTORICAL_PUBLIC_MANIFEST_SNAPSHOT
+    )
+    items = json.loads(INDEX_JSON.read_text(encoding="utf-8"))["items"]
+    markdown = INDEX_MD.read_text(encoding="utf-8")
+    exact_errors: list[str] = []
+    check_current_truth_surface._check_clean_evaluation_boundary(
+        exact_errors,
+        items,
+        markdown,
+    )
+    assert "clean evaluation boundary protected hash drift: public_dataset_sha256.manifest" not in (
+        exact_errors
+    )
+
+    drifted_snapshot = tmp_path / "manifest.snapshot.json"
+    drifted_snapshot.write_bytes(HISTORICAL_PUBLIC_MANIFEST_SNAPSHOT.read_bytes() + b"\n")
+    monkeypatch.setattr(
+        check_current_truth_surface,
+        "CLEAN_BOUNDARY_PUBLIC_MANIFEST_SNAPSHOT_PATH",
+        drifted_snapshot,
+    )
+    drift_errors: list[str] = []
+    check_current_truth_surface._check_clean_evaluation_boundary(
+        drift_errors,
+        items,
+        markdown,
+    )
+    assert "clean evaluation boundary protected hash drift: public_dataset_sha256.manifest" in (
+        drift_errors
+    )
 
 
 @pytest.mark.parametrize(

@@ -1003,7 +1003,7 @@
     },
     "manifest": {
       "path": "data/public-samples/manifest_public_sample.json",
-      "sha256": "47d7337ff92a7dbd85ec9ee93120e9d32af81ca13f50f5761dfa1743f03127ae"
+      "sha256": "f866c173795e97953b1dec85611b405867d0a29497910282f99d399f109cda95"
     },
     "seed": {
       "path": "data/public-samples/seed_traces.jsonl",

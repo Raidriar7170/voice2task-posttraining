@@ -79,7 +79,15 @@ HISTORICAL_SOURCE_SNAPSHOT_OVERRIDES = {
     "CONTEXT.md": (
         "reports/public-sample/contract-compiler-v2-causal-boundary/source-snapshots/"
         "CONTEXT.2ffc67d81be8b3e482555efd23db5b0bf60239eb4ef4d9e24514cae24ea1009f.md"
-    )
+    ),
+    "data/public-samples/manifest_public_sample.json": (
+        "reports/public-sample/formal-manifest-history/"
+        "manifest_public_sample.f866c173795e97953b1dec85611b405867d0a29497910282f99d399f109cda95.json"
+    ),
+    "reports/public-sample/split-integrity-audit/summary.json": (
+        "reports/public-sample/split-integrity-audit/source-snapshots/"
+        "summary.ac10bd0a1c3fefb717433de68ae29d049069b521bae8599234b7f52faec8f598.json"
+    ),
 }
 
 DENIED_INPUTS = (

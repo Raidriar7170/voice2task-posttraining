@@ -28,8 +28,7 @@
     "dpo": "data/public-samples/dpo_public_sample.jsonl",
     "manifest": "data/public-samples/manifest_public_sample.json",
     "seed": "data/public-samples/seed_traces.jsonl",
-    "sft": "data/public-samples/sft_public_sample.jsonl",
-    "sft_train": "data/public-samples/sft_train_public_sample.jsonl"
+    "sft": "data/public-samples/sft_public_sample.jsonl"
   },
   "generated_at": "2026-06-19T09:09:25.032006+00:00",
   "manifest_id": "public-sample-20260619T090925Z",
@@ -143,12 +142,6 @@
       "train": 46
     },
     "seed_rows": 247,
-    "sft_train_artifact": {
-      "canonical_jsonl": true,
-      "row_count": 282,
-      "sha256": "262096626e808ac42f20900e0ff85230f43d68df58910a60a316dfc468fd779f",
-      "split": "train"
-    },
     "slot_value_candidate_seed_rows": 4,
     "slot_value_candidates_formal_public_sample": true,
     "source": "sanitized_public_seed_fixture"

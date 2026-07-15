@@ -40,4 +40,4 @@ Lexical/template/provenance checks do not establish semantic independence, natur
 - `data/public-samples/seed_traces.jsonl` — `8fe5e75e9e0891b6824d7c142cbe15547267377420f8b3240414436265d15801`
 - `data/public-samples/sft_public_sample.jsonl` — `4b677420f766555c04199f15f69f41f3b3ad36ad3cd5c33d2b40b0e3f8573587`
 - `data/public-samples/dpo_public_sample.jsonl` — `b673dff3c1f598a250c8ed463be320fd2126b61a07e7672b83fbca4bae266ea8`
-- `data/public-samples/manifest_public_sample.json` — `f866c173795e97953b1dec85611b405867d0a29497910282f99d399f109cda95`
+- `data/public-samples/manifest_public_sample.json` — `47d7337ff92a7dbd85ec9ee93120e9d32af81ca13f50f5761dfa1743f03127ae`
