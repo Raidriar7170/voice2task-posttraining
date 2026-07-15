@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>真实 SFT CLI 单一 JSON 修复 · Human Brief</title>
+  <style>
+    :root { color-scheme: light; --ink:#17202a; --muted:#475569; --line:#cbd5e1; --warn:#9a3412; --panel:#fff7ed; }
+    body { max-width:760px; margin:4rem auto; padding:0 1rem; font:16px/1.7 system-ui,sans-serif; color:var(--ink); }
+    h1 { line-height:1.2; } h2 { margin-top:2rem; } code { background:#f1f5f9; padding:.1em .3em; overflow-wrap:anywhere; }
+    .status { color:var(--warn); font-weight:700; } .callout { border-left:4px solid var(--warn); padding:1rem; background:var(--panel); }
+    a { color:#1d4ed8; } ul { padding-left:1.3rem; } footer { border-top:1px solid var(--line); margin-top:2rem; padding-top:1rem; color:var(--muted); }
+  </style>
+</head>
+<body>
+  <p>OpenSpec · fix-real-sft-cli-single-json-v1</p>
+  <h1>真实 SFT CLI stdout 单一 JSON 修复</h1>
+  <p class="status">ARCHIVED_CODE_GREEN · PRIOR_SMOKE_RUNTIME_POSTCONDITION_FAILED · SECOND_SMOKE_NOT_AUTHORIZED · execution_readiness=false</p>
+
+  <p class="callout">第一次获授权的真实 1-step SFT 已证明 adapter 参数发生有限、非零且有限值的更新，但进程 stdout 在最终 JSON 前包含 Trainer 的两行 Python 字典输出，因此完整 stdout 不是单一 JSON document。该运行不得对外描述为 <code>SMOKE_COMPLETED</code>，也不得据此进入阶段二。</p>
+
+  <h2>本轮边界</h2>
+  <ul>
+    <li>只修复 CLI 输出隔离与回归测试；不修改模型、数据、训练预算、preflight 或 adapter 证据。</li>
+    <li>统一 backend dispatch 内的 Python stdout 被逐行加 <code>voice2task-backend: </code> 前缀并流式转发到 stderr；最终成功或失败 JSON 保留在隔离范围外。</li>
+    <li>不再次运行真实 smoke，不运行完整 SFT、DPO、GRPO、prediction、evaluation，不访问 test、lockbox 或 clean-evaluation population。</li>
+  </ul>
+
+  <h2>TDD 与当前证据</h2>
+  <ul>
+    <li>RED：3 个回归按预期失败，分别复现 noisy SFT success、noisy runtime exception、mock-only DPO dispatch 的 stdout 污染。</li>
+    <li>GREEN：3 个新增回归通过；A100 review-hardening 与 private-preflight 组合回归为 154 passed。</li>
+    <li>独立只读审阅：Pass，Must Fix 0，Should Fix 0；pre-archive 完整测试为 1450 passed，另有 4 个只由 active change 触发的既有生命周期门失败，未增加 allowlist。</li>
+    <li>Ruff、strict OpenSpec 16/16、formal public data 696 SFT / 2100 DPO、88 个数据与 schema 回归、public leak scan 和 diff check 均通过；targeted Mypy 仅保留两个未触及 imported module 的既有诊断。</li>
+    <li>归档后：active changes=0，完整 pytest 1454 passed，strict OpenSpec 15/15，truth-surface、5/5 本地链接、private ignore/untracked/status guard 与 Stop hook 双路径 exit 0 均通过。</li>
+    <li>测试不下载模型、不要求 GPU，也不执行训练或 DPO。</li>
+  </ul>
+
+  <h2>不变的 clean-evaluation 事实</h2>
+  <ul>
+    <li><code>acquisition_source_status=UNAVAILABLE</code></li>
+    <li><code>authoritatively_bound_binding_count=0</code></li>
+    <li><code>human_acceptance_status=NOT_RECORDED</code></li>
+    <li><code>protocol_freeze_status=NOT_FROZEN</code></li>
+    <li><code>clean_population_status=NOT_MATERIALIZED</code></li>
+    <li><code>freeze_authorized=false</code>；<code>execution_readiness=false</code></li>
+  </ul>
+
+  <h2>审阅入口</h2>
+  <ul>
+    <li><a href="../../openspec/changes/archive/2026-07-15-fix-real-sft-cli-single-json-v1/proposal.md">Proposal</a></li>
+    <li><a href="../../openspec/changes/archive/2026-07-15-fix-real-sft-cli-single-json-v1/design.md">Design</a></li>
+    <li><a href="../../openspec/changes/archive/2026-07-15-fix-real-sft-cli-single-json-v1/specs/supervised-contract-tuning/spec.md">Delta spec</a></li>
+    <li><a href="../../openspec/changes/archive/2026-07-15-fix-real-sft-cli-single-json-v1/tasks.md">Tasks</a></li>
+    <li><a href="../../openspec/specs/supervised-contract-tuning/spec.md">Current main spec</a></li>
+  </ul>
+
+  <footer>本 bounded code fix 已审阅并归档，但先前真实 smoke 仍是 Runtime Postcondition Failed。任何第二次真实 smoke 都需要新的明确授权；本 brief 不构成训练、评测、发布、生产就绪或模型改进声明。</footer>
+</body>
+</html>

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import sys
 import types
 from pathlib import Path
 from typing import Any
@@ -24,6 +25,16 @@ PUBLIC_RESULT_KEYS = {
     "adapter_files",
     "clean_evaluation",
 }
+BACKEND_DIAGNOSTIC_PREFIX = "voice2task-backend: "
+
+
+def _assert_only_prefixed_nonresult_diagnostics(stderr: str) -> None:
+    lines = stderr.splitlines()
+    assert lines
+    assert all(line.startswith(BACKEND_DIAGNOSTIC_PREFIX) for line in lines)
+    for line in lines:
+        with pytest.raises(json.JSONDecodeError):
+            json.loads(line)
 
 
 @pytest.mark.parametrize(
@@ -106,6 +117,94 @@ def test_training_cli_stdout_uses_public_result_allowlist(
     assert set(result).issubset(PUBLIC_RESULT_KEYS)
     assert private_path not in captured.out
     assert captured.err == ""
+
+
+def test_sft_cli_isolates_observed_trainer_mapping_lines_and_json_shaped_backend_output(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    observed_lines = [
+        "{'loss': 2.3265, 'grad_norm': 1.0, 'learning_rate': 0.0, 'epoch': 1.0}",
+        (
+            "{'train_runtime': 1.0, 'train_samples_per_second': 1.0, "
+            "'train_steps_per_second': 1.0, 'train_loss': 2.3265, 'epoch': 1.0}"
+        ),
+    ]
+
+    def noisy_sft(*args: Any, **kwargs: Any) -> dict[str, Any]:
+        print(*observed_lines, sep="\n")
+        sys.stdout.write('{"backend_progress":')
+        sys.stdout.write('"not-a-result"}\n')
+        return {
+            "schema_version": "voice2task-training-result-v1",
+            "stage": "sft",
+            "training_status": "training_completed",
+            "blockers": [],
+        }
+
+    monkeypatch.setattr(train_cli, "run_sft", noisy_sft)
+
+    exit_code = train_cli.main(
+        ["sft", "--config", "config.json", "--manifest", "manifest.json", "--output-dir", "run"]
+    )
+
+    captured = capsys.readouterr()
+    result = json.loads(captured.out)
+    assert exit_code == 0
+    assert result["training_status"] == "training_completed"
+    for line in observed_lines:
+        assert f"{BACKEND_DIAGNOSTIC_PREFIX}{line}" in captured.err
+    assert f'{BACKEND_DIAGNOSTIC_PREFIX}{{"backend_progress":"not-a-result"}}' in captured.err
+    _assert_only_prefixed_nonresult_diagnostics(captured.err)
+
+
+def test_sft_cli_restores_result_stdout_after_noisy_runtime_exception(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    def noisy_failure(*args: Any, **kwargs: Any) -> dict[str, Any]:
+        print("{'loss': 9.9}")
+        sys.stdout.write('{"private_backend_error":"must-not-be-result"}')
+        raise RuntimeError("private /workspace/model exception")
+
+    monkeypatch.setattr(train_cli, "run_sft", noisy_failure)
+
+    exit_code = train_cli.main(
+        ["sft", "--config", "config.json", "--manifest", "manifest.json", "--output-dir", "run"]
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert json.loads(captured.out) == {
+        "blockers": ["TRAINING_RUNTIME_ERROR"],
+        "schema_version": "voice2task-training-result-v1",
+        "training_status": "training_failed",
+    }
+    assert "private /workspace/model exception" not in captured.out + captured.err
+    _assert_only_prefixed_nonresult_diagnostics(captured.err)
+
+
+def test_dpo_cli_uses_shared_stdout_isolation_without_running_dpo(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    def noisy_dpo(*args: Any, **kwargs: Any) -> dict[str, Any]:
+        sys.stdout.write('{"dpo_backend":')
+        sys.stdout.write('"mock-only"}\n')
+        return {"stage": "dpo", "training_status": "dry_run", "blockers": []}
+
+    monkeypatch.setattr(train_cli, "run_dpo", noisy_dpo)
+
+    exit_code = train_cli.main(
+        ["dpo", "--config", "config.json", "--manifest", "manifest.json", "--output-dir", "run"]
+    )
+
+    captured = capsys.readouterr()
+    result = json.loads(captured.out)
+    assert exit_code == 0
+    assert result["training_status"] == "dry_run"
+    assert captured.err == f'{BACKEND_DIAGNOSTIC_PREFIX}{{"dpo_backend":"mock-only"}}\n'
+    _assert_only_prefixed_nonresult_diagnostics(captured.err)
 
 
 def test_public_training_result_rebuilds_preflight_without_unknown_nested_private_fields() -> None:

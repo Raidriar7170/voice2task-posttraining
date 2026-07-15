@@ -1,8 +1,12 @@
 from __future__ import annotations
 
 import argparse
+import io
 import json
+import sys
+from contextlib import redirect_stdout
 from pathlib import Path
+from typing import TextIO, cast
 
 from voice2task.io import write_json
 from voice2task.training import (
@@ -15,6 +19,29 @@ from voice2task.training import (
     run_sft_preflight,
     run_sft_runtime_label_provenance_check,
 )
+
+BACKEND_DIAGNOSTIC_PREFIX = "voice2task-backend: "
+
+
+class _PrefixedDiagnosticStream(io.TextIOBase):
+    """Stream backend stdout to stderr with one prefix per logical line."""
+
+    def __init__(self, sink: TextIO) -> None:
+        self._sink = sink
+        self._at_line_start = True
+
+    def write(self, text: str) -> int:
+        if not isinstance(text, str):
+            raise TypeError("diagnostic stream accepts text only")
+        for part in text.splitlines(keepends=True):
+            if self._at_line_start:
+                self._sink.write(BACKEND_DIAGNOSTIC_PREFIX)
+            self._sink.write(part)
+            self._at_line_start = part.endswith(("\n", "\r"))
+        return len(text)
+
+    def flush(self) -> None:
+        self._sink.flush()
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -60,34 +87,40 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
-        if args.command == "sft":
-            metadata = run_sft(args.config, args.manifest, args.output_dir, dry_run=args.dry_run)
-        elif args.command == "sft-preflight":
-            metadata = run_sft_preflight(args.config, args.manifest, args.output_dir)
-        elif args.command == "dpo":
-            metadata = run_dpo(args.config, args.manifest, args.output_dir, dry_run=args.dry_run)
-        elif args.command == "sft-predict":
-            metadata = run_sft_prediction_export(
-                args.config,
-                args.manifest,
-                args.output,
-                dry_run=args.dry_run,
-                fixture_mode=args.fixture_mode,
-            )
-        elif args.command == "sft-inspect-objective":
-            metadata = inspect_sft_objective_from_manifest(args.manifest, split=args.split)
-        elif args.command == "sft-prepare-runtime-label-provenance":
-            metadata = prepare_sft_runtime_label_provenance(args.config, args.manifest, metadata_path=args.output)
-        elif args.command == "sft-runtime-label-provenance-check":
-            metadata = run_sft_runtime_label_provenance_check(
-                args.config,
-                args.manifest,
-                split=args.split,
-                output_path=args.output,
-                run_runtime_check=args.run_runtime_check,
-            )
-        else:
-            raise AssertionError(f"unhandled command: {args.command}")
+        diagnostic_stream = cast(TextIO, _PrefixedDiagnosticStream(sys.stderr))
+        with redirect_stdout(diagnostic_stream):
+            if args.command == "sft":
+                metadata = run_sft(args.config, args.manifest, args.output_dir, dry_run=args.dry_run)
+            elif args.command == "sft-preflight":
+                metadata = run_sft_preflight(args.config, args.manifest, args.output_dir)
+            elif args.command == "dpo":
+                metadata = run_dpo(args.config, args.manifest, args.output_dir, dry_run=args.dry_run)
+            elif args.command == "sft-predict":
+                metadata = run_sft_prediction_export(
+                    args.config,
+                    args.manifest,
+                    args.output,
+                    dry_run=args.dry_run,
+                    fixture_mode=args.fixture_mode,
+                )
+            elif args.command == "sft-inspect-objective":
+                metadata = inspect_sft_objective_from_manifest(args.manifest, split=args.split)
+            elif args.command == "sft-prepare-runtime-label-provenance":
+                metadata = prepare_sft_runtime_label_provenance(
+                    args.config,
+                    args.manifest,
+                    metadata_path=args.output,
+                )
+            elif args.command == "sft-runtime-label-provenance-check":
+                metadata = run_sft_runtime_label_provenance_check(
+                    args.config,
+                    args.manifest,
+                    split=args.split,
+                    output_path=args.output,
+                    run_runtime_check=args.run_runtime_check,
+                )
+            else:
+                raise AssertionError(f"unhandled command: {args.command}")
     except Exception:
         metadata = {
             "schema_version": "voice2task-training-result-v1",
