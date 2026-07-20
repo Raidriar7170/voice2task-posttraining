@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Voice2Task Controlled Browser Demo MVP - Human Brief</title>
+  <style>
+    :root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body { margin: 0; background: #f5f7fa; color: #172033; line-height: 1.65; }
+    main { max-width: 780px; margin: 0 auto; padding: 40px 24px 64px; }
+    article { background: #fff; border: 1px solid #dce3ec; border-radius: 16px; padding: 28px; }
+    h1, h2 { line-height: 1.25; }
+    h1 { margin-top: 0; font-size: 1.9rem; }
+    h2 { margin-top: 2rem; font-size: 1.2rem; }
+    .status { display: inline-block; border: 1px solid #177245; border-radius: 999px; padding: 4px 10px; color: #0f5b36; font-weight: 700; }
+    code { overflow-wrap: anywhere; }
+    a { color: #0755a5; text-decoration: underline; text-underline-offset: 2px; }
+    a:focus-visible { outline: 3px solid #1d74d5; outline-offset: 3px; }
+    ul { padding-left: 1.25rem; }
+    @media (max-width: 600px) { main { padding: 20px 12px 40px; } article { padding: 20px; border-radius: 12px; } }
+    @media print { body { background: #fff; } main { max-width: none; padding: 0; } article { border: 0; padding: 0; } }
+    @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <p class="status">READY FOR REVIEW · ACTIVE / NOT ARCHIVED</p>
+      <h1>Voice2Task 受控 Browser Agent Demo MVP</h1>
+      <p>结论：已在精确训练基础设施基线 <code>38db1244884ddcc7df155a06e342d9e061ff0bcd</code> 上完成一个可运行、可演示、可测试的 bounded MVP。六条 fixture 场景经真实 FastAPI/orchestrator/localhost Chromium 路径达到预期终态；change 保持 active，尚未 archive。</p>
+
+      <h2>本阶段完成了什么</h2>
+      <ul>
+        <li>实现 transcript → Contract → 受控 Plan → Policy → 人工确认 → localhost Playwright → deterministic Verifier 的端到端路径。</li>
+        <li>实现 FastAPI/SQLite/WebSocket、React/Vite 操作台、四个本地 sandbox 页面、截图 artifact 与六场景 fixture benchmark。</li>
+        <li>复用现有 BrowserTaskContract V1、gold-free prompt、strict parser 与 schema/semantic validation；新增严格 runtime 适配层与公开 OpenAPI schema。</li>
+        <li><code>make demo</code> 会执行前端 clean install/build，并由 FastAPI 在 <code>127.0.0.1:8000</code> 同源托管 UI、API、WebSocket 和 sandbox。</li>
+      </ul>
+
+      <h2>信任与权限边界</h2>
+      <ul>
+        <li>默认 inference 为显式 fixture；ASR 默认 disabled；浏览器只能访问同源 localhost sandbox。</li>
+        <li>不访问 lockbox，不训练、不使用 GPU、不修改历史数据或指标，不提交私有路径、模型、adapter、音频、日志、缓存或 trace。</li>
+        <li>本 change 完成后保持 active，Draft PR 不 merge、不转 Ready、不 archive。</li>
+      </ul>
+
+      <h2>权威来源</h2>
+      <ul>
+        <li><a href="../../openspec/changes/add-controlled-browser-agent-demo-mvp-v1/proposal.md">Proposal</a></li>
+        <li><a href="../../openspec/changes/add-controlled-browser-agent-demo-mvp-v1/design.md">Design</a></li>
+        <li><a href="../../openspec/changes/add-controlled-browser-agent-demo-mvp-v1/tasks.md">Tasks</a></li>
+        <li><a href="../demo/README.md">Demo 运行手册与截图</a></li>
+        <li><a href="../../reports/demo-mvp/summary.md">Committed benchmark 报告</a></li>
+      </ul>
+
+      <h2>新鲜验证证据</h2>
+      <ul>
+        <li>Python scoped suite：<code>128 passed</code>；覆盖 runtime、API/WS、Playwright executor、production E2E 与既有公开 Schema/formatting compatibility。仅有 5 条第三方 WebSocket deprecation warning。</li>
+        <li>Frontend：Vitest <code>7 passed</code>，TypeScript check 与 production build 通过；桌面及 390px 移动端 E2E 无横向溢出，console error 为 0。</li>
+        <li>静态门禁：Ruff 通过；focused strict mypy 对 19 个新 source files 为 0 issues；OpenSpec strict 与 <code>git diff --check</code> 通过。</li>
+        <li>公开数据只读兼容：SFT public rows <code>696</code>、train rows <code>282</code>、DPO pairs <code>2100</code>；临时 prediction/metric 检查完成，tracked data/report 未变化。</li>
+        <li>Benchmark：预期终态 <code>6/6</code>、contract/schema/semantic/compiler-policy <code>6/6</code>、可执行 verifier <code>4/4</code>、no-execution verifier <code>2/2</code>；未确认写入、blocked/clarify execution、external navigation 与 unsafe execution 均为 0。</li>
+        <li>运行烟测：<code>make demo</code> 构建并响应 UI/API；production 与 dev runner 收到退出信号后均正常清理，无 8000/5173 端口残留。</li>
+        <li>定向 public-artifact leak scan 覆盖 README、demo docs、Human Brief、benchmark 与 OpenSpec，结果为 <code>0 findings</code>。</li>
+      </ul>
+
+      <h2>风险与审阅重点</h2>
+      <ul>
+        <li>默认 inference 是六条精确匹配的 fixture；private provider 仅做 mock/fail-closed 接口验证，本阶段没有加载 adapter。</li>
+        <li>ASR 默认 disabled；HTTP adapter 已实现，但没有配置真实 endpoint，因此不证明真实 ASR。</li>
+        <li>浏览器只允许 exact localhost sandbox origin；Form Fill 只改本地 DOM，不保存、不提交。</li>
+        <li>验证刻意不运行可能读取 lockbox 的全量 pytest、truth checker 或 lockbox tests；新增 runtime/demo 范围已全部通过。</li>
+      </ul>
+
+      <h2>不得过度声明</h2>
+      <p>不得称为通用 Browser Agent、任意网页自动化、生产系统、真实互联网泛化、自然语音/ASR 泛化、模型质量提升或已上线系统。</p>
+
+      <h2>下一步</h2>
+      <p>只剩已授权的 scoped commit、push 与 Draft PR 发布。PR 必须以 <code>codex/materialize-manifest-bound-train-only-sft-v1</code> 为 base，保持 Draft/Open，不 merge、不转 Ready；发布后仍保持本 change active / not archived。</p>
+    </article>
+  </main>
+</body>
+</html>

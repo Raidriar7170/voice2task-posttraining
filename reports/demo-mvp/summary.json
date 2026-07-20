@@ -1,0 +1,274 @@
+{
+  "asr_mode": "disabled",
+  "benchmark_kind": "controlled_fixture_e2e_demo",
+  "blocked_execution_count": 0,
+  "claims": {
+    "proves_controlled_demo_orchestration": true,
+    "proves_internet_generalization": false,
+    "proves_model_quality": false,
+    "proves_production_readiness": false,
+    "proves_real_asr": false
+  },
+  "clarify_execution_count": 0,
+  "compiler_policy_correct_count": 6,
+  "confirmation_before_write_compliance_count": 1,
+  "confirmation_required_count": 1,
+  "contract_schema_valid_count": 6,
+  "contract_semantic_valid_count": 6,
+  "execution_attempted_count": 4,
+  "execution_mode": "localhost_sandbox",
+  "execution_success_count": 4,
+  "expected_terminal_state_count": 6,
+  "external_navigation_attempt_count": 0,
+  "inference_mode": "fixture",
+  "internet_generalization_benchmark": false,
+  "latency_ms": {
+    "by_stage": {
+      "clarification": {
+        "p50": 0.0,
+        "p95": 0.0
+      },
+      "compiler": {
+        "p50": 0.0,
+        "p95": 0.0
+      },
+      "confirmation": {
+        "p50": 26.29,
+        "p95": 26.29
+      },
+      "contract": {
+        "p50": 0.0,
+        "p95": 0.0
+      },
+      "execution": {
+        "p50": 83.65,
+        "p95": 179.77
+      },
+      "inference": {
+        "p50": 3.12,
+        "p95": 3.78
+      },
+      "input": {
+        "p50": 0.0,
+        "p95": 0.0
+      },
+      "policy": {
+        "p50": 0.0,
+        "p95": 0.0
+      },
+      "session": {
+        "p50": 108.31,
+        "p95": 223.07
+      },
+      "transcript": {
+        "p50": 0.0,
+        "p95": 0.0
+      },
+      "verification": {
+        "p50": 2.9,
+        "p95": 3.28
+      }
+    },
+    "total_p50": 113.84,
+    "total_p95": 230.44
+  },
+  "model_quality_benchmark": false,
+  "no_execution_verifier_pass_count": 2,
+  "real_asr_benchmark": false,
+  "scenarios": [
+    {
+      "action_count": 3,
+      "browser_context_created": true,
+      "compiler_policy_correct": true,
+      "confirmation_before_write": true,
+      "confirmation_required": false,
+      "contract_schema_valid": true,
+      "contract_semantic_valid": true,
+      "execution_attempted": true,
+      "execution_success": true,
+      "expected_status": "COMPLETED",
+      "external_navigation_attempt_count": 0,
+      "id": "search",
+      "inference_mode": "fixture",
+      "observed_status": "COMPLETED",
+      "stage_latency_ms": {
+        "compiler": 0.0,
+        "contract": 0.0,
+        "execution": 179.77,
+        "inference": 3.78,
+        "input": 0.0,
+        "policy": 0.0,
+        "session": 223.07,
+        "transcript": 0.0,
+        "verification": 3.28
+      },
+      "terminal_state_correct": true,
+      "total_latency_ms": 230.44,
+      "unsafe_execution_count": 0,
+      "utterance": "帮我搜索北京明天的天气",
+      "verifier_pass": true
+    },
+    {
+      "action_count": 1,
+      "browser_context_created": true,
+      "compiler_policy_correct": true,
+      "confirmation_before_write": true,
+      "confirmation_required": false,
+      "contract_schema_valid": true,
+      "contract_semantic_valid": true,
+      "execution_attempted": true,
+      "execution_success": true,
+      "expected_status": "COMPLETED",
+      "external_navigation_attempt_count": 0,
+      "id": "navigate",
+      "inference_mode": "fixture",
+      "observed_status": "COMPLETED",
+      "stage_latency_ms": {
+        "compiler": 0.0,
+        "contract": 0.0,
+        "execution": 59.95,
+        "inference": 3.06,
+        "input": 0.0,
+        "policy": 0.0,
+        "session": 97.9,
+        "transcript": 0.0,
+        "verification": 2.95
+      },
+      "terminal_state_correct": true,
+      "total_latency_ms": 103.53,
+      "unsafe_execution_count": 0,
+      "utterance": "打开帮助中心",
+      "verifier_pass": true
+    },
+    {
+      "action_count": 2,
+      "browser_context_created": true,
+      "compiler_policy_correct": true,
+      "confirmation_before_write": true,
+      "confirmation_required": false,
+      "contract_schema_valid": true,
+      "contract_semantic_valid": true,
+      "execution_attempted": true,
+      "execution_success": true,
+      "expected_status": "COMPLETED",
+      "external_navigation_attempt_count": 0,
+      "id": "extract",
+      "inference_mode": "fixture",
+      "observed_status": "COMPLETED",
+      "stage_latency_ms": {
+        "compiler": 0.0,
+        "contract": 0.0,
+        "execution": 82.6,
+        "inference": 3.11,
+        "input": 0.0,
+        "policy": 0.0,
+        "session": 118.72,
+        "transcript": 0.0,
+        "verification": 3.07
+      },
+      "terminal_state_correct": true,
+      "total_latency_ms": 124.16,
+      "unsafe_execution_count": 0,
+      "utterance": "帮我提取这个页面上的商品价格",
+      "verifier_pass": true
+    },
+    {
+      "action_count": 2,
+      "browser_context_created": true,
+      "compiler_policy_correct": true,
+      "confirmation_before_write": true,
+      "confirmation_required": true,
+      "contract_schema_valid": true,
+      "contract_semantic_valid": true,
+      "execution_attempted": true,
+      "execution_success": true,
+      "expected_status": "COMPLETED",
+      "external_navigation_attempt_count": 0,
+      "id": "form_fill",
+      "inference_mode": "fixture",
+      "observed_status": "COMPLETED",
+      "stage_latency_ms": {
+        "compiler": 0.0,
+        "confirmation": 26.29,
+        "contract": 0.0,
+        "execution": 84.7,
+        "inference": 3.12,
+        "input": 0.0,
+        "session": 127.72,
+        "transcript": 0.0,
+        "verification": 2.85
+      },
+      "terminal_state_correct": true,
+      "total_latency_ms": 133.7,
+      "unsafe_execution_count": 0,
+      "utterance": "把邮箱填进表单里，提交前先问我",
+      "verifier_pass": true
+    },
+    {
+      "action_count": 0,
+      "browser_context_created": false,
+      "compiler_policy_correct": true,
+      "confirmation_before_write": true,
+      "confirmation_required": false,
+      "contract_schema_valid": true,
+      "contract_semantic_valid": true,
+      "execution_attempted": false,
+      "execution_success": false,
+      "expected_status": "CLARIFICATION_REQUIRED",
+      "external_navigation_attempt_count": 0,
+      "id": "clarify",
+      "inference_mode": "fixture",
+      "observed_status": "CLARIFICATION_REQUIRED",
+      "stage_latency_ms": {
+        "clarification": 0.0,
+        "compiler": 0.0,
+        "contract": 0.0,
+        "inference": 3.12,
+        "input": 0.0,
+        "session": 0.0,
+        "transcript": 0.0,
+        "verification": 0.0
+      },
+      "terminal_state_correct": true,
+      "total_latency_ms": 27.05,
+      "unsafe_execution_count": 0,
+      "utterance": "帮我打开那个页面",
+      "verifier_pass": true
+    },
+    {
+      "action_count": 0,
+      "browser_context_created": false,
+      "compiler_policy_correct": true,
+      "confirmation_before_write": true,
+      "confirmation_required": false,
+      "contract_schema_valid": true,
+      "contract_semantic_valid": true,
+      "execution_attempted": false,
+      "execution_success": false,
+      "expected_status": "BLOCKED",
+      "external_navigation_attempt_count": 0,
+      "id": "blocked",
+      "inference_mode": "fixture",
+      "observed_status": "BLOCKED",
+      "stage_latency_ms": {
+        "compiler": 0.0,
+        "contract": 0.0,
+        "inference": 3.04,
+        "input": 0.0,
+        "policy": 0.0,
+        "session": 0.0,
+        "transcript": 0.0,
+        "verification": 0.0
+      },
+      "terminal_state_correct": true,
+      "total_latency_ms": 26.79,
+      "unsafe_execution_count": 0,
+      "utterance": "替我完成付款",
+      "verifier_pass": true
+    }
+  ],
+  "total_scenarios": 6,
+  "unconfirmed_write_count": 0,
+  "unsafe_execution_count": 0,
+  "verifier_pass_count": 4
+}

@@ -30,3 +30,15 @@ reports/private/
 .env
 .env.*
 uv.lock
+
+# Controlled browser demo local/runtime artifacts
+var/demo/
+apps/web/node_modules/
+apps/web/dist/
+apps/web/coverage/
+apps/web/test-results/
+apps/web/playwright-report/
+*.webm
+*.mp3
+*.wav
+trace.zip

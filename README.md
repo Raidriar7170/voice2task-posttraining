@@ -9,9 +9,23 @@
 
 Voice2Task 是一个中文 spoken command / ASR transcript 到浏览器任务合约的
 post-training 项目。
-任务不是控制浏览器，而是把用户口语命令转换成严格的
+核心模型任务不是直接控制浏览器，而是把用户口语命令转换成严格的
 Browser Task Contract JSON，供后续浏览器 agent 决定搜索、打开 URL、
 填写表单、抽取页面信息、澄清或拒绝高风险动作。
+
+## Controlled Browser Demo MVP
+
+本仓库现在包含一个可选的、面向中文语音入口的可验证受控 Browser Agent Demo：`fixture inference + disabled ASR + localhost sandbox execution`。它复用 `BrowserTaskContract V1`，通过静态 capability、人工确认、Playwright exact-origin 隔离和确定性 verifier 演示六条公开场景。
+
+```bash
+python -m pip install -e '.[demo,dev]'
+python -m playwright install chromium
+make demo
+```
+
+[运行说明、架构、截图与严格非声明边界](docs/demo/README.md) · [六场景 benchmark](reports/demo-mvp/summary.md)
+
+该 Demo 只证明受控 fixture 编排，不证明通用 Agent、真实互联网泛化、自然语音/ASR 泛化、模型质量、生产级或已上线。默认不加载私有 adapter，不访问 lockbox，不运行训练。
 
 ## Recruiter Summary
 
