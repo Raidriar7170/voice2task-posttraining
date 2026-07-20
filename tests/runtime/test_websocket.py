@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import asyncio
 from pathlib import Path
+from time import monotonic, sleep
 
 import pytest
 from fastapi.testclient import TestClient
@@ -10,9 +12,19 @@ from apps.api.config import DemoConfig
 from apps.api.event_hub import BoundedEventHub
 from apps.api.main import create_app
 from tests.runtime.test_api import FakeExecutor
+from voice2task.runtime.inference import ProviderError
 
 
-def _app(tmp_path: Path):
+class UnsafeFailingProvider:
+    async def infer(self, _transcript: str):
+        await asyncio.sleep(0.01)
+        raise ProviderError(
+            "PRIVATE_PROVIDER_FAILED",
+            "leak /Users/private/model hostname=secret pid=1234",
+        )
+
+
+def _app(tmp_path: Path, *, inference_provider=None):
     config = DemoConfig(
         database_path=tmp_path / "demo.sqlite3",
         artifact_dir=tmp_path / "artifacts",
@@ -29,7 +41,11 @@ def _app(tmp_path: Path):
     def factory(event_sink, artifact_sink):
         return FakeExecutor(event_sink, artifact_sink, config.artifact_dir)
 
-    return create_app(config=config, executor_factory=factory)
+    return create_app(
+        config=config,
+        executor_factory=factory,
+        inference_provider=inference_provider,
+    )
 
 
 def _create(client: TestClient, text: str) -> dict[str, object]:
@@ -37,8 +53,34 @@ def _create(client: TestClient, text: str) -> dict[str, object]:
         "/api/sessions",
         json={"input_kind": "text", "text": text, "profile": {"email": "demo@example.com"}},
     )
-    assert response.status_code == 201
-    return response.json()
+    assert response.status_code == 202
+    payload = response.json()
+    assert payload["session"]["status"] == "INPUT_RECEIVED"
+    deadline = monotonic() + 2.0
+    while monotonic() < deadline:
+        session = client.get(f"/api/sessions/{payload['session_id']}").json()["session"]
+        plan = session.get("plan")
+        if (
+            session["status"] == "PLAN_READY"
+            and isinstance(plan, dict)
+            and plan.get("requires_confirmation") is True
+        ):
+            sleep(0.01)
+            continue
+        if session["status"] in {
+            "PLAN_READY",
+            "AWAITING_CONFIRMATION",
+            "CLARIFICATION_REQUIRED",
+            "BLOCKED",
+            "FAILED",
+        }:
+            if client.app.state.services.task_registry.is_active(str(payload["session_id"])):
+                sleep(0.01)
+                continue
+            payload["session"] = session
+            return payload
+        sleep(0.01)
+    pytest.fail(f"session {payload['session_id']} did not finish background processing")
 
 
 def test_websocket_replays_after_seq_then_streams_ordered_live_events(tmp_path: Path) -> None:
@@ -94,6 +136,36 @@ def test_terminal_replay_closes_normally_and_unknown_session_is_rejected(tmp_pat
             with client.websocket_connect("/ws/sessions/not-found") as websocket:
                 websocket.receive_json()
         assert unknown.value.code == 4404
+
+
+def test_websocket_replay_never_exposes_provider_private_message(tmp_path: Path) -> None:
+    with TestClient(_app(tmp_path, inference_provider=UnsafeFailingProvider())) as client:
+        created = client.post(
+            "/api/sessions",
+            json={
+                "input_kind": "text",
+                "text": "打开帮助中心",
+                "profile": {"email": "demo@example.com"},
+            },
+        ).json()
+        session_id = str(created["session_id"])
+        deadline = monotonic() + 2.0
+        while monotonic() < deadline:
+            session = client.get(f"/api/sessions/{session_id}").json()["session"]
+            if session["status"] == "FAILED":
+                break
+            sleep(0.01)
+        else:
+            pytest.fail("failing provider did not reach FAILED")
+
+        terminal_seq = int(session["last_event_seq"])
+        with client.websocket_connect(f"/ws/sessions/{session_id}?after_seq=0") as websocket:
+            replay = [websocket.receive_json() for _ in range(terminal_seq)]
+
+    rendered = repr(replay)
+    assert "/Users/private/model" not in rendered
+    assert "hostname=secret" not in rendered
+    assert "pid=1234" not in rendered
 
 
 @pytest.mark.asyncio

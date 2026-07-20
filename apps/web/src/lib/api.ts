@@ -1,5 +1,6 @@
 import type {
   APIErrorBody,
+  ConfirmationChallenge,
   CreateSessionResponse,
   ExecutionEvent,
   PublicConfig,
@@ -28,6 +29,13 @@ async function requestJSON<T>(path: string, init?: RequestInit): Promise<T> {
   return payload as T;
 }
 
+async function requestNoContent(path: string, init: RequestInit): Promise<void> {
+  const response = await fetch(path, init);
+  if (response.ok) return;
+  const body = (await response.json()) as APIErrorBody;
+  throw new DemoAPIError(body.error.code, body.error.message, body.error.retryable);
+}
+
 export const api = {
   config: () => requestJSON<PublicConfig>("/api/config/public"),
   sessions: () => requestJSON<{ sessions: SessionRecord[] }>("/api/sessions"),
@@ -52,13 +60,18 @@ export const api = {
     return requestJSON<CreateSessionResponse>("/api/sessions", { method: "POST", body: form });
   },
   confirmTranscript: (sessionId: string, transcript: string, planVersion: number) =>
-    requestJSON<{ session: SessionRecord; confirmation_token: string | null }>(
+    requestJSON<{ session: SessionRecord }>(
       `/api/sessions/${encodeURIComponent(sessionId)}/transcript`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ transcript, plan_version: planVersion }),
       },
+    ),
+  confirmationChallenge: (sessionId: string) =>
+    requestJSON<ConfirmationChallenge>(
+      `/api/sessions/${encodeURIComponent(sessionId)}/confirmation-challenge`,
+      { method: "POST" },
     ),
   confirm: (
     sessionId: string,
@@ -83,4 +96,6 @@ export const api = {
     requestJSON<{ session: SessionRecord }>(`/api/sessions/${encodeURIComponent(sessionId)}/cancel`, {
       method: "POST",
     }),
+  deleteSession: (sessionId: string) =>
+    requestNoContent(`/api/sessions/${encodeURIComponent(sessionId)}`, { method: "DELETE" }),
 };

@@ -118,6 +118,10 @@ async def test_executor_runs_four_scenarios_with_events_screenshots_and_cleanup(
     assert sum(event_type is EventType.ACTION_COMPLETED for event_type, _ in events) == expected_actions
     assert manager.active_context_count == 0
     assert verify_execution(plan, contract, context, outcome).passed is True
+    if plan.capability_id == "demo_product":
+        assert outcome.evidence.action_outputs == {"product_price": "¥199.00"}
+        assert outcome.evidence.dom_snapshot["product_price"] == "¥199.00"
+        assert outcome.evidence.action_outputs is not outcome.evidence.dom_snapshot
     serialized_events = repr(events)
     assert "data-testid" not in serialized_events
     assert str(tmp_path) not in serialized_events

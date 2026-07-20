@@ -9,7 +9,7 @@ ALLOWED_VALUE_SOURCES = frozenset(
     {
         None,
         "contract.slots.query",
-        "execution.values.product_price",
+        "execution.action_outputs.product_price",
         "session.profile.email",
     }
 )

@@ -1,6 +1,6 @@
-import { render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   ConfirmationModal,
@@ -12,6 +12,13 @@ import {
   VerifierPanel,
 } from "../components";
 import type { ExecutionEvent, SessionRecord } from "../types";
+
+const config = {
+  inference_mode: "fixture" as const,
+  asr_mode: "disabled" as const,
+  execution_mode: "sandbox" as const,
+  benchmark_kind: "controlled_fixture_e2e_demo" as const,
+};
 
 const session: SessionRecord = {
   id: "session-test",
@@ -133,6 +140,12 @@ const events: ExecutionEvent[] = [
   },
 ];
 
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
+
 describe("operation console components", () => {
   it("keeps inference, ASR, and execution modes visibly labeled", () => {
     render(
@@ -170,6 +183,7 @@ describe("operation console components", () => {
         onEmailChange={vi.fn()}
         onInputKindChange={vi.fn()}
         onAudioFile={vi.fn()}
+        onError={vi.fn()}
         onSubmit={vi.fn()}
       />,
     );
@@ -193,6 +207,74 @@ describe("operation console components", () => {
     expect(screen.queryByRole("button", { name: "执行计划" })).not.toBeInTheDocument();
   });
 
+  it("shows explicit transient status text and separate confirmed execution controls", () => {
+    const execute = vi.fn();
+    const cancel = vi.fn();
+    const deleteSession = vi.fn();
+    const { rerender } = render(
+      <PlanPanel
+        session={{ ...session, status: "TRANSCRIBING" }}
+        busy={false}
+        onExecute={execute}
+        onCancel={cancel}
+        onDelete={deleteSession}
+      />,
+    );
+    expect(screen.getByText("正在转写")).toBeVisible();
+
+    rerender(
+      <PlanPanel
+        session={{ ...session, status: "CONFIRMED" }}
+        busy={false}
+        onExecute={execute}
+        onCancel={cancel}
+        onDelete={deleteSession}
+      />,
+    );
+    expect(screen.getByText("已确认待执行")).toBeVisible();
+    expect(screen.getByRole("button", { name: "执行已确认计划" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "取消 Session" })).toBeEnabled();
+
+    rerender(
+      <PlanPanel
+        session={{ ...session, status: "COMPLETED" }}
+        busy={false}
+        onExecute={execute}
+        onCancel={cancel}
+        onDelete={deleteSession}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "删除 Session" })).toBeEnabled();
+    expect(screen.queryByRole("button", { name: "执行已确认计划" })).not.toBeInTheDocument();
+  });
+
+  it("keeps cancel and delete controls available before a plan exists", () => {
+    const cancel = vi.fn();
+    const deleteSession = vi.fn();
+    const withoutPlan = { ...session, plan: null, contract: null, policy: null };
+    const { rerender } = render(
+      <PlanPanel
+        session={{ ...withoutPlan, status: "INPUT_RECEIVED" }}
+        busy={false}
+        onExecute={vi.fn()}
+        onCancel={cancel}
+        onDelete={deleteSession}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "取消 Session" })).toBeEnabled();
+
+    rerender(
+      <PlanPanel
+        session={{ ...withoutPlan, status: "FAILED" }}
+        busy={false}
+        onExecute={vi.fn()}
+        onCancel={cancel}
+        onDelete={deleteSession}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "删除 Session" })).toBeEnabled();
+  });
+
   it("shows explicit confirmation details and handles approve/reject", async () => {
     const approve = vi.fn();
     const reject = vi.fn();
@@ -207,10 +289,449 @@ describe("operation console components", () => {
     );
     expect(screen.getByRole("dialog", { name: "写操作确认" })).toBeVisible();
     expect(screen.getByText(/不访问真实网站/)).toBeVisible();
-    await userEvent.click(screen.getByRole("button", { name: "确认并执行" }));
+    await userEvent.click(screen.getByRole("button", { name: "确认计划" }));
     await userEvent.click(screen.getByRole("button", { name: "拒绝" }));
     expect(approve).toHaveBeenCalledOnce();
     expect(reject).toHaveBeenCalledOnce();
+  });
+
+  it("reports unsupported microphone access without an unhandled rejection", async () => {
+    const onError = vi.fn();
+    Object.defineProperty(navigator, "mediaDevices", { configurable: true, value: undefined });
+    render(
+      <InputPanel
+        config={{ ...config, asr_mode: "fixture" }}
+        text=""
+        email="demo@example.com"
+        inputKind="audio"
+        audioFile={null}
+        busy={false}
+        onTextChange={vi.fn()}
+        onEmailChange={vi.fn()}
+        onInputKindChange={vi.fn()}
+        onAudioFile={vi.fn()}
+        onError={onError}
+        onSubmit={vi.fn()}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "开始录音" }));
+    await waitFor(() => expect(onError).toHaveBeenCalledWith(
+      "MICROPHONE_UNSUPPORTED",
+      expect.any(String),
+    ));
+  });
+
+  it("reports microphone permission denial without leaking a rejection", async () => {
+    const onError = vi.fn();
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: {
+        getUserMedia: vi.fn().mockRejectedValue(
+          new DOMException("permission denied", "NotAllowedError"),
+        ),
+      },
+    });
+    vi.stubGlobal("MediaRecorder", class {});
+    render(
+      <InputPanel
+        config={{ ...config, asr_mode: "fixture" }}
+        text=""
+        email="demo@example.com"
+        inputKind="audio"
+        audioFile={null}
+        busy={false}
+        onTextChange={vi.fn()}
+        onEmailChange={vi.fn()}
+        onInputKindChange={vi.fn()}
+        onAudioFile={vi.fn()}
+        onError={onError}
+        onSubmit={vi.fn()}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "开始录音" }));
+    await waitFor(() => expect(onError).toHaveBeenCalledWith(
+      "MICROPHONE_PERMISSION_DENIED",
+      expect.any(String),
+    ));
+  });
+
+  it("stops acquired tracks when MediaRecorder construction fails", async () => {
+    const stop = vi.fn();
+    const onError = vi.fn();
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia: vi.fn().mockResolvedValue({ getTracks: () => [{ stop }] }) },
+    });
+    vi.stubGlobal("MediaRecorder", class {
+      constructor() { throw new Error("constructor failed"); }
+    });
+    render(
+      <InputPanel
+        config={{ ...config, asr_mode: "fixture" }}
+        text=""
+        email="demo@example.com"
+        inputKind="audio"
+        audioFile={null}
+        busy={false}
+        onTextChange={vi.fn()}
+        onEmailChange={vi.fn()}
+        onInputKindChange={vi.fn()}
+        onAudioFile={vi.fn()}
+        onError={onError}
+        onSubmit={vi.fn()}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "开始录音" }));
+    await waitFor(() => expect(onError).toHaveBeenCalledWith(
+      "MICROPHONE_START_FAILED",
+      expect.any(String),
+    ));
+    expect(stop).toHaveBeenCalledOnce();
+  });
+
+  it("stops every acquired track when MediaRecorder.start fails", async () => {
+    const stop = vi.fn();
+    const onError = vi.fn();
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia: vi.fn().mockResolvedValue({ getTracks: () => [{ stop }] }) },
+    });
+    vi.stubGlobal("MediaRecorder", class {
+      start() { throw new Error("start failed"); }
+      stop() {}
+    });
+    render(
+      <InputPanel
+        config={{ ...config, asr_mode: "fixture" }}
+        text=""
+        email="demo@example.com"
+        inputKind="audio"
+        audioFile={null}
+        busy={false}
+        onTextChange={vi.fn()}
+        onEmailChange={vi.fn()}
+        onInputKindChange={vi.fn()}
+        onAudioFile={vi.fn()}
+        onError={onError}
+        onSubmit={vi.fn()}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "开始录音" }));
+    await waitFor(() => expect(onError).toHaveBeenCalledWith(
+      "MICROPHONE_START_FAILED",
+      expect.any(String),
+    ));
+    expect(stop).toHaveBeenCalledOnce();
+  });
+
+  it("stops every active microphone track on unmount", async () => {
+    const stop = vi.fn();
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia: vi.fn().mockResolvedValue({ getTracks: () => [{ stop }] }) },
+    });
+    vi.stubGlobal("MediaRecorder", class {
+      ondataavailable: ((event: BlobEvent) => void) | null = null;
+      onstop: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      start() {}
+      stop() { this.onstop?.(); }
+    });
+    const { unmount } = render(
+      <InputPanel
+        config={{ ...config, asr_mode: "fixture" }}
+        text=""
+        email="demo@example.com"
+        inputKind="audio"
+        audioFile={null}
+        busy={false}
+        onTextChange={vi.fn()}
+        onEmailChange={vi.fn()}
+        onInputKindChange={vi.fn()}
+        onAudioFile={vi.fn()}
+        onError={vi.fn()}
+        onSubmit={vi.fn()}
+      />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "开始录音" }));
+
+    unmount();
+    expect(stop).toHaveBeenCalledOnce();
+  });
+
+  it("stops active tracks on recorder error", async () => {
+    const stop = vi.fn();
+    const onError = vi.fn();
+    let instance: { onerror: (() => void) | null } | null = null;
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia: vi.fn().mockResolvedValue({ getTracks: () => [{ stop }] }) },
+    });
+    vi.stubGlobal("MediaRecorder", class {
+      state = "recording";
+      ondataavailable: ((event: BlobEvent) => void) | null = null;
+      onstop: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      constructor() { instance = this; }
+      start() {}
+      stop() {}
+    });
+    render(
+      <InputPanel
+        config={{ ...config, asr_mode: "fixture" }}
+        text=""
+        email="demo@example.com"
+        inputKind="audio"
+        audioFile={null}
+        busy={false}
+        onTextChange={vi.fn()}
+        onEmailChange={vi.fn()}
+        onInputKindChange={vi.fn()}
+        onAudioFile={vi.fn()}
+        onError={onError}
+        onSubmit={vi.fn()}
+      />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "开始录音" }));
+
+    act(() => instance?.onerror?.());
+    expect(onError).toHaveBeenCalledWith("MICROPHONE_RECORDING_FAILED", expect.any(String));
+    expect(stop).toHaveBeenCalledOnce();
+  });
+
+  it("stops active tracks when switching away from audio input", async () => {
+    const stop = vi.fn();
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia: vi.fn().mockResolvedValue({ getTracks: () => [{ stop }] }) },
+    });
+    vi.stubGlobal("MediaRecorder", class {
+      state = "recording";
+      ondataavailable: ((event: BlobEvent) => void) | null = null;
+      onstop: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      start() {}
+      stop() { this.onstop?.(); }
+    });
+    const common = {
+      config: { ...config, asr_mode: "fixture" as const },
+      text: "",
+      email: "demo@example.com",
+      audioFile: null,
+      busy: false,
+      onTextChange: vi.fn(),
+      onEmailChange: vi.fn(),
+      onInputKindChange: vi.fn(),
+      onAudioFile: vi.fn(),
+      onError: vi.fn(),
+      onSubmit: vi.fn(),
+    };
+    const view = render(<InputPanel {...common} inputKind="audio" />);
+    await userEvent.click(screen.getByRole("button", { name: "开始录音" }));
+
+    view.rerender(<InputPanel {...common} inputKind="text" />);
+    expect(stop).toHaveBeenCalledOnce();
+  });
+
+  it("discards a microphone stream acquired after switching to text", async () => {
+    const stop = vi.fn();
+    const constructRecorder = vi.fn();
+    let resolveAcquisition!: (stream: MediaStream) => void;
+    const pending = new Promise<MediaStream>((resolve) => {
+      resolveAcquisition = resolve;
+    });
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia: vi.fn().mockReturnValue(pending) },
+    });
+    vi.stubGlobal("MediaRecorder", class {
+      constructor() { constructRecorder(); }
+      start() {}
+      stop() {}
+    });
+    const common = {
+      config: { ...config, asr_mode: "fixture" as const },
+      text: "",
+      email: "demo@example.com",
+      audioFile: null,
+      busy: false,
+      onTextChange: vi.fn(),
+      onEmailChange: vi.fn(),
+      onInputKindChange: vi.fn(),
+      onAudioFile: vi.fn(),
+      onError: vi.fn(),
+      onSubmit: vi.fn(),
+    };
+    const view = render(<InputPanel {...common} inputKind="audio" />);
+    await userEvent.click(screen.getByRole("button", { name: "开始录音" }));
+
+    view.rerender(<InputPanel {...common} inputKind="text" />);
+    resolveAcquisition({ getTracks: () => [{ stop }] } as unknown as MediaStream);
+
+    await waitFor(() => expect(stop).toHaveBeenCalledOnce());
+    expect(constructRecorder).not.toHaveBeenCalled();
+  });
+
+  it("coalesces repeated microphone clicks while acquisition is pending", async () => {
+    const getUserMedia = vi.fn().mockReturnValue(new Promise<MediaStream>(() => undefined));
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia },
+    });
+    vi.stubGlobal("MediaRecorder", class {});
+    render(
+      <InputPanel
+        config={{ ...config, asr_mode: "fixture" }}
+        text=""
+        email="demo@example.com"
+        inputKind="audio"
+        audioFile={null}
+        busy={false}
+        onTextChange={vi.fn()}
+        onEmailChange={vi.fn()}
+        onInputKindChange={vi.fn()}
+        onAudioFile={vi.fn()}
+        onError={vi.fn()}
+        onSubmit={vi.fn()}
+      />,
+    );
+    const start = screen.getByRole("button", { name: "开始录音" });
+
+    await userEvent.click(start);
+    await userEvent.click(start);
+
+    expect(getUserMedia).toHaveBeenCalledOnce();
+  });
+
+  it("stops a microphone stream acquired after unmount", async () => {
+    const stop = vi.fn();
+    let resolveAcquisition!: (stream: MediaStream) => void;
+    const pending = new Promise<MediaStream>((resolve) => {
+      resolveAcquisition = resolve;
+    });
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia: vi.fn().mockReturnValue(pending) },
+    });
+    vi.stubGlobal("MediaRecorder", class {});
+    const { unmount } = render(
+      <InputPanel
+        config={{ ...config, asr_mode: "fixture" }}
+        text=""
+        email="demo@example.com"
+        inputKind="audio"
+        audioFile={null}
+        busy={false}
+        onTextChange={vi.fn()}
+        onEmailChange={vi.fn()}
+        onInputKindChange={vi.fn()}
+        onAudioFile={vi.fn()}
+        onError={vi.fn()}
+        onSubmit={vi.fn()}
+      />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "开始录音" }));
+
+    unmount();
+    resolveAcquisition({ getTracks: () => [{ stop }] } as unknown as MediaStream);
+
+    await waitFor(() => expect(stop).toHaveBeenCalledOnce());
+  });
+
+  it("stops active tracks before replacing a recording with an uploaded file", async () => {
+    const stop = vi.fn();
+    const onAudioFile = vi.fn();
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia: vi.fn().mockResolvedValue({ getTracks: () => [{ stop }] }) },
+    });
+    vi.stubGlobal("MediaRecorder", class {
+      state = "recording";
+      ondataavailable: ((event: BlobEvent) => void) | null = null;
+      onstop: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      start() {}
+      stop() { this.onstop?.(); }
+    });
+    const { container } = render(
+      <InputPanel
+        config={{ ...config, asr_mode: "fixture" }}
+        text=""
+        email="demo@example.com"
+        inputKind="audio"
+        audioFile={null}
+        busy={false}
+        onTextChange={vi.fn()}
+        onEmailChange={vi.fn()}
+        onInputKindChange={vi.fn()}
+        onAudioFile={onAudioFile}
+        onError={vi.fn()}
+        onSubmit={vi.fn()}
+      />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "开始录音" }));
+
+    const replacement = new File(["audio"], "replacement.webm", { type: "audio/webm" });
+    fireEvent.change(container.querySelector('input[type="file"]') as HTMLInputElement, {
+      target: { files: [replacement] },
+    });
+    expect(stop).toHaveBeenCalledOnce();
+    expect(onAudioFile).toHaveBeenCalledWith(replacement);
+  });
+
+  it("does not let a delayed recorder stop overwrite an uploaded replacement", async () => {
+    const stop = vi.fn();
+    const onAudioFile = vi.fn();
+    let instance: {
+      ondataavailable: ((event: BlobEvent) => void) | null;
+      onstop: (() => void) | null;
+    } | null = null;
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia: vi.fn().mockResolvedValue({ getTracks: () => [{ stop }] }) },
+    });
+    vi.stubGlobal("MediaRecorder", class {
+      state = "recording";
+      ondataavailable: ((event: BlobEvent) => void) | null = null;
+      onstop: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      constructor() { instance = this; }
+      start() {
+        this.ondataavailable?.({ data: new Blob(["old-recording"]) } as BlobEvent);
+      }
+      stop() {}
+    });
+    const { container } = render(
+      <InputPanel
+        config={{ ...config, asr_mode: "fixture" }}
+        text=""
+        email="demo@example.com"
+        inputKind="audio"
+        audioFile={null}
+        busy={false}
+        onTextChange={vi.fn()}
+        onEmailChange={vi.fn()}
+        onInputKindChange={vi.fn()}
+        onAudioFile={onAudioFile}
+        onError={vi.fn()}
+        onSubmit={vi.fn()}
+      />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "开始录音" }));
+    const replacement = new File(["replacement"], "replacement.webm", { type: "audio/webm" });
+    fireEvent.change(container.querySelector('input[type="file"]') as HTMLInputElement, {
+      target: { files: [replacement] },
+    });
+
+    act(() => instance?.onstop?.());
+
+    expect(stop).toHaveBeenCalledOnce();
+    expect(onAudioFile).toHaveBeenCalledOnce();
+    expect(onAudioFile).toHaveBeenLastCalledWith(replacement);
   });
 
   it("renders sequenced timeline and verifier pass text independent of color", () => {

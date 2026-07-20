@@ -54,6 +54,9 @@ describe("App", () => {
     expect(screen.getByRole("heading", { name: "输入" })).toBeVisible();
     expect(screen.getByRole("heading", { name: "Session History" })).toBeVisible();
     expect(screen.getByText(/受控 fixture/)).toBeVisible();
+    expect(screen.getByText(
+      "Session、事件和截图仅保存在本机 SQLite / var/demo；删除 Session 会删除对应记录和截图。原始音频仅临时存放；confirmation challenge 仅保存在当前 tab 的 sessionStorage，不使用 localStorage。",
+    )).toBeVisible();
 
     await userEvent.clear(screen.getByLabelText("中文指令"));
     await userEvent.type(screen.getByLabelText("中文指令"), "任意输入");

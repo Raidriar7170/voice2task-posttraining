@@ -16,7 +16,7 @@ extract page information, clarify, or refuse a risky action.
 
 ## Controlled Browser Demo MVP
 
-The repository now includes an optional, verifiable controlled Browser Agent demo for a Chinese voice entry point: `fixture inference + disabled ASR + localhost sandbox execution`. It reuses `BrowserTaskContract V1` and demonstrates six public scenarios through static capabilities, human confirmation, Playwright exact-origin isolation, and deterministic verification.
+The repository now includes an optional, verifiable controlled Browser Agent demo for a Chinese voice entry point: `fixture inference + disabled ASR + localhost sandbox execution`. It reuses `BrowserTaskContract V1` and demonstrates six public scenarios through a `202 Accepted` background lifecycle, static capabilities, a recoverable one-time challenge, separate confirm/execute steps, Playwright exact-origin isolation, and independent action/DOM evidence.
 
 ```bash
 python -m pip install -e '.[demo,dev]'

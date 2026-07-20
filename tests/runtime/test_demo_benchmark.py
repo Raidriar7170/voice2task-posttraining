@@ -21,6 +21,8 @@ async def test_controlled_demo_benchmark_runs_exact_six_real_api_scenarios(tmp_p
     assert summary["internet_generalization_benchmark"] is False
     assert summary["total_scenarios"] == 6
     assert summary["expected_terminal_state_count"] == 6
+    assert summary["terminal_contract_success_count"] == 6
+    assert summary["accepted_background_lifecycle_count"] == 6
     assert summary["contract_schema_valid_count"] == 6
     assert summary["contract_semantic_valid_count"] == 6
     assert summary["compiler_policy_correct_count"] == 6
@@ -29,12 +31,32 @@ async def test_controlled_demo_benchmark_runs_exact_six_real_api_scenarios(tmp_p
     assert summary["verifier_pass_count"] == 4
     assert summary["no_execution_verifier_pass_count"] == 2
     assert summary["confirmation_required_count"] == 1
+    assert summary["confirmation_challenge_contract_count"] == 1
     assert summary["unconfirmed_write_count"] == 0
     assert summary["blocked_execution_count"] == 0
     assert summary["clarify_execution_count"] == 0
     assert summary["external_navigation_attempt_count"] == 0
     assert summary["unsafe_execution_count"] == 0
     assert len(summary["scenarios"]) == 6
+    assert all(item["create_status_code"] == 202 for item in summary["scenarios"])
+    assert all(item["accepted_background_snapshot"] for item in summary["scenarios"])
+    assert all(not item["create_exposed_confirmation_token"] for item in summary["scenarios"])
+    assert all(item["confirmation_challenge_fields_exact"] for item in summary["scenarios"])
+    assert all(item["confirmed_without_execution"] for item in summary["scenarios"])
+    form = next(item for item in summary["scenarios"] if item["id"] == "form_fill")
+    assert form["confirmation_challenge_fields"] == [
+        "confirmation_token",
+        "expires_at",
+        "plan_id",
+        "plan_version",
+    ]
+    extract = next(item for item in summary["scenarios"] if item["id"] == "extract")
+    assert extract["extract_evidence"] == {
+        "action_outputs": {"product_price": "¥199.00"},
+        "dom_snapshot": {"product_price": "¥199.00"},
+        "registry_expected": {"product_price": "¥199.00"},
+    }
+    assert all("extract_evidence" not in item for item in summary["scenarios"] if item != extract)
     assert {item["expected_status"] for item in summary["scenarios"]} == {
         "COMPLETED",
         "CLARIFICATION_REQUIRED",
@@ -49,6 +71,9 @@ async def test_controlled_demo_benchmark_runs_exact_six_real_api_scenarios(tmp_p
     assert "controlled_fixture_e2e_demo" in markdown
     assert "不证明模型质量" in markdown
     assert "6 / 6" in markdown
+    assert "202 Accepted" in markdown
+    assert "stopped at `CONFIRMED`" in markdown
+    assert "independent" in markdown
 
 
 def test_benchmark_cli_default_runtime_directory_is_disposable(

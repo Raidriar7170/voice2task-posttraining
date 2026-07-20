@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import AsyncIterator, Awaitable, Callable
 from datetime import datetime, timezone
 from pathlib import Path
+from time import monotonic, sleep
 from uuid import uuid4
 
 import pytest
@@ -14,6 +15,7 @@ from voice2task.runtime.models import (
     ArtifactRecord,
     BrowserTaskContractPayload,
     EventType,
+    ExecutionEvidence,
     ExecutionOutcome,
     ExecutionPlan,
     SessionContext,
@@ -40,20 +42,22 @@ class FakeExecutor:
     ) -> ExecutionOutcome:
         if plan.requires_confirmation and not confirmation_consumed:
             raise AssertionError("orchestrator bypassed confirmation")
-        values: dict[str, str]
+        action_outputs: dict[str, str] = {}
+        dom_snapshot: dict[str, str]
         path: str
         if plan.capability_id == "demo_search":
             query = str(contract.slots["query"])
-            values = {"query_input": query, "results": f"受控结果：{query}"}
+            dom_snapshot = {"query_input": query, "results": f"受控结果：{query}"}
             path = "/sandbox/search"
         elif plan.capability_id == "demo_help":
-            values = {"heading": "Voice2Task 帮助中心"}
+            dom_snapshot = {"heading": "Voice2Task 帮助中心"}
             path = "/sandbox/help"
         elif plan.capability_id == "demo_product":
-            values = {"product_price": "¥199.00", "product_price_dom": "¥199.00"}
+            action_outputs = {"product_price": "¥199.00"}
+            dom_snapshot = {"product_price": "¥199.00"}
             path = "/sandbox/product"
         elif plan.capability_id == "demo_profile_form":
-            values = {"email_input": context.profile.email}
+            dom_snapshot = {"email_input": context.profile.email}
             path = "/sandbox/profile"
         else:
             raise AssertionError("fake executor received a non-executable plan")
@@ -97,7 +101,10 @@ class FakeExecutor:
             browser_context_created=True,
             action_count=len(plan.actions),
             final_url_path=path,
-            values=values,
+            evidence=ExecutionEvidence(
+                action_outputs=action_outputs,
+                dom_snapshot=dom_snapshot,
+            ),
             screenshots=[artifact_id],
             elapsed_ms=4,
         )
@@ -146,8 +153,57 @@ def _create(client: TestClient, text: str, email: str = "demo@example.com") -> d
         "/api/sessions",
         json={"input_kind": "text", "text": text, "profile": {"email": email}},
     )
-    assert response.status_code == 201, response.text
-    return response.json()
+    assert response.status_code == 202, response.text
+    payload = response.json()
+    assert payload["session"]["status"] == "INPUT_RECEIVED"
+    assert "confirmation_token" not in payload
+    payload["session"] = _wait_for_session(
+        client,
+        str(payload["session_id"]),
+        {
+            "PLAN_READY",
+            "AWAITING_CONFIRMATION",
+            "CLARIFICATION_REQUIRED",
+            "BLOCKED",
+            "FAILED",
+        },
+    )
+    return payload
+
+
+def _wait_for_session(
+    client: TestClient,
+    session_id: str,
+    statuses: set[str],
+    *,
+    timeout: float = 2.0,
+) -> dict[str, object]:
+    deadline = monotonic() + timeout
+    while monotonic() < deadline:
+        response = client.get(f"/api/sessions/{session_id}")
+        assert response.status_code == 200, response.text
+        session = response.json()["session"]
+        plan = session.get("plan")
+        if (
+            session["status"] == "PLAN_READY"
+            and isinstance(plan, dict)
+            and plan.get("requires_confirmation") is True
+        ):
+            sleep(0.01)
+            continue
+        if session["status"] in statuses:
+            if client.app.state.services.task_registry.is_active(session_id):
+                sleep(0.01)
+                continue
+            return session
+        sleep(0.01)
+    pytest.fail(f"session {session_id} did not reach one of {sorted(statuses)}")
+
+
+def _challenge(client: TestClient, session_id: str) -> str:
+    response = client.post(f"/api/sessions/{session_id}/confirmation-challenge")
+    assert response.status_code == 200, response.text
+    return str(response.json()["confirmation_token"])
 
 
 def test_health_public_config_runtime_schemas_and_openapi_are_public_safe(
@@ -167,6 +223,8 @@ def test_health_public_config_runtime_schemas_and_openapi_are_public_safe(
     }
     assert "BrowserTaskContractPayload" in schemas.json()["schemas"]
     assert "ExecutionPlan" in schemas.json()["schemas"]
+    assert "ExecutionEvidence" in schemas.json()["schemas"]
+    assert "ExecutionOutcome" in schemas.json()["schemas"]
     combined = repr([config.json(), schemas.json(), openapi.json()])
     assert "/Users/" not in combined
     assert "confirmation_token_hash" not in combined
@@ -198,7 +256,7 @@ def test_text_search_create_execute_history_artifact_and_delete(api_client: Test
     assert isinstance(session, dict)
     assert session["status"] == "PLAN_READY"
     assert session["inference_mode"] == "fixture"
-    assert created["confirmation_token"] is None
+    assert "confirmation_token" not in created
 
     execute = api_client.post(f"/api/sessions/{session_id}/execute")
     assert execute.status_code == 200, execute.text
@@ -228,10 +286,73 @@ def test_text_search_create_execute_history_artifact_and_delete(api_client: Test
     assert api_client.get(f"/api/sessions/{session_id}/artifacts/{artifact_id}").status_code == 404
 
 
+def test_artifact_unlink_failure_keeps_session_retryable(
+    api_client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    created = _create(api_client, "帮我搜索北京明天的天气")
+    session_id = str(created["session_id"])
+    completed = api_client.post(f"/api/sessions/{session_id}/execute").json()["session"]
+    artifact_id = str(completed["execution"]["screenshots"][0])
+    artifact_path = api_client.app.state.services.config.artifact_dir / f"{artifact_id}.png"
+    original_unlink = Path.unlink
+
+    def fail_target_unlink(path: Path, *args: object, **kwargs: object) -> None:
+        if path == artifact_path:
+            raise OSError("private filesystem failure /Users/example")
+        original_unlink(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "unlink", fail_target_unlink)
+    failed = api_client.delete(f"/api/sessions/{session_id}")
+
+    assert failed.status_code == 500
+    assert failed.json() == {
+        "error": {
+            "code": "ARTIFACT_DELETE_FAILED",
+            "message": "Local session artifacts could not be removed.",
+            "retryable": True,
+        }
+    }
+    assert api_client.get(f"/api/sessions/{session_id}").status_code == 200
+    assert api_client.get(
+        f"/api/sessions/{session_id}/artifacts/{artifact_id}"
+    ).status_code == 200
+
+    monkeypatch.setattr(Path, "unlink", original_unlink)
+    assert api_client.delete(f"/api/sessions/{session_id}").status_code == 204
+    assert api_client.get(f"/api/sessions/{session_id}").status_code == 404
+
+
+def test_extract_evidence_is_preserved_across_create_execute_get_and_list(
+    api_client: TestClient,
+) -> None:
+    created = _create(api_client, "帮我提取这个页面上的商品价格")
+    session_id = str(created["session_id"])
+    assert created["session"]["execution"] is None
+
+    executed = api_client.post(f"/api/sessions/{session_id}/execute")
+    assert executed.status_code == 200
+    expected_evidence = {
+        "action_outputs": {"product_price": "¥199.00"},
+        "dom_snapshot": {"product_price": "¥199.00"},
+    }
+    assert executed.json()["session"]["execution"]["evidence"] == expected_evidence
+
+    fetched = api_client.get(f"/api/sessions/{session_id}")
+    listed = api_client.get("/api/sessions")
+    assert fetched.status_code == 200
+    assert listed.status_code == 200
+    assert fetched.json()["session"]["execution"]["evidence"] == expected_evidence
+    listed_session = next(
+        item for item in listed.json()["sessions"] if item["id"] == session_id
+    )
+    assert listed_session["execution"]["evidence"] == expected_evidence
+
+
 def test_form_requires_bound_confirmation_then_executes_once(api_client: TestClient) -> None:
     created = _create(api_client, "把邮箱填进表单里，提交前先问我")
     session_id = str(created["session_id"])
-    token = created["confirmation_token"]
+    token = _challenge(api_client, session_id)
     assert isinstance(token, str) and token
     assert created["session"]["status"] == "AWAITING_CONFIRMATION"
     assert token not in repr(created["session"])
@@ -256,7 +377,10 @@ def test_form_requires_bound_confirmation_then_executes_once(api_client: TestCli
 
     executed = api_client.post(f"/api/sessions/{session_id}/execute")
     assert executed.status_code == 200
-    assert executed.json()["session"]["execution"]["values"]["email_input"] == "demo@example.com"
+    assert (
+        executed.json()["session"]["execution"]["evidence"]["dom_snapshot"]["email_input"]
+        == "demo@example.com"
+    )
     duplicate = api_client.post(f"/api/sessions/{session_id}/execute")
     assert duplicate.status_code == 409
     assert duplicate.json()["error"]["code"] == "EXECUTION_ALREADY_STARTED"
@@ -265,12 +389,13 @@ def test_form_requires_bound_confirmation_then_executes_once(api_client: TestCli
 def test_confirmation_reject_cancels_without_execution(api_client: TestClient) -> None:
     created = _create(api_client, "把邮箱填进表单里，提交前先问我")
     session_id = str(created["session_id"])
+    token = _challenge(api_client, session_id)
     rejected = api_client.post(
         f"/api/sessions/{session_id}/confirm",
         json={
             "decision": "reject",
             "plan_version": 1,
-            "confirmation_token": created["confirmation_token"],
+            "confirmation_token": token,
         },
     )
     assert rejected.status_code == 200
@@ -292,7 +417,7 @@ def test_no_execution_scenarios_end_terminal(
         "browser_context_created": False,
         "action_count": 0,
         "final_url_path": None,
-        "values": {},
+        "evidence": {"action_outputs": {}, "dom_snapshot": {}},
         "screenshots": [],
         "elapsed_ms": 0,
     }
@@ -316,12 +441,10 @@ def test_audio_disabled_and_fixture_transcript_edit_flow(tmp_path: Path) -> None
             data={"input_kind": "audio"},
             files={"audio": ("recording.wav", b"wave", "audio/wav")},
         )
-        assert response.status_code == 503
-        assert response.json()["error"] == {
-            "code": "ASR_PROVIDER_UNAVAILABLE",
-            "message": "ASR is disabled. Switch to text input or configure a provider.",
-            "retryable": False,
-        }
+        assert response.status_code == 202
+        session_id = str(response.json()["session_id"])
+        failed = _wait_for_session(disabled, session_id, {"FAILED"})
+        assert failed["error_code"] == "ASR_PROVIDER_UNAVAILABLE"
 
     fixture_config = _config(tmp_path / "fixture", asr_mode="fixture")
 
@@ -334,18 +457,21 @@ def test_audio_disabled_and_fixture_transcript_edit_flow(tmp_path: Path) -> None
             data={"input_kind": "audio", "fixture_id": "fixture-search"},
             files={"audio": ("../../recording.wav", b"wave", "audio/wav")},
         )
-        assert response.status_code == 201, response.text
+        assert response.status_code == 202, response.text
         payload = response.json()
         session_id = payload["session_id"]
-        assert payload["session"]["status"] == "TRANSCRIPT_READY"
+        assert payload["session"]["status"] == "INPUT_RECEIVED"
         assert payload["transcript_confirmation_required"] is True
+        transcript_ready = _wait_for_session(fixture, session_id, {"TRANSCRIPT_READY"})
+        assert transcript_ready["status"] == "TRANSCRIPT_READY"
 
         confirmed = fixture.post(
             f"/api/sessions/{session_id}/transcript",
             json={"transcript": "帮我搜索北京明天的天气", "plan_version": 1},
         )
-        assert confirmed.status_code == 200, confirmed.text
-        session = confirmed.json()["session"]
+        assert confirmed.status_code == 202, confirmed.text
+        assert confirmed.json()["session"]["status"] == "TRANSCRIPT_READY"
+        session = _wait_for_session(fixture, session_id, {"PLAN_READY"})
         assert session["status"] == "PLAN_READY"
         assert session["transcript_original"] == "帮我搜索北京明天的天气"
         assert session["transcript"] == "帮我搜索北京明天的天气"
@@ -371,9 +497,14 @@ def test_uniform_errors_cover_validation_media_type_not_found_and_fixture_provid
     assert unsupported_media.json()["error"]["code"] == "UNSUPPORTED_MEDIA_TYPE"
     assert missing.status_code == 404
     assert missing.json()["error"]["code"] == "SESSION_NOT_FOUND"
-    assert unknown_fixture.status_code == 422
-    assert unknown_fixture.json()["error"]["code"] == "FIXTURE_INPUT_UNSUPPORTED"
-    for response in (invalid, unsupported_media, missing, unknown_fixture):
+    assert unknown_fixture.status_code == 202
+    unknown_session = _wait_for_session(
+        api_client,
+        str(unknown_fixture.json()["session_id"]),
+        {"FAILED"},
+    )
+    assert unknown_session["error_code"] == "FIXTURE_INPUT_UNSUPPORTED"
+    for response in (invalid, unsupported_media, missing):
         error = response.json()["error"]
         assert set(error) == {"code", "message", "retryable"}
         assert "/Users/" not in repr(error)
@@ -407,3 +538,39 @@ def test_unexpected_executor_error_marks_session_failed_without_leaking_metadata
         assert "/Users/" not in serialized
         assert "hostname=" not in serialized
         assert "pid=" not in serialized
+
+
+def test_executor_preparation_failure_is_retryable_before_atomic_execution_claim(
+    tmp_path: Path,
+) -> None:
+    config = _config(tmp_path)
+    attempts = 0
+
+    def factory(event_sink: EventSink, artifact_sink: ArtifactSink) -> FakeExecutor:
+        nonlocal attempts
+        attempts += 1
+        if attempts == 1:
+            raise RuntimeError("private executor preparation detail")
+        return FakeExecutor(event_sink, artifact_sink, config.artifact_dir)
+
+    with TestClient(create_app(config=config, executor_factory=factory)) as client:
+        created = _create(client, "打开帮助中心")
+        session_id = str(created["session_id"])
+
+        failed_preparation = client.post(f"/api/sessions/{session_id}/execute")
+        assert failed_preparation.status_code == 500
+        assert failed_preparation.json()["error"] == {
+            "code": "EXECUTION_PREPARATION_FAILED",
+            "message": "The controlled browser executor could not be prepared safely.",
+            "retryable": False,
+        }
+        retryable = client.get(f"/api/sessions/{session_id}").json()["session"]
+        assert retryable["status"] == "PLAN_READY"
+        assert retryable["execution_claimed"] is False
+
+        executed = client.post(f"/api/sessions/{session_id}/execute")
+        assert executed.status_code == 200
+        assert executed.json()["session"]["status"] == "COMPLETED"
+        duplicate = client.post(f"/api/sessions/{session_id}/execute")
+        assert duplicate.status_code == 409
+        assert duplicate.json()["error"]["code"] == "EXECUTION_ALREADY_STARTED"

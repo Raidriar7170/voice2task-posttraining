@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import Any, cast
@@ -18,6 +18,7 @@ from apps.api.errors import APIError
 from apps.api.event_hub import BoundedEventHub, SlowSubscriberDropped
 from apps.api.models import ConfirmationRequest, TextSessionRequest, TranscriptRequest
 from apps.api.sandbox import router as sandbox_router
+from apps.api.task_registry import SessionTaskRegistry
 from voice2task.runtime.asr import (
     MAX_AUDIO_BYTES,
     ASRProvider,
@@ -25,6 +26,7 @@ from voice2task.runtime.asr import (
     DisabledASRProvider,
     FixtureASRProvider,
     HTTPASRProvider,
+    stage_uploaded_audio,
 )
 from voice2task.runtime.executor import BrowserManager, ExecutorError, SandboxExecutor
 from voice2task.runtime.inference import (
@@ -37,6 +39,8 @@ from voice2task.runtime.models import (
     BrowserTaskContractPayload,
     ExecutionAction,
     ExecutionEvent,
+    ExecutionEvidence,
+    ExecutionOutcome,
     ExecutionPlan,
     PolicyResult,
     Profile,
@@ -76,6 +80,7 @@ class DemoServices:
     store: SQLiteSessionStore
     hub: BoundedEventHub
     orchestrator: DemoOrchestrator
+    task_registry: SessionTaskRegistry
     browser_manager: BrowserManager | None
 
 
@@ -113,6 +118,8 @@ def create_app(
     *,
     config: DemoConfig | None = None,
     executor_factory: ExecutorFactory | None = None,
+    inference_provider: Voice2TaskInferenceProvider | None = None,
+    asr_provider: ASRProvider | None = None,
 ) -> FastAPI:
     resolved_config = config or DemoConfig.from_environment()
 
@@ -122,10 +129,9 @@ def create_app(
         await store.initialize()
         await store.recover_interrupted_sessions()
         hub = BoundedEventHub(queue_size=resolved_config.websocket_queue_size)
-        inference = _inference_provider(resolved_config)
-        if isinstance(inference, LocalPeftVoice2TaskProvider):
-            await inference.load()
-        asr = _asr_provider(resolved_config)
+        inference = inference_provider or _inference_provider(resolved_config)
+        asr = asr_provider or _asr_provider(resolved_config)
+        task_registry = SessionTaskRegistry()
         browser_manager: BrowserManager | None = None
         if executor_factory is None:
             browser_manager = BrowserManager()
@@ -161,11 +167,21 @@ def create_app(
             store=store,
             hub=hub,
             orchestrator=orchestrator,
+            task_registry=task_registry,
             browser_manager=browser_manager,
         )
         try:
             yield
         finally:
+            cancelled_session_ids = await task_registry.shutdown()
+            for session_id in cancelled_session_ids:
+                await orchestrator.fail_background_task(
+                    session_id,
+                    stage="shutdown",
+                    error_code="SERVER_SHUTDOWN_CANCELLED",
+                    message="Background session work was cancelled during server shutdown",
+                    transient_only=True,
+                )
             if browser_manager is not None:
                 await browser_manager.close()
 
@@ -178,6 +194,43 @@ def create_app(
 
     def services(request: Request) -> DemoServices:
         return cast(DemoServices, request.app.state.services)
+
+    async def schedule_background(
+        service: DemoServices,
+        session_id: str,
+        *,
+        stage: str,
+        work: Callable[[], Awaitable[object]],
+        on_done: Callable[[], None] | None = None,
+        on_registered: Callable[[], None] | None = None,
+    ) -> None:
+        async def run() -> None:
+            await work()
+
+        async def handle_error(exc: BaseException) -> None:
+            if isinstance(exc, ProviderError):
+                code = exc.code
+                message = exc.public_message
+            elif isinstance(exc, ASRProviderError):
+                code = exc.code
+                message = exc.public_message
+            else:
+                code = f"BACKGROUND_{stage.upper()}_FAILED"
+                message = f"Background {stage} work failed safely."
+            await service.orchestrator.fail_background_task(
+                session_id,
+                stage=stage,
+                error_code=code,
+                message=message,
+            )
+
+        await service.task_registry.start(
+            session_id,
+            run,
+            on_error=handle_error,
+            on_done=on_done,
+            on_registered=on_registered,
+        )
 
     @app.exception_handler(APIError)
     async def api_error_handler(_request: Request, exc: APIError) -> JSONResponse:
@@ -247,6 +300,8 @@ def create_app(
             BrowserTaskContractPayload,
             SessionContext,
             ExecutionAction,
+            ExecutionEvidence,
+            ExecutionOutcome,
             ExecutionPlan,
             PolicyResult,
             VerificationCheck,
@@ -255,7 +310,7 @@ def create_app(
         )
         return {"schemas": {model.__name__: model.model_json_schema() for model in models}}
 
-    @app.post("/api/sessions", status_code=201)
+    @app.post("/api/sessions", status_code=202)
     async def create_session(request: Request) -> dict[str, Any]:
         service = services(request)
         content_type = request.headers.get("content-type", "").lower()
@@ -264,16 +319,22 @@ def create_app(
                 request_model = TextSessionRequest.model_validate(await request.json())
             except (PydanticValidationError, ValueError) as exc:
                 raise APIError("VALIDATION_ERROR", "Request validation failed.", 422) from exc
-            session, token = await service.orchestrator.create_text_session(
+            session = await service.orchestrator.create_text_session(
                 text=request_model.text,
                 profile=request_model.profile,
             )
-            return {
+            response = {
                 "session_id": session.id,
                 "session": _session_payload(session),
-                "confirmation_token": token,
                 "transcript_confirmation_required": False,
             }
+            await schedule_background(
+                service,
+                session.id,
+                stage="inference",
+                work=lambda: service.orchestrator.process_text_session(session.id),
+            )
+            return response
         if content_type.startswith("multipart/form-data"):
             form = await request.form()
             if str(form.get("input_kind", "audio")) != "audio":
@@ -289,19 +350,48 @@ def create_app(
                 profile = Profile(email=str(form.get("profile_email", "demo@example.com")))
             except PydanticValidationError as exc:
                 raise APIError("VALIDATION_ERROR", "Profile validation failed.", 422) from exc
-            session = await service.orchestrator.create_audio_session(
-                content=content,
-                mime_type=upload.content_type or "application/octet-stream",
-                client_filename=upload.filename,
-                profile=profile,
-                fixture_id=str(form["fixture_id"]) if form.get("fixture_id") else None,
-            )
-            return {
-                "session_id": session.id,
-                "session": _session_payload(session),
-                "confirmation_token": None,
-                "transcript_confirmation_required": True,
-            }
+            try:
+                staged = stage_uploaded_audio(
+                    content=content,
+                    mime_type=upload.content_type or "application/octet-stream",
+                    client_filename=upload.filename,
+                    temp_dir=resolved_config.audio_temp_dir,
+                    fixture_id=str(form["fixture_id"]) if form.get("fixture_id") else None,
+                )
+            except ASRProviderError as exc:
+                raise APIError(
+                    exc.code,
+                    exc.public_message,
+                    _error_status(exc.code, 422),
+                    exc.retryable,
+                ) from exc
+            task_owns_staged_audio = False
+
+            def transfer_staged_audio_ownership() -> None:
+                nonlocal task_owns_staged_audio
+                task_owns_staged_audio = True
+
+            try:
+                session = await service.orchestrator.create_audio_session(
+                    profile=profile,
+                )
+                response = {
+                    "session_id": session.id,
+                    "session": _session_payload(session),
+                    "transcript_confirmation_required": True,
+                }
+                await schedule_background(
+                    service,
+                    session.id,
+                    stage="asr",
+                    work=lambda: service.orchestrator.process_audio_session(session.id, staged),
+                    on_done=lambda: staged.path.unlink(missing_ok=True),
+                    on_registered=transfer_staged_audio_ownership,
+                )
+                return response
+            finally:
+                if not task_owns_staged_audio:
+                    staged.path.unlink(missing_ok=True)
         raise APIError("UNSUPPORTED_MEDIA_TYPE", "Use application/json or multipart/form-data.", 415)
 
     @app.get("/api/sessions")
@@ -319,18 +409,43 @@ def create_app(
         events = await services(request).store.events_after(session_id, max(after_seq, 0))
         return {"events": [event.model_dump(mode="json") for event in events]}
 
-    @app.post("/api/sessions/{session_id}/transcript")
+    @app.post("/api/sessions/{session_id}/transcript", status_code=202)
     async def confirm_transcript(
         session_id: str,
         payload: TranscriptRequest,
         request: Request,
     ) -> dict[str, Any]:
-        session, token = await services(request).orchestrator.confirm_transcript(
+        service = services(request)
+        if service.task_registry.is_active(session_id):
+            raise SessionConflict("SESSION_TASK_ACTIVE")
+        session = await service.store.get_session(session_id)
+        if session.status is not SessionStatus.TRANSCRIPT_READY or session.input_kind != "audio":
+            raise SessionConflict("TRANSCRIPT_NOT_EDITABLE")
+        if session.plan_version != payload.plan_version:
+            raise SessionConflict("PLAN_VERSION_MISMATCH")
+        await schedule_background(
+            service,
             session_id,
-            transcript=payload.transcript,
-            plan_version=payload.plan_version,
+            stage="inference",
+            work=lambda: service.orchestrator.confirm_transcript(
+                session_id,
+                transcript=payload.transcript,
+                plan_version=payload.plan_version,
+            ),
         )
-        return {"session": _session_payload(session), "confirmation_token": token}
+        return {"session": _session_payload(session)}
+
+    @app.post("/api/sessions/{session_id}/confirmation-challenge")
+    async def confirmation_challenge(session_id: str, request: Request) -> dict[str, Any]:
+        token, expires_at, plan = await services(request).orchestrator.issue_confirmation_challenge(
+            session_id
+        )
+        return {
+            "confirmation_token": token,
+            "plan_id": plan.plan_id,
+            "plan_version": plan.plan_version,
+            "expires_at": expires_at.isoformat(),
+        }
 
     @app.post("/api/sessions/{session_id}/confirm")
     async def confirm_session(
@@ -348,12 +463,17 @@ def create_app(
 
     @app.post("/api/sessions/{session_id}/execute")
     async def execute_session(session_id: str, request: Request) -> dict[str, Any]:
-        session = await services(request).orchestrator.execute(session_id)
+        service = services(request)
+        if service.task_registry.is_active(session_id):
+            raise SessionConflict("SESSION_TASK_ACTIVE")
+        session = await service.orchestrator.execute(session_id)
         return {"session": _session_payload(session)}
 
     @app.post("/api/sessions/{session_id}/cancel")
     async def cancel_session(session_id: str, request: Request) -> dict[str, Any]:
-        session = await services(request).orchestrator.cancel(session_id)
+        service = services(request)
+        await service.task_registry.cancel(session_id)
+        session = await service.orchestrator.cancel(session_id)
         return {"session": _session_payload(session)}
 
     @app.get("/api/sessions/{session_id}/artifacts/{artifact_id}")
@@ -369,14 +489,25 @@ def create_app(
     async def delete_session(session_id: str, request: Request) -> Response:
         service = services(request)
         session = await service.store.get_session(session_id)
-        if session.status in {SessionStatus.EXECUTING, SessionStatus.VERIFYING}:
-            raise SessionConflict("EXECUTION_IN_PROGRESS")
+        if service.task_registry.is_active(session_id):
+            raise SessionConflict("SESSION_TASK_ACTIVE")
+        if session.status not in TERMINAL_STATUSES:
+            raise SessionConflict("SESSION_NOT_DELETABLE")
         artifacts = await service.store.list_artifacts(session_id)
-        await service.store.delete_session(session_id)
         for artifact in artifacts:
             candidate = service.config.artifact_dir / artifact.relative_path
-            if candidate.parent.resolve() == service.config.artifact_dir.resolve():
+            try:
+                if candidate.parent.resolve() != service.config.artifact_dir.resolve():
+                    raise OSError("artifact path escaped its configured directory")
                 candidate.unlink(missing_ok=True)
+            except OSError as exc:
+                raise APIError(
+                    "ARTIFACT_DELETE_FAILED",
+                    "Local session artifacts could not be removed.",
+                    500,
+                    retryable=True,
+                ) from exc
+        await service.store.delete_session(session_id)
         return Response(status_code=204)
 
     @app.websocket("/ws/sessions/{session_id}")

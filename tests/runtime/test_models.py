@@ -5,9 +5,11 @@ from datetime import datetime, timezone
 import pytest
 from pydantic import ValidationError
 
+from voice2task.runtime import models as runtime_models
 from voice2task.runtime.models import (
     BrowserTaskContractPayload,
     ExecutionAction,
+    ExecutionOutcome,
     SessionContext,
     sanitize_public_payload,
 )
@@ -59,6 +61,41 @@ def test_runtime_models_forbid_selector_and_extra_fields() -> None:
     schema_text = str(ExecutionAction.model_json_schema())
     assert "selector" not in schema_text
     assert "javascript" not in schema_text.lower()
+
+
+def test_execution_evidence_is_strict_and_replaces_shared_values() -> None:
+    evidence_type = getattr(runtime_models, "ExecutionEvidence", None)
+
+    assert evidence_type is not None, "ExecutionEvidence must be a public runtime model"
+    evidence = evidence_type(
+        action_outputs={"product_price": "¥198.00"},
+        dom_snapshot={"product_price": "¥199.00"},
+    )
+    outcome = ExecutionOutcome(
+        browser_context_created=True,
+        action_count=2,
+        evidence=evidence,
+    )
+
+    assert outcome.evidence.action_outputs == {"product_price": "¥198.00"}
+    assert outcome.evidence.dom_snapshot == {"product_price": "¥199.00"}
+    assert outcome.model_dump(mode="json")["evidence"] == {
+        "action_outputs": {"product_price": "¥198.00"},
+        "dom_snapshot": {"product_price": "¥199.00"},
+    }
+    assert "values" not in ExecutionOutcome.model_json_schema()["properties"]
+    with pytest.raises(ValidationError):
+        evidence_type(
+            action_outputs={},
+            dom_snapshot={},
+            values={"product_price": "¥199.00"},
+        )
+    with pytest.raises(ValidationError):
+        ExecutionOutcome(
+            browser_context_created=True,
+            action_count=2,
+            values={"product_price": "¥199.00"},
+        )
 
 
 @pytest.mark.parametrize("kind", ["login", "upload", "download", "script"])

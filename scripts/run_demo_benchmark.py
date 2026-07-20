@@ -96,6 +96,63 @@ SCENARIOS = (
     },
 )
 
+TERMINAL_STATUSES = {
+    "COMPLETED",
+    "BLOCKED",
+    "CLARIFICATION_REQUIRED",
+    "FAILED",
+    "CANCELLED",
+}
+
+
+async def _wait_for_session_status(
+    client: httpx.AsyncClient,
+    session_id: str,
+    expected_statuses: set[str],
+    *,
+    timeout_seconds: float = 10.0,
+) -> dict[str, Any]:
+    deadline = time.monotonic() + timeout_seconds
+    last_status = "UNKNOWN"
+    while time.monotonic() < deadline:
+        response = await client.get(f"/api/sessions/{session_id}")
+        response.raise_for_status()
+        session = response.json()["session"]
+        last_status = str(session["status"])
+        if last_status in expected_statuses:
+            return session
+        if last_status in TERMINAL_STATUSES:
+            raise RuntimeError(
+                f"session {session_id} reached unexpected terminal status {last_status}; "
+                f"expected one of {sorted(expected_statuses)}"
+            )
+        await asyncio.sleep(0.01)
+    raise TimeoutError(
+        f"session {session_id} remained {last_status}; expected one of "
+        f"{sorted(expected_statuses)} within {timeout_seconds:.1f}s"
+    )
+
+
+async def _execute_when_background_task_is_released(
+    client: httpx.AsyncClient,
+    session_id: str,
+    *,
+    timeout_seconds: float = 10.0,
+) -> httpx.Response:
+    deadline = time.monotonic() + timeout_seconds
+    while time.monotonic() < deadline:
+        response = await client.post(f"/api/sessions/{session_id}/execute")
+        if response.is_success:
+            return response
+        error = response.json().get("error", {})
+        if response.status_code != 409 or error.get("code") != "SESSION_TASK_ACTIVE":
+            response.raise_for_status()
+        await asyncio.sleep(0.01)
+    raise TimeoutError(
+        f"session {session_id} background task ownership was not released within "
+        f"{timeout_seconds:.1f}s"
+    )
+
 
 def _free_port() -> int:
     with socket.socket() as sock:
@@ -171,28 +228,79 @@ async def run_benchmark(*, output_dir: Path, work_dir: Path) -> dict[str, Any]:
                     },
                 )
                 create_response.raise_for_status()
+                if create_response.status_code != 202:
+                    raise RuntimeError(
+                        f"session create returned {create_response.status_code}, expected 202"
+                    )
                 created = create_response.json()
-                session = created["session"]
+                accepted_session = created["session"]
+                if "confirmation_token" in created:
+                    raise RuntimeError("session create exposed a confirmation token")
+                accepted_background_snapshot = (
+                    accepted_session["status"] == "INPUT_RECEIVED"
+                    and accepted_session["contract"] is None
+                    and accepted_session["plan"] is None
+                )
+                ready_statuses = (
+                    {"AWAITING_CONFIRMATION"}
+                    if scenario["confirmation_required"]
+                    else {"PLAN_READY"}
+                    if scenario["executable"]
+                    else {str(scenario["expected_status"])}
+                )
+                session = await _wait_for_session_status(
+                    client,
+                    created["session_id"],
+                    ready_statuses,
+                )
                 confirmation_before_write = True
+                confirmed_without_execution = True
+                challenge_fields_exact = True
+                challenge_response_fields: list[str] = []
                 execution_attempted = False
 
                 if scenario["confirmation_required"]:
                     confirmation_before_write = (
                         session["status"] == "AWAITING_CONFIRMATION" and session["execution"] is None
                     )
+                    challenge_response = await client.post(
+                        f"/api/sessions/{created['session_id']}/confirmation-challenge"
+                    )
+                    challenge_response.raise_for_status()
+                    challenge = challenge_response.json()
+                    challenge_response_fields = sorted(challenge)
+                    challenge_fields_exact = set(challenge) == {
+                        "confirmation_token",
+                        "plan_id",
+                        "plan_version",
+                        "expires_at",
+                    }
+                    if not challenge_fields_exact:
+                        raise RuntimeError(
+                            "confirmation challenge fields differ from the public contract"
+                        )
                     confirm_response = await client.post(
                         f"/api/sessions/{created['session_id']}/confirm",
                         json={
                             "decision": "approve",
-                            "plan_version": session["plan_version"],
-                            "confirmation_token": created["confirmation_token"],
+                            "plan_version": challenge["plan_version"],
+                            "confirmation_token": challenge["confirmation_token"],
                         },
                     )
                     confirm_response.raise_for_status()
+                    confirmed = confirm_response.json()["session"]
+                    confirmed_without_execution = (
+                        confirmed["status"] == "CONFIRMED"
+                        and confirmed["execution"] is None
+                        and not confirmed["execution_claimed"]
+                    )
+                    if not confirmed_without_execution:
+                        raise RuntimeError("confirmation executed or claimed work before /execute")
                 if scenario["executable"]:
                     execution_attempted = True
-                    execute_response = await client.post(
-                        f"/api/sessions/{created['session_id']}/execute"
+                    execute_response = await _execute_when_background_task_is_released(
+                        client,
+                        created["session_id"],
                     )
                     execute_response.raise_for_status()
                     session = execute_response.json()["session"]
@@ -269,6 +377,9 @@ async def run_benchmark(*, output_dir: Path, work_dir: Path) -> dict[str, Any]:
                         "expected_status": scenario["expected_status"],
                         "observed_status": session["status"],
                         "terminal_state_correct": session["status"] == scenario["expected_status"],
+                        "create_status_code": create_response.status_code,
+                        "accepted_background_snapshot": accepted_background_snapshot,
+                        "create_exposed_confirmation_token": "confirmation_token" in created,
                         "contract_schema_valid": bool(validation["strict_schema_valid"]),
                         "contract_semantic_valid": bool(validation["semantic_valid"]),
                         "compiler_policy_correct": policy_correct,
@@ -282,6 +393,9 @@ async def run_benchmark(*, output_dir: Path, work_dir: Path) -> dict[str, Any]:
                         ),
                         "confirmation_required": bool(scenario["confirmation_required"]),
                         "confirmation_before_write": confirmation_before_write,
+                        "confirmation_challenge_fields_exact": challenge_fields_exact,
+                        "confirmation_challenge_fields": challenge_response_fields,
+                        "confirmed_without_execution": confirmed_without_execution,
                         "browser_context_created": bool(session["execution"]["browser_context_created"]),
                         "action_count": int(session["execution"]["action_count"]),
                         "external_navigation_attempt_count": external_navigation_attempts,
@@ -290,6 +404,13 @@ async def run_benchmark(*, output_dir: Path, work_dir: Path) -> dict[str, Any]:
                         "stage_latency_ms": stage_latency,
                     }
                 )
+                if scenario["id"] == "extract":
+                    scenario_results[-1]["extract_evidence"] = {
+                        **session["execution"]["evidence"],
+                        "registry_expected": dict(
+                            CAPABILITY_REGISTRY["demo_product"].expected_values or {}
+                        ),
+                    }
     finally:
         server.should_exit = True
         await server_task
@@ -308,6 +429,16 @@ async def run_benchmark(*, output_dir: Path, work_dir: Path) -> dict[str, Any]:
         "execution_mode": "localhost_sandbox",
         "total_scenarios": len(scenario_results),
         "expected_terminal_state_count": sum(item["terminal_state_correct"] for item in scenario_results),
+        "terminal_contract_success_count": sum(
+            item["terminal_state_correct"]
+            and item["contract_schema_valid"]
+            and item["contract_semantic_valid"]
+            for item in scenario_results
+        ),
+        "accepted_background_lifecycle_count": sum(
+            item["create_status_code"] == 202 and item["accepted_background_snapshot"]
+            for item in scenario_results
+        ),
         "contract_schema_valid_count": sum(item["contract_schema_valid"] for item in scenario_results),
         "contract_semantic_valid_count": sum(item["contract_semantic_valid"] for item in scenario_results),
         "compiler_policy_correct_count": sum(item["compiler_policy_correct"] for item in scenario_results),
@@ -320,6 +451,12 @@ async def run_benchmark(*, output_dir: Path, work_dir: Path) -> dict[str, Any]:
         "confirmation_required_count": sum(item["confirmation_required"] for item in scenario_results),
         "confirmation_before_write_compliance_count": sum(
             item["confirmation_before_write"] for item in scenario_results if item["confirmation_required"]
+        ),
+        "confirmation_challenge_contract_count": sum(
+            item["confirmation_challenge_fields_exact"]
+            and item["confirmed_without_execution"]
+            for item in scenario_results
+            if item["confirmation_required"]
         ),
         "unconfirmed_write_count": sum(
             not item["confirmation_before_write"] for item in scenario_results if item["confirmation_required"]
@@ -352,12 +489,15 @@ async def run_benchmark(*, output_dir: Path, work_dir: Path) -> dict[str, Any]:
     }
     required_counts = (
         summary["expected_terminal_state_count"] == 6
+        and summary["terminal_contract_success_count"] == 6
+        and summary["accepted_background_lifecycle_count"] == 6
         and summary["contract_schema_valid_count"] == 6
         and summary["contract_semantic_valid_count"] == 6
         and summary["compiler_policy_correct_count"] == 6
         and summary["execution_success_count"] == 4
         and summary["verifier_pass_count"] == 4
         and summary["no_execution_verifier_pass_count"] == 2
+        and summary["confirmation_challenge_contract_count"] == 1
         and summary["unconfirmed_write_count"] == 0
         and summary["blocked_execution_count"] == 0
         and summary["clarify_execution_count"] == 0
@@ -367,12 +507,15 @@ async def run_benchmark(*, output_dir: Path, work_dir: Path) -> dict[str, Any]:
     if not required_counts:
         diagnostic_keys = (
             "expected_terminal_state_count",
+            "terminal_contract_success_count",
+            "accepted_background_lifecycle_count",
             "contract_schema_valid_count",
             "contract_semantic_valid_count",
             "compiler_policy_correct_count",
             "execution_success_count",
             "verifier_pass_count",
             "no_execution_verifier_pass_count",
+            "confirmation_challenge_contract_count",
             "unconfirmed_write_count",
             "blocked_execution_count",
             "clarify_execution_count",
@@ -397,9 +540,16 @@ async def run_benchmark(*, output_dir: Path, work_dir: Path) -> dict[str, Any]:
     markdown = f"""# Voice2Task Controlled Demo Benchmark
 
 - `benchmark_kind`: `controlled_fixture_e2e_demo`
+- Claim flags: `model_quality_benchmark=false`; `real_asr_benchmark=false`;
+  `internet_generalization_benchmark=false`.
 - Inference: `fixture`; ASR: `disabled`; execution: exact-origin localhost sandbox.
 - Result: **{expected_count} / 6** expected terminal states; **{verifier_count} / 4** executable verifier
   passes; **{no_execution_verifier_count} / 2** no-execution verifier passes.
+- Contract/compiler: **{summary['terminal_contract_success_count']} / 6** terminal + strict contract;
+  **{summary['compiler_policy_correct_count']} / 6** compiler/policy. All six creates returned
+  `202 Accepted` with the initial background-work snapshot.
+- Confirmation: challenge fields were exact and the write plan stopped at `CONFIRMED` before a
+  separate `/execute` request (`{summary['confirmation_challenge_contract_count']} / 1`).
 - Safety: unconfirmed writes `{summary['unconfirmed_write_count']}`, blocked executions
   `{summary['blocked_execution_count']}`, clarify executions `{summary['clarify_execution_count']}`,
   external navigation `{summary['external_navigation_attempt_count']}`, unsafe execution
@@ -412,6 +562,9 @@ async def run_benchmark(*, output_dir: Path, work_dir: Path) -> dict[str, Any]:
 {rows}
 
 Latency p50/p95: `{summary['latency_ms']['total_p50']}` / `{summary['latency_ms']['total_p95']}` ms.
+
+Extract evidence is serialized only for the Extract scenario as independent
+`action_outputs`, fresh `dom_snapshot`, and registry-owned expected values in the JSON report.
 """
     (output_dir / "summary.md").write_text(markdown, encoding="utf-8")
     return summary

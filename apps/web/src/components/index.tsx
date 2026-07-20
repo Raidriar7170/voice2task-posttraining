@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import type {
   ConnectionState,
@@ -8,11 +8,18 @@ import type {
 } from "../types";
 
 const STATUS_LABELS: Record<string, string> = {
+  CREATED: "正在创建 Session",
+  INPUT_RECEIVED: "输入已接收",
+  TRANSCRIBING: "正在转写",
+  INFERRING: "正在推理",
+  CONTRACT_READY: "合约已生成，正在编译计划",
+  CONTRACT_REJECTED: "合约已拒绝",
   PLAN_READY: "计划待执行",
+  POLICY_BLOCKED: "策略已阻止",
   AWAITING_CONFIRMATION: "等待人工确认",
-  CONFIRMED: "已确认",
-  EXECUTING: "执行中",
-  VERIFYING: "验证中",
+  CONFIRMED: "已确认待执行",
+  EXECUTING: "正在执行",
+  VERIFYING: "正在验证",
   COMPLETED: "已完成",
   BLOCKED: "已阻止",
   CLARIFICATION_REQUIRED: "需要澄清",
@@ -85,6 +92,7 @@ export function InputPanel({
   onEmailChange,
   onInputKindChange,
   onAudioFile,
+  onError,
   onSubmit,
 }: {
   config: PublicConfig;
@@ -97,32 +105,145 @@ export function InputPanel({
   onEmailChange: (value: string) => void;
   onInputKindChange: (value: "text" | "audio") => void;
   onAudioFile: (file: File | null) => void;
+  onError: (code: string, message: string) => void;
   onSubmit: () => void;
 }) {
   const fileInput = useRef<HTMLInputElement>(null);
   const recorder = useRef<MediaRecorder | null>(null);
+  const stream = useRef<MediaStream | null>(null);
+  const mounted = useRef(true);
+  const acquisitionGeneration = useRef(0);
+  const acquisitionPending = useRef(false);
+  const inputKindRef = useRef(inputKind);
+  const discardOnStop = useRef(false);
+  const errorHandler = useRef(onError);
   const chunks = useRef<Blob[]>([]);
   const [recording, setRecording] = useState(false);
   const audioDisabled = config.asr_mode === "disabled";
+  errorHandler.current = onError;
+  inputKindRef.current = inputKind;
+
+  const stopTracks = useCallback(() => {
+    stream.current?.getTracks().forEach((track) => track.stop());
+    stream.current = null;
+  }, []);
+
+  const stopRecording = useCallback((discard = false) => {
+    acquisitionGeneration.current += 1;
+    acquisitionPending.current = false;
+    if (discard) discardOnStop.current = true;
+    const active = recorder.current;
+    recorder.current = null;
+    try {
+      if (active && active.state !== "inactive") active.stop();
+    } catch {
+      if (mounted.current) {
+        errorHandler.current(
+          "MICROPHONE_STOP_FAILED",
+          "录音停止失败；已释放 microphone tracks。",
+        );
+      }
+    } finally {
+      stopTracks();
+      if (mounted.current) setRecording(false);
+    }
+  }, [stopTracks]);
+
+  useEffect(() => {
+    if (inputKind !== "audio") stopRecording(true);
+  }, [inputKind, stopRecording]);
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      stopRecording(true);
+    };
+  }, [stopRecording]);
 
   const toggleRecording = async () => {
     if (recording) {
-      recorder.current?.stop();
-      setRecording(false);
+      stopRecording();
       return;
     }
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    chunks.current = [];
-    const active = new MediaRecorder(stream, { mimeType: "audio/webm" });
-    recorder.current = active;
-    active.ondataavailable = (event) => chunks.current.push(event.data);
-    active.onstop = () => {
-      const file = new File(chunks.current, "voice2task-recording.webm", { type: "audio/webm" });
-      onAudioFile(file);
-      stream.getTracks().forEach((track) => track.stop());
-    };
-    active.start();
-    setRecording(true);
+    if (acquisitionPending.current) return;
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      onError("MICROPHONE_UNSUPPORTED", "当前浏览器不支持 microphone recording。");
+      return;
+    }
+    const generation = acquisitionGeneration.current + 1;
+    acquisitionGeneration.current = generation;
+    acquisitionPending.current = true;
+    let acquired: MediaStream | null = null;
+    try {
+      acquired = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (
+        !mounted.current
+        || inputKindRef.current !== "audio"
+        || generation !== acquisitionGeneration.current
+      ) {
+        acquired.getTracks().forEach((track) => track.stop());
+        return;
+      }
+      stream.current = acquired;
+      chunks.current = [];
+      discardOnStop.current = false;
+      const active = new MediaRecorder(acquired, { mimeType: "audio/webm" });
+      recorder.current = active;
+      active.ondataavailable = (event) => chunks.current.push(event.data);
+      active.onstop = () => {
+        const discard = discardOnStop.current;
+        discardOnStop.current = false;
+        if (!discard && mounted.current && chunks.current.length > 0) {
+          onAudioFile(
+            new File(chunks.current, "voice2task-recording.webm", { type: "audio/webm" }),
+          );
+        }
+        chunks.current = [];
+        recorder.current = null;
+        stopTracks();
+        if (mounted.current) setRecording(false);
+      };
+      active.onerror = () => {
+        discardOnStop.current = false;
+        chunks.current = [];
+        if (mounted.current) {
+          errorHandler.current(
+            "MICROPHONE_RECORDING_FAILED",
+            "录音失败；已释放 microphone tracks。",
+          );
+        }
+        recorder.current = null;
+        stopTracks();
+        if (mounted.current) setRecording(false);
+      };
+      active.start();
+      if (recorder.current === active) setRecording(true);
+    } catch (error) {
+      if (generation !== acquisitionGeneration.current || !mounted.current) {
+        if (acquired !== null && stream.current !== acquired) {
+          acquired.getTracks().forEach((track) => track.stop());
+        }
+        return;
+      }
+      discardOnStop.current = false;
+      chunks.current = [];
+      recorder.current = null;
+      stopTracks();
+      if (!mounted.current) return;
+      setRecording(false);
+      const code = error instanceof DOMException && error.name === "NotAllowedError"
+        ? "MICROPHONE_PERMISSION_DENIED"
+        : "MICROPHONE_START_FAILED";
+      const message = code === "MICROPHONE_PERMISSION_DENIED"
+        ? "Microphone permission denied；可改用音频上传或文本输入。"
+        : "Microphone recording 启动失败；可改用音频上传或文本输入。";
+      errorHandler.current(code, message);
+    } finally {
+      if (generation === acquisitionGeneration.current) {
+        acquisitionPending.current = false;
+      }
+    }
   };
 
   return (
@@ -189,13 +310,16 @@ export function InputPanel({
             type="file"
             disabled={audioDisabled}
             accept="audio/wav,audio/webm,audio/mpeg,.wav,.webm,.mp3"
-            onChange={(event) => onAudioFile(event.target.files?.[0] ?? null)}
+            onChange={(event) => {
+              stopRecording(true);
+              onAudioFile(event.target.files?.[0] ?? null);
+            }}
           />
           <div className="button-row">
             <button type="button" className="secondary-button" disabled={audioDisabled} onClick={() => fileInput.current?.click()}>
               上传音频
             </button>
-            <button type="button" className="secondary-button" disabled={audioDisabled} onClick={toggleRecording}>
+            <button type="button" className="secondary-button" disabled={audioDisabled} onClick={() => void toggleRecording()}>
               {recording ? "停止录音" : "开始录音"}
             </button>
           </div>
@@ -304,13 +428,34 @@ export function PlanPanel({
   session,
   busy,
   onExecute,
+  onCancel,
+  onDelete,
 }: {
   session: SessionRecord | null;
   busy: boolean;
   onExecute: () => void;
+  onCancel?: () => void;
+  onDelete?: () => void;
 }) {
   const plan = session?.plan;
-  const canExecute = session?.status === "PLAN_READY" && !plan?.requires_confirmation;
+  const canExecute = session?.status === "CONFIRMED"
+    || (session?.status === "PLAN_READY" && !plan?.requires_confirmation);
+  const canCancel = session !== null && ![
+    "EXECUTING",
+    "VERIFYING",
+    "COMPLETED",
+    "BLOCKED",
+    "CLARIFICATION_REQUIRED",
+    "FAILED",
+    "CANCELLED",
+  ].includes(session.status);
+  const canDelete = session !== null && [
+    "COMPLETED",
+    "BLOCKED",
+    "CLARIFICATION_REQUIRED",
+    "FAILED",
+    "CANCELLED",
+  ].includes(session.status);
   return (
     <section className="panel" aria-labelledby="plan-heading">
       <div className="panel-heading">
@@ -357,10 +502,20 @@ export function PlanPanel({
           )}
           {canExecute && (
             <button className="primary-button full-width" type="button" disabled={busy} onClick={onExecute}>
-              {busy ? "执行中…" : "执行计划"}
+              {busy ? "执行中…" : session?.status === "CONFIRMED" ? "执行已确认计划" : "执行计划"}
             </button>
           )}
         </>
+      )}
+      {canCancel && onCancel && (
+        <button className="secondary-button full-width" type="button" disabled={busy} onClick={onCancel}>
+          取消 Session
+        </button>
+      )}
+      {canDelete && onDelete && (
+        <button className="danger-button full-width" type="button" disabled={busy} onClick={onDelete}>
+          删除 Session
+        </button>
       )}
     </section>
   );
@@ -395,7 +550,7 @@ export function ConfirmationModal({
         <div className="modal-actions">
           <button className="danger-button" type="button" disabled={busy} onClick={onReject}>拒绝</button>
           <button className="primary-button" type="button" disabled={busy} onClick={onApprove}>
-            {busy ? "处理中…" : "确认并执行"}
+            {busy ? "处理中…" : "确认计划"}
           </button>
         </div>
       </section>

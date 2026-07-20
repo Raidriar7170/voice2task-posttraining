@@ -38,6 +38,7 @@ def verify_execution(
     outcome: ExecutionOutcome,
 ) -> VerificationResult:
     checks: list[VerificationCheck] = []
+    extract_failure_code: str | None = None
     if plan.route in {"deny", "clarify"}:
         expected = "browser_context_created=false;action_count=0"
         observed = (
@@ -73,8 +74,8 @@ def verify_execution(
         )
         if plan.capability_id == "demo_search":
             query = str(contract.slots["query"])
-            field_value = outcome.values.get("query_input", "")
-            results = outcome.values.get("results", "")
+            field_value = outcome.evidence.dom_snapshot.get("query_input", "")
+            results = outcome.evidence.dom_snapshot.get("results", "")
             checks.extend(
                 [
                     _check(
@@ -92,7 +93,7 @@ def verify_execution(
                 ]
             )
         elif plan.capability_id == "demo_help":
-            heading = outcome.values.get("heading", "")
+            heading = outcome.evidence.dom_snapshot.get("heading", "")
             expected_heading = capability.heading or ""
             checks.append(
                 _check(
@@ -103,20 +104,55 @@ def verify_execution(
                 )
             )
         elif plan.capability_id == "demo_product":
-            extracted = outcome.values.get("product_price", "")
-            dom_value = outcome.values.get("product_price_dom", "")
+            extracted = outcome.evidence.action_outputs.get("product_price", "")
+            dom_value = outcome.evidence.dom_snapshot.get("product_price", "")
+            expected_values = capability.expected_values or {}
+            registry_expected = expected_values.get("product_price", "")
             content_hash = hashlib.sha256(dom_value.encode()).hexdigest()
-            checks.append(
-                _check(
-                    CheckType.TEXT_EQUALS,
-                    passed=bool(extracted) and extracted == dom_value,
-                    expected=dom_value or "non-empty DOM product price",
-                    observed=extracted,
-                    evidence_ref=f"locator:product_price;sha256:{content_hash}",
-                )
+            checks.extend(
+                [
+                    _check(
+                        CheckType.TEXT_EQUALS,
+                        passed=bool(extracted),
+                        expected="non-empty action output",
+                        observed=extracted or "<missing>",
+                        evidence_ref="action_output:product_price",
+                    ),
+                    _check(
+                        CheckType.TEXT_EQUALS,
+                        passed=bool(dom_value),
+                        expected="non-empty DOM snapshot",
+                        observed=dom_value or "<missing>",
+                        evidence_ref=f"locator:product_price;sha256:{content_hash}",
+                    ),
+                    _check(
+                        CheckType.TEXT_EQUALS,
+                        passed=bool(extracted) and bool(dom_value) and extracted == dom_value,
+                        expected=dom_value or "<missing DOM snapshot>",
+                        observed=extracted or "<missing action output>",
+                        evidence_ref="action_output:product_price;dom_snapshot:product_price",
+                    ),
+                    _check(
+                        CheckType.TEXT_EQUALS,
+                        passed=bool(dom_value)
+                        and bool(registry_expected)
+                        and dom_value == registry_expected,
+                        expected=registry_expected or "<missing registry expected value>",
+                        observed=dom_value or "<missing DOM snapshot>",
+                        evidence_ref="registry:demo_product.expected_values.product_price",
+                    ),
+                ]
             )
+            if not extracted:
+                extract_failure_code = "EXTRACT_ACTION_OUTPUT_MISSING"
+            elif not dom_value:
+                extract_failure_code = "EXTRACT_DOM_SNAPSHOT_MISSING"
+            elif extracted != dom_value:
+                extract_failure_code = "EXTRACT_EVIDENCE_MISMATCH"
+            elif dom_value != registry_expected:
+                extract_failure_code = "EXTRACT_EXPECTED_VALUE_MISMATCH"
         elif plan.capability_id == "demo_profile_form":
-            observed_email = outcome.values.get("email_input", "")
+            observed_email = outcome.evidence.dom_snapshot.get("email_input", "")
             expected_email = context.profile.email
             checks.append(
                 _check(
@@ -130,5 +166,5 @@ def verify_execution(
     return VerificationResult(
         passed=passed,
         checks=checks,
-        failure_code=None if passed else "VERIFICATION_FAILED",
+        failure_code=None if passed else extract_failure_code or "VERIFICATION_FAILED",
     )

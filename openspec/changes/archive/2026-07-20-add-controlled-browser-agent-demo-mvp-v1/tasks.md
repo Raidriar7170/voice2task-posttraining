@@ -52,3 +52,16 @@
 - [x] 7.5 Perform a structured read-only diff/acceptance self-review, fix every Must Fix through a new failing test, and rerun the complete focused verification bundle.
 - [x] 7.6 Mark all OpenSpec implementation tasks complete while leaving the change active and unarchived.
 - [x] 7.7 Commit scoped changes, push `codex/voice2task-controlled-browser-demo-mvp-v1`, create a Draft PR against `codex/materialize-manifest-bound-train-only-sft-v1`, and verify Draft/Open/unmerged state.
+
+## 8. Review Fixes
+
+- [x] 8.1 Review fix #1: preserve strict independent action-output and fresh DOM-snapshot evidence; enforce ordered `EXTRACT_ACTION_OUTPUT_MISSING`, `EXTRACT_DOM_SNAPSHOT_MISSING`, `EXTRACT_EVIDENCE_MISMATCH`, and `EXTRACT_EXPECTED_VALUE_MISMATCH` codes against registry expected `¥199.00`; preserve `VERIFICATION_FAILED` for later non-Extract failures; prove executor independence plus model/SQLite/API/benchmark serialization; and rerun the focused tests, Ruff, strict mypy, OpenSpec strict validation, and diff checks.
+- [x] 8.2a Review fix #2 backend: replace create/transcript raw-token responses with a bound, rotating confirmation-challenge endpoint; preserve separate confirm and execute requests; and test binding, expiry, rejection, duplicate, hash-only persistence, and recoverable pre-claim execution safety.
+- [x] 8.2b Review fix #2 frontend: recover only a matching pending challenge from `sessionStorage`, preserve the separate confirm/execute UI flow, and test refresh/expiry/rejection/duplicate safety without `localStorage`.
+- [x] 8.3a Review fix #3 backend: make accepted text/audio/transcript work return `202 Accepted`, retain and observe one owned task per session in `SessionTaskRegistry`, persist controlled background failures, and test task lifecycle, duplicate ownership, disconnect independence, cancellation, shutdown, and reconnect/replay behavior.
+- [x] 8.3b Review fix #3 frontend: refresh authoritative session snapshots after WebSocket state signals, refetch when replay is newer than the concurrently loaded snapshot, and test reconnect/history snapshot behavior.
+- [x] 8.4 Review fix #4: stop/clear microphone resources and revoke object URLs on every exit, remove server artifacts/temp audio and client challenge state on deletion, add precise local-storage disclosure, and test cleanup paths.
+- [x] 8.4b Final Reviewer cleanup follow-up: sanitize event strings before SQLite/REST/WebSocket exposure, generation-guard pending microphone acquisition, transfer staged-audio cleanup ownership cancellation-safely, and keep session rows retryable when artifact unlink fails; cover each root cause with focused regressions.
+- [x] 8.5 Run the final focused no-lockbox backend/frontend/E2E verification bundle, Ruff, strict mypy, build/type checks, public leak scan, OpenSpec strict validation, and `git diff --check`; confirm training, dataset, historical metric, prediction, and lockbox surfaces are unchanged.
+- [x] 8.6 Sync all three delta specs to main specs and archive `add-controlled-browser-agent-demo-mvp-v1` only after 8.2-8.5 are complete and the final gate is green.
+- [x] 8.7 Prepare and verify the scoped result as a Draft stacked integration against `codex/materialize-manifest-bound-train-only-sft-v1`; keep it Draft/Open/unmerged and do not release, deploy, train, or merge.

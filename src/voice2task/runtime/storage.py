@@ -14,6 +14,7 @@ from typing import Any
 import aiosqlite
 
 from voice2task.runtime.models import (
+    RESTART_INTERRUPTED_STATUSES,
     ArtifactRecord,
     EventType,
     ExecutionEvent,
@@ -21,6 +22,7 @@ from voice2task.runtime.models import (
     SessionRecord,
     SessionStatus,
     sanitize_public_payload,
+    sanitize_public_text,
 )
 from voice2task.runtime.session import assert_transition
 
@@ -205,9 +207,9 @@ class SQLiteSessionStore:
                 session_id,
                 seq,
                 event_type.value,
-                stage,
-                status,
-                message,
+                sanitize_public_text(stage),
+                sanitize_public_text(status),
+                sanitize_public_text(message),
                 _dump(sanitize_public_payload(payload)) or "{}",
                 created_at.isoformat(),
             ),
@@ -224,6 +226,9 @@ class SQLiteSessionStore:
         payload: dict[str, Any] | None = None,
     ) -> ExecutionEvent:
         now = _now()
+        public_stage = sanitize_public_text(stage)
+        public_status = sanitize_public_text(status)
+        public_message = sanitize_public_text(message)
         async with self._write_lock, self._connect() as connection:
             await connection.execute("BEGIN IMMEDIATE")
             row = await self._session_row(connection, session_id)
@@ -237,9 +242,9 @@ class SQLiteSessionStore:
                 session_id=session_id,
                 seq=seq,
                 event_type=event_type,
-                stage=stage,
-                status=status,
-                message=message,
+                stage=public_stage,
+                status=public_status,
+                message=public_message,
                 payload=payload or {},
                 created_at=now,
             )
@@ -248,9 +253,9 @@ class SQLiteSessionStore:
             session_id=session_id,
             seq=seq,
             event_type=event_type,
-            stage=stage,
-            status=status,
-            message=message,
+            stage=public_stage,
+            status=public_status,
+            message=public_message,
             payload=sanitize_public_payload(payload or {}),
             created_at=now,
         )
@@ -269,6 +274,7 @@ class SQLiteSessionStore:
         updates: dict[str, Any] | None = None,
     ) -> SessionRecord:
         now = _now()
+        public_error_code = sanitize_public_text(error_code) if error_code is not None else None
         async with self._write_lock, self._connect() as connection:
             await connection.execute("BEGIN IMMEDIATE")
             row = await self._session_row(connection, session_id)
@@ -279,7 +285,7 @@ class SQLiteSessionStore:
                 "status": target.value,
                 "updated_at": now.isoformat(),
                 "last_event_seq": seq,
-                "error_code": error_code,
+                "error_code": public_error_code,
             }
             columns.update(self._encoded_updates(updates or {}))
             assignments = ", ".join(f"{column} = ?" for column in columns)
@@ -390,18 +396,18 @@ class SQLiteSessionStore:
             await connection.commit()
         return True
 
-    async def issue_confirmation(
+    async def require_confirmation(
         self,
         session_id: str,
         *,
         plan_id: str,
         plan_version: int,
+        plan_expires_at: datetime,
         now: datetime | None = None,
-    ) -> str:
-        issued_at = now or _now()
-        expires_at = issued_at + timedelta(minutes=5)
-        token = secrets.token_urlsafe(32)
-        token_hash = hashlib.sha256(token.encode()).hexdigest()
+    ) -> SessionRecord:
+        required_at = now or _now()
+        if required_at > plan_expires_at:
+            raise SessionConflict("PLAN_EXPIRED")
         async with self._write_lock, self._connect() as connection:
             await connection.execute("BEGIN IMMEDIATE")
             row = await self._session_row(connection, session_id)
@@ -418,17 +424,79 @@ class SQLiteSessionStore:
                 """
                 UPDATE sessions
                 SET status = ?, updated_at = ?, last_event_seq = ?, confirmation_status = ?,
-                    confirmation_token_hash = ?, confirmation_plan_id = ?, confirmation_expires_at = ?,
-                    confirmation_consumed_at = NULL
+                    confirmation_token_hash = NULL, confirmation_plan_id = ?,
+                    confirmation_expires_at = ?, confirmation_consumed_at = NULL
                 WHERE id = ?
                 """,
                 (
                     SessionStatus.AWAITING_CONFIRMATION.value,
+                    required_at.isoformat(),
+                    seq,
+                    "required",
+                    plan_id,
+                    plan_expires_at.isoformat(),
+                    session_id,
+                ),
+            )
+            await self._insert_event(
+                connection,
+                session_id=session_id,
+                seq=seq,
+                event_type=EventType.CONFIRMATION_REQUIRED,
+                stage="confirmation",
+                status="required",
+                message="Explicit confirmation required",
+                payload={
+                    "plan_id": plan_id,
+                    "plan_version": plan_version,
+                    "plan_expires_at": plan_expires_at.isoformat(),
+                },
+                created_at=required_at,
+            )
+            await connection.commit()
+        return await self.get_session(session_id)
+
+    async def rotate_confirmation_challenge(
+        self,
+        session_id: str,
+        *,
+        plan_id: str,
+        plan_version: int,
+        plan_expires_at: datetime,
+        now: datetime | None = None,
+    ) -> tuple[str, datetime]:
+        issued_at = now or _now()
+        if issued_at > plan_expires_at:
+            raise SessionConflict("CONFIRMATION_EXPIRED")
+        expires_at = min(issued_at + timedelta(minutes=5), plan_expires_at)
+        token = secrets.token_urlsafe(32)
+        token_hash = hashlib.sha256(token.encode()).hexdigest()
+        async with self._write_lock, self._connect() as connection:
+            await connection.execute("BEGIN IMMEDIATE")
+            row = await self._session_row(connection, session_id)
+            current = SessionStatus(str(row["status"]))
+            if row["confirmation_consumed_at"] is not None:
+                await connection.rollback()
+                raise SessionConflict("CONFIRMATION_ALREADY_CONSUMED")
+            if current is not SessionStatus.AWAITING_CONFIRMATION:
+                await connection.rollback()
+                raise SessionConflict("CONFIRMATION_NOT_AVAILABLE")
+            if row["confirmation_plan_id"] != plan_id or int(row["plan_version"]) != plan_version:
+                await connection.rollback()
+                raise SessionConflict("CONFIRMATION_BINDING_MISMATCH")
+            seq = int(row["last_event_seq"]) + 1
+            await connection.execute(
+                """
+                UPDATE sessions
+                SET updated_at = ?, last_event_seq = ?, confirmation_status = ?,
+                    confirmation_token_hash = ?, confirmation_expires_at = ?
+                WHERE id = ?
+                """,
+                (
                     issued_at.isoformat(),
                     seq,
                     "pending",
                     token_hash,
-                    plan_id,
                     expires_at.isoformat(),
                     session_id,
                 ),
@@ -440,12 +508,16 @@ class SQLiteSessionStore:
                 event_type=EventType.CONFIRMATION_REQUIRED,
                 stage="confirmation",
                 status="pending",
-                message="Explicit confirmation required",
-                payload={"plan_id": plan_id, "plan_version": plan_version, "expires_at": expires_at.isoformat()},
+                message="Confirmation challenge issued",
+                payload={
+                    "plan_id": plan_id,
+                    "plan_version": plan_version,
+                    "expires_at": expires_at.isoformat(),
+                },
                 created_at=issued_at,
             )
             await connection.commit()
-        return token
+        return token, expires_at
 
     async def consume_confirmation(
         self,
@@ -485,7 +557,7 @@ class SQLiteSessionStore:
                 """
                 UPDATE sessions
                 SET status = ?, updated_at = ?, last_event_seq = ?, confirmation_status = ?,
-                    confirmation_consumed_at = ?
+                    confirmation_consumed_at = ?, confirmation_token_hash = NULL
                 WHERE id = ?
                 """,
                 (
@@ -546,7 +618,7 @@ class SQLiteSessionStore:
                 """
                 UPDATE sessions
                 SET status = ?, updated_at = ?, last_event_seq = ?, confirmation_status = ?,
-                    confirmation_consumed_at = ?
+                    confirmation_consumed_at = ?, confirmation_token_hash = NULL
                 WHERE id = ?
                 """,
                 (
@@ -635,17 +707,17 @@ class SQLiteSessionStore:
         ]
 
     async def recover_interrupted_sessions(self) -> int:
-        transient = {
-            SessionStatus.TRANSCRIBING,
-            SessionStatus.INFERRING,
-            SessionStatus.EXECUTING,
-            SessionStatus.VERIFYING,
-        }
+        transient = RESTART_INTERRUPTED_STATUSES
         async with self._connect() as connection:
             placeholders = ",".join("?" for _ in transient)
             cursor = await connection.execute(
-                f"SELECT id FROM sessions WHERE status IN ({placeholders})",  # noqa: S608
-                tuple(status.value for status in transient),
+                f"""SELECT id FROM sessions
+                    WHERE status IN ({placeholders})
+                       OR (status = ? AND input_kind = 'text')""",  # noqa: S608
+                (
+                    *(status.value for status in transient),
+                    SessionStatus.TRANSCRIPT_READY.value,
+                ),
             )
             session_ids = [str(row[0]) for row in await cursor.fetchall()]
         for session_id in session_ids:
@@ -736,10 +808,10 @@ class SQLiteSessionStore:
                 session_id=str(row["session_id"]),
                 seq=int(row["seq"]),
                 event_type=EventType(str(row["event_type"])),
-                stage=str(row["stage"]),
-                status=str(row["status"]),
-                message=str(row["message"]),
-                payload=_load(row["payload_json"]),
+                stage=sanitize_public_text(str(row["stage"])),
+                status=sanitize_public_text(str(row["status"])),
+                message=sanitize_public_text(str(row["message"])),
+                payload=sanitize_public_payload(_load(row["payload_json"])),
                 created_at=datetime.fromisoformat(str(row["created_at"])),
             )
             for row in rows

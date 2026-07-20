@@ -46,7 +46,7 @@ Vite 在 `127.0.0.1:5173` 运行，并代理 `/api`、`/ws`、`/sandbox` 到 Fas
 | 帮我打开那个页面 | `clarify/clarify` | `CLARIFICATION_REQUIRED` | 0 actions / no context |
 | 替我完成付款 | `blocked/deny` | `BLOCKED` | 0 actions / no context |
 
-Form Fill 只把 `demo@example.com` 填入本地 DOM，不点击 save、不提交。确认 nonce 只返回一次，数据库仅存 SHA-256 hash；它绑定 session、plan ID、plan version，五分钟过期且只能消费一次。
+Form Fill 只把 `demo@example.com` 填入本地 DOM，不点击 save、不提交。Session create 不返回 raw token；页面在 session 到达 `AWAITING_CONFIRMATION` 后调用独立的 `POST .../confirmation-challenge`。每次调用都会旋转 challenge、使旧 token 失效；数据库只保存 SHA-256 hash。Challenge 绑定 session、plan ID、plan version，五分钟过期且只能消费一次。浏览器只把匹配且未过期的 challenge 放在当前 tab 的 `sessionStorage`，刷新后先读取权威 session snapshot 再决定恢复或清除，从不使用 `localStorage`。
 
 ## Provider 配置
 
@@ -74,8 +74,9 @@ export VOICE2TASK_ASR_ENDPOINT=http://127.0.0.1:9001/v1/transcribe
 主要接口：
 
 - `GET /api/health`、`GET /api/config/public`、`GET /api/schemas/runtime`
-- `POST /api/sessions`（text JSON 或 audio multipart）
-- `POST /api/sessions/{id}/transcript`
+- `POST /api/sessions`（text JSON 或 audio multipart；返回 `202 Accepted` 初始 snapshot）
+- `POST /api/sessions/{id}/transcript`（返回 `202 Accepted`，后台继续 inference）
+- `POST /api/sessions/{id}/confirmation-challenge`
 - `POST /api/sessions/{id}/confirm`
 - `POST /api/sessions/{id}/execute`、`POST /api/sessions/{id}/cancel`
 - `GET /api/sessions/{id}`、`GET /api/sessions/{id}/events?after_seq=N`
@@ -89,7 +90,9 @@ export VOICE2TASK_ASR_ENDPOINT=http://127.0.0.1:9001/v1/transcribe
 {"error":{"code":"...","message":"...","retryable":false}}
 ```
 
-WebSocket 先 replay `seq > after_seq`，再发送实时事件；heartbeat 不写入 SQLite。每个客户端有独立有界队列，慢客户端只断开自身。终态 replay 完成后以正常 close 结束。
+每个 accepted create/transcript 工作由 `SessionTaskRegistry` 保留唯一 owned task；HTTP 响应不等待 inference 完成，SQLite session/event 才是权威状态。WebSocket 先 replay `seq > after_seq`，再发送实时事件；heartbeat 不写入 SQLite。客户端按最高 seq 去重/重连，并在 state-bearing event 后重新 GET 权威 snapshot，拒绝 `last_event_seq` 回退的旧响应。每个客户端有独立有界队列，慢客户端只断开自身；终态 replay 后正常 close。
+
+确认与执行是两个显式阶段：challenge 只允许 `/confirm` 返回 `CONFIRMED`；页面随后显示独立的“执行已确认计划”按钮，只有新的 `/execute` 请求才可能 claim 浏览器动作。确认失败或执行准备失败不会伪装成成功，已确认 session 可显式重试 execute。
 
 ## 受控执行
 
@@ -99,6 +102,9 @@ WebSocket 先 replay `seq > after_seq`，再发送实时事件；heartbeat 不�
 - 网络 route 只放行 exact sandbox origin 的 `/sandbox/`；外部 HTTP(S) 在发送前 abort，WebSocket、popup、download、file chooser 被阻止。
 - 最多五个动作，单动作与整体 timeout；每个动作记录严格递增事件和随机 ID 截图。
 - verifier 只读取 URL path、heading、field value、results、DOM price 与内容 hash；不使用 LLM judge，不修复失败。
+- Extract 的 action return 保存在 `execution.evidence.action_outputs`；动作完成后的全新页面读取独立写入 `dom_snapshot`。Verifier 依次检查 action output、fresh DOM、两源一致、registry expected `¥199.00`，分别使用 `EXTRACT_ACTION_OUTPUT_MISSING`、`EXTRACT_DOM_SNAPSHOT_MISSING`、`EXTRACT_EVIDENCE_MISMATCH`、`EXTRACT_EXPECTED_VALUE_MISMATCH`；之后的非 Extract postcondition 失败仍为 `VERIFICATION_FAILED`。
+
+本地保留边界：raw audio 仅为服务端临时文件；在 background task 注册前由 request-scope `finally` 清理，注册后由 task completion cleanup 接管。Session metadata 与截图保留在本机 ignored runtime 目录，直到用户删除 terminal session。删除先移除服务端 artifact，再删除数据库行；若文件删除失败，API 返回 retryable `ARTIFACT_DELETE_FAILED` 并保留行供重试。成功删除后才移除当前 tab 对应的 `sessionStorage` challenge。
 
 详见 [architecture.md](architecture.md)。
 
@@ -118,7 +124,9 @@ make demo-test
 
 它只证明六条 fixture 的 API/orchestrator/Chromium 编排；不证明模型质量。
 
-当前结果为预期终态与 contract/compiler-policy <code>6/6</code>、四个可执行场景 verifier <code>4/4</code>、Blocked/Clarify no-execution verifier <code>2/2</code>；未确认写入、Blocked/Clarify execution、外部导航和 unsafe execution 均为 0。
+当前结果为 `202 Accepted` background lifecycle <code>6/6</code>、预期终态 + strict contract <code>6/6</code>、compiler/policy <code>6/6</code>、四个可执行场景 verifier <code>4/4</code>、Blocked/Clarify no-execution verifier <code>2/2</code>。Form challenge 字段精确且确认后先停在 `CONFIRMED`；未确认写入、Blocked/Clarify execution、外部导航和 unsafe execution 均为 0。Extract JSON 只公开 fixture-safe 的独立 action output、fresh DOM 与 registry expected evidence。
+
+Production build E2E 在 `1440×900` 与 `390×844` 覆盖 Search、Extract 独立 evidence、Form 刷新恢复与两阶段执行、Blocked 零执行和 Session 删除；同时断言 inference/compiler timeline 在 execution 前可见、console/page error 为 0、横向溢出为 0。
 
 为遵守本 change 的 read-scope，验证命令只运行新增 runtime/demo、既有公开 schema/formatting compatibility、公开数据校验与静态检查。不会收集 lockbox tests、evidence truth checker 或任何可能访问 lockbox 的全量 pytest。
 

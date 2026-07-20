@@ -23,8 +23,12 @@ The runtime SHALL enforce the declared session transition table, append strictly
 - **THEN** the runtime SHALL reject it without changing state or appending a success event
 
 #### Scenario: Server restarts during execution
-- **WHEN** startup finds a session in a transient inference or execution state
+- **WHEN** startup finds accepted input or a session in a transient transcription, inference, compilation, execution, or verification state
 - **THEN** the runtime SHALL mark it failed with `SERVER_RESTART_INTERRUPTED` and SHALL NOT replay any action
+
+#### Scenario: Graceful shutdown reaches an already durable recovery boundary
+- **WHEN** shutdown cancels and awaits a still-owned task after that task has persisted audio `TRANSCRIPT_READY`, `PLAN_READY`, `AWAITING_CONFIRMATION`, or `CONFIRMED`
+- **THEN** the runtime SHALL preserve that stable state for explicit user resumption instead of replacing it with a shutdown failure
 
 ### Requirement: Plans are deterministic and capability bound
 The compiler SHALL map a validated contract and persisted SessionContext to a stable plan containing only reviewed capability, locator, value-source, timeout, and postcondition identifiers.
@@ -61,11 +65,15 @@ The policy gate SHALL allow only the four localhost demo capabilities and SHALL 
 - **THEN** policy SHALL return a stable reason code and no browser context SHALL be created
 
 ### Requirement: Confirmation and execution are at-most-once
-The runtime SHALL bind confirmation to one session, plan ID, plan version, and five-minute expiry and SHALL atomically claim at most one execution.
+The runtime SHALL bind a confirmation challenge to one session, plan ID, plan version, and five-minute expiry, SHALL consume it before execution, and SHALL atomically claim at most one execution.
 
 #### Scenario: Confirmation is approved once
 - **WHEN** the correct unexpired token and plan version are submitted from `AWAITING_CONFIRMATION`
 - **THEN** the token SHALL be consumed and the session SHALL enter `CONFIRMED`
+
+#### Scenario: Confirmation succeeds without executing
+- **WHEN** the bound challenge is consumed successfully
+- **THEN** the response SHALL expose `CONFIRMED` and no browser action SHALL run until a separate execute request claims the same plan version
 
 #### Scenario: Confirmation or execute is repeated
 - **WHEN** the same token or execute request is submitted after consumption or execution claim
@@ -97,8 +105,39 @@ The verifier SHALL compare deterministic URL, heading, field, result, extraction
 - **WHEN** compiler/policy returns blocked or clarification required
 - **THEN** verification SHALL record `browser_context_created=false` and `action_count=0`
 
+### Requirement: Execution evidence preserves independent observation sources
+The runtime SHALL model execution evidence as strict, separate action-output and fresh DOM-snapshot mappings. An action SHALL write only its direct output, the post-action DOM collector SHALL create a new snapshot without receiving or mutating action outputs, and SQLite SHALL preserve the exact evidence JSON after close/reopen.
+
+#### Scenario: Extract output matches the fresh DOM snapshot
+- **WHEN** the Extract action returns a non-empty product price and a fresh post-action DOM read independently observes the same price
+- **THEN** verification SHALL compare `action_outputs["product_price"]` with `dom_snapshot["product_price"]`, compare the DOM value with registry expected `¥199.00`, and may pass those checks
+
+#### Scenario: Extract action output is missing
+- **WHEN** `action_outputs["product_price"]` is absent or empty regardless of later evidence
+- **THEN** verification SHALL fail with `EXTRACT_ACTION_OUTPUT_MISSING`
+
+#### Scenario: Extract DOM snapshot is missing
+- **WHEN** action output is non-empty but `dom_snapshot["product_price"]` is absent or empty
+- **THEN** verification SHALL fail with `EXTRACT_DOM_SNAPSHOT_MISSING`
+
+#### Scenario: Extract output differs from the fresh DOM snapshot
+- **WHEN** the Extract action output and fresh post-action DOM observation differ
+- **THEN** verification SHALL remain failed with `EXTRACT_EVIDENCE_MISMATCH` even if either individual source is non-empty
+
+#### Scenario: Matching Extract evidence differs from registry expected
+- **WHEN** both sources are non-empty and equal but the DOM value is not registry expected `¥199.00`
+- **THEN** verification SHALL remain failed with `EXTRACT_EXPECTED_VALUE_MISMATCH`
+
+#### Scenario: Extract evidence passes but another check fails
+- **WHEN** both sources are non-empty and equal to registry expected `¥199.00` but URL or another non-Extract postcondition fails
+- **THEN** verification SHALL fail with `VERIFICATION_FAILED`
+
+#### Scenario: Non-extract postconditions are verified
+- **WHEN** Search, Navigate, or Form Fill verification reads page state
+- **THEN** it SHALL read the fresh DOM snapshot and SHALL NOT treat an action output as observed DOM state
+
 ### Requirement: Controlled benchmark has explicit claim boundaries
-The benchmark SHALL run exactly the six approved fixture scenarios and publish aggregate orchestration evidence with all model-quality, real-ASR, and internet-generalization claims false.
+The benchmark SHALL run exactly the six approved fixture scenarios, serialize only fixture-safe Extract action/DOM/registry evidence needed to audit the verifier, and publish aggregate orchestration evidence with all model-quality, real-ASR, and internet-generalization claims false.
 
 #### Scenario: Fixture benchmark passes
 - **WHEN** all approved scenarios run through a local application

@@ -123,6 +123,19 @@ def test_compiler_is_deterministic_and_discards_model_url_from_actions() -> None
     assert "help.example.com" not in first.plan.model_dump_json()
 
 
+def test_extract_plan_uses_action_output_value_source_namespace() -> None:
+    result = compile_contract_to_plan(
+        _contract("extract", "extract_page", {"target": "商品价格"}),
+        _context("demo_product"),
+    )
+
+    assert result.plan is not None
+    extract_action = result.plan.actions[-1]
+    assert extract_action.value_source == "execution.action_outputs.product_price"
+    assert "execution.values" not in result.plan.model_dump_json()
+    assert evaluate_policy(result.plan, now=ISSUED_AT).allowed is True
+
+
 @pytest.mark.parametrize(
     "contract",
     [

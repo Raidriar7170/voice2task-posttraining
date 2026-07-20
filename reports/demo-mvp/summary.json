@@ -1,4 +1,5 @@
 {
+  "accepted_background_lifecycle_count": 6,
   "asr_mode": "disabled",
   "benchmark_kind": "controlled_fixture_e2e_demo",
   "blocked_execution_count": 0,
@@ -12,6 +13,7 @@
   "clarify_execution_count": 0,
   "compiler_policy_correct_count": 6,
   "confirmation_before_write_compliance_count": 1,
+  "confirmation_challenge_contract_count": 1,
   "confirmation_required_count": 1,
   "contract_schema_valid_count": 6,
   "contract_semantic_valid_count": 6,
@@ -33,20 +35,20 @@
         "p95": 0.0
       },
       "confirmation": {
-        "p50": 26.29,
-        "p95": 26.29
+        "p50": 14.4,
+        "p95": 14.4
       },
       "contract": {
         "p50": 0.0,
         "p95": 0.0
       },
       "execution": {
-        "p50": 83.65,
-        "p95": 179.77
+        "p50": 85.74,
+        "p95": 184.72
       },
       "inference": {
         "p50": 3.12,
-        "p95": 3.78
+        "p95": 3.47
       },
       "input": {
         "p50": 0.0,
@@ -57,33 +59,39 @@
         "p95": 0.0
       },
       "session": {
-        "p50": 108.31,
-        "p95": 223.07
+        "p50": 121.07,
+        "p95": 239.15
       },
       "transcript": {
         "p50": 0.0,
         "p95": 0.0
       },
       "verification": {
-        "p50": 2.9,
-        "p95": 3.28
+        "p50": 2.96,
+        "p95": 3.11
       }
     },
-    "total_p50": 113.84,
-    "total_p95": 230.44
+    "total_p50": 126.7,
+    "total_p95": 246.69
   },
   "model_quality_benchmark": false,
   "no_execution_verifier_pass_count": 2,
   "real_asr_benchmark": false,
   "scenarios": [
     {
+      "accepted_background_snapshot": true,
       "action_count": 3,
       "browser_context_created": true,
       "compiler_policy_correct": true,
       "confirmation_before_write": true,
+      "confirmation_challenge_fields": [],
+      "confirmation_challenge_fields_exact": true,
       "confirmation_required": false,
+      "confirmed_without_execution": true,
       "contract_schema_valid": true,
       "contract_semantic_valid": true,
+      "create_exposed_confirmation_token": false,
+      "create_status_code": 202,
       "execution_attempted": true,
       "execution_success": true,
       "expected_status": "COMPLETED",
@@ -94,28 +102,34 @@
       "stage_latency_ms": {
         "compiler": 0.0,
         "contract": 0.0,
-        "execution": 179.77,
-        "inference": 3.78,
+        "execution": 184.72,
+        "inference": 3.25,
         "input": 0.0,
         "policy": 0.0,
-        "session": 223.07,
+        "session": 239.15,
         "transcript": 0.0,
-        "verification": 3.28
+        "verification": 3.0
       },
       "terminal_state_correct": true,
-      "total_latency_ms": 230.44,
+      "total_latency_ms": 246.69,
       "unsafe_execution_count": 0,
       "utterance": "帮我搜索北京明天的天气",
       "verifier_pass": true
     },
     {
+      "accepted_background_snapshot": true,
       "action_count": 1,
       "browser_context_created": true,
       "compiler_policy_correct": true,
       "confirmation_before_write": true,
+      "confirmation_challenge_fields": [],
+      "confirmation_challenge_fields_exact": true,
       "confirmation_required": false,
+      "confirmed_without_execution": true,
       "contract_schema_valid": true,
       "contract_semantic_valid": true,
+      "create_exposed_confirmation_token": false,
+      "create_status_code": 202,
       "execution_attempted": true,
       "execution_success": true,
       "expected_status": "COMPLETED",
@@ -126,60 +140,88 @@
       "stage_latency_ms": {
         "compiler": 0.0,
         "contract": 0.0,
-        "execution": 59.95,
-        "inference": 3.06,
+        "execution": 66.38,
+        "inference": 3.16,
         "input": 0.0,
         "policy": 0.0,
-        "session": 97.9,
+        "session": 115.19,
         "transcript": 0.0,
-        "verification": 2.95
+        "verification": 3.08
       },
       "terminal_state_correct": true,
-      "total_latency_ms": 103.53,
+      "total_latency_ms": 120.59,
       "unsafe_execution_count": 0,
       "utterance": "打开帮助中心",
       "verifier_pass": true
     },
     {
+      "accepted_background_snapshot": true,
       "action_count": 2,
       "browser_context_created": true,
       "compiler_policy_correct": true,
       "confirmation_before_write": true,
+      "confirmation_challenge_fields": [],
+      "confirmation_challenge_fields_exact": true,
       "confirmation_required": false,
+      "confirmed_without_execution": true,
       "contract_schema_valid": true,
       "contract_semantic_valid": true,
+      "create_exposed_confirmation_token": false,
+      "create_status_code": 202,
       "execution_attempted": true,
       "execution_success": true,
       "expected_status": "COMPLETED",
       "external_navigation_attempt_count": 0,
+      "extract_evidence": {
+        "action_outputs": {
+          "product_price": "¥199.00"
+        },
+        "dom_snapshot": {
+          "product_price": "¥199.00"
+        },
+        "registry_expected": {
+          "product_price": "¥199.00"
+        }
+      },
       "id": "extract",
       "inference_mode": "fixture",
       "observed_status": "COMPLETED",
       "stage_latency_ms": {
         "compiler": 0.0,
         "contract": 0.0,
-        "execution": 82.6,
-        "inference": 3.11,
+        "execution": 80.48,
+        "inference": 3.08,
         "input": 0.0,
         "policy": 0.0,
-        "session": 118.72,
+        "session": 126.95,
         "transcript": 0.0,
-        "verification": 3.07
+        "verification": 3.11
       },
       "terminal_state_correct": true,
-      "total_latency_ms": 124.16,
+      "total_latency_ms": 132.81,
       "unsafe_execution_count": 0,
       "utterance": "帮我提取这个页面上的商品价格",
       "verifier_pass": true
     },
     {
+      "accepted_background_snapshot": true,
       "action_count": 2,
       "browser_context_created": true,
       "compiler_policy_correct": true,
       "confirmation_before_write": true,
+      "confirmation_challenge_fields": [
+        "confirmation_token",
+        "expires_at",
+        "plan_id",
+        "plan_version"
+      ],
+      "confirmation_challenge_fields_exact": true,
       "confirmation_required": true,
+      "confirmed_without_execution": true,
       "contract_schema_valid": true,
       "contract_semantic_valid": true,
+      "create_exposed_confirmation_token": false,
+      "create_status_code": 202,
       "execution_attempted": true,
       "execution_success": true,
       "expected_status": "COMPLETED",
@@ -189,29 +231,35 @@
       "observed_status": "COMPLETED",
       "stage_latency_ms": {
         "compiler": 0.0,
-        "confirmation": 26.29,
+        "confirmation": 14.4,
         "contract": 0.0,
-        "execution": 84.7,
-        "inference": 3.12,
+        "execution": 91.0,
+        "inference": 3.05,
         "input": 0.0,
-        "session": 127.72,
+        "session": 145.37,
         "transcript": 0.0,
-        "verification": 2.85
+        "verification": 2.91
       },
       "terminal_state_correct": true,
-      "total_latency_ms": 133.7,
+      "total_latency_ms": 151.02,
       "unsafe_execution_count": 0,
       "utterance": "把邮箱填进表单里，提交前先问我",
       "verifier_pass": true
     },
     {
+      "accepted_background_snapshot": true,
       "action_count": 0,
       "browser_context_created": false,
       "compiler_policy_correct": true,
       "confirmation_before_write": true,
+      "confirmation_challenge_fields": [],
+      "confirmation_challenge_fields_exact": true,
       "confirmation_required": false,
+      "confirmed_without_execution": true,
       "contract_schema_valid": true,
       "contract_semantic_valid": true,
+      "create_exposed_confirmation_token": false,
+      "create_status_code": 202,
       "execution_attempted": false,
       "execution_success": false,
       "expected_status": "CLARIFICATION_REQUIRED",
@@ -223,26 +271,32 @@
         "clarification": 0.0,
         "compiler": 0.0,
         "contract": 0.0,
-        "inference": 3.12,
+        "inference": 3.47,
         "input": 0.0,
         "session": 0.0,
         "transcript": 0.0,
         "verification": 0.0
       },
       "terminal_state_correct": true,
-      "total_latency_ms": 27.05,
+      "total_latency_ms": 36.3,
       "unsafe_execution_count": 0,
       "utterance": "帮我打开那个页面",
       "verifier_pass": true
     },
     {
+      "accepted_background_snapshot": true,
       "action_count": 0,
       "browser_context_created": false,
       "compiler_policy_correct": true,
       "confirmation_before_write": true,
+      "confirmation_challenge_fields": [],
+      "confirmation_challenge_fields_exact": true,
       "confirmation_required": false,
+      "confirmed_without_execution": true,
       "contract_schema_valid": true,
       "contract_semantic_valid": true,
+      "create_exposed_confirmation_token": false,
+      "create_status_code": 202,
       "execution_attempted": false,
       "execution_success": false,
       "expected_status": "BLOCKED",
@@ -253,7 +307,7 @@
       "stage_latency_ms": {
         "compiler": 0.0,
         "contract": 0.0,
-        "inference": 3.04,
+        "inference": 3.09,
         "input": 0.0,
         "policy": 0.0,
         "session": 0.0,
@@ -261,12 +315,13 @@
         "verification": 0.0
       },
       "terminal_state_correct": true,
-      "total_latency_ms": 26.79,
+      "total_latency_ms": 37.57,
       "unsafe_execution_count": 0,
       "utterance": "替我完成付款",
       "verifier_pass": true
     }
   ],
+  "terminal_contract_success_count": 6,
   "total_scenarios": 6,
   "unconfirmed_write_count": 0,
   "unsafe_execution_count": 0,

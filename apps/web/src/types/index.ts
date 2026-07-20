@@ -61,11 +61,16 @@ export type VerificationResult = {
   failure_code: string | null;
 };
 
+export type ExecutionEvidence = {
+  action_outputs: Record<string, string>;
+  dom_snapshot: Record<string, string>;
+};
+
 export type ExecutionOutcome = {
   browser_context_created: boolean;
   action_count: number;
   final_url_path: string | null;
-  values: Record<string, string>;
+  evidence: ExecutionEvidence;
   screenshots: string[];
   elapsed_ms: number;
 };
@@ -153,8 +158,14 @@ export type APIErrorBody = {
 export type CreateSessionResponse = {
   session_id: string;
   session: SessionRecord;
-  confirmation_token: string | null;
   transcript_confirmation_required: boolean;
+};
+
+export type ConfirmationChallenge = {
+  confirmation_token: string;
+  plan_id: string;
+  plan_version: number;
+  expires_at: string;
 };
 
 export type ConnectionState = "idle" | "connecting" | "connected" | "reconnecting" | "closed";

@@ -6,11 +6,17 @@ from pathlib import Path
 from typing import Protocol
 from uuid import uuid4
 
-from voice2task.runtime.asr import ASRProvider, ASRProviderError, transcribe_uploaded_audio
+from voice2task.runtime.asr import (
+    ASRProvider,
+    ASRProviderError,
+    StagedAudioUpload,
+    transcribe_staged_audio,
+)
 from voice2task.runtime.compiler import compile_contract_to_plan
 from voice2task.runtime.executor import ExecutorError
 from voice2task.runtime.inference import ProviderError, Voice2TaskInferenceProvider
 from voice2task.runtime.models import (
+    RESTART_INTERRUPTED_STATUSES,
     ArtifactRecord,
     BrowserTaskContractPayload,
     EventType,
@@ -142,9 +148,9 @@ class DemoOrchestrator:
         await self._publish_after(session_id, 0)
         return session
 
-    async def create_text_session(self, *, text: str, profile: Profile) -> tuple[SessionRecord, str | None]:
+    async def create_text_session(self, *, text: str, profile: Profile) -> SessionRecord:
         session = await self._new_session(input_kind="text", profile=profile)
-        await self._transition(
+        return await self._transition(
             session.id,
             SessionStatus.INPUT_RECEIVED,
             event_type=EventType.INPUT_RECEIVED,
@@ -153,27 +159,25 @@ class DemoOrchestrator:
             message="Text input received",
             updates={"transcript_original": text, "transcript": text, "transcript_edited": False},
         )
+
+    async def process_text_session(self, session_id: str) -> SessionRecord:
         await self._transition(
-            session.id,
+            session_id,
             SessionStatus.TRANSCRIPT_READY,
             event_type=EventType.TRANSCRIPT_CONFIRMED,
             stage="transcript",
             status="ok",
             message="Text transcript accepted",
         )
-        return await self._process_transcript(session.id)
+        return await self._process_transcript(session_id)
 
     async def create_audio_session(
         self,
         *,
-        content: bytes,
-        mime_type: str,
-        client_filename: str | None,
         profile: Profile,
-        fixture_id: str | None,
     ) -> SessionRecord:
         session = await self._new_session(input_kind="audio", profile=profile)
-        await self._transition(
+        return await self._transition(
             session.id,
             SessionStatus.INPUT_RECEIVED,
             event_type=EventType.AUDIO_ACCEPTED,
@@ -181,48 +185,53 @@ class DemoOrchestrator:
             status="ok",
             message="Audio input accepted for configured ASR",
         )
-        await self._transition(
-            session.id,
-            SessionStatus.TRANSCRIBING,
-            event_type=EventType.ASR_STARTED,
-            stage="asr",
-            status="running",
-            message="ASR transcription started",
-        )
+
+    async def process_audio_session(
+        self,
+        session_id: str,
+        staged: StagedAudioUpload,
+    ) -> SessionRecord:
         try:
-            result = await transcribe_uploaded_audio(
-                self.asr_provider,
-                content=content,
-                mime_type=mime_type,
-                client_filename=client_filename,
-                temp_dir=self.audio_temp_dir,
-                fixture_id=fixture_id,
-            )
-        except ASRProviderError as exc:
             await self._transition(
-                session.id,
-                SessionStatus.FAILED,
-                event_type=EventType.ASR_FAILED,
+                session_id,
+                SessionStatus.TRANSCRIBING,
+                event_type=EventType.ASR_STARTED,
                 stage="asr",
-                status="failed",
-                message=exc.public_message,
-                error_code=exc.code,
+                status="running",
+                message="ASR transcription started",
             )
-            raise
-        return await self._transition(
-            session.id,
-            SessionStatus.TRANSCRIPT_READY,
-            event_type=EventType.ASR_COMPLETED,
-            stage="asr",
-            status="ok",
-            message="ASR transcript ready for user confirmation",
-            payload={"provider": result.provider, "duration_ms": result.duration_ms},
-            updates={
-                "transcript_original": result.text,
-                "transcript": result.text,
-                "transcript_edited": False,
-            },
-        )
+            try:
+                result = await transcribe_staged_audio(
+                    self.asr_provider,
+                    staged,
+                )
+            except ASRProviderError as exc:
+                await self._transition(
+                    session_id,
+                    SessionStatus.FAILED,
+                    event_type=EventType.ASR_FAILED,
+                    stage="asr",
+                    status="failed",
+                    message=exc.public_message,
+                    error_code=exc.code,
+                )
+                raise
+            return await self._transition(
+                session_id,
+                SessionStatus.TRANSCRIPT_READY,
+                event_type=EventType.ASR_COMPLETED,
+                stage="asr",
+                status="ok",
+                message="ASR transcript ready for user confirmation",
+                payload={"provider": result.provider, "duration_ms": result.duration_ms},
+                updates={
+                    "transcript_original": result.text,
+                    "transcript": result.text,
+                    "transcript_edited": False,
+                },
+            )
+        finally:
+            staged.path.unlink(missing_ok=True)
 
     async def confirm_transcript(
         self,
@@ -230,7 +239,7 @@ class DemoOrchestrator:
         *,
         transcript: str,
         plan_version: int,
-    ) -> tuple[SessionRecord, str | None]:
+    ) -> SessionRecord:
         session = await self.store.get_session(session_id)
         if session.status is not SessionStatus.TRANSCRIPT_READY or session.input_kind != "audio":
             raise SessionConflict("TRANSCRIPT_NOT_EDITABLE")
@@ -252,7 +261,7 @@ class DemoOrchestrator:
         )
         return await self._process_transcript(session_id)
 
-    async def _process_transcript(self, session_id: str) -> tuple[SessionRecord, str | None]:
+    async def _process_transcript(self, session_id: str) -> SessionRecord:
         session = await self._transition(
             session_id,
             SessionStatus.INFERRING,
@@ -383,7 +392,7 @@ class DemoOrchestrator:
                 message=policy.message,
                 payload={"reason_code": policy.reason_code, "browser_context_created": False},
             )
-            return await self.store.get_session(session_id), None
+            return await self.store.get_session(session_id)
 
         await self._transition(
             session_id,
@@ -402,14 +411,14 @@ class DemoOrchestrator:
         )
         if plan.requires_confirmation:
             before = await self.store.get_session(session_id)
-            token = await self.store.issue_confirmation(
+            await self.store.require_confirmation(
                 session_id,
                 plan_id=plan.plan_id,
                 plan_version=plan.plan_version,
-                now=context.plan_issued_at,
+                plan_expires_at=plan.expires_at,
             )
             await self._publish_after(session_id, before.last_event_seq)
-            return await self.store.get_session(session_id), token
+            return await self.store.get_session(session_id)
         await self._append(
             session_id,
             event_type=EventType.POLICY_ALLOWED,
@@ -418,7 +427,61 @@ class DemoOrchestrator:
             message="Read-only localhost plan allowed; explicit Execute is still required",
             payload={"reason_code": policy.reason_code},
         )
-        return await self.store.get_session(session_id), None
+        return await self.store.get_session(session_id)
+
+    async def issue_confirmation_challenge(
+        self,
+        session_id: str,
+    ) -> tuple[str, datetime, ExecutionPlan]:
+        session = await self.store.get_session(session_id)
+        if session.status is not SessionStatus.AWAITING_CONFIRMATION or session.plan is None:
+            raise SessionConflict("CONFIRMATION_NOT_AVAILABLE")
+        plan = ExecutionPlan.model_validate(session.plan)
+        before = session.last_event_seq
+        token, expires_at = await self.store.rotate_confirmation_challenge(
+            session_id,
+            plan_id=plan.plan_id,
+            plan_version=plan.plan_version,
+            plan_expires_at=plan.expires_at,
+        )
+        await self._publish_after(session_id, before)
+        return token, expires_at, plan
+
+    async def fail_background_task(
+        self,
+        session_id: str,
+        *,
+        stage: str,
+        error_code: str,
+        message: str,
+        transient_only: bool = False,
+    ) -> None:
+        try:
+            session = await self.store.get_session(session_id)
+        except Exception:
+            return
+        if session.status in {
+            SessionStatus.COMPLETED,
+            SessionStatus.BLOCKED,
+            SessionStatus.CLARIFICATION_REQUIRED,
+            SessionStatus.FAILED,
+            SessionStatus.CANCELLED,
+        }:
+            return
+        is_restart_transient = session.status in RESTART_INTERRUPTED_STATUSES or (
+            session.status is SessionStatus.TRANSCRIPT_READY and session.input_kind == "text"
+        )
+        if transient_only and not is_restart_transient:
+            return
+        await self._transition(
+            session_id,
+            SessionStatus.FAILED,
+            event_type=EventType.SESSION_FAILED,
+            stage=stage,
+            status="failed",
+            message=message,
+            error_code=error_code,
+        )
 
     async def confirm(
         self,
@@ -470,10 +533,6 @@ class DemoOrchestrator:
         policy = evaluate_policy(plan, confirmation_consumed=confirmation_consumed)
         if not policy.allowed:
             raise SessionConflict(policy.reason_code)
-        before = session.last_event_seq
-        await self.store.claim_execution(session_id)
-        await self._publish_after(session_id, before)
-
         async def event_sink(event_type: EventType, payload: dict[str, object]) -> None:
             status = "running" if event_type is EventType.ACTION_STARTED else "ok"
             if event_type is EventType.ACTION_FAILED:
@@ -490,7 +549,17 @@ class DemoOrchestrator:
         async def artifact_sink(artifact: ArtifactRecord) -> None:
             await self.store.add_artifact(artifact)
 
-        executor = self.executor_factory(event_sink, artifact_sink)
+        try:
+            executor = self.executor_factory(event_sink, artifact_sink)
+        except Exception as exc:
+            raise ExecutorError(
+                "EXECUTION_PREPARATION_FAILED",
+                "The controlled browser executor could not be prepared safely.",
+            ) from exc
+
+        before = session.last_event_seq
+        await self.store.claim_execution(session_id)
+        await self._publish_after(session_id, before)
         try:
             outcome = await executor.execute(
                 plan,

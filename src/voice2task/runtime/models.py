@@ -52,6 +52,20 @@ TERMINAL_STATUSES = frozenset(
     }
 )
 
+RESTART_INTERRUPTED_STATUSES = frozenset(
+    {
+        SessionStatus.CREATED,
+        SessionStatus.INPUT_RECEIVED,
+        SessionStatus.TRANSCRIBING,
+        SessionStatus.INFERRING,
+        SessionStatus.CONTRACT_READY,
+        SessionStatus.CONTRACT_REJECTED,
+        SessionStatus.POLICY_BLOCKED,
+        SessionStatus.EXECUTING,
+        SessionStatus.VERIFYING,
+    }
+)
+
 
 class EventType(str, Enum):
     SESSION_CREATED = "SESSION_CREATED"
@@ -259,11 +273,16 @@ class ArtifactRecord(StrictModel):
     created_at: datetime
 
 
+class ExecutionEvidence(StrictModel):
+    action_outputs: dict[str, str] = Field(default_factory=dict)
+    dom_snapshot: dict[str, str] = Field(default_factory=dict)
+
+
 class ExecutionOutcome(StrictModel):
     browser_context_created: bool
     action_count: int = Field(ge=0)
     final_url_path: str | None = None
-    values: dict[str, str] = Field(default_factory=dict)
+    evidence: ExecutionEvidence = Field(default_factory=ExecutionEvidence)
     screenshots: list[str] = Field(default_factory=list)
     elapsed_ms: int = Field(default=0, ge=0)
 

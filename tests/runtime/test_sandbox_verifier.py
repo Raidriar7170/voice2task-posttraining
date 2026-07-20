@@ -1,15 +1,18 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import datetime, timezone
 
 import httpx
 import pytest
 
 from apps.api.sandbox import router as sandbox_router
+from voice2task.runtime.capabilities import CAPABILITY_REGISTRY
 from voice2task.runtime.compiler import compile_contract_to_plan
 from voice2task.runtime.inference import FIXTURE_CONTRACTS
 from voice2task.runtime.models import (
     BrowserTaskContractPayload,
+    ExecutionEvidence,
     ExecutionOutcome,
     SessionContext,
 )
@@ -67,10 +70,12 @@ async def test_four_sandbox_pages_are_deterministic_and_same_origin() -> None:
                 browser_context_created=True,
                 action_count=3,
                 final_url_path="/sandbox/search",
-                values={
-                    "query_input": "北京明天天气",
-                    "results": "受控结果：北京明天天气",
-                },
+                evidence=ExecutionEvidence(
+                    dom_snapshot={
+                        "query_input": "北京明天天气",
+                        "results": "受控结果：北京明天天气",
+                    }
+                ),
             ),
         ),
         (
@@ -79,7 +84,9 @@ async def test_four_sandbox_pages_are_deterministic_and_same_origin() -> None:
                 browser_context_created=True,
                 action_count=1,
                 final_url_path="/sandbox/help",
-                values={"heading": "Voice2Task 帮助中心"},
+                evidence=ExecutionEvidence(
+                    dom_snapshot={"heading": "Voice2Task 帮助中心"}
+                ),
             ),
         ),
         (
@@ -88,10 +95,10 @@ async def test_four_sandbox_pages_are_deterministic_and_same_origin() -> None:
                 browser_context_created=True,
                 action_count=2,
                 final_url_path="/sandbox/product",
-                values={
-                    "product_price": "¥199.00",
-                    "product_price_dom": "¥199.00",
-                },
+                evidence=ExecutionEvidence(
+                    action_outputs={"product_price": "¥199.00"},
+                    dom_snapshot={"product_price": "¥199.00"},
+                ),
             ),
         ),
         (
@@ -100,7 +107,9 @@ async def test_four_sandbox_pages_are_deterministic_and_same_origin() -> None:
                 browser_context_created=True,
                 action_count=2,
                 final_url_path="/sandbox/profile",
-                values={"email_input": "demo@example.com"},
+                evidence=ExecutionEvidence(
+                    dom_snapshot={"email_input": "demo@example.com"}
+                ),
             ),
         ),
     ],
@@ -139,7 +148,9 @@ def test_verifier_failure_is_not_repaired() -> None:
         browser_context_created=True,
         action_count=3,
         final_url_path="/sandbox/search",
-        values={"query_input": "错误值", "results": "错误结果"},
+        evidence=ExecutionEvidence(
+            dom_snapshot={"query_input": "错误值", "results": "错误结果"}
+        ),
     )
 
     first = verify_execution(plan, contract, _context(), outcome)
@@ -149,3 +160,103 @@ def test_verifier_failure_is_not_repaired() -> None:
     assert first.passed is False
     assert first.failure_code == "VERIFICATION_FAILED"
     assert any(not check.passed for check in first.checks)
+
+
+def test_extract_verifier_fails_when_action_output_differs_from_fresh_dom_snapshot() -> None:
+    contract, plan = _compiled("帮我提取这个页面上的商品价格")
+    outcome = ExecutionOutcome.model_validate(
+        {
+            "browser_context_created": True,
+            "action_count": 2,
+            "final_url_path": "/sandbox/product",
+            "evidence": {
+                "action_outputs": {"product_price": "¥198.00"},
+                "dom_snapshot": {"product_price": "¥199.00"},
+            },
+        }
+    )
+
+    result = verify_execution(plan, contract, _context(), outcome)
+
+    assert result.passed is False
+    assert result.failure_code == "EXTRACT_EVIDENCE_MISMATCH"
+    extract_check = result.checks[-2]
+    assert extract_check.passed is False
+    assert extract_check.expected == "¥199.00"
+    assert extract_check.observed == "¥198.00"
+
+
+@pytest.mark.parametrize(
+    ("action_output", "dom_snapshot", "expected_failure_code"),
+    [
+        ("", "¥199.00", "EXTRACT_ACTION_OUTPUT_MISSING"),
+        ("¥199.00", "", "EXTRACT_DOM_SNAPSHOT_MISSING"),
+        ("¥199.00", "¥198.00", "EXTRACT_EVIDENCE_MISMATCH"),
+        ("¥198.00", "¥198.00", "EXTRACT_EXPECTED_VALUE_MISMATCH"),
+    ],
+)
+def test_extract_verifier_uses_deterministic_failure_code_precedence(
+    action_output: str,
+    dom_snapshot: str,
+    expected_failure_code: str,
+) -> None:
+    contract, plan = _compiled("帮我提取这个页面上的商品价格")
+    outcome = ExecutionOutcome(
+        browser_context_created=True,
+        action_count=2,
+        final_url_path="/sandbox/product",
+        evidence=ExecutionEvidence(
+            action_outputs={"product_price": action_output} if action_output else {},
+            dom_snapshot={"product_price": dom_snapshot} if dom_snapshot else {},
+        ),
+    )
+
+    result = verify_execution(plan, contract, _context(), outcome)
+
+    assert result.passed is False
+    assert result.failure_code == expected_failure_code
+
+
+def test_extract_verifier_uses_registry_expected_value_after_evidence_matches() -> None:
+    contract, plan = _compiled("帮我提取这个页面上的商品价格")
+    outcome = ExecutionOutcome(
+        browser_context_created=True,
+        action_count=2,
+        final_url_path="/sandbox/product",
+        evidence=ExecutionEvidence(
+            action_outputs={"product_price": "¥199.00"},
+            dom_snapshot={"product_price": "¥199.00"},
+        ),
+    )
+    product = CAPABILITY_REGISTRY["demo_product"]
+
+    with pytest.MonkeyPatch.context() as monkeypatch:
+        monkeypatch.setitem(
+            CAPABILITY_REGISTRY,
+            "demo_product",
+            replace(product, expected_values={"product_price": "¥200.00"}),
+        )
+        result = verify_execution(plan, contract, _context(), outcome)
+
+    assert result.passed is False
+    assert result.failure_code == "EXTRACT_EXPECTED_VALUE_MISMATCH"
+    assert result.checks[-1].expected == "¥200.00"
+    assert result.checks[-1].observed == "¥199.00"
+
+
+def test_extract_verifier_keeps_generic_code_for_non_evidence_failure() -> None:
+    contract, plan = _compiled("帮我提取这个页面上的商品价格")
+    outcome = ExecutionOutcome(
+        browser_context_created=True,
+        action_count=2,
+        final_url_path="/sandbox/wrong-product",
+        evidence=ExecutionEvidence(
+            action_outputs={"product_price": "¥199.00"},
+            dom_snapshot={"product_price": "¥199.00"},
+        ),
+    )
+
+    result = verify_execution(plan, contract, _context(), outcome)
+
+    assert result.passed is False
+    assert result.failure_code == "VERIFICATION_FAILED"

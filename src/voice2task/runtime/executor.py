@@ -18,6 +18,7 @@ from voice2task.runtime.models import (
     BrowserTaskContractPayload,
     EventType,
     ExecutionAction,
+    ExecutionEvidence,
     ExecutionOutcome,
     ExecutionPlan,
     SessionContext,
@@ -119,7 +120,7 @@ class SandboxExecutor:
         *,
         contract: BrowserTaskContractPayload,
         context: SessionContext,
-        values: dict[str, str],
+        action_outputs: dict[str, str],
     ) -> str:
         if source is None:
             return ""
@@ -127,8 +128,8 @@ class SandboxExecutor:
             return str(contract.slots["query"])
         if source == "session.profile.email":
             return context.profile.email
-        if source == "execution.values.product_price":
-            return values.get("product_price", "")
+        if source == "execution.action_outputs.product_price":
+            return action_outputs.get("product_price", "")
         raise ExecutorError("VALUE_SOURCE_NOT_ALLOWLISTED", "Action value source is not allowlisted.")
 
     async def _perform_action(
@@ -139,7 +140,7 @@ class SandboxExecutor:
         *,
         contract: BrowserTaskContractPayload,
         context: SessionContext,
-        values: dict[str, str],
+        action_outputs: dict[str, str],
     ) -> None:
         timeout = action.timeout_ms
         if action.kind.value == "navigate":
@@ -153,13 +154,18 @@ class SandboxExecutor:
             raise ExecutorError("LOCATOR_NOT_ALLOWLISTED", "Action locator is not allowlisted.")
         locator = page.locator(selector)
         if action.kind.value == "fill":
-            value = self._resolve_value(action.value_source, contract=contract, context=context, values=values)
+            value = self._resolve_value(
+                action.value_source,
+                contract=contract,
+                context=context,
+                action_outputs=action_outputs,
+            )
             await locator.fill(value, timeout=timeout)
         elif action.kind.value == "click":
             await locator.click(timeout=timeout)
         elif action.kind.value == "extract_text":
             text = await locator.text_content(timeout=timeout)
-            values[action.locator_id] = (text or "").strip()
+            action_outputs[action.locator_id] = (text or "").strip()
         else:
             raise ExecutorError("UNSAFE_ACTION", "Action kind is not supported by the sandbox executor.")
 
@@ -190,23 +196,22 @@ class SandboxExecutor:
             )
         return artifact_id
 
-    async def _collect_values(
+    async def _collect_dom_snapshot(
         self,
         page: Page,
         capability: Capability,
-        values: dict[str, str],
-    ) -> None:
+    ) -> dict[str, str]:
+        dom_snapshot: dict[str, str] = {}
         for locator_id in ("query_input", "email_input"):
             selector = capability.locators.get(locator_id)
             if selector and await page.locator(selector).count():
-                values[locator_id] = await page.locator(selector).input_value()
+                dom_snapshot[locator_id] = await page.locator(selector).input_value()
         for locator_id in ("results", "heading", "product_price"):
             selector = capability.locators.get(locator_id)
             if selector and await page.locator(selector).count():
                 text = await page.locator(selector).text_content()
-                values[locator_id] = (text or "").strip()
-        if capability.capability_id == "demo_product":
-            values["product_price_dom"] = values.get("product_price", "")
+                dom_snapshot[locator_id] = (text or "").strip()
+        return dom_snapshot
 
     async def execute(
         self,
@@ -257,7 +262,7 @@ class SandboxExecutor:
         started = time.monotonic()
         browser_context = await self.manager.new_context()
         external_request_blocked = False
-        values: dict[str, str] = {}
+        action_outputs: dict[str, str] = {}
         screenshots: list[str] = []
         completed_actions = 0
 
@@ -298,7 +303,7 @@ class SandboxExecutor:
                         capability,
                         contract=contract,
                         context=context,
-                        values=values,
+                        action_outputs=action_outputs,
                     )
                     if external_request_blocked:
                         raise ExecutorError(
@@ -331,12 +336,15 @@ class SandboxExecutor:
                         {"action_id": action.action_id, "error_code": code},
                     )
                     raise ExecutorError(code, "The controlled browser action failed.") from exc
-            await self._collect_values(page, capability, values)
+            dom_snapshot = await self._collect_dom_snapshot(page, capability)
             return ExecutionOutcome(
                 browser_context_created=True,
                 action_count=completed_actions,
                 final_url_path=urlsplit(page.url).path,
-                values=values,
+                evidence=ExecutionEvidence(
+                    action_outputs=action_outputs,
+                    dom_snapshot=dom_snapshot,
+                ),
                 screenshots=screenshots,
                 elapsed_ms=int((time.monotonic() - started) * 1000),
             )

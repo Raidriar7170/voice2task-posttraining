@@ -30,14 +30,33 @@ async def _new_page(browser, origin: str, viewport: dict[str, int]) -> Page:
 async def _complete_search(page: Page) -> None:
     await page.get_by_role("button", name="帮我搜索北京明天的天气").click()
     await page.get_by_role("button", name="生成受控计划").click()
-    await page.get_by_role("button", name="执行计划").click()
-    await page.get_by_text("通过", exact=True).wait_for()
+    await page.locator(".capability-line strong", has_text="demo_search").wait_for()
+    for _ in range(20):
+        await page.get_by_role("button", name="执行计划").click()
+        await page.wait_for_timeout(50)
+        if await page.get_by_text("通过", exact=True).is_visible():
+            return
+        active_task_error = page.get_by_role("alert").filter(has_text="SESSION_TASK_ACTIVE")
+        if await active_task_error.count() and await active_task_error.is_visible():
+            continue
+        await page.get_by_text("通过", exact=True).wait_for(timeout=10_000)
+        return
+    raise RuntimeError("search execution remained blocked by background task ownership")
 
 
 async def _clear_sessions(origin: str) -> None:
     async with httpx.AsyncClient(base_url=origin) as client:
         sessions = (await client.get("/api/sessions")).json()["sessions"]
         for session in sessions:
+            if session["status"] not in {
+                "COMPLETED",
+                "BLOCKED",
+                "CLARIFICATION_REQUIRED",
+                "FAILED",
+                "CANCELLED",
+            }:
+                cancel = await client.post(f"/api/sessions/{session['id']}/cancel")
+                cancel.raise_for_status()
             response = await client.delete(f"/api/sessions/{session['id']}")
             response.raise_for_status()
 

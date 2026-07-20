@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
 from urllib.parse import urlsplit
@@ -19,6 +20,13 @@ MIME_SUFFIXES = {
     "audio/webm": ".webm",
     "audio/mpeg": ".mp3",
 }
+
+
+@dataclass(frozen=True)
+class StagedAudioUpload:
+    path: Path
+    mime_type: str
+    fixture_id: str | None = None
 
 
 class ASRProviderError(RuntimeError):
@@ -152,16 +160,45 @@ async def transcribe_uploaded_audio(
     temp_dir: Path,
     fixture_id: str | None = None,
 ) -> ASRResult:
+    staged = stage_uploaded_audio(
+        content=content,
+        mime_type=mime_type,
+        client_filename=client_filename,
+        temp_dir=temp_dir,
+        fixture_id=fixture_id,
+    )
+    return await transcribe_staged_audio(provider, staged)
+
+
+def stage_uploaded_audio(
+    *,
+    content: bytes,
+    mime_type: str,
+    client_filename: str | None,
+    temp_dir: Path,
+    fixture_id: str | None = None,
+) -> StagedAudioUpload:
     audio = validate_audio_upload(content, mime_type, client_filename)
     temp_dir.mkdir(parents=True, exist_ok=True)
     temporary_path = temp_dir / f"{uuid4().hex}{MIME_SUFFIXES[audio.mime_type]}"
     temporary_path.write_bytes(audio.content)
+    return StagedAudioUpload(
+        path=temporary_path,
+        mime_type=audio.mime_type,
+        fixture_id=fixture_id,
+    )
+
+
+async def transcribe_staged_audio(
+    provider: ASRProvider,
+    staged: StagedAudioUpload,
+) -> ASRResult:
     try:
         safe_audio = AudioInput(
-            content=temporary_path.read_bytes(),
-            mime_type=audio.mime_type,
-            fixture_id=fixture_id,
+            content=staged.path.read_bytes(),
+            mime_type=staged.mime_type,
+            fixture_id=staged.fixture_id,
         )
         return await provider.transcribe(safe_audio)
     finally:
-        temporary_path.unlink(missing_ok=True)
+        staged.path.unlink(missing_ok=True)

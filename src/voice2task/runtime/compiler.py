@@ -154,7 +154,7 @@ def compile_contract_to_plan(
                 kind=ActionKind.EXTRACT_TEXT,
                 capability_id=capability_id,
                 locator_id="product_price",
-                value_source="execution.values.product_price",
+                value_source="execution.action_outputs.product_price",
             ),
         ]
         postconditions = [

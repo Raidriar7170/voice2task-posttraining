@@ -15,7 +15,7 @@ Browser Task Contract JSON，供后续浏览器 agent 决定搜索、打开 URL�
 
 ## Controlled Browser Demo MVP
 
-本仓库现在包含一个可选的、面向中文语音入口的可验证受控 Browser Agent Demo：`fixture inference + disabled ASR + localhost sandbox execution`。它复用 `BrowserTaskContract V1`，通过静态 capability、人工确认、Playwright exact-origin 隔离和确定性 verifier 演示六条公开场景。
+本仓库现在包含一个可选的、面向中文语音入口的可验证受控 Browser Agent Demo：`fixture inference + disabled ASR + localhost sandbox execution`。它复用 `BrowserTaskContract V1`，通过 `202 Accepted` 后台生命周期、静态 capability、可恢复的一次性 challenge、两阶段确认/执行、Playwright exact-origin 隔离和独立 action/DOM evidence 演示六条公开场景。
 
 ```bash
 python -m pip install -e '.[demo,dev]'
