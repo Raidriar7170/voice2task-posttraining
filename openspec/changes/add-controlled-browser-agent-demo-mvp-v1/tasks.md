@@ -51,4 +51,4 @@
 - [x] 7.4 Run a targeted public-leak/private-path scan over every new public artifact and inspect ignored/untracked files for models, adapters, audio, logs, caches, browser traces, or absolute paths.
 - [x] 7.5 Perform a structured read-only diff/acceptance self-review, fix every Must Fix through a new failing test, and rerun the complete focused verification bundle.
 - [x] 7.6 Mark all OpenSpec implementation tasks complete while leaving the change active and unarchived.
-- [ ] 7.7 Commit scoped changes, push `codex/voice2task-controlled-browser-demo-mvp-v1`, create a Draft PR against `codex/materialize-manifest-bound-train-only-sft-v1`, and verify Draft/Open/unmerged state.
+- [x] 7.7 Commit scoped changes, push `codex/voice2task-controlled-browser-demo-mvp-v1`, create a Draft PR against `codex/materialize-manifest-bound-train-only-sft-v1`, and verify Draft/Open/unmerged state.
