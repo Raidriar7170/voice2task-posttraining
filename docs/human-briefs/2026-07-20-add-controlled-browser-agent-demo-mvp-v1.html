@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Voice2Task Controlled Browser Demo MVP - Human Brief</title>
+  <style>
+    :root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body { margin: 0; background: #f5f7fa; color: #172033; line-height: 1.65; }
+    main { max-width: 780px; margin: 0 auto; padding: 40px 24px 64px; }
+    article { background: #fff; border: 1px solid #dce3ec; border-radius: 16px; padding: 28px; }
+    h1, h2 { line-height: 1.25; }
+    h1 { margin-top: 0; font-size: 1.9rem; }
+    h2 { margin-top: 2rem; font-size: 1.2rem; }
+    .status { display: inline-block; border: 1px solid #177245; border-radius: 999px; padding: 4px 10px; color: #0f5b36; font-weight: 700; }
+    code { overflow-wrap: anywhere; }
+    a { color: #0755a5; text-decoration: underline; text-underline-offset: 2px; }
+    a:focus-visible { outline: 3px solid #1d74d5; outline-offset: 3px; }
+    ul { padding-left: 1.25rem; }
+    @media (max-width: 600px) { main { padding: 20px 12px 40px; } article { padding: 20px; border-radius: 12px; } }
+    @media print { body { background: #fff; } main { max-width: none; padding: 0; } article { border: 0; padding: 0; } }
+    @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <p><strong>历史快照：</strong>本文记录 2026-07-20 的 stacked Draft 边界，已由 <a href="2026-07-21-make-controlled-browser-demo-merge-ready-v1.html">2026-07-21 MERGE_READY Human Brief</a> 取代为当前 PR 集成状态；下述 SHA、Draft 与 <code>STACKED_BASE_PENDING</code> 只描述当时状态。</p>
+      <p class="status">REVIEW FIXES COMPLETE · OPENSPEC ARCHIVED · STACKED BASE PENDING</p>
+      <h1>Voice2Task 受控 Browser Agent Demo MVP</h1>
+      <p>结论：已在精确训练基础设施基线 <code>38db1244884ddcc7df155a06e342d9e061ff0bcd</code> 上完成一个可运行、可演示、可测试的 bounded MVP，并在同一个 OpenSpec change 内完成全部 review fixes。六条 fixture 场景经真实 FastAPI/orchestrator/localhost Chromium 路径达到预期终态；最终 no-lockbox 门禁和 Reviewer 复审均通过，三份 delta spec 已同步到 main specs，change 已归档。由于该 stacked base 尚未进入 <code>main</code>，最终 truth marker 保持 <code>STACKED_BASE_PENDING</code>。</p>
+
+      <h2>本阶段完成了什么</h2>
+      <ul>
+        <li>实现 transcript → Contract → 受控 Plan → Policy → 人工确认 → localhost Playwright → deterministic Verifier 的端到端路径。</li>
+        <li>实现 FastAPI/SQLite/WebSocket、React/Vite 操作台、四个本地 sandbox 页面、截图 artifact 与六场景 fixture benchmark。</li>
+        <li>复用现有 BrowserTaskContract V1、gold-free prompt、strict parser 与 schema/semantic validation；新增严格 runtime 适配层与公开 OpenAPI schema。</li>
+        <li><code>make demo</code> 会执行前端 clean install/build，并由 FastAPI 在 <code>127.0.0.1:8000</code> 同源托管 UI、API、WebSocket 和 sandbox。</li>
+      </ul>
+
+      <h2>本轮真实 Review Fixes</h2>
+      <ul>
+        <li>Extract evidence 拆为独立 <code>action_outputs</code> 与动作后的 fresh <code>dom_snapshot</code>，按固定顺序返回四个专用错误码，并保留后续非 Extract 失败的 <code>VERIFICATION_FAILED</code>。</li>
+        <li>Create/transcript 改为 <code>202 Accepted</code> 初始 snapshot；<code>SessionTaskRegistry</code> 保留并观察每个 accepted background task，SQLite/event 才是权威状态。</li>
+        <li>Raw confirmation token 不再出现在 create/transcript 响应；独立 challenge endpoint 可旋转 token、只落 hash。Web UI 只在 <code>sessionStorage</code> 恢复匹配 challenge，并严格分离 <code>CONFIRMED</code> 与显式 execute。</li>
+        <li>WebSocket state-bearing event 触发权威 HTTP snapshot refresh；客户端按 seq 去重、拒绝 regressive snapshot，并在 history replay 已领先并发 snapshot 时重新读取权威状态。Graceful shutdown 只失败真正 transient 的 task，不覆盖已经持久化的可恢复 plan/confirmation 边界。</li>
+        <li>事件 message/payload 在 SQLite 持久化与 REST/WebSocket 发布前净化；provider-controlled private path、hostname 与 PID 有 REST + WS 回归保护。</li>
+        <li>麦克风 pending acquisition 使用 generation/in-flight guard；临时音频以注册回调原子转移清理责任；artifact 删除失败保留数据库行并返回 retryable 错误。</li>
+      </ul>
+
+      <h2>信任与权限边界</h2>
+      <ul>
+        <li>默认 inference 为显式 fixture；ASR 默认 disabled；浏览器只能访问同源 localhost sandbox。</li>
+        <li>不访问 lockbox，不训练、不使用 GPU、不修改历史数据或指标，不提交私有路径、模型、adapter、音频、日志、缓存或 trace。</li>
+        <li>本 change 已按明确授权完成 spec sync 与 archive；Draft PR 仍不得 merge、不得转 Ready。</li>
+        <li>PR #5 的 stacked base <code>codex/materialize-manifest-bound-train-only-sft-v1@38db1244884ddcc7df155a06e342d9e061ff0bcd</code> 尚未进入 <code>main</code>。因此本分支结果不是 main-based、不是 main-ready，也不能描述为已集成。</li>
+      </ul>
+
+      <h2>权威来源</h2>
+      <ul>
+        <li><a href="../../openspec/changes/archive/2026-07-20-add-controlled-browser-agent-demo-mvp-v1/proposal.md">Proposal</a></li>
+        <li><a href="../../openspec/changes/archive/2026-07-20-add-controlled-browser-agent-demo-mvp-v1/design.md">Design</a></li>
+        <li><a href="../../openspec/changes/archive/2026-07-20-add-controlled-browser-agent-demo-mvp-v1/tasks.md">Tasks</a></li>
+        <li><a href="../demo/README.md">Demo 运行手册与截图</a></li>
+        <li><a href="../../reports/demo-mvp/summary.md">Committed benchmark 报告</a></li>
+      </ul>
+
+      <h2>新鲜验证证据</h2>
+      <ul>
+        <li>Benchmark runner：真实 API/orchestrator/localhost Chromium 六场景临时报告通过；create <code>202 Accepted</code> lifecycle <code>6/6</code>、预期终态 + strict contract <code>6/6</code>、compiler/policy <code>6/6</code>、可执行 verifier <code>4/4</code>、no-execution verifier <code>2/2</code>。</li>
+        <li>Confirmation/Safety：challenge public fields <code>1/1</code>，confirm 后在独立 execute 前保持 <code>CONFIRMED</code>；未确认写入、blocked/clarify execution、external navigation 与 unsafe execution 均为 0。</li>
+        <li>Extract JSON evidence：action output <code>¥199.00</code>、fresh DOM <code>¥199.00</code>、registry expected <code>¥199.00</code>，且只在 Extract scenario 序列化。</li>
+        <li>Production E2E：Search、独立 Extract evidence、刷新恢复后的两阶段 Form confirmation、Blocked 与 Session 删除在 <code>1440×900</code> 和 <code>390×844</code> 完成；inference/compiler event 在 UI 中先于 execution 出现，console/page error 为 0，无横向溢出。当前结果 <code>4 passed</code>。</li>
+        <li>Focused Python：runtime/API/WebSocket/executor、production E2E 与既有 V1 schema/formatting compatibility 共 <code>166 passed</code>；production E2E 单列 <code>4 passed</code>。</li>
+        <li>Frontend：Vitest <code>37 passed</code>，TypeScript check 与 production build 通过。</li>
+        <li>Ruff、focused strict mypy、归档后 OpenSpec strict <code>18/18</code>、public leak scan <code>0 findings</code> 与 <code>git diff --check</code> 全部通过；同一 Reviewer 复审为 <code>Pass</code>，无 Must Fix / Should Fix。</li>
+        <li>Truth checker 明确未运行，因为其实现会读取 lockbox；本阶段 truth-surface 状态为 <code>LOCKBOX_BOUNDARY_BLOCKED</code>，不是测试豁免或模型质量结论。</li>
+      </ul>
+
+      <h2>风险与审阅重点</h2>
+      <ul>
+        <li>默认 inference 是六条精确匹配的 fixture；private provider 仅做 mock/fail-closed 接口验证，本阶段没有加载 adapter。</li>
+        <li>ASR 默认 disabled；HTTP adapter 已实现，但没有配置真实 endpoint，因此不证明真实 ASR。</li>
+        <li>浏览器只允许 exact localhost sandbox origin；Form Fill 只改本地 DOM，不保存、不提交。</li>
+        <li>验证刻意不运行可能读取 lockbox 的全量 pytest、truth checker 或 lockbox tests；新增 runtime/demo 范围已全部通过。</li>
+      </ul>
+
+      <h2>不得过度声明</h2>
+      <p>不得称为通用 Browser Agent、任意网页自动化、生产系统、真实互联网泛化、自然语音/ASR 泛化、模型质量提升或已上线系统。</p>
+
+      <h2>发布状态与下一步</h2>
+      <p><a href="https://github.com/Raidriar7170/voice2task-posttraining/pull/5">Draft PR #5</a> 仍以 <code>codex/materialize-manifest-bound-train-only-sft-v1@38db1244884ddcc7df155a06e342d9e061ff0bcd</code> 为 stacked base；该 base 尚未进入 <code>main</code>。本轮只更新既有 Draft PR 分支，OpenSpec active change 数为 0；不自动转 Ready、merge、release、deploy 或训练。最终状态：<code>STACKED_BASE_PENDING</code>。</p>
+    </article>
+  </main>
+</body>
+</html>

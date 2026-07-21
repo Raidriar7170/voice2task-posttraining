@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Voice2Task Controlled Browser Demo - MERGE_READY Human Brief</title>
+  <style>
+    :root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body { margin: 0; background: #f5f7fa; color: #172033; line-height: 1.65; }
+    main { max-width: 800px; margin: 0 auto; padding: 40px 24px 64px; }
+    article { background: #fff; border: 1px solid #dce3ec; border-radius: 16px; padding: 28px; }
+    h1, h2 { line-height: 1.25; }
+    h1 { margin-top: 0; font-size: 1.9rem; }
+    h2 { margin-top: 2rem; font-size: 1.2rem; }
+    .status { display: inline-block; border: 1px solid #177245; border-radius: 999px; padding: 4px 10px; color: #0f5b36; font-weight: 700; }
+    code { overflow-wrap: anywhere; }
+    a { color: #0755a5; text-decoration: underline; text-underline-offset: 2px; }
+    a:focus-visible { outline: 3px solid #1d74d5; outline-offset: 3px; }
+    ul { padding-left: 1.25rem; }
+    @media (max-width: 600px) { main { padding: 20px 12px 40px; } article { padding: 20px; border-radius: 12px; } }
+    @media print { body { background: #fff; } main { max-width: none; padding: 0; } article { border: 0; padding: 0; } }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <p class="status">MERGE_READY · MANUAL MERGE ONLY</p>
+      <h1>Voice2Task Controlled Browser Demo 最终集成简报</h1>
+      <p>结论：PR #5 已从训练前置分支去栈，只保留 Controlled Browser Demo 范围，并以 <code>main</code> 为直接 base。最终有效状态必须以 <a href="https://github.com/Raidriar7170/voice2task-posttraining/pull/5">GitHub PR #5</a> 同时显示 Ready for review、<code>MERGEABLE / CLEAN</code>、零未解决 review thread 为准。本任务不授权自动 Merge。</p>
+
+      <h2>集成与修复</h2>
+      <ul>
+        <li>Demo 范围直接基于实时 <code>origin/main</code>；PR #3、train-only 前置栈和独立 recruiter-facing PR #4 均未混入最终差异。</li>
+        <li>删除不必要的顶层 <code>tests/__init__.py</code>，恢复既有测试的裸 fixture 导入，同时保留 <code>tests.runtime</code> 导入。</li>
+        <li>在最终 DOM snapshot 后再次检查被阻断的外部请求；检查后到 outcome 返回之间无 await，延迟外联不能被误报为成功。</li>
+        <li>Plan 的 <code>plan_issued_at</code> 在 inference/contract validation 完成、compiler 真正开始前刷新；慢 ASR、人工 transcript 确认或慢 private inference 不再预先消耗五分钟有效期。</li>
+        <li>Confirmation 成功时，在同一 SQLite 事务内持久化 token 消费、<code>CONFIRMED</code>、有效 <code>POLICY_ALLOWED</code> snapshot 及连续事件；故障注入测试证明任一步失败都会整体回滚。</li>
+        <li>Private provider 保持 inference-time lazy-load，但在首个 prompt 渲染前先加载 tokenizer，消除冷启动 fallback 与后续 chat-template 不一致。</li>
+        <li>旧 2026-07-20 Human Brief 保留为历史 stacked Draft 快照，并显式链接到本文。</li>
+      </ul>
+
+      <h2>权威证据</h2>
+      <ul>
+        <li><a href="../../openspec/changes/archive/2026-07-20-add-controlled-browser-agent-demo-mvp-v1/proposal.md">OpenSpec proposal</a>、<a href="../../openspec/changes/archive/2026-07-20-add-controlled-browser-agent-demo-mvp-v1/design.md">design</a> 与 <a href="../../openspec/changes/archive/2026-07-20-add-controlled-browser-agent-demo-mvp-v1/tasks.md">tasks</a> 已归档；三份 delta spec 已同步，active changes 为 0。</li>
+        <li><a href="../demo/README.md">Demo 运行手册</a>、<a href="../../reports/demo-mvp/summary.md">committed benchmark</a> 与四张 fixture-safe 桌面/移动截图保持可复核。</li>
+        <li>PR head/base 的最终 SHA 不在本文复制；GitHub PR 页面是当前 SHA 的唯一权威来源，避免把旧 SHA 固化为现状。</li>
+      </ul>
+
+      <h2>新鲜验证</h2>
+      <ul>
+        <li>Non-lockbox Python：<code>170 passed</code>，覆盖 runtime/API、public schema/formatting compatibility 与 production Playwright E2E；未收集 lockbox 或训练评测套件。</li>
+        <li>Frontend：Vitest <code>37 passed</code>；TypeScript typecheck 与 production build 通过。</li>
+        <li>Production Playwright E2E：<code>4 passed</code>，覆盖 Search、独立 Extract evidence、Form confirm/execute 恢复、Blocked、双 viewport、零 console/page error 与零横向溢出。</li>
+        <li>Controlled benchmark：<code>6/6</code> 预期终态与 strict contract、<code>6/6</code> compiler/policy、<code>4/4</code> executable verifier、<code>2/2</code> no-execution verifier；另验证确认前 policy、确认后持久化 policy 与事件顺序均为 <code>1/1</code>，external/unsafe/blocked/clarify execution 均为 0。</li>
+        <li>Ruff 全仓通过；strict mypy 对 runtime/API <code>20</code> 个源文件零 issue；OpenSpec strict <code>18/18</code>；public artifacts leak scan <code>0 findings</code>；受保护训练/数据/历史指标/lockbox 差异为 0；<code>git diff --check</code> 通过。</li>
+        <li>仓库未配置 PR check runs 或 status contexts；最终只声明“所有可用远程检查中无失败项”，不虚构远程 CI green。</li>
+      </ul>
+
+      <h2>边界与风险</h2>
+      <ul>
+        <li>默认 inference 是六条精确 fixture；ASR 默认 disabled；private PEFT 仅 mock/fail-closed 验证，未加载 adapter。</li>
+        <li>浏览器只允许 exact localhost sandbox origin；Form Fill 只修改本地 DOM，不保存、不提交。</li>
+        <li>不作通用 Browser Agent、任意公网自动化、自然语音/ASR 泛化、模型质量提升、生产就绪、发布或部署声明。</li>
+        <li>没有训练、GPU/A100、release、deploy 或 Merge 行为。</li>
+      </ul>
+
+      <h2>下一步</h2>
+      <p>停止自动执行，保留 clean worktree，等待用户在 GitHub 手动 Merge PR #5。</p>
+    </article>
+  </main>
+</body>
+</html>

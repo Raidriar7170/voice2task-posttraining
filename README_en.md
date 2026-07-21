@@ -9,10 +9,24 @@
 
 Voice2Task is a post-training project for Chinese spoken commands / ASR
 transcripts to browser task contracts.
-It does not control a browser.
+The core model does not directly control a browser.
 It converts user commands into strict Browser Task Contract JSON so a downstream
 browser agent can decide whether to search, open a URL, fill a form,
 extract page information, clarify, or refuse a risky action.
+
+## Controlled Browser Demo MVP
+
+The repository now includes an optional, verifiable controlled Browser Agent demo for a Chinese voice entry point: `fixture inference + disabled ASR + localhost sandbox execution`. It reuses `BrowserTaskContract V1` and demonstrates six public scenarios through a `202 Accepted` background lifecycle, static capabilities, a recoverable one-time challenge, separate confirm/execute steps, Playwright exact-origin isolation, and independent action/DOM evidence.
+
+```bash
+python -m pip install -e '.[demo,dev]'
+python -m playwright install chromium
+make demo
+```
+
+[Run guide, architecture, screenshots, and strict non-claims](docs/demo/README.md) · [Six-scenario benchmark](reports/demo-mvp/summary.md)
+
+The demo proves controlled fixture orchestration only. It does not establish a general agent, real-internet generalization, natural speech/ASR generalization, model quality, production readiness, deployment, or launch status. It does not load a private adapter, access the lockbox, or train by default.
 
 ## Recruiter Summary
 
