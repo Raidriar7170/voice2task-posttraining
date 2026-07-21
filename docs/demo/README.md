@@ -46,7 +46,7 @@ Vite 在 `127.0.0.1:5173` 运行，并代理 `/api`、`/ws`、`/sandbox` 到 Fas
 | 帮我打开那个页面 | `clarify/clarify` | `CLARIFICATION_REQUIRED` | 0 actions / no context |
 | 替我完成付款 | `blocked/deny` | `BLOCKED` | 0 actions / no context |
 
-Form Fill 只把 `demo@example.com` 填入本地 DOM，不点击 save、不提交。Session create 不返回 raw token；页面在 session 到达 `AWAITING_CONFIRMATION` 后调用独立的 `POST .../confirmation-challenge`。每次调用都会旋转 challenge、使旧 token 失效；数据库只保存 SHA-256 hash。Challenge 绑定 session、plan ID、plan version，五分钟过期且只能消费一次。浏览器只把匹配且未过期的 challenge 放在当前 tab 的 `sessionStorage`，刷新后先读取权威 session snapshot 再决定恢复或清除，从不使用 `localStorage`。
+Form Fill 只把 `demo@example.com` 填入本地 DOM，不点击 save、不提交。Plan 的五分钟有效期从 contract validation 完成、compiler 真正开始时计时，不从 Session 创建时提前消耗。Session create 不返回 raw token；页面在 session 到达 `AWAITING_CONFIRMATION` 后调用独立的 `POST .../confirmation-challenge`。每次调用都会旋转 challenge、使旧 token 失效；数据库只保存 SHA-256 hash。Challenge 绑定 session、plan ID、plan version，五分钟过期且只能消费一次。确认成功时，token 消费、`CONFIRMED` 状态、有效 `POLICY_ALLOWED` snapshot 和对应事件在同一 SQLite 事务内提交；浏览器仍需单独 `/execute`。浏览器只把匹配且未过期的 challenge 放在当前 tab 的 `sessionStorage`，刷新后先读取权威 session snapshot 再决定恢复或清除，从不使用 `localStorage`。
 
 ## Provider 配置
 
@@ -58,7 +58,7 @@ export VOICE2TASK_BASE_MODEL_PATH=/private/local/base-model
 export VOICE2TASK_ADAPTER_PATH=/private/local/adapter
 ```
 
-该模式使用 `local_files_only=true`、统一 gold-free prompt、greedy decoding、严格 whole-object parser、V1 schema/semantic validation，且只允许一次 schema retry。缺路径、加载或推理失败都 fail closed；绝不回退到 fixture。路径不会出现在公共 API 或事件中。
+该模式使用 `local_files_only=true`、统一 gold-free prompt、greedy decoding、严格 whole-object parser、V1 schema/semantic validation，且只允许一次 schema retry。模型仍在首次 inference 时 lazy-load，但 tokenizer 会在首个 prompt 渲染前加载，因此冷启动与后续请求使用同一 chat-template 路径。缺路径、加载或推理失败都 fail closed；绝不回退到 fixture。路径不会出现在公共 API 或事件中。
 
 HTTP ASR 模式：
 

@@ -93,6 +93,58 @@ async def test_private_provider_uses_gold_free_prompt_and_one_schema_retry() -> 
 
 
 @pytest.mark.asyncio
+async def test_private_provider_loads_tokenizer_before_rendering_first_prompt(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    valid = {
+        "task_type": "search",
+        "route": "search_web",
+        "safety": {"allow": True, "reason": "public_readonly"},
+        "confirmation_required": False,
+        "slots": {"query": "北京明天天气"},
+        "normalized_command": "搜索北京明天天气",
+        "language": "zh-CN",
+        "contract_version": "v1",
+    }
+    calls: list[str] = []
+
+    class TemplateTokenizer:
+        def apply_chat_template(
+            self,
+            messages: list[dict[str, str]],
+            *,
+            tokenize: bool,
+            add_generation_prompt: bool,
+        ) -> str:
+            assert tokenize is False
+            assert add_generation_prompt is True
+            calls.append("render")
+            return f"template::{messages[-1]['content']}"
+
+    provider = LocalPeftVoice2TaskProvider()
+
+    async def load() -> None:
+        calls.append("load")
+        provider._tokenizer = TemplateTokenizer()
+
+    async def decode(prompt: str) -> str:
+        calls.append(f"decode::{prompt}")
+        return json.dumps(valid, ensure_ascii=False)
+
+    monkeypatch.setattr(provider, "load", load)
+    monkeypatch.setattr(provider, "_decode", decode)
+
+    result = await provider.infer("帮我搜索北京明天的天气")
+
+    assert result.inference_mode == "private_model"
+    assert calls == [
+        "load",
+        "render",
+        "decode::template::帮我搜索北京明天的天气",
+    ]
+
+
+@pytest.mark.asyncio
 async def test_private_provider_never_falls_back_to_fixture() -> None:
     calls = 0
 

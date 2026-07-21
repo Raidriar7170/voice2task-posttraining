@@ -320,14 +320,17 @@ class DemoOrchestrator:
             payload={"schema_valid": True, "semantic_valid": True},
         )
         session = await self.store.get_session(session_id)
-        initial_compile = compile_contract_to_plan(contract, session.context)
+        compile_context = session.context.model_copy(
+            update={"plan_issued_at": datetime.now(timezone.utc)}
+        )
+        initial_compile = compile_contract_to_plan(contract, compile_context)
         if initial_compile.plan is not None:
-            context = session.context.model_copy(
+            context = compile_context.model_copy(
                 update={"selected_capability": initial_compile.plan.capability_id}
             )
             compile_result = compile_contract_to_plan(contract, context)
         else:
-            context = session.context
+            context = compile_context
             compile_result = initial_compile
         if compile_result.plan is None:
             await self._transition(
@@ -497,11 +500,15 @@ class DemoOrchestrator:
         plan = ExecutionPlan.model_validate(session.plan)
         before = session.last_event_seq
         if decision == "approve":
+            effective_policy = evaluate_policy(plan, confirmation_consumed=True)
+            if not effective_policy.allowed:
+                raise SessionConflict(effective_policy.reason_code)
             result = await self.store.consume_confirmation(
                 session_id,
                 token=token,
                 plan_id=plan.plan_id,
                 plan_version=plan_version,
+                effective_policy=effective_policy,
             )
         else:
             result = await self.store.reject_confirmation(

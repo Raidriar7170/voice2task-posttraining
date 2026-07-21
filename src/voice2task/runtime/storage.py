@@ -18,6 +18,7 @@ from voice2task.runtime.models import (
     ArtifactRecord,
     EventType,
     ExecutionEvent,
+    PolicyResult,
     SessionContext,
     SessionRecord,
     SessionStatus,
@@ -526,9 +527,12 @@ class SQLiteSessionStore:
         token: str,
         plan_id: str,
         plan_version: int,
+        effective_policy: PolicyResult,
         now: datetime | None = None,
     ) -> SessionRecord:
         consumed_at = now or _now()
+        if not effective_policy.allowed or effective_policy.reason_code != "POLICY_ALLOWED":
+            raise SessionConflict("POLICY_NOT_ALLOWED")
         supplied_hash = hashlib.sha256(token.encode()).hexdigest()
         async with self._write_lock, self._connect() as connection:
             await connection.execute("BEGIN IMMEDIATE")
@@ -553,19 +557,22 @@ class SQLiteSessionStore:
                 raise SessionConflict("CONFIRMATION_TOKEN_INVALID")
             assert_transition(current, SessionStatus.CONFIRMED)
             seq = int(row["last_event_seq"]) + 1
+            policy_seq = seq + 1
             await connection.execute(
                 """
                 UPDATE sessions
                 SET status = ?, updated_at = ?, last_event_seq = ?, confirmation_status = ?,
-                    confirmation_consumed_at = ?, confirmation_token_hash = NULL
+                    confirmation_consumed_at = ?, confirmation_token_hash = NULL,
+                    policy_json = ?
                 WHERE id = ?
                 """,
                 (
                     SessionStatus.CONFIRMED.value,
                     consumed_at.isoformat(),
-                    seq,
+                    policy_seq,
                     "approved",
                     consumed_at.isoformat(),
+                    _dump(effective_policy),
                     session_id,
                 ),
             )
@@ -578,6 +585,20 @@ class SQLiteSessionStore:
                 status="ok",
                 message="Confirmation accepted",
                 payload={"plan_id": plan_id, "plan_version": plan_version},
+                created_at=consumed_at,
+            )
+            await self._insert_event(
+                connection,
+                session_id=session_id,
+                seq=policy_seq,
+                event_type=EventType.POLICY_ALLOWED,
+                stage="policy",
+                status="ok",
+                message=effective_policy.message,
+                payload={
+                    "reason_code": effective_policy.reason_code,
+                    "requires_confirmation": effective_policy.requires_confirmation,
+                },
                 created_at=consumed_at,
             )
             await connection.commit()

@@ -30,9 +30,12 @@
 
       <h2>集成与修复</h2>
       <ul>
-        <li>仅将三个 Demo 提交移植到实时 <code>origin/main</code>；PR #3、train-only 前置栈和独立 recruiter-facing PR #4 均未混入最终差异。</li>
+        <li>Demo 范围直接基于实时 <code>origin/main</code>；PR #3、train-only 前置栈和独立 recruiter-facing PR #4 均未混入最终差异。</li>
         <li>删除不必要的顶层 <code>tests/__init__.py</code>，恢复既有测试的裸 fixture 导入，同时保留 <code>tests.runtime</code> 导入。</li>
         <li>在最终 DOM snapshot 后再次检查被阻断的外部请求；检查后到 outcome 返回之间无 await，延迟外联不能被误报为成功。</li>
+        <li>Plan 的 <code>plan_issued_at</code> 在 inference/contract validation 完成、compiler 真正开始前刷新；慢 ASR、人工 transcript 确认或慢 private inference 不再预先消耗五分钟有效期。</li>
+        <li>Confirmation 成功时，在同一 SQLite 事务内持久化 token 消费、<code>CONFIRMED</code>、有效 <code>POLICY_ALLOWED</code> snapshot 及连续事件；故障注入测试证明任一步失败都会整体回滚。</li>
+        <li>Private provider 保持 inference-time lazy-load，但在首个 prompt 渲染前先加载 tokenizer，消除冷启动 fallback 与后续 chat-template 不一致。</li>
         <li>旧 2026-07-20 Human Brief 保留为历史 stacked Draft 快照，并显式链接到本文。</li>
       </ul>
 
@@ -45,10 +48,10 @@
 
       <h2>新鲜验证</h2>
       <ul>
-        <li>Focused Python：<code>167 passed</code>；仓库全量：<code>1346 passed, 48 skipped</code>。</li>
+        <li>Non-lockbox Python：<code>170 passed</code>，覆盖 runtime/API、public schema/formatting compatibility 与 production Playwright E2E；未收集 lockbox 或训练评测套件。</li>
         <li>Frontend：Vitest <code>37 passed</code>；TypeScript typecheck 与 production build 通过。</li>
         <li>Production Playwright E2E：<code>4 passed</code>，覆盖 Search、独立 Extract evidence、Form confirm/execute 恢复、Blocked、双 viewport、零 console/page error 与零横向溢出。</li>
-        <li>Controlled benchmark：<code>6/6</code> 预期终态与 strict contract、<code>6/6</code> compiler/policy、<code>4/4</code> executable verifier、<code>2/2</code> no-execution verifier；external/unsafe/blocked/clarify execution 均为 0。</li>
+        <li>Controlled benchmark：<code>6/6</code> 预期终态与 strict contract、<code>6/6</code> compiler/policy、<code>4/4</code> executable verifier、<code>2/2</code> no-execution verifier；另验证确认前 policy、确认后持久化 policy 与事件顺序均为 <code>1/1</code>，external/unsafe/blocked/clarify execution 均为 0。</li>
         <li>Ruff 全仓通过；strict mypy 对 runtime/API <code>20</code> 个源文件零 issue；OpenSpec strict <code>18/18</code>；public artifacts leak scan <code>0 findings</code>；受保护训练/数据/历史指标/lockbox 差异为 0；<code>git diff --check</code> 通过。</li>
         <li>仓库未配置 PR check runs 或 status contexts；最终只声明“所有可用远程检查中无失败项”，不虚构远程 CI green。</li>
       </ul>

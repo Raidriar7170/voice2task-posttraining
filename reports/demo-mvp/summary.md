@@ -9,8 +9,10 @@
 - Contract/compiler: **6 / 6** terminal + strict contract;
   **6 / 6** compiler/policy. All six creates returned
   `202 Accepted` with the initial background-work snapshot.
-- Confirmation: challenge fields were exact and the write plan stopped at `CONFIRMED` before a
-  separate `/execute` request (`1 / 1`).
+- Confirmation: challenge fields were exact, the write plan stopped at `CONFIRMED` before a
+  separate `/execute` request (`1 / 1`), and the
+  effective `POLICY_ALLOWED` snapshot/event persisted atomically
+  (`1 / 1`).
 - Safety: unconfirmed writes `0`, blocked executions
   `0`, clarify executions `0`,
   external navigation `0`, unsafe execution
@@ -20,14 +22,14 @@
 
 | Scenario | Terminal state | Schema valid | Compiler/policy | Verifier pass | Total ms |
 | --- | --- | ---: | ---: | ---: | ---: |
-| search | COMPLETED | True | True | True | 246.69 |
-| navigate | COMPLETED | True | True | True | 120.59 |
-| extract | COMPLETED | True | True | True | 132.81 |
-| form_fill | COMPLETED | True | True | True | 151.02 |
-| clarify | CLARIFICATION_REQUIRED | True | True | True | 36.30 |
-| blocked | BLOCKED | True | True | True | 37.57 |
+| search | COMPLETED | True | True | True | 228.51 |
+| navigate | COMPLETED | True | True | True | 119.78 |
+| extract | COMPLETED | True | True | True | 132.35 |
+| form_fill | COMPLETED | True | True | True | 135.52 |
+| clarify | CLARIFICATION_REQUIRED | True | True | True | 35.34 |
+| blocked | BLOCKED | True | True | True | 35.70 |
 
-Latency p50/p95: `126.7` / `246.69` ms.
+Latency p50/p95: `126.06` / `228.51` ms.
 
 Extract evidence is serialized only for the Extract scenario as independent
 `action_outputs`, fresh `dom_snapshot`, and registry-owned expected values in the JSON report.

@@ -245,6 +245,7 @@ class LocalPeftVoice2TaskProvider:
         return value if isinstance(value, str) else str(value)
 
     async def infer(self, transcript: str) -> InferenceResult:
+        await self.load()
         prediction_input = PredictionInput(id="runtime", input_text=transcript)
         prompt = format_sft_prediction_prompt(prediction_input, tokenizer=self._tokenizer)
         decoded = await self._decode(prompt)

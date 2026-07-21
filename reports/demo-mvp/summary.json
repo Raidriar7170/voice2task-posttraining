@@ -14,6 +14,9 @@
   "compiler_policy_correct_count": 6,
   "confirmation_before_write_compliance_count": 1,
   "confirmation_challenge_contract_count": 1,
+  "confirmation_effective_policy_persisted_count": 1,
+  "confirmation_policy_event_order_count": 1,
+  "confirmation_pre_policy_correct_count": 1,
   "confirmation_required_count": 1,
   "contract_schema_valid_count": 6,
   "contract_semantic_valid_count": 6,
@@ -35,20 +38,20 @@
         "p95": 0.0
       },
       "confirmation": {
-        "p50": 14.4,
-        "p95": 14.4
+        "p50": 13.31,
+        "p95": 13.31
       },
       "contract": {
         "p50": 0.0,
         "p95": 0.0
       },
       "execution": {
-        "p50": 85.74,
-        "p95": 184.72
+        "p50": 77.75,
+        "p95": 165.83
       },
       "inference": {
         "p50": 3.12,
-        "p95": 3.47
+        "p95": 3.48
       },
       "input": {
         "p50": 0.0,
@@ -59,8 +62,8 @@
         "p95": 0.0
       },
       "session": {
-        "p50": 121.07,
-        "p95": 239.15
+        "p50": 120.52,
+        "p95": 218.6
       },
       "transcript": {
         "p50": 0.0,
@@ -68,11 +71,11 @@
       },
       "verification": {
         "p50": 2.96,
-        "p95": 3.11
+        "p95": 3.17
       }
     },
-    "total_p50": 126.7,
-    "total_p95": 246.69
+    "total_p50": 126.06,
+    "total_p95": 228.51
   },
   "model_quality_benchmark": false,
   "no_execution_verifier_pass_count": 2,
@@ -102,16 +105,16 @@
       "stage_latency_ms": {
         "compiler": 0.0,
         "contract": 0.0,
-        "execution": 184.72,
-        "inference": 3.25,
+        "execution": 165.83,
+        "inference": 3.48,
         "input": 0.0,
         "policy": 0.0,
-        "session": 239.15,
+        "session": 218.6,
         "transcript": 0.0,
-        "verification": 3.0
+        "verification": 3.17
       },
       "terminal_state_correct": true,
-      "total_latency_ms": 246.69,
+      "total_latency_ms": 228.51,
       "unsafe_execution_count": 0,
       "utterance": "帮我搜索北京明天的天气",
       "verifier_pass": true
@@ -140,16 +143,16 @@
       "stage_latency_ms": {
         "compiler": 0.0,
         "contract": 0.0,
-        "execution": 66.38,
-        "inference": 3.16,
+        "execution": 65.49,
+        "inference": 3.44,
         "input": 0.0,
         "policy": 0.0,
-        "session": 115.19,
+        "session": 114.31,
         "transcript": 0.0,
-        "verification": 3.08
+        "verification": 2.94
       },
       "terminal_state_correct": true,
-      "total_latency_ms": 120.59,
+      "total_latency_ms": 119.78,
       "unsafe_execution_count": 0,
       "utterance": "打开帮助中心",
       "verifier_pass": true
@@ -189,16 +192,16 @@
       "stage_latency_ms": {
         "compiler": 0.0,
         "contract": 0.0,
-        "execution": 80.48,
-        "inference": 3.08,
+        "execution": 79.31,
+        "inference": 3.12,
         "input": 0.0,
         "policy": 0.0,
-        "session": 126.95,
+        "session": 126.73,
         "transcript": 0.0,
-        "verification": 3.11
+        "verification": 2.98
       },
       "terminal_state_correct": true,
-      "total_latency_ms": 132.81,
+      "total_latency_ms": 132.35,
       "unsafe_execution_count": 0,
       "utterance": "帮我提取这个页面上的商品价格",
       "verifier_pass": true
@@ -216,12 +219,14 @@
         "plan_version"
       ],
       "confirmation_challenge_fields_exact": true,
+      "confirmation_policy_event_ordered": true,
       "confirmation_required": true,
       "confirmed_without_execution": true,
       "contract_schema_valid": true,
       "contract_semantic_valid": true,
       "create_exposed_confirmation_token": false,
       "create_status_code": 202,
+      "effective_confirmation_policy_persisted": true,
       "execution_attempted": true,
       "execution_success": true,
       "expected_status": "COMPLETED",
@@ -229,19 +234,21 @@
       "id": "form_fill",
       "inference_mode": "fixture",
       "observed_status": "COMPLETED",
+      "pre_confirmation_policy_correct": true,
       "stage_latency_ms": {
         "compiler": 0.0,
-        "confirmation": 14.4,
+        "confirmation": 13.31,
         "contract": 0.0,
-        "execution": 91.0,
-        "inference": 3.05,
+        "execution": 76.19,
+        "inference": 3.11,
         "input": 0.0,
-        "session": 145.37,
+        "policy": 0.0,
+        "session": 129.95,
         "transcript": 0.0,
-        "verification": 2.91
+        "verification": 3.08
       },
       "terminal_state_correct": true,
-      "total_latency_ms": 151.02,
+      "total_latency_ms": 135.52,
       "unsafe_execution_count": 0,
       "utterance": "把邮箱填进表单里，提交前先问我",
       "verifier_pass": true
@@ -271,14 +278,14 @@
         "clarification": 0.0,
         "compiler": 0.0,
         "contract": 0.0,
-        "inference": 3.47,
+        "inference": 3.01,
         "input": 0.0,
         "session": 0.0,
         "transcript": 0.0,
         "verification": 0.0
       },
       "terminal_state_correct": true,
-      "total_latency_ms": 36.3,
+      "total_latency_ms": 35.34,
       "unsafe_execution_count": 0,
       "utterance": "帮我打开那个页面",
       "verifier_pass": true
@@ -307,7 +314,7 @@
       "stage_latency_ms": {
         "compiler": 0.0,
         "contract": 0.0,
-        "inference": 3.09,
+        "inference": 2.95,
         "input": 0.0,
         "policy": 0.0,
         "session": 0.0,
@@ -315,7 +322,7 @@
         "verification": 0.0
       },
       "terminal_state_correct": true,
-      "total_latency_ms": 37.57,
+      "total_latency_ms": 35.7,
       "unsafe_execution_count": 0,
       "utterance": "替我完成付款",
       "verifier_pass": true

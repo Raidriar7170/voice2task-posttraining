@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import time
 from concurrent.futures import CancelledError as FutureCancelledError
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from threading import Event
 from typing import Any
@@ -162,6 +163,50 @@ def test_text_create_returns_before_delayed_inference_and_persists_real_events(
             "INFERENCE_STARTED",
         ]
         assert "PLAN_COMPILED" in event_types
+
+
+def test_plan_issuance_starts_after_delayed_inference(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import voice2task.runtime.orchestrator as orchestrator_module
+    import voice2task.runtime.storage as storage_module
+
+    created_at = datetime(2026, 7, 21, 12, 0, tzinfo=timezone.utc)
+    compile_at = created_at + timedelta(minutes=6)
+    clock = {"now": created_at}
+
+    class ControlledDateTime:
+        @classmethod
+        def now(cls, tz: timezone | None = None) -> datetime:
+            assert tz is timezone.utc
+            return clock["now"]
+
+    monkeypatch.setattr(orchestrator_module, "datetime", ControlledDateTime)
+    monkeypatch.setattr(storage_module, "_now", lambda: clock["now"])
+
+    provider = ThreadBlockingInferenceProvider()
+    with TestClient(_app(tmp_path, inference_provider=provider)) as client:
+        try:
+            created = _create_text(client, "把邮箱填进表单里，提交前先问我")
+            session_id = str(created["session_id"])
+            assert provider.started.wait(timeout=1.0)
+
+            clock["now"] = compile_at
+            provider.release.set()
+            planned = _wait_for_status(
+                client,
+                session_id,
+                {"AWAITING_CONFIRMATION", "FAILED"},
+            )
+        finally:
+            provider.release.set()
+
+    assert planned["status"] == "AWAITING_CONFIRMATION"
+    assert datetime.fromisoformat(planned["context"]["plan_issued_at"]) == compile_at
+    assert datetime.fromisoformat(planned["plan"]["expires_at"]) == compile_at + timedelta(
+        minutes=5
+    )
 
 
 def test_private_provider_is_not_eagerly_loaded_during_app_startup(tmp_path: Path) -> None:

@@ -2,13 +2,16 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timedelta, timezone
+from typing import Any
 
+import aiosqlite
 import pytest
 
 from voice2task.runtime.models import (
     EventType,
     ExecutionEvidence,
     ExecutionOutcome,
+    PolicyResult,
     SessionContext,
     SessionStatus,
 )
@@ -23,6 +26,15 @@ def _context(session_id: str) -> SessionContext:
         selected_capability="demo_profile_form",
         plan_version=1,
         plan_issued_at=datetime(2026, 7, 20, tzinfo=timezone.utc),
+    )
+
+
+def _allowed_policy() -> PolicyResult:
+    return PolicyResult(
+        allowed=True,
+        requires_confirmation=True,
+        reason_code="POLICY_ALLOWED",
+        message="Plan is restricted to an allowlisted localhost capability.",
     )
 
 
@@ -270,6 +282,7 @@ async def test_confirmation_challenge_rotates_hash_and_is_consumed_once(tmp_path
             token=first_token,
             plan_id="plan-v1",
             plan_version=1,
+            effective_policy=_allowed_policy(),
             now=issued_at + timedelta(seconds=1),
         )
 
@@ -278,6 +291,7 @@ async def test_confirmation_challenge_rotates_hash_and_is_consumed_once(tmp_path
         token=second_token,
         plan_id="plan-v1",
         plan_version=1,
+        effective_policy=_allowed_policy(),
         now=issued_at + timedelta(seconds=1),
     )
     confirmed = await store.get_session("session-confirm")
@@ -291,8 +305,103 @@ async def test_confirmation_challenge_rotates_hash_and_is_consumed_once(tmp_path
             token=second_token,
             plan_id="plan-v1",
             plan_version=1,
+            effective_policy=_allowed_policy(),
             now=issued_at + timedelta(seconds=1),
         )
+
+
+@pytest.mark.asyncio
+async def test_confirmation_and_effective_policy_commit_atomically(
+    tmp_path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    store = SQLiteSessionStore(tmp_path / "demo.sqlite3")
+    await store.initialize()
+    await store.create_session(
+        session_id="session-confirm-atomic",
+        input_kind="text",
+        context=_context("session-confirm-atomic"),
+        inference_mode="fixture",
+        asr_mode="disabled",
+        execution_mode="sandbox",
+    )
+    await _advance_to_plan_ready(store, "session-confirm-atomic")
+    await store.update_fields(
+        "session-confirm-atomic",
+        policy=PolicyResult(
+            allowed=False,
+            requires_confirmation=True,
+            reason_code="CONFIRMATION_REQUIRED",
+            message="Explicit confirmation is required before this local write.",
+        ),
+    )
+    issued_at = datetime(2026, 7, 20, 12, 0, tzinfo=timezone.utc)
+    plan_expires_at = issued_at + timedelta(minutes=3)
+    await store.require_confirmation(
+        "session-confirm-atomic",
+        plan_id="plan-v1",
+        plan_version=1,
+        plan_expires_at=plan_expires_at,
+        now=issued_at,
+    )
+    token, _ = await store.rotate_confirmation_challenge(
+        "session-confirm-atomic",
+        plan_id="plan-v1",
+        plan_version=1,
+        plan_expires_at=plan_expires_at,
+        now=issued_at,
+    )
+    before = await store.get_session("session-confirm-atomic")
+    before_events = await store.events_after("session-confirm-atomic", 0)
+    original_insert = store._insert_event
+
+    async def fail_policy_event(
+        connection: aiosqlite.Connection,
+        *,
+        session_id: str,
+        seq: int,
+        event_type: EventType,
+        stage: str,
+        status: str,
+        message: str,
+        payload: dict[str, Any],
+        created_at: datetime,
+    ) -> None:
+        if event_type is EventType.POLICY_ALLOWED:
+            raise RuntimeError("injected policy event failure")
+        await original_insert(
+            connection,
+            session_id=session_id,
+            seq=seq,
+            event_type=event_type,
+            stage=stage,
+            status=status,
+            message=message,
+            payload=payload,
+            created_at=created_at,
+        )
+
+    monkeypatch.setattr(store, "_insert_event", fail_policy_event)
+
+    with pytest.raises(RuntimeError, match="injected policy event failure"):
+        await store.consume_confirmation(
+            "session-confirm-atomic",
+            token=token,
+            plan_id="plan-v1",
+            plan_version=1,
+            effective_policy=_allowed_policy(),
+            now=issued_at + timedelta(seconds=1),
+        )
+
+    after = await store.get_session("session-confirm-atomic")
+    after_events = await store.events_after("session-confirm-atomic", 0)
+    assert after.status is before.status is SessionStatus.AWAITING_CONFIRMATION
+    assert after.confirmation_status == before.confirmation_status == "pending"
+    assert after.confirmation_token_hash == before.confirmation_token_hash
+    assert after.confirmation_consumed_at is None
+    assert after.policy == before.policy
+    assert after.last_event_seq == before.last_event_seq
+    assert after_events == before_events
 
 
 @pytest.mark.asyncio
@@ -343,6 +452,7 @@ async def test_confirmation_challenge_rejects_wrong_binding_expiry_and_clears_on
             token=token,
             plan_id="other-plan",
             plan_version=1,
+            effective_policy=_allowed_policy(),
             now=issued_at,
         )
     with pytest.raises(SessionConflict, match="CONFIRMATION_EXPIRED"):
@@ -351,6 +461,7 @@ async def test_confirmation_challenge_rejects_wrong_binding_expiry_and_clears_on
             token=token,
             plan_id="plan-v1",
             plan_version=1,
+            effective_policy=_allowed_policy(),
             now=issued_at + timedelta(minutes=6),
         )
 

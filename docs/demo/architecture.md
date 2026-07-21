@@ -49,7 +49,7 @@ stateDiagram-v2
 
 Text/audio create and transcript confirmation return `202 Accepted` with the initial persisted snapshot. `SessionTaskRegistry` retains exactly one background operation for that session/stage while SQLite remains authoritative. A synchronous registration callback transfers staged-audio cleanup from request scope to task scope; cancellation before transfer runs request `finally`, and registered task completion owns later cleanup. The SQLite session row owns `last_event_seq`; state update and its event append share one `BEGIN IMMEDIATE` transaction, and `(session_id, seq)` is unique. Event strings/payloads are sanitized before insertion and defensively on read, so REST and WebSocket replay/live use the same public-safe record. `execution_claimed` atomically prevents a second active execution. Startup marks accepted input plus transient transcription, inference, compilation, execution, and verification states `FAILED/SERVER_RESTART_INTERRUPTED`; it never replays browser actions. Graceful shutdown cancels and awaits every owned task but preserves an audio transcript or plan/confirmation state that was already persisted at a resumable boundary.
 
-For writes, create/transcript responses never expose a token. `POST .../confirmation-challenge` returns exactly token, plan ID/version, and expiry, stores only the hash, and rotates away any prior challenge. `/confirm` consumes the matching challenge and stops at `CONFIRMED`; only a separate `/execute` may claim work. Same-tab recovery uses `sessionStorage` only after rebinding to a fresh authoritative snapshot.
+For writes, create/transcript responses never expose a token. `POST .../confirmation-challenge` returns exactly token, plan ID/version, and expiry, stores only the hash, and rotates away any prior challenge. `/confirm` consumes the matching challenge and stops at `CONFIRMED`; confirmation state, token consumption, the effective `POLICY_ALLOWED` snapshot, and its event commit in one SQLite transaction. Only a separate `/execute` may claim work. Same-tab recovery uses `sessionStorage` only after rebinding to a fresh authoritative snapshot.
 
 ## Capability registry
 
@@ -60,7 +60,7 @@ For writes, create/transcript responses never expose a token. `POST .../confirma
 | `demo_product` | `/sandbox/product` | navigate, extract text | independent action output = fresh DOM = registry expected `¥199.00` |
 | `demo_profile_form` | `/sandbox/profile` | navigate, fill | confirmed email value; no save/submit |
 
-The public plan contains only capability, action, locator and value-source IDs. Actual selectors and paths stay in trusted code. Plan IDs hash the canonical contract, persisted `SessionContext`, plan version, issued-at, and registry version; expiry is issued-at plus five minutes.
+The public plan contains only capability, action, locator and value-source IDs. Actual selectors and paths stay in trusted code. Plan IDs hash the canonical contract, persisted `SessionContext`, plan version, issued-at, and registry version; expiry is issued-at plus five minutes. The orchestrator refreshes issued-at after inference and contract validation, immediately before compiler entry, so ASR, transcript review, or slow private inference cannot consume the plan window before a plan exists.
 
 ## Executor defenses
 
@@ -86,4 +86,4 @@ Raw audio is temporary. A microphone acquisition generation guard coalesces pend
 
 ## Claim boundary
 
-The committed benchmark runs fixture inference, disabled ASR and real localhost Chromium. It is orchestration evidence only. Private PEFT is covered by fail-closed/mock tests without loading a private adapter or GPU. HTTP ASR is covered by typed mock transport tests without claiming a real ASR benchmark.
+The committed benchmark runs fixture inference, disabled ASR and real localhost Chromium. It is orchestration evidence only. Private PEFT is covered by fail-closed/mock tests without loading a private adapter or GPU; production private inference lazy-loads its tokenizer before rendering the first prompt so cold and warm chat-template paths agree. HTTP ASR is covered by typed mock transport tests without claiming a real ASR benchmark.

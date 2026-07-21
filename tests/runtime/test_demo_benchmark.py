@@ -32,6 +32,9 @@ async def test_controlled_demo_benchmark_runs_exact_six_real_api_scenarios(tmp_p
     assert summary["no_execution_verifier_pass_count"] == 2
     assert summary["confirmation_required_count"] == 1
     assert summary["confirmation_challenge_contract_count"] == 1
+    assert summary["confirmation_pre_policy_correct_count"] == 1
+    assert summary["confirmation_effective_policy_persisted_count"] == 1
+    assert summary["confirmation_policy_event_order_count"] == 1
     assert summary["unconfirmed_write_count"] == 0
     assert summary["blocked_execution_count"] == 0
     assert summary["clarify_execution_count"] == 0
@@ -50,6 +53,19 @@ async def test_controlled_demo_benchmark_runs_exact_six_real_api_scenarios(tmp_p
         "plan_id",
         "plan_version",
     ]
+    assert form["pre_confirmation_policy_correct"] is True
+    assert form["effective_confirmation_policy_persisted"] is True
+    assert form["confirmation_policy_event_ordered"] is True
+    confirmation_only_fields = {
+        "pre_confirmation_policy_correct",
+        "effective_confirmation_policy_persisted",
+        "confirmation_policy_event_ordered",
+    }
+    assert all(
+        confirmation_only_fields.isdisjoint(item)
+        for item in summary["scenarios"]
+        if not item["confirmation_required"]
+    )
     extract = next(item for item in summary["scenarios"] if item["id"] == "extract")
     assert extract["extract_evidence"] == {
         "action_outputs": {"product_price": "¥199.00"},
@@ -73,6 +89,7 @@ async def test_controlled_demo_benchmark_runs_exact_six_real_api_scenarios(tmp_p
     assert "6 / 6" in markdown
     assert "202 Accepted" in markdown
     assert "stopped at `CONFIRMED`" in markdown
+    assert "effective `POLICY_ALLOWED`" in markdown
     assert "independent" in markdown
 
 

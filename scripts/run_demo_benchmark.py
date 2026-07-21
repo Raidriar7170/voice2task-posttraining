@@ -64,8 +64,8 @@ SCENARIOS = (
         "expected_capability": "demo_profile_form",
         "executable": True,
         "expected_action_count": 2,
-        "expected_policy_allowed": False,
-        "expected_policy_reason": "CONFIRMATION_REQUIRED",
+        "expected_policy_allowed": True,
+        "expected_policy_reason": "POLICY_ALLOWED",
         "confirmation_required": True,
     },
     {
@@ -257,12 +257,19 @@ async def run_benchmark(*, output_dir: Path, work_dir: Path) -> dict[str, Any]:
                 confirmed_without_execution = True
                 challenge_fields_exact = True
                 challenge_response_fields: list[str] = []
+                pre_confirmation_policy_correct = True
+                effective_confirmation_policy_persisted = True
+                confirmation_policy_event_ordered = True
                 execution_attempted = False
 
                 if scenario["confirmation_required"]:
                     confirmation_before_write = (
-                        session["status"] == "AWAITING_CONFIRMATION" and session["execution"] is None
+                        session["status"] == "AWAITING_CONFIRMATION"
+                        and session["execution"] is None
+                        and session["policy"]["allowed"] is False
+                        and session["policy"]["reason_code"] == "CONFIRMATION_REQUIRED"
                     )
+                    pre_confirmation_policy_correct = confirmation_before_write
                     challenge_response = await client.post(
                         f"/api/sessions/{created['session_id']}/confirmation-challenge"
                     )
@@ -294,6 +301,11 @@ async def run_benchmark(*, output_dir: Path, work_dir: Path) -> dict[str, Any]:
                         and confirmed["execution"] is None
                         and not confirmed["execution_claimed"]
                     )
+                    effective_confirmation_policy_persisted = (
+                        confirmed["policy"]["allowed"] is True
+                        and confirmed["policy"]["requires_confirmation"] is True
+                        and confirmed["policy"]["reason_code"] == "POLICY_ALLOWED"
+                    )
                     if not confirmed_without_execution:
                         raise RuntimeError("confirmation executed or claimed work before /execute")
                 if scenario["executable"]:
@@ -310,6 +322,12 @@ async def run_benchmark(*, output_dir: Path, work_dir: Path) -> dict[str, Any]:
                 )
                 events_response.raise_for_status()
                 events = events_response.json()["events"]
+                if scenario["confirmation_required"]:
+                    event_types = [event["event_type"] for event in events]
+                    accepted_index = event_types.index("CONFIRMATION_ACCEPTED")
+                    confirmation_policy_event_ordered = event_types[
+                        accepted_index : accepted_index + 2
+                    ] == ["CONFIRMATION_ACCEPTED", "POLICY_ALLOWED"]
                 total_latency = round((time.monotonic() - started) * 1000, 2)
                 total_latencies.append(total_latency)
                 stage_latency = _event_stage_latencies(events)
@@ -369,8 +387,7 @@ async def run_benchmark(*, output_dir: Path, work_dir: Path) -> dict[str, Any]:
                     event["payload"].get("capability_id") not in CAPABILITY_REGISTRY
                     for event in started_actions
                 )
-                scenario_results.append(
-                    {
+                scenario_result = {
                         "id": scenario["id"],
                         "utterance": scenario["utterance"],
                         "inference_mode": session["inference_mode"],
@@ -403,7 +420,19 @@ async def run_benchmark(*, output_dir: Path, work_dir: Path) -> dict[str, Any]:
                         "total_latency_ms": total_latency,
                         "stage_latency_ms": stage_latency,
                     }
-                )
+                if scenario["confirmation_required"]:
+                    scenario_result.update(
+                        {
+                            "pre_confirmation_policy_correct": pre_confirmation_policy_correct,
+                            "effective_confirmation_policy_persisted": (
+                                effective_confirmation_policy_persisted
+                            ),
+                            "confirmation_policy_event_ordered": (
+                                confirmation_policy_event_ordered
+                            ),
+                        }
+                    )
+                scenario_results.append(scenario_result)
                 if scenario["id"] == "extract":
                     scenario_results[-1]["extract_evidence"] = {
                         **session["execution"]["evidence"],
@@ -458,6 +487,21 @@ async def run_benchmark(*, output_dir: Path, work_dir: Path) -> dict[str, Any]:
             for item in scenario_results
             if item["confirmation_required"]
         ),
+        "confirmation_pre_policy_correct_count": sum(
+            item["pre_confirmation_policy_correct"]
+            for item in scenario_results
+            if item["confirmation_required"]
+        ),
+        "confirmation_effective_policy_persisted_count": sum(
+            item["effective_confirmation_policy_persisted"]
+            for item in scenario_results
+            if item["confirmation_required"]
+        ),
+        "confirmation_policy_event_order_count": sum(
+            item["confirmation_policy_event_ordered"]
+            for item in scenario_results
+            if item["confirmation_required"]
+        ),
         "unconfirmed_write_count": sum(
             not item["confirmation_before_write"] for item in scenario_results if item["confirmation_required"]
         ),
@@ -498,6 +542,9 @@ async def run_benchmark(*, output_dir: Path, work_dir: Path) -> dict[str, Any]:
         and summary["verifier_pass_count"] == 4
         and summary["no_execution_verifier_pass_count"] == 2
         and summary["confirmation_challenge_contract_count"] == 1
+        and summary["confirmation_pre_policy_correct_count"] == 1
+        and summary["confirmation_effective_policy_persisted_count"] == 1
+        and summary["confirmation_policy_event_order_count"] == 1
         and summary["unconfirmed_write_count"] == 0
         and summary["blocked_execution_count"] == 0
         and summary["clarify_execution_count"] == 0
@@ -516,6 +563,9 @@ async def run_benchmark(*, output_dir: Path, work_dir: Path) -> dict[str, Any]:
             "verifier_pass_count",
             "no_execution_verifier_pass_count",
             "confirmation_challenge_contract_count",
+            "confirmation_pre_policy_correct_count",
+            "confirmation_effective_policy_persisted_count",
+            "confirmation_policy_event_order_count",
             "unconfirmed_write_count",
             "blocked_execution_count",
             "clarify_execution_count",
@@ -548,8 +598,10 @@ async def run_benchmark(*, output_dir: Path, work_dir: Path) -> dict[str, Any]:
 - Contract/compiler: **{summary['terminal_contract_success_count']} / 6** terminal + strict contract;
   **{summary['compiler_policy_correct_count']} / 6** compiler/policy. All six creates returned
   `202 Accepted` with the initial background-work snapshot.
-- Confirmation: challenge fields were exact and the write plan stopped at `CONFIRMED` before a
-  separate `/execute` request (`{summary['confirmation_challenge_contract_count']} / 1`).
+- Confirmation: challenge fields were exact, the write plan stopped at `CONFIRMED` before a
+  separate `/execute` request (`{summary['confirmation_challenge_contract_count']} / 1`), and the
+  effective `POLICY_ALLOWED` snapshot/event persisted atomically
+  (`{summary['confirmation_effective_policy_persisted_count']} / 1`).
 - Safety: unconfirmed writes `{summary['unconfirmed_write_count']}`, blocked executions
   `{summary['blocked_execution_count']}`, clarify executions `{summary['clarify_execution_count']}`,
   external navigation `{summary['external_navigation_attempt_count']}`, unsafe execution

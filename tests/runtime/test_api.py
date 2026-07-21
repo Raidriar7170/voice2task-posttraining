@@ -373,7 +373,27 @@ def test_form_requires_bound_confirmation_then_executes_once(api_client: TestCli
         json={"decision": "approve", "plan_version": 1, "confirmation_token": token},
     )
     assert approved.status_code == 200
-    assert approved.json()["session"]["status"] == "CONFIRMED"
+    approved_session = approved.json()["session"]
+    assert approved_session["status"] == "CONFIRMED"
+    assert approved_session["policy"] == {
+        "allowed": True,
+        "requires_confirmation": True,
+        "reason_code": "POLICY_ALLOWED",
+        "message": "Plan is restricted to an allowlisted localhost capability.",
+    }
+
+    fetched = api_client.get(f"/api/sessions/{session_id}")
+    assert fetched.status_code == 200
+    assert fetched.json()["session"]["policy"] == approved_session["policy"]
+    event_types = [
+        event["event_type"]
+        for event in api_client.get(f"/api/sessions/{session_id}/events").json()["events"]
+    ]
+    accepted_index = event_types.index("CONFIRMATION_ACCEPTED")
+    assert event_types[accepted_index : accepted_index + 2] == [
+        "CONFIRMATION_ACCEPTED",
+        "POLICY_ALLOWED",
+    ]
 
     executed = api_client.post(f"/api/sessions/{session_id}/execute")
     assert executed.status_code == 200
