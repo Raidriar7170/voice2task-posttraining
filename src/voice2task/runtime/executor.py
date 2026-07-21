@@ -337,6 +337,10 @@ class SandboxExecutor:
                     )
                     raise ExecutorError(code, "The controlled browser action failed.") from exc
             dom_snapshot = await self._collect_dom_snapshot(page, capability)
+            if external_request_blocked:
+                raise ExecutorError(
+                    "EXTERNAL_REQUEST_BLOCKED", "A request outside the exact sandbox origin was blocked."
+                )
             return ExecutionOutcome(
                 browser_context_created=True,
                 action_count=completed_actions,

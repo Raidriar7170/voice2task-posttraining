@@ -4,7 +4,7 @@ import asyncio
 from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 from playwright.async_api import Error as PlaywrightError
@@ -186,6 +186,50 @@ async def test_executor_aborts_external_request_before_egress_and_closes_context
 
     assert exc_info.value.code == "EXTERNAL_REQUEST_BLOCKED"
     assert manager.active_context_count == 0
+
+
+@pytest.mark.asyncio
+async def test_executor_fails_when_external_request_is_blocked_during_final_snapshot(
+    sandbox_origin: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    context = _context("delayed-external-egress")
+    contract, plan = _compiled("打开帮助中心", context)
+    browser_context = AsyncMock()
+    captured_route: dict[str, object] = {}
+
+    async def register_route(_pattern: str, handler: object) -> None:
+        captured_route["handler"] = handler
+
+    browser_context.route.side_effect = register_route
+    browser_context.route_web_socket = None
+    page = AsyncMock()
+    page.on = Mock()
+    page.url = f"{sandbox_origin}/sandbox/help"
+    browser_context.new_page.return_value = page
+    manager = BrowserManager()
+    manager.new_context = AsyncMock(return_value=browser_context)  # type: ignore[method-assign]
+    manager.close_context = AsyncMock()  # type: ignore[method-assign]
+    executor = SandboxExecutor(manager, sandbox_origin=sandbox_origin, artifact_dir=tmp_path)
+    monkeypatch.setattr(executor, "_perform_action", AsyncMock())
+    monkeypatch.setattr(executor, "_save_screenshot", AsyncMock(return_value="screenshot-id"))
+
+    external_route = AsyncMock()
+    external_route.request.url = "https://example.com/delayed-egress"
+
+    async def collect_snapshot(*_args: object, **_kwargs: object) -> dict[str, str]:
+        handler = captured_route["handler"]
+        assert callable(handler)
+        await handler(external_route)
+        return {}
+
+    monkeypatch.setattr(executor, "_collect_dom_snapshot", collect_snapshot)
+
+    with pytest.raises(ExecutorError, match="EXTERNAL_REQUEST_BLOCKED") as exc_info:
+        await executor.execute(plan, contract=contract, context=context)
+
+    assert exc_info.value.code == "EXTERNAL_REQUEST_BLOCKED"
+    external_route.abort.assert_awaited_once_with("blockedbyclient")
+    manager.close_context.assert_awaited_once_with(browser_context)
 
 
 @pytest.mark.asyncio
