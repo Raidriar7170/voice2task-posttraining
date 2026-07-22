@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>阶段 A：修复后真实 A100 SFT smoke 重跑</title>
+  <style>
+    :root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body { max-width: 920px; margin: 32px auto; padding: 0 20px 48px; color: #172033; line-height: 1.65; }
+    h1, h2 { line-height: 1.25; }
+    .status { padding: 12px 16px; border-left: 4px solid #b7791f; background: #fff8e6; }
+    code { background: #f3f5f8; padding: 1px 5px; border-radius: 4px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #d8dee9; padding: 8px 10px; text-align: left; vertical-align: top; }
+    th { background: #f6f8fa; }
+    .no { color: #8b1a1a; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <h1>阶段 A：修复后真实 A100 SFT smoke 重跑</h1>
+  <p class="status"><strong>当前结论：</strong>固定提交上的全部 gate 与唯一一次真实 smoke 均已通过。launch count 精确为 1，没有重试；这只证明 bounded real training path 与 adapter update 可用，不是模型指标提升或 clean-evaluation readiness。</p>
+
+  <h2>固定边界</h2>
+  <table>
+    <tr><th>变更</th><td><code>rerun-real-a100-sft-smoke-after-cli-fix-v1</code></td></tr>
+    <tr><th>可执行提交</th><td><code>df25648d1d837d7aa4af7757b9aea68783d2a5b6</code></td></tr>
+    <tr><th>模型</th><td>Qwen2.5-7B-Instruct，本地文件，禁止下载</td></tr>
+    <tr><th>数据</th><td>current formal manifest 的 <code>train</code> split，1–2 rows</td></tr>
+    <tr><th>预算</th><td>exactly 1 optimizer step；单张显式选择且空闲的 A100</td></tr>
+    <tr><th>执行次数</th><td>最多一次；失败、异常或 postcondition 不满足均不得重试</td></tr>
+  </table>
+
+  <h2>必须先通过的 gate</h2>
+  <ul>
+    <li>远端 tracked checkout clean，HEAD 精确等于固定提交，且 stdout isolation 修复存在。</li>
+    <li>private config 为 ignored、untracked、非 symlink。</li>
+    <li>本地 Qwen2.5-7B-Instruct identity 与 inventory/hash 通过。</li>
+    <li>显式单卡可见、完全空闲且 free-memory gate 通过。</li>
+    <li>全新 output leaf 尚未创建，output identity policy 通过。</li>
+    <li>shared preflight exit 0、<code>ready=true</code>、无 blockers，并绑定精确数据与预算。</li>
+  </ul>
+
+  <h2>成功判定</h2>
+  <p>必须同时满足：<code>exit_code=0</code>；stdout 恰为一个 JSON document；stderr 无竞争性结果 JSON；<code>training_status=training_completed</code>；<code>smoke_status=SMOKE_COMPLETED</code>；<code>observed_optimizer_steps=1</code>；<code>training_rows_used</code> 为 1 或 2；<code>changed_adapter_tensor_count&gt;0</code>；<code>all_adapter_tensors_finite=true</code>；adapter config 与 weights 存在且非空；整个 run tree 不含完整 base model weights。</p>
+
+  <h2>真实执行证据</h2>
+  <table>
+    <tr><th>部署</th><td>远端 tracked checkout clean，HEAD 精确为固定提交；stdout redirect 与 diagnostic prefix 修复均存在。</td></tr>
+    <tr><th>Private config</th><td><code>git_ignored=true</code>、<code>git_tracked=false</code>、<code>nonsymlink=true</code>、mode <code>0600</code>。</td></tr>
+    <tr><th>Model identity</th><td><code>Qwen/Qwen2.5-7B-Instruct</code>，geometry 匹配，local-only；snapshot revision SHA-256 <code>2a1aaaf30e79bc9817f385e41260f822b4533f570a62f7253afc536e8f724363</code>；weight inventory 15,231,271,888 bytes。</td></tr>
+    <tr><th>GPU gate</th><td>显式单张 A100-SXM4-80GB；visible count 1、compute process count 0、idle verified；free 78.734 GiB，阈值 35 GiB。</td></tr>
+    <tr><th>Data / budget</th><td>formal manifest <code>public-sample-20260619T090925Z</code>，<code>train</code>，2 rows，exactly 1 optimizer step。</td></tr>
+    <tr><th>Preflight</th><td>exit 0；stdout 单 JSON、stderr 0 bytes；<code>ready=true</code>、<code>blockers=[]</code>、output ready。</td></tr>
+    <tr><th>Launch protocol</th><td>launch marker <code>attempt=1</code>，phase launch count 1；exit 0；stdout 6,758 bytes 且完整解析为单 JSON；stderr 1,573 bytes，未发现 whole-document 或 line-level JSON，也无竞争性 result fields。</td></tr>
+    <tr><th>Training result</th><td><code>training_completed</code>、<code>SMOKE_COMPLETED</code>、optimizer steps 1、rows 2、changed adapter tensors 112/224、all finite；before/after digest 不同。</td></tr>
+    <tr><th>Artifacts</th><td>adapter config 1,029 bytes；adapter safetensors 20,214,760 bytes；run tree 4 files / 20,234,578 bytes；base shard match 0、suspicious full-weight files 0。</td></tr>
+  </table>
+
+  <h2>证据与隐私</h2>
+  <p>原始日志、私有绝对路径、配置内容、raw rows、模型文件、cache 与 adapter 只留在 ignored/private 远端证据区。仓库只记录固定提交、稳定状态、脱敏 hash/count、验证结果与真实 stop verdict；本地未提交 OpenSpec 不混入远端可执行 checkout。</p>
+
+  <h2>明确不做</h2>
+  <p class="no">不运行 prediction、evaluation、DPO、GRPO、public test、lockbox 或 clean-evaluation；不 commit、push、更新或合并 PR #3，不 archive、release、production deploy；不声称模型提升、held-out/generalization gain、生产就绪或 live-browser benchmark 改善。</p>
+
+  <h2>验证</h2>
+  <ul>
+    <li>CLI/preflight/A100 smoke focused tests：<code>206 passed</code>。</li>
+    <li>public dataset-builder、schema、DPO-pair no-training contract tests：<code>30 passed</code>。</li>
+    <li>本 change 与 Human Brief public leak scan：0 findings。</li>
+    <li><code>openspec validate --all --strict</code>：16/16 passed。</li>
+    <li><code>git diff --check</code>：passed；禁止 claim marker scan：passed。</li>
+    <li><code>git status --short</code>：仅新增本 Human Brief 与 bounded OpenSpec change，均为 untracked；无代码修改。</li>
+  </ul>
+
+  <h2>下一步</h2>
+  <p>验证已通过。保持变更 active，等待只读 Reviewer 与人类决定是否另行授权更新 PR #3。不得把后续 search-query 指标实验提交进 PR #3。</p>
+</body>
+</html>

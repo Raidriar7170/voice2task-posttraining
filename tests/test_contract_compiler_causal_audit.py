@@ -22,6 +22,11 @@ HISTORICAL_CONTEXT_SNAPSHOT = (
     "reports/public-sample/contract-compiler-v2-causal-boundary/"
     f"source-snapshots/CONTEXT.{HISTORICAL_CONTEXT_SHA256}.md"
 )
+HISTORICAL_TRAINING_SHA256 = "978e2df42be7b1e020c5215febaf843a527b0fb96469273c93b66ce20b62db3c"
+HISTORICAL_TRAINING_SNAPSHOT = (
+    "reports/public-sample/contract-compiler-v2-causal-boundary/"
+    f"source-snapshots/training.{HISTORICAL_TRAINING_SHA256}.py"
+)
 
 
 def _audit() -> dict[str, object]:
@@ -637,7 +642,10 @@ def test_historical_context_snapshot_is_exact_and_live_context_has_advanced() ->
     overrides = getattr(audit_module, "HISTORICAL_SOURCE_SNAPSHOT_OVERRIDES", None)
     resolver = getattr(audit_module, "_resolve_audit_source_path", None)
 
-    assert overrides == {"CONTEXT.md": HISTORICAL_CONTEXT_SNAPSHOT}
+    assert overrides == {
+        "src/voice2task/training.py": HISTORICAL_TRAINING_SNAPSHOT,
+        "CONTEXT.md": HISTORICAL_CONTEXT_SNAPSHOT,
+    }
     assert callable(resolver)
     snapshot = resolver(REPO_ROOT, "CONTEXT.md")
     assert snapshot == REPO_ROOT / HISTORICAL_CONTEXT_SNAPSHOT
@@ -647,6 +655,18 @@ def test_historical_context_snapshot_is_exact_and_live_context_has_advanced() ->
     assert hashlib.sha256((REPO_ROOT / "CONTEXT.md").read_bytes()).hexdigest() != (
         HISTORICAL_CONTEXT_SHA256
     )
+
+
+def test_historical_training_snapshot_is_exact_and_live_training_has_advanced() -> None:
+    snapshot = audit_module._resolve_audit_source_path(REPO_ROOT, "src/voice2task/training.py")
+
+    assert snapshot == REPO_ROOT / HISTORICAL_TRAINING_SNAPSHOT
+    snapshot_bytes = snapshot.read_bytes()
+    assert len(snapshot_bytes) == 112_979
+    assert hashlib.sha256(snapshot_bytes).hexdigest() == HISTORICAL_TRAINING_SHA256
+    assert hashlib.sha256(
+        (REPO_ROOT / "src/voice2task/training.py").read_bytes()
+    ).hexdigest() != HISTORICAL_TRAINING_SHA256
 
 
 def test_historical_builder_emits_logical_context_path_and_phase_time_hash() -> None:

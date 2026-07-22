@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Private A100 SFT Smoke V1 · Archive Closeout</title><style>body{max-width:760px;margin:4rem auto;padding:0 1rem;font:16px/1.7 system-ui;color:#17202a}h1{line-height:1.15}.status{color:#166534;font-weight:700}code{background:#f3f4f6;padding:.1em .3em}.callout{border-left:4px solid #9a3412;padding:1rem;background:#fff7ed}</style></head>
+<body><p>OpenSpec · enable-private-a100-sft-smoke-v1</p><h1>审阅收口：把真实更新证据和运行时边界做成硬门</h1><p class="status">ARCHIVED_CODE_GREEN · REAL_SMOKE_NOT_RUN · execution_readiness=false</p>
+<p>本轮只修复审阅指出的五项：public stdout 严格白名单、descriptor-relative 输出 claim、空闲显存与占用门、offset 驱动的 assistant-only 标签验证、adapter 参数真实变化证据。</p>
+<p class="callout">不执行完整训练、DPO、GRPO、prediction、evaluation 或 lockbox 访问；未通过所有共享 preflight 与 postconditions 时不得使用 <code>SMOKE_COMPLETED</code>。</p>
+<p>clean-evaluation 保持：acquisition unavailable、binding count 0、human acceptance not recorded、protocol not frozen、clean population not materialized、freeze unauthorized、execution readiness false。</p>
+<p class="callout">输出 claim 的威胁模型已由用户明确收窄：代码继续防御所有检查点可观察的 drift、symlink、inode exchange 与 concurrent leaf；不声称最后一次 identity checkpoint 到 <code>mkdirat</code> syscall 之间对同 UID 恶意 rename 具备内核原子性。部署前必须保证该窗口内 output root/parent namespace 不被同 UID 对手恶意改名。</p>
+<p>本轮新回归先得到 <code>17 failed</code>；最终 focused suite 为 <code>203 passed</code>，完整 pytest 为 <code>1413 passed</code>。Ruff、OpenSpec strict（15/15）、truth-surface、git diff check 均通过。Targeted mypy 仅保留两个未触及文件中的既有诊断，本次训练文件零诊断。</p>
+<p>主 <code>supervised-contract-tuning</code> spec 已同步，change 已归档到 <code>openspec/changes/archive/2026-07-14-enable-private-a100-sft-smoke-v1/</code>，active changes 为 0。未运行真实训练。</p>
+</body></html>

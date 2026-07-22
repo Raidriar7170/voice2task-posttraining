@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Container PID-aware SFT GPU Occupancy · 人类简报</title>
+  <style>
+    body { max-width: 760px; margin: 4rem auto; padding: 0 1rem; color: #17202a; font: 16px/1.7 system-ui; }
+    h1 { line-height: 1.15; }
+    .status { color: #9a3412; font-weight: 700; }
+    .callout { border-left: 4px solid #9a3412; padding: 1rem; background: #fff7ed; }
+    code { background: #f3f4f6; padding: .1em .3em; }
+  </style>
+</head>
+<body>
+  <p>OpenSpec · fix-container-pid-aware-sft-gpu-occupancy-v1</p>
+  <h1>让空闲 GPU 检查不再依赖容器 PID 映射</h1>
+  <p class="status">LOCAL_IMPLEMENTATION · FOCUSED_GREEN · REMOTE_NOT_RUN</p>
+  <p>父进程先确认显式选择的 GPU 没有 compute process，再以 <code>sys.executable -I</code>、绝对 helper 脚本和固定最小环境启动短生命周期内部 Python helper，采集 CUDA、A100、BF16、总显存和可用显存事实。helper 不继承 proxy、token、<code>PYTHONPATH</code> 或动态加载注入变量，本身不预建 socket，并在导入 torch 前安装阻断 CPython 真实 socket creation 与网络事件的 audit hook。helper 退出并释放自己的 CUDA context 后，父进程再次确认 occupancy 为空。</p>
+  <p>每次 shared preflight 都完整重复 <code>occupancy → helper → occupancy</code>，不推断、不学习、不缓存或公开任何 PID。任一已确认占用返回 <code>GPU_BUSY</code>；采样、helper timeout/nonzero 或协议异常返回 <code>GPU_OCCUPANCY_PROBE_FAILED</code>。</p>
+  <p>该合同只证明 pre/post 两个 occupancy 样本为空，并记录 helper 期间的可用显存；不声称两个样本之间持续绝对没有外部进程。</p>
+  <p>torch 导入失败或 CUDA 不可用返回 <code>CUDA_UNAVAILABLE</code>；CUDA API 异常返回 <code>CUDA_PROBE_FAILED</code>。helper 只输出一个严格 typed JSON，所有失败均不包含原始异常或私有运行值。</p>
+  <p class="callout">本阶段没有运行真实训练、完整 SFT、DPO、GRPO、prediction 或 evaluation；没有访问 lockbox，没有远端操作，也没有模型改进、clean-evaluation ready 或 production-ready 声明。</p>
+  <p>clean-evaluation 七项事实保持阻断，<code>execution_readiness=false</code>。</p>
+</body>
+</html>

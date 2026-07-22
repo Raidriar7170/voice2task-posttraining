@@ -72,6 +72,10 @@ EXPECTED_SOURCE_SHA256 = {
 }
 
 HISTORICAL_SOURCE_SNAPSHOT_OVERRIDES = {
+    "src/voice2task/training.py": (
+        "reports/public-sample/contract-compiler-v2-causal-boundary/source-snapshots/"
+        "training.978e2df42be7b1e020c5215febaf843a527b0fb96469273c93b66ce20b62db3c.py"
+    ),
     "CONTEXT.md": (
         "reports/public-sample/contract-compiler-v2-causal-boundary/source-snapshots/"
         "CONTEXT.2ffc67d81be8b3e482555efd23db5b0bf60239eb4ef4d9e24514cae24ea1009f.md"
