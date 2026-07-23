@@ -14,9 +14,139 @@ It converts user commands into strict Browser Task Contract JSON so a downstream
 browser agent can decide whether to search, open a URL, fill a form,
 extract page information, clarify, or refuse a risky action.
 
-## Controlled Browser Demo MVP
+## 30-Second Overview
 
-The repository now includes an optional, verifiable controlled Browser Agent demo for a Chinese voice entry point: `fixture inference + disabled ASR + localhost sandbox execution`. It reuses `BrowserTaskContract V1` and demonstrates six public scenarios through a `202 Accepted` background lifecycle, static capabilities, a recoverable one-time challenge, separate confirm/execute steps, Playwright exact-origin isolation, and independent action/DOM evidence.
+Voice2Task exposes two deliberately separate evidence surfaces. Model
+post-training converts a Chinese spoken command or reviewed ASR transcript into
+a strict contract; the controlled demo orchestrates, executes, and verifies that
+contract against localhost fixtures.
+
+### A. Model / Post-Training Surface
+
+- **Model and data:** Qwen2.5-7B-Instruct + LoRA; 247 seeds, 696 SFT rows,
+  and 2,100 preference pairs.
+- **Frozen evaluation:** `lockbox-v1` contains 120 rows / 120 semantic
+  families under a frozen manifest, gold-free prompt, and one-look aggregate
+  evaluation.
+- **Final SFT aggregate deltas:** semantic contract validity **+4.17pp**,
+  task type accuracy **+6.67pp**, route accuracy **+5.83pp**, and
+  confirmation accuracy **+8.33pp**.
+- **Hard boundary:** strict contract exact match fell from **0.0167 to
+  0.0083**; therefore this repository makes `no overall model improvement
+  claim`.
+
+### B. Controlled Agent Demo Surface
+
+- **Full stack:** React / Vite UI, FastAPI API, WebSocket event stream,
+  SQLite-authoritative session/event state, and a Playwright exact-origin
+  localhost sandbox.
+- **Control chain:** `BrowserTaskContract V1` -> compiler / policy ->
+  one-time confirmation challenge -> separate explicit execution request ->
+  deterministic verifier.
+- **Committed controlled result:** expected terminal state + strict contract
+  **6/6**; executable verifier **4/4**; Blocked / Clarify no-execution
+  verifier **2/2**.
+- **Defaults:** `Fixture Inference`, `ASR Disabled`, and `Localhost Sandbox`.
+  The private model and HTTP ASR are explicit opt-ins and fail closed.
+
+## Explicit Non-Claims
+
+This high-visibility boundary applies to both the model result and the demo
+result. The repository makes:
+
+- `no overall model improvement claim`;
+- `no real-ASR benchmark claim`;
+- `no live-browser benchmark claim`;
+- `no production-readiness claim`;
+- `no safety-readiness claim`;
+- `no generic-agent claim`;
+- `no checkpoint / adapter release claim`;
+- `no DPO success claim`.
+
+The controlled demo proves localhost orchestration for six public fixtures only.
+It is not a model-quality, real-ASR, live-internet-generalization, or
+production-capability benchmark.
+
+## Controlled Demo: Real Committed Screenshots
+
+These images come from committed localhost FastAPI + Chromium runs. Click either
+image for its full resolution. No fabricated image or synthetic GIF is used.
+
+<table>
+  <tr>
+    <td align="center" valign="top">
+      <a href="docs/demo/screenshots/desktop-search-complete.png">
+        <img src="docs/demo/screenshots/desktop-search-complete.png"
+             alt="Desktop Search complete in the controlled Voice2Task demo"
+             height="620">
+      </a>
+    </td>
+    <td align="center" valign="top">
+      <a href="docs/demo/screenshots/desktop-form-confirmation.png">
+        <img src="docs/demo/screenshots/desktop-form-confirmation.png"
+             alt="Desktop Form confirmation in the controlled Voice2Task demo"
+             width="620">
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top"><strong>Desktop Search complete.</strong> Fixture Inference · ASR Disabled · Localhost Sandbox. Controlled Search orchestration and deterministic verification completed; <strong>not</strong> a live-internet or model-quality benchmark.</td>
+    <td valign="top"><strong>Desktop Form confirmation.</strong> Fixture Inference · ASR Disabled · Localhost Sandbox. The write pauses at a one-time confirmation challenge, with confirmation and execution split into separate requests; <strong>not</strong> a live-internet or model-quality benchmark.</td>
+  </tr>
+</table>
+
+[Original committed Search PNG](docs/demo/screenshots/desktop-search-complete.png) ·
+[Original committed Form confirmation PNG](docs/demo/screenshots/desktop-form-confirmation.png)
+
+## Architecture at a Glance
+
+```mermaid
+flowchart LR
+    UI["React / Vite UI"] --> INPUT["Spoken command<br/>or reviewed transcript"]
+    ASR["HTTP ASR<br/>opt-in; default disabled"] -. "reviewed transcript" .-> INPUT
+    INPUT --> ADAPTER["FastAPI inference adapter<br/>fixture default<br/>private PEFT opt-in"]
+    ADAPTER --> CONTRACT["BrowserTaskContract V1"]
+    CONTRACT --> POLICY["Compiler / policy"]
+    POLICY -->|"write plan"| CHALLENGE["One-time confirmation<br/>challenge"]
+    CHALLENGE --> EXECUTE["Explicit execution<br/>request"]
+    POLICY -->|"read-only plan"| EXECUTE
+    EXECUTE --> PLAYWRIGHT["Playwright exact-origin<br/>localhost sandbox"]
+    PLAYWRIGHT --> VERIFY["Deterministic verifier"]
+    VERIFY --> EVIDENCE["Event / artifact evidence<br/>SQLite authoritative state<br/>WebSocket stream"]
+    ASR -. "failure" .-> CLOSED["Fail closed"]
+    ADAPTER -. "private-model failure" .-> CLOSED
+    CLOSED --- NOFALLBACK["No failed private-model<br/>fallback to fixture"]
+```
+
+Fixture inference is the default. The private PEFT model and HTTP ASR are both
+opt-in. Any private-provider failure fails closed and never silently falls back
+to fixture inference. See the full [demo architecture](docs/demo/architecture.md).
+
+## Recruiter Resume Bullets
+
+- Built an evidence-first Chinese speech/ASR-to-`BrowserTaskContract`
+  post-training pipeline with **Qwen2.5-7B-Instruct + LoRA**, **247 seeds /
+  696 SFT rows / 2,100 preference pairs**, and a **120-row / 120-family frozen
+  lockbox**; reported final-SFT gains of semantic validity **+4.17pp**, task
+  type **+6.67pp**, route **+5.83pp**, and confirmation **+8.33pp**, while
+  preserving the negative strict-exact result **0.0167 -> 0.0083** and making
+  no overall model-improvement claim.
+- Implemented a controlled full-stack Browser Agent Demo with **React / Vite +
+  FastAPI + WebSocket + SQLite + Playwright**, two-stage confirmation/execution,
+  an exact-origin localhost sandbox, and deterministic verification; validated
+  **6/6** terminal+strict-contract outcomes, **4/4** executable scenarios, and
+  **2/2** Blocked/Clarify no-execution scenarios, scoped strictly to fixture
+  orchestration rather than model, real-ASR, internet, or production capability.
+
+## Run the Controlled Browser Demo
+
+The repository includes an optional, verifiable controlled Browser Agent demo
+for a Chinese voice entry point:
+`fixture inference + disabled ASR + localhost sandbox execution`. It reuses
+`BrowserTaskContract V1` and demonstrates six public scenarios through a
+`202 Accepted` background lifecycle, static capabilities, a recoverable
+one-time challenge, separate confirm/execute steps, Playwright exact-origin
+isolation, and independent action/DOM evidence.
 
 ```bash
 python -m pip install -e '.[demo,dev]'
@@ -27,17 +157,6 @@ make demo
 [Run guide, architecture, screenshots, and strict non-claims](docs/demo/README.md) · [Six-scenario benchmark](reports/demo-mvp/summary.md)
 
 The demo proves controlled fixture orchestration only. It does not establish a general agent, real-internet generalization, natural speech/ASR generalization, model quality, production readiness, deployment, or launch status. It does not load a private adapter, access the lockbox, or train by default.
-
-## Recruiter Summary
-
-| Area | What this project built |
-| --- | --- |
-| Problem | Chinese voice/ASR browser commands -> schema-valid browser task contract JSON |
-| Model pipeline | Qwen2.5-7B-Instruct + LoRA SFT; the adapter remains private and is not released in this repo |
-| Data/training | 247 seeds / 696 SFT rows / 2,100 preference pairs; public dev/test are `DEVELOPMENT_ONLY_SPENT`; final SFT used existing training data only |
-| Prompt/eval hardening | Unified gold-free prompt policy `unified_gold_free_v1`; strict layered validation from JSON parse -> strict schema -> semantic contract -> exact match |
-| Frozen evaluation | 120-row `lockbox-v1`, 120 semantic families, frozen manifest, one-look final evaluation |
-| Result boundary | Final SFT did not improve strict contract exact match; no overall model improvement claim is made |
 
 ## Final Lockbox v1 Result
 
@@ -74,29 +193,12 @@ Evidence links:
 - [Current status and evidence](docs/current-status.md)
 - [Lockbox protocol](docs/lockbox.md)
 
-## Explicit Non-Claims
-
-This repository does **not** claim:
-
-- overall model improvement from final SFT;
-- production readiness;
-- safety readiness;
-- executable browser quality;
-- DPO success;
-- adapter/checkpoint release;
-- live-browser benchmark improvement.
-
-The strongest supported claim is narrower:
-under a frozen 120-row lockbox and a gold-free strict evaluator,
-final SFT improved several semantic/channel aggregate metrics
-but reduced strict full-contract exact match.
-
 ## Repository Role
 
 | This repo is | This repo is not |
 | --- | --- |
 | A speech/ASR-to-contract post-training evidence repository | A generic chat fine-tuning project |
-| A strict JSON contract generation and evaluation pipeline | A GUI action policy or browser controller |
+| A strict JSON contract pipeline plus a controlled localhost orchestration demo | A generic/open-world browser controller or GUI action-policy learner |
 | A public-safe SFT/DPO data, training, prediction, and evaluation workflow | A checkpoint or adapter release |
 | A place where negative, blocked, and superseded evidence stays auditable | A success story built by deleting inconvenient results |
 

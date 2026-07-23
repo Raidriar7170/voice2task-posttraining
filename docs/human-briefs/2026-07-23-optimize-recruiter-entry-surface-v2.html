@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Voice2Task Recruiter Entry Surface - REVIEW_REQUIRED Human Brief</title>
+  <style>
+    :root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body { margin: 0; background: #f5f7fa; color: #172033; line-height: 1.65; }
+    main { max-width: 820px; margin: 0 auto; padding: 40px 24px 64px; }
+    article { background: #fff; border: 1px solid #dce3ec; border-radius: 16px; padding: 28px; }
+    h1, h2 { line-height: 1.25; }
+    h1 { margin-top: 0; font-size: 1.9rem; }
+    h2 { margin-top: 2rem; font-size: 1.2rem; }
+    .status { display: inline-block; border: 1px solid #9a6700; border-radius: 999px; padding: 4px 10px; color: #7a4f00; font-weight: 700; }
+    code { overflow-wrap: anywhere; }
+    a { color: #0755a5; text-decoration: underline; text-underline-offset: 2px; }
+    a:focus-visible { outline: 3px solid #1d74d5; outline-offset: 3px; }
+    ul { padding-left: 1.25rem; }
+    @media (max-width: 600px) { main { padding: 20px 12px 40px; } article { padding: 20px; border-radius: 12px; } }
+    @media print { body { background: #fff; } main { max-width: none; padding: 0; } article { border: 0; padding: 0; } }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <p class="status">REVIEW_REQUIRED · LOCAL ONLY</p>
+      <h1>Voice2Task Recruiter Entry Surface 简报</h1>
+      <p>结论：中英文 README 已把模型后训练与 controlled Browser Agent Demo 拆成两个清晰的 30 秒证据 surface，并在首个核心章节展示真实 committed screenshots、紧凑架构图、两条事实安全简历 bullet 与高可见 non-claims。所有改动仍为本地未提交状态；没有 commit、push、release、训练、GPU、lockbox 消费或远程写入。</p>
+
+      <h2>本轮改动</h2>
+      <ul>
+        <li><a href="../../README.md">中文 README</a> 与 <a href="../../README_en.md">English README</a> 现在同时呈现 Qwen2.5-7B-Instruct + LoRA、247/696/2,100 数据规模、120-row/120-family frozen lockbox、四项 aggregate 改善和 strict exact 下降。</li>
+        <li>README 首个核心章节嵌入真实 Desktop Search complete 与 Desktop Form confirmation PNG，并明确标注 Fixture Inference、ASR Disabled、Localhost Sandbox，以及非 live-internet / model-quality benchmark。</li>
+        <li><a href="../demo/architecture.md">Demo architecture</a> 与双 README 的 Mermaid 图补全 reviewed transcript、inference adapter、BrowserTaskContract、compiler/policy、confirmation challenge、explicit execution、Playwright sandbox、deterministic verifier 和 event/artifact evidence。</li>
+        <li>双 README 的 recruiter summary 已收敛为两条 copy-ready bullet：模型训练与 frozen lockbox；controlled full-stack Browser Agent Demo。</li>
+        <li><a href="../../CONTEXT.md">CONTEXT.md</a> 将过时的绝对 “not a browser controller” 限定为核心模型边界，并明确单独 demo 只执行 static exact-origin localhost capabilities。</li>
+      </ul>
+
+      <h2>权威证据</h2>
+      <ul>
+        <li><a href="../../reports/lockbox-v1/final-evaluation/comparison.md">Final lockbox comparison</a>：aggregate-only one-look evidence；strict exact <code>0.0167 -&gt; 0.0083</code>，不得作 overall improvement 或 row-level cause 推断。</li>
+        <li><a href="../../reports/demo-mvp/summary.md">Controlled demo summary</a>：expected terminal + strict contract <code>6/6</code>、executable verifier <code>4/4</code>、Blocked/Clarify no-execution verifier <code>2/2</code>。</li>
+        <li><a href="../demo/screenshots/desktop-search-complete.png">Desktop Search complete</a> 与 <a href="../demo/screenshots/desktop-form-confirmation.png">Desktop Form confirmation</a> 都是仓库已跟踪的 localhost fixture 运行截图，不是伪造图片或合成 GIF。</li>
+      </ul>
+
+      <h2>Fresh public-safe 验证</h2>
+      <ul>
+        <li>Focused Python：<code>166 passed</code>，两条依赖 deprecation warning；未收集 private adapter、private corpus 或 lockbox row-level tests。</li>
+        <li>Ruff：<code>All checks passed!</code>。</li>
+        <li>OpenSpec strict：<code>18 passed, 0 failed</code>；active changes 保持 0。</li>
+        <li>Current truth surface：<code>current truth surface check passed</code>。</li>
+        <li>Frontend production build：<code>npm ci</code> 后 TypeScript + Vite build 通过，audit 为 0 vulnerabilities。</li>
+        <li><code>git diff --check</code> 与两张 HTML 嵌入图片的显式路径检查通过。</li>
+        <li><code>make demo-test</code> 的最终 fresh rerun 为 Python <code>170 passed</code>、frontend <code>37 passed</code>；但首次完整运行为 <code>169 passed, 1 failed</code>，独立重复测试也出现先 pass、后 fail。失败来自既有 transcript-confirmation 并发竞态，且本轮对 <code>apps/</code>、<code>src/</code>、<code>tests/</code> 无差异，因此不能把单次 rerun 描述为稳定 green。</li>
+      </ul>
+
+      <h2>明确 Non-Claims</h2>
+      <ul>
+        <li>No overall model improvement claim。</li>
+        <li>No real-ASR benchmark claim。</li>
+        <li>No live-browser benchmark claim。</li>
+        <li>No production-readiness claim。</li>
+        <li>No safety-readiness claim。</li>
+        <li>No generic-agent claim。</li>
+        <li>No checkpoint / adapter release claim。</li>
+        <li>No DPO success claim。</li>
+      </ul>
+
+      <h2>风险与下一步</h2>
+      <ul>
+        <li>Desktop Search 原图为长页面截图；README 使用受约束预览并保留原始 committed PNG 链接，没有裁剪或伪造运行结果。</li>
+        <li><code>make demo-test</code> 的既有竞态需要单独授权的 runtime bugfix 阶段；本轮不以修改 API/task-registry 行为来换取 green。</li>
+        <li>只读 Reviewer 已返回 <code>Final Verdict: Pass</code>，无 Must Fix / Should Fix。下一步仅等待用户审阅；仍停在本地状态，不自动 commit、push 或发布。</li>
+      </ul>
+    </article>
+  </main>
+</body>
+</html>

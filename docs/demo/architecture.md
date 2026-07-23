@@ -4,22 +4,31 @@
 
 ```mermaid
 flowchart LR
-    UI["React operation console"] -->|"text or audio"| API["FastAPI API"]
-    API --> ASR["ASR provider\ndisabled fixture or exact HTTP"]
-    API --> INF["Voice2Task inference\nfixture or private PEFT"]
-    INF --> V1["BrowserTaskContract V1\nstrict schema and semantics"]
-    V1 --> COMP["Pure compiler"]
-    REG["Static capability registry\ntrusted paths selectors values"] --> COMP
-    COMP --> POL["Policy gate"]
-    POL -->|"read-only Execute or confirmed write"| EXE["Playwright executor"]
-    EXE --> SANDBOX["Exact-origin localhost sandbox"]
-    EXE --> VER["Deterministic verifier"]
-    API <--> DB["SQLite sessions events artifacts"]
-    DB --> WS["Replay plus bounded live WebSocket"]
-    WS --> UI
+    UI["React / Vite UI"] --> INPUT["Spoken command<br/>or reviewed transcript"]
+    ASR["HTTP ASR<br/>opt-in; default disabled"] -. "reviewed transcript" .-> INPUT
+    INPUT --> INF["FastAPI inference adapter<br/>fixture default<br/>private PEFT opt-in"]
+    INF --> V1["BrowserTaskContract V1<br/>strict schema + semantics"]
+    V1 --> COMP["Compiler / policy"]
+    REG["Static capability registry<br/>trusted paths, selectors, values"] --> COMP
+    COMP -->|"write plan"| CHALLENGE["One-time confirmation<br/>challenge"]
+    CHALLENGE --> EXECUTE["Explicit execution<br/>request"]
+    COMP -->|"read-only plan"| EXECUTE
+    EXECUTE --> EXE["Playwright executor"]
+    EXE --> SANDBOX["Exact-origin<br/>localhost sandbox"]
+    SANDBOX --> VER["Deterministic verifier"]
+    VER --> EVIDENCE["Event / artifact evidence<br/>SQLite authoritative state<br/>WebSocket replay + stream"]
+    EVIDENCE --> UI
+    ASR -. "failure" .-> CLOSED["Fail closed"]
+    INF -. "private-model failure" .-> CLOSED
+    CLOSED --- NOFALLBACK["No failed private-model<br/>fallback to fixture"]
 ```
 
 `BrowserTaskContract V1` remains the model boundary. The compiler never interprets a model-authored selector or arbitrary URL; it maps a validated task and allowlisted slot into IDs owned by the static registry.
+
+Fixture inference is the default path. Private PEFT inference and HTTP ASR are
+explicit opt-ins. Missing configuration, provider failure, invalid output, or
+schema/semantic rejection fails closed. In particular, a failed private-model
+request never falls back to fixture inference.
 
 ## Session lifecycle
 

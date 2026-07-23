@@ -2,7 +2,7 @@
 
 ## 1. Project Scope
 
-Voice2Task Post-Training is an evidence-first companion project for Chinese spoken command / ASR transcript -> schema-valid browser task contracts. The project studies public-safe SFT/DPO data construction, Qwen2.5-7B-Instruct + LoRA training paths, prediction artifacts, strict contract evaluation, and offline schema projections. It is not a browser controller, GUI action policy learner, generic chat fine-tune, checkpoint release, or production system.
+Voice2Task Post-Training is an evidence-first companion project for Chinese spoken command / ASR transcript -> schema-valid browser task contracts. The project studies public-safe SFT/DPO data construction, Qwen2.5-7B-Instruct + LoRA training paths, prediction artifacts, strict contract evaluation, and offline schema projections. The core post-training model is not a browser controller or GUI action-policy learner. A separate controlled demo executes only static capabilities inside an exact-origin localhost sandbox; it does not make the project a generic/open-world browser controller, generic chat fine-tune, checkpoint release, or production system.
 
 ## 2. Current Formal Data Boundary
 
